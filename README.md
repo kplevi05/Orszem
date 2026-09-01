@@ -78,6 +78,28 @@ Point the apps at the backend with `-PORSZEM_API_BASE_URL=...`
 
 Demo-only fixture. The database stores only an Argon2id hash.
 
+## Remote demo deployment (Oracle Cloud)
+
+The public HTTPS demo backend (Caddy + Spring Boot API + PostgreSQL on Docker
+Compose, ARM64) is described end-to-end in
+[`docs/deployment/ORACLE_DEPLOYMENT.md`](docs/deployment/ORACLE_DEPLOYMENT.md):
+first deployment, `.env` secrets, update, health verification and rollback.
+
+```bash
+# on the server
+cd /home/opc/apps/orszem
+scripts/deploy.sh --pull       # git pull --ff-only + build + up -d + health check
+scripts/health-check.sh        # verification only
+```
+
+Demo APKs against the public endpoint:
+
+```bash
+cd apps/android
+./gradlew :public-app:assembleRelease :service-app:assembleRelease \
+  -PORSZEM_API_BASE_URL=https://<public-host>/
+```
+
 ## Verification
 
 ```bash

@@ -1,0 +1,53 @@
+# Őrszem Demo v1 — public edge.
+#
+# The only container that publishes ports. Terminates TLS with a certificate
+# obtained automatically from Let's Encrypt (HTTP-01 on :80), and proxies to the
+# API over the internal Docker network. The API and PostgreSQL are never
+# reachable from the internet.
+#
+# ORSZEM_PUBLIC_HOST must be a DNS name that resolves to this VM's public IPv4,
+# otherwise ACME issuance cannot succeed.
+
+{
+	admin 127.0.0.1:2019
+	# UDP/443 is not published (firewalld allows TCP only), so do not advertise HTTP/3.
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$ORSZEM_PUBLIC_HOST} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Őrszem Demo v1 HTTP contract (OpenAPI base path /api/v1).
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	# Actuator health / liveness / readiness probes (details are never shown).
+	handle /actuator/health* {
+		reverse_proxy api:8080
+	}
+
+	handle / {
+		respond "Orszem Demo v1 API" 200
+	}
+
+	# Everything else (internet background scanners) gets a plain 404.
+	handle {
+		respond 404
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
