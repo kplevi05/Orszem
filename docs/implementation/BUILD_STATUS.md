@@ -76,7 +76,11 @@ hand-written DTOs, `safeApiCall` mapping problem+json → the contract error cod
 - `./gradlew testDebugUnitTest` → **19 unit tests, 0 failures** across the four
   ViewModel test classes. ✅
 - `./gradlew :public-app:assembleRelease :service-app:assembleRelease` → both
-  minified release APKs. ✅
+  minified (R8) release APKs:
+  `public-app/build/outputs/apk/release/public-app-release.apk`,
+  `service-app/build/outputs/apk/release/service-app-release.apk`. ✅
+  (`aapt2 dump badging` confirms `hu.orszem.publicapp` "Őrszem" and
+  `hu.orszem.serviceapp` "Őrszem Szolgálat" as two separate applications.)
 
 Setup needed on that machine: SDK platform 35 + build-tools 35.0.0 added (only
 API 37 was present); Temurin JDK 21 in `.toolchain/`; `local.properties` with
