@@ -57,9 +57,5 @@ class SessionManager @Inject constructor(
 
     fun currentToken(): String? = token
 
-    private suspend fun firstSession(): StoredSession? {
-        var result: StoredSession? = null
-        kotlinx.coroutines.flow.firstOrNull(sessionStore.session)?.let { result = it }
-        return result
-    }
+    private suspend fun firstSession(): StoredSession? = sessionStore.session.firstOrNull()
 }

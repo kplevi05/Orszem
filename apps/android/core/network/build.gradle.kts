@@ -28,11 +28,13 @@ dependencies {
     api(project(":core:model"))
     api(project(":core:common"))
 
-    implementation(libs.retrofit.core)
+    // Exposed in public signatures (OrszemApi returns retrofit2.Response,
+    // OrszemApiFactory accepts an okhttp3.Interceptor, safeApiCall uses Json).
+    api(libs.retrofit.core)
+    api(libs.okhttp.core)
+    api(libs.kotlinx.serialization.json)
     implementation(libs.retrofit.kotlinx.serialization)
-    implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
-    implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)

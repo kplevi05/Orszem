@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -161,7 +161,7 @@ fun ReportFormScreen(
                     if (state.locating) {
                         CircularProgressIndicator(Modifier.height(18.dp), strokeWidth = 2.dp)
                     } else {
-                        Icon(Icons.Filled.MyLocation, contentDescription = null)
+                        Icon(Icons.Filled.LocationOn, contentDescription = null)
                         Spacer(Modifier.height(0.dp))
                         Text("  " + stringResource(R.string.form_locate))
                     }

@@ -7,11 +7,3 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.hilt) apply false
 }
-
-subprojects {
-    // AGP's library annotation extraction fails on this Windows toolchain
-    // (java.io.IOException while resolving its inputs) and the AARs are not
-    // published anywhere, so it is not needed for the Demo v1 build.
-    tasks.matching { it.name.matches(Regex("extract.*Annotations")) }
-        .configureEach { enabled = false }
-}

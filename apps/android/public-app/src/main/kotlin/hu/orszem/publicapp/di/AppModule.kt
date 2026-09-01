@@ -29,6 +29,10 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun clock(): Clock = Clock.systemDefaultZone()
+
+    @Provides
+    @Singleton
     fun settlementLocationProvider(@ApplicationContext context: Context): SettlementLocationProvider =
         SettlementLocationProvider(context)
 }
