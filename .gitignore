@@ -41,3 +41,16 @@ postgres-data/
 tmp/
 temp/
 *.tmp
+
+# Local toolchain bootstrap (not committed)
+.toolchain/
+.tool-versions.local
+
+# Node (contract tooling)
+node_modules/
+
+# Android
+*.apk
+*.aab
+.kotlin/
+

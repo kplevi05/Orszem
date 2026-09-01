@@ -1,0 +1,13 @@
+{
+  "name": "orszem-contracts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Tooling for linting the canonical Őrszem Demo v1 OpenAPI contract.",
+  "scripts": {
+    "lint": "redocly lint --config openapi/redocly.yaml openapi/orszem-v1.yaml",
+    "bundle": "redocly bundle openapi/orszem-v1.yaml -o openapi/orszem-v1.bundled.yaml"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.34.2"
+  }
+}

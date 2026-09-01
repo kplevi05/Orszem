@@ -1,0 +1,48 @@
+# Őrszem Demo v1 — local runtime (PostgreSQL + API).
+# Usage:
+#   docker compose -f infra/compose/docker-compose.yml up -d db      # DB only (for ./gradlew bootRun)
+#   docker compose -f infra/compose/docker-compose.yml up -d          # DB + API
+name: orszem-demo
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: orszem
+      POSTGRES_USER: orszem
+      POSTGRES_PASSWORD: orszem
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - orszem-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orszem -d orszem"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ORSZEM_PROFILE:-demo}
+      ORSZEM_DB_URL: jdbc:postgresql://db:5432/orszem
+      ORSZEM_DB_USERNAME: orszem
+      ORSZEM_DB_PASSWORD: orszem
+      ORSZEM_JWT_SECRET: ${ORSZEM_JWT_SECRET:?set ORSZEM_JWT_SECRET to a 32+ byte secret}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  orszem-db:
