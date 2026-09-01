@@ -3,6 +3,7 @@ package hu.orszem.serviceapp.feature.detail
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,13 +14,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -45,7 +51,20 @@ fun ReportDetailScreen(
     viewModel: ReportDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(reportId) { viewModel.load(reportId) }
+
+    // A confirmed deletion leaves this screen; the list reloads on return.
+    LaunchedEffect(state.deleted) { if (state.deleted) onBack() }
+
+    val deleteFailed = stringResource(R.string.detail_delete_failed)
+    val retry = stringResource(R.string.action_retry)
+    LaunchedEffect(state.deleteError) {
+        if (state.deleteError == null) return@LaunchedEffect
+        val result = snackbar.showSnackbar(message = deleteFailed, actionLabel = retry)
+        if (result == SnackbarResult.ActionPerformed) viewModel.confirmDelete()
+        viewModel.dismissDeleteError()
+    }
 
     Scaffold(
         topBar = {
@@ -58,6 +77,7 @@ fun ReportDetailScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         when {
             state.loading -> LoadingState()
@@ -71,12 +91,34 @@ fun ReportDetailScreen(
                 showActions = !readOnly,
                 canAccept = state.canAccept,
                 canArchive = state.canArchive,
+                canDelete = state.canDelete,
                 actionInProgress = state.actionInProgress,
+                deleting = state.deleting,
                 onAccept = viewModel::accept,
                 onArchive = viewModel::archive,
+                onDelete = viewModel::requestDelete,
                 modifier = Modifier.padding(padding),
             )
         }
+    }
+
+    // Deliberately a confirmation dialog, not swipe-to-delete (§E).
+    if (state.confirmingDelete) {
+        AlertDialog(
+            onDismissRequest = viewModel::cancelDelete,
+            title = { Text(stringResource(R.string.detail_delete_confirm_title)) },
+            text = { Text(stringResource(R.string.detail_delete_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = viewModel::confirmDelete) {
+                    Text(stringResource(R.string.detail_delete_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::cancelDelete) {
+                    Text(stringResource(R.string.detail_delete_cancel))
+                }
+            },
+        )
     }
 
     if (state.staleConflict) {
@@ -97,6 +139,9 @@ private val formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM
 private fun DetailContent(
     report: ServiceReportDetail,
     showActions: Boolean,
+    canDelete: Boolean = false,
+    deleting: Boolean = false,
+    onDelete: () -> Unit = {},
     canAccept: Boolean,
     canArchive: Boolean,
     actionInProgress: Boolean,
@@ -133,6 +178,17 @@ private fun DetailContent(
         }
         if (showActions && canArchive) {
             PrimaryButton(stringResource(R.string.detail_archive), onArchive, loading = actionInProgress)
+        }
+        // Demo v1.1: pilot/test-data cleanup. Shown only when the backend grants
+        // REPORT_DELETE, and available from every status — including the archive.
+        if (canDelete) {
+            OutlinedButton(
+                onClick = onDelete,
+                enabled = !deleting && !actionInProgress,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            ) {
+                Text(stringResource(R.string.detail_delete))
+            }
         }
     }
 }

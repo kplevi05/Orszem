@@ -15,8 +15,10 @@ android {
         applicationId = "hu.orszem.publicapp"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        // Demo v1.1 (controlled pilot polish). versionCode must increase for an
+        // in-place upgrade over the distributed Demo v1 build.
+        versionCode = 2
+        versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "API_BASE_URL", "\"${providers.gradleProperty("ORSZEM_API_BASE_URL").getOrElse("http://10.0.2.2:8080/")}\"")

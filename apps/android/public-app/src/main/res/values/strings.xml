@@ -22,16 +22,31 @@
     <string name="error_settlement_required">A település megadása kötelező.</string>
     <string name="error_event_required">Válasszon eseménytípust.</string>
     <string name="error_time_future">Az esemény időpontja nem lehet a jövőben.</string>
-    <string name="error_network">Hálózati hiba. A bejelentés adatai megmaradtak.</string>
-    <string name="error_generic">Nem sikerült elküldeni a bejelentést.</string>
+    <!-- Network / server states (Demo v1.1 §F). The form contents and the
+         client-generated report id survive every one of these. -->
+    <string name="error_network">A szolgáltatás jelenleg nem érhető el. Ellenőrizze az internetkapcsolatot, majd próbálja újra.</string>
+    <string name="error_timeout">A kapcsolat időtúllépés miatt megszakadt. A bejelentés adatai megmaradtak, próbálja újra.</string>
+    <string name="error_server">A szolgáltatás átmenetileg nem elérhető. Kérjük, próbálja újra kicsit később.</string>
+    <string name="error_rate_limited">Túl sok bejelentés érkezett rövid idő alatt. Kérjük, várjon egy kicsit, majd próbálja újra.</string>
+    <string name="error_conflict">Ez a bejelentés már beérkezett. Új bejelentés indításához próbálja újra.</string>
+    <string name="error_validation">A megadott adatok nem megfelelőek. Kérjük, ellenőrizze a mezőket.</string>
+    <string name="error_generic">Nem sikerült elküldeni a bejelentést. Kérjük, próbálja újra.</string>
     <string name="action_retry">ÚJRA</string>
 
-    <string name="catalog_error">Nem sikerült betölteni az eseménylistát.</string>
+    <string name="catalog_error">Nem sikerült betölteni az eseménylistát. Ellenőrizze az internetkapcsolatot, majd próbálja újra.</string>
     <string name="catalog_loading">Eseménylista betöltése…</string>
 
-    <string name="location_denied">A helymeghatározás nem engedélyezett. Adja meg a települést kézzel.</string>
-    <string name="location_failed">A helymeghatározás nem sikerült. Adja meg a települést kézzel.</string>
+    <!-- Location / GPS states (Demo v1.1 §A). Each state has its own message;
+         raw Android errors, provider names and exceptions are never shown. -->
     <string name="location_working">Helymeghatározás…</string>
+    <string name="location_permission_required">A település automatikus kitöltéséhez engedélyezze a helymeghatározást, vagy adja meg a települést kézzel.</string>
+    <string name="location_permission_denied_forever">A helymeghatározás le van tiltva ehhez az alkalmazáshoz. Engedélyezze az alkalmazás beállításaiban, vagy adja meg a települést kézzel.</string>
+    <string name="location_services_disabled">A helymeghatározás ki van kapcsolva. Kérjük, a helymeghatározás használatához kapcsolja be a GPS szolgáltatást a készülékén.</string>
+    <string name="location_unavailable">A helyzet jelenleg nem határozható meg. Kérjük, próbálja újra, vagy adja meg manuálisan a települést.</string>
+    <string name="location_geocoding_failed">A település nem volt automatikusan meghatározható. Kérjük, adja meg manuálisan.</string>
+    <string name="location_open_settings">BEÁLLÍTÁSOK MEGNYITÁSA</string>
+    <string name="location_grant">ENGEDÉLYEZÉS</string>
+    <string name="location_open_app_settings">ALKALMAZÁS BEÁLLÍTÁSAI</string>
 
     <string name="success_title">Bejelentés elküldve</string>
     <string name="success_body">Köszönjük! A szolgálat megkapta a bejelentést.</string>

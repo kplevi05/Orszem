@@ -46,6 +46,35 @@ class GetReportDetailUseCase(private val repository: ServiceReportRepository) {
         repository.findDetail(id) ?: throw ReportNotFoundException()
 }
 
+/**
+ * Demo v1.1: permanent deletion for pilot/test-data cleanup.
+ *
+ * Allowed from NEW, IN_PROGRESS and ARCHIVED alike — the point of the feature is
+ * removing test rows, not modelling a workflow step. Analytics read the `reports`
+ * table directly, so every count follows automatically with no "deleted" bucket.
+ *
+ * The use case is only reachable through a controller that exists solely in the
+ * demo configuration; it additionally requires an authenticated actor.
+ */
+@Service
+class DeleteReportUseCase(
+    private val repository: ServiceReportRepository,
+    private val audit: AuditPort,
+) {
+    @Transactional
+    fun execute(id: UUID, actorUserId: UUID) {
+        val previousStatus = repository.deletePermanently(id) ?: throw ReportNotFoundException()
+        audit.record(
+            action = AuditAction.REPORT_DELETED,
+            targetType = "REPORT",
+            // Null on purpose: the row is gone, so a target_id would dangle.
+            targetId = null,
+            actorUserId = actorUserId,
+            metadata = mapOf("reportId" to id.toString(), "previousStatus" to previousStatus.name),
+        )
+    }
+}
+
 @Service
 class AcceptReportUseCase(
     private val repository: ServiceReportRepository,

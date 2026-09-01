@@ -69,7 +69,19 @@ APK outputs:
 `apps/android/service-app/build/outputs/apk/release/service-app-release.apk`.
 
 Point the apps at the backend with `-PORSZEM_API_BASE_URL=...`
-(default `http://10.0.2.2:8080/` for the Android emulator).
+(default `http://10.0.2.2:8080/` for the Android emulator). The URL is the
+**origin only** — `OrszemApi` declares the `api/v1/...` path segments itself.
+
+For the pilot builds use the helper, which pins the public HTTPS endpoint and
+names the outputs as distributed:
+
+```bash
+scripts/build-demo-apks.sh          # -> apps/android/build/demo-apks/
+```
+
+Release builds permit no cleartext traffic: `network_security_config.xml` sets
+`cleartextTrafficPermitted="false"`, and only the **debug** variant allows it for
+`10.0.2.2` / `localhost`, so local development is unaffected.
 
 ### 4. Demo login
 

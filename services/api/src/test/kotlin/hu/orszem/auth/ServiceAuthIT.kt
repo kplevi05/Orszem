@@ -61,7 +61,7 @@ class ServiceAuthIT @Autowired constructor(
     }
 
     @Test
-    fun `me returns the profile and the Demo v1 capability set`() {
+    fun `me returns the profile and the Demo v1 capability set plus the demo-only delete capability`() {
         val token = rest.postForEntity(
             "/api/v1/service/auth/login",
             mapOf("username" to demoUser, "password" to demoPassword),
@@ -75,8 +75,12 @@ class ServiceAuthIT @Autowired constructor(
         assertThat(me.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(me.body!!.username).isEqualTo(demoUser)
         assertThat(me.body!!.role).isEqualTo("SERVICE_USER")
+        // REPORT_DELETE is Demo v1.1 and is granted only because this profile sets
+        // orszem.demo.deletion-enabled=true. In a deployment without that switch the
+        // capability is absent and the delete route does not exist at all.
         assertThat(me.body!!.capabilities).containsExactlyInAnyOrder(
             "REPORT_READ_ACTIVE", "REPORT_ACCEPT", "REPORT_ARCHIVE", "ARCHIVE_READ", "ANALYTICS_READ",
+            "REPORT_DELETE",
         )
     }
 

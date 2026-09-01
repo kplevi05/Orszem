@@ -10,11 +10,13 @@ import hu.orszem.core.model.ReportPage
 import hu.orszem.core.model.ServiceProfile
 import hu.orszem.core.model.ServiceCapability
 import hu.orszem.core.model.ServiceReportDetail
+import hu.orszem.core.model.ServiceReportSummary
 import hu.orszem.core.model.SettlementStat
 import hu.orszem.core.model.TrainStat
 import hu.orszem.core.network.OrszemApi
 import hu.orszem.core.network.dto.ServiceLoginRequestDto
 import hu.orszem.core.network.safeApiCall
+import hu.orszem.core.network.safeEmptyApiCall
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import javax.inject.Inject
@@ -74,6 +76,48 @@ class ServiceReportRepository @Inject constructor(
     suspend fun archive(reportId: String): Outcome<ServiceReportDetail> = withContext(dispatchers.io) {
         safeApiCall { api.archiveReport(reportId) }.map { it.toModel() }
     }
+
+    /**
+     * Demo v1.1 pilot/test-data cleanup. Permanent; the backend additionally
+     * refuses this unless the deployment enables demo deletion, so a 404 here can
+     * also mean "not enabled in this environment".
+     */
+    suspend fun delete(reportId: String): Outcome<Unit> = withContext(dispatchers.io) {
+        safeEmptyApiCall { api.deleteReport(reportId) }
+    }
+
+    /**
+     * Loads the COMPLETE active dataset by following the existing opaque cursor
+     * until it is exhausted (Demo v1.1 §C/§D). The backend paging contract and its
+     * default ordering are untouched; the client simply consumes every page.
+     *
+     * [pageLimit] is the contract maximum so the number of round trips stays low,
+     * and [maxPages] is a safety stop so a misbehaving cursor cannot loop forever.
+     */
+    suspend fun allActiveReports(pageLimit: Int = 100, maxPages: Int = 50): Outcome<List<ServiceReportSummary>> =
+        withContext(dispatchers.io) {
+            val collected = mutableListOf<ServiceReportSummary>()
+            val seen = mutableSetOf<String>()
+            var cursor: String? = null
+            var pages = 0
+            while (true) {
+                when (val outcome = activeReports(cursor = cursor, limit = pageLimit)) {
+                    is Outcome.Failure -> return@withContext outcome
+                    is Outcome.Success -> {
+                        // Defensive de-duplication: a report accepted between two
+                        // page fetches can otherwise appear twice.
+                        outcome.value.items.forEach { if (seen.add(it.id)) collected += it }
+                        cursor = outcome.value.nextCursor
+                        pages++
+                        if (cursor == null || pages >= maxPages) {
+                            return@withContext Outcome.Success(collected.toList())
+                        }
+                    }
+                }
+            }
+            @Suppress("UNREACHABLE_CODE")
+            Outcome.Success(collected.toList())
+        }
 }
 
 data class Analytics(

@@ -51,5 +51,11 @@ data class OrszemProperties(
         val seedEnabled: Boolean = false,
         /** Shared secret for the demo reset endpoint. Blank disables the endpoint. */
         val resetToken: String = "",
+        /**
+         * Demo v1.1: enables authenticated hard deletion of reports for
+         * pilot/test-data cleanup. Off by default; the endpoint does not exist at
+         * all unless this is true AND the active profile is local/demo.
+         */
+        val deletionEnabled: Boolean = false,
     )
 }

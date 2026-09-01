@@ -33,4 +33,7 @@ class ServiceApiClient(
 
     fun <T> post(path: String, type: Class<T>): ResponseEntity<T> =
         rest.exchange(path, HttpMethod.POST, HttpEntity<Void>(headers()), type)
+
+    fun <T> delete(path: String, type: Class<T>): ResponseEntity<T> =
+        rest.exchange(path, HttpMethod.DELETE, HttpEntity<Void>(headers()), type)
 }

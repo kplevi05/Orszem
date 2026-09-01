@@ -11,6 +11,7 @@ import hu.orszem.servicecase.domain.TransitionOutcome
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
@@ -146,6 +147,30 @@ class JdbcServiceReportRepository(
         """.trimIndent(),
         actorUserId, now,
     )
+
+    /**
+     * Demo v1.1 hard delete.
+     *
+     * `reports` is not referenced by any foreign key, so removing the row is safe;
+     * `audit_events.target_id` has no FK either, which is exactly why the workflow
+     * rows pointing at this report are removed in the same transaction — otherwise
+     * they would survive as references to a report that no longer exists. The
+     * deletion itself is audited separately by the use case, with target_id null.
+     */
+    @Transactional
+    override fun deletePermanently(id: UUID): ReportStatus? {
+        val status = jdbc.query(
+            "SELECT status FROM reports WHERE id = :id FOR UPDATE",
+            MapSqlParameterSource("id", id),
+        ) { rs, _ -> ReportStatus.valueOf(rs.getString("status")) }.firstOrNull() ?: return null
+
+        jdbc.update(
+            "DELETE FROM audit_events WHERE target_type = 'REPORT' AND target_id = :id",
+            MapSqlParameterSource("id", id),
+        )
+        jdbc.update("DELETE FROM reports WHERE id = :id", MapSqlParameterSource("id", id))
+        return status
+    }
 
     private fun transition(id: UUID, sql: String, actorUserId: UUID, now: Instant): TransitionOutcome {
         val updated = jdbc.update(

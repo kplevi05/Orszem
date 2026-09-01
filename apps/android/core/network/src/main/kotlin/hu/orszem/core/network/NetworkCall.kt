@@ -8,6 +8,7 @@ import hu.orszem.core.network.dto.ProblemDetailsDto
 import kotlinx.serialization.json.Json
 import retrofit2.Response
 import java.io.IOException
+import java.net.SocketTimeoutException
 
 /**
  * Runs a Retrofit call and normalises the outcome:
@@ -22,14 +23,38 @@ suspend fun <T : Any> safeApiCall(
     val response = block()
     if (response.isSuccessful) {
         val body = response.body()
-        if (body != null) Outcome.Success(body) else Outcome.Failure(ApiError(ApiErrorCode.INTERNAL_ERROR, "Üres válasz."))
+        if (body != null) Outcome.Success(body) else Outcome.Failure(ApiError(ApiErrorCode.INTERNAL_ERROR, null))
     } else {
         Outcome.Failure(parseProblem(json, response))
     }
+} catch (e: SocketTimeoutException) {
+    // Checked before IOException: SocketTimeoutException is a subclass.
+    Outcome.Failure(ApiError(ApiErrorCode.TIMEOUT, null, cause = e))
 } catch (e: IOException) {
-    Outcome.Failure(ApiError(ApiErrorCode.NETWORK, "Hálózati hiba. Próbálja újra.", cause = e))
+    // UnknownHostException (DNS), ConnectException, SSLException, ...
+    Outcome.Failure(ApiError(ApiErrorCode.NETWORK, null, cause = e))
 } catch (e: Exception) {
-    Outcome.Failure(ApiError(ApiErrorCode.UNKNOWN, e.message, cause = e))
+    // `message` is deliberately dropped: it can carry hostnames, TLS details or
+    // library class names, none of which may reach the user (Demo v1.1 §F).
+    Outcome.Failure(ApiError(ApiErrorCode.UNKNOWN, null, cause = e))
+}
+
+/**
+ * Same normalisation as [safeApiCall] for endpoints that answer with no body
+ * (HTTP 204). A missing body is the success case here, not an error.
+ */
+suspend fun safeEmptyApiCall(
+    json: Json = LenientJson,
+    block: suspend () -> Response<*>,
+): Outcome<Unit> = try {
+    val response = block()
+    if (response.isSuccessful) Outcome.Success(Unit) else Outcome.Failure(parseProblem(json, response))
+} catch (e: SocketTimeoutException) {
+    Outcome.Failure(ApiError(ApiErrorCode.TIMEOUT, null, cause = e))
+} catch (e: IOException) {
+    Outcome.Failure(ApiError(ApiErrorCode.NETWORK, null, cause = e))
+} catch (e: Exception) {
+    Outcome.Failure(ApiError(ApiErrorCode.UNKNOWN, null, cause = e))
 }
 
 private fun parseProblem(json: Json, response: Response<*>): ApiError {

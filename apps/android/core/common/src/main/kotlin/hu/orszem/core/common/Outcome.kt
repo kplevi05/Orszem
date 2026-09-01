@@ -13,7 +13,14 @@ enum class ApiErrorCode {
     REPORT_NOT_ARCHIVABLE,
     RATE_LIMITED,
     INTERNAL_ERROR,
+
+    // Transport-level outcomes. These are produced by the client, not the
+    // backend contract, and exist so the UI can tell "no connection" apart from
+    // "the request took too long" (Demo v1.1 §F).
+    /** DNS failure, no route, connection refused/reset. */
     NETWORK,
+    /** Connect/read/write timeout. */
+    TIMEOUT,
     UNKNOWN,
 }
 
@@ -27,7 +34,13 @@ data class ApiError(
     val cause: Throwable? = null,
 ) {
     val isUnauthorized: Boolean get() = code == ApiErrorCode.UNAUTHORIZED || code == ApiErrorCode.INVALID_CREDENTIALS
-    val isRecoverableNetwork: Boolean get() = code == ApiErrorCode.NETWORK || code == ApiErrorCode.RATE_LIMITED
+
+    /** Worth offering a Retry action for: nothing about the request itself was wrong. */
+    val isRecoverableNetwork: Boolean
+        get() = code == ApiErrorCode.NETWORK ||
+            code == ApiErrorCode.TIMEOUT ||
+            code == ApiErrorCode.RATE_LIMITED ||
+            code == ApiErrorCode.INTERNAL_ERROR
 }
 
 /** Result type for the repository layer. */

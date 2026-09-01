@@ -81,7 +81,18 @@ data class ReportPage(
 )
 
 enum class ServiceCapability {
-    REPORT_READ_ACTIVE, REPORT_ACCEPT, REPORT_ARCHIVE, ARCHIVE_READ, ANALYTICS_READ,
+    REPORT_READ_ACTIVE,
+    REPORT_ACCEPT,
+    REPORT_ARCHIVE,
+    ARCHIVE_READ,
+    ANALYTICS_READ,
+
+    /**
+     * Demo v1.1: permanent deletion for pilot/test-data cleanup. Granted only by
+     * deployments that enable demo deletion, so the UI must drive the delete
+     * affordance from this capability rather than from the role.
+     */
+    REPORT_DELETE,
 }
 
 data class ServiceProfile(

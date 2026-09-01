@@ -14,6 +14,8 @@ orszem:
   demo:
     seed-enabled: true
     reset-token: ${ORSZEM_DEMO_RESET_TOKEN:local-demo-reset}
+    # Demo v1.1: authenticated hard delete for pilot/test-data cleanup.
+    deletion-enabled: ${ORSZEM_DEMO_DELETION_ENABLED:true}
 
 logging:
   level:

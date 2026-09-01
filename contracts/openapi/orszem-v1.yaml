@@ -198,6 +198,49 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+    delete:
+      tags: [Service Reports]
+      operationId: deleteServiceReport
+      summary: Bejelentés végleges törlése (Demo v1.1, csak demo környezet)
+      description: >-
+        Pilot/teszt adattisztításra szolgáló, kizárólag a demo konfigurációban
+        (orszem.demo.deletion-enabled=true, local/demo profil) létező művelet.
+        Hitelesített szolgálati kontextust és REPORT_DELETE képességet igényel;
+        anonim hívó soha nem törölhet. Végleges (hard) törlés: NEW, IN_PROGRESS
+        és ARCHIVED állapotból egyaránt engedélyezett, és az analitika a
+        megmaradó sorokat tükrözi. Ha a művelet a környezetben nincs
+        engedélyezve, a DELETE handler nem jön létre, így az útvonal 405
+        METHOD_NOT_ALLOWED választ ad.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '204':
+          description: A bejelentés véglegesen törölve
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/ReportNotFound'
+        '405':
+          description: >-
+            A törlés ebben a környezetben nincs engedélyezve
+            (orszem.demo.deletion-enabled=false vagy nem local/demo profil).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                deletionDisabled:
+                  value:
+                    type: about:blank
+                    title: Method not allowed
+                    status: 405
+                    code: METHOD_NOT_ALLOWED
+                    detail: A kért művelet ezen az útvonalon nem engedélyezett.
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /service/reports/{reportId}/accept:
     post:
       tags: [Service Reports]
@@ -686,6 +729,11 @@ components:
               - REPORT_ARCHIVE
               - ARCHIVE_READ
               - ANALYTICS_READ
+              # Demo v1.1: only granted when the deployment enables demo
+              # deletion (orszem.demo.deletion-enabled=true). Clients must
+              # drive the delete affordance from this capability, never from
+              # the role name.
+              - REPORT_DELETE
 
     EventTypeEmbedded:
       type: object

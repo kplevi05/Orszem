@@ -2,6 +2,47 @@
 
 _Newest milestone on top._
 
+## Demo v1.1 — controlled pilot polish ⏳ (branch `feat/demo-v1.1-pilot-polish`)
+
+Scope: GPS/location UX, ÚJ / FOLYAMATBAN separation, client-side filtering and
+sorting, demo-only authenticated deletion, and a limited network/error UX pass.
+No Production functionality was added.
+
+| Area | Delivered |
+| --- | --- |
+| §A Location | `SettlementLookupResult` split into PermissionMissing / LocationServicesDisabled / Unavailable / GeocodingFailed / Success; device location checked with `LocationManagerCompat` (works on minSdk 26); each state has its own Hungarian string and, where useful, an action (location settings, app settings, retry, re-prompt). Coordinates still never leave the device and never block manual entry. |
+| §B Tabs | The Service App loads the **complete** active dataset by following the existing opaque cursor to exhaustion (`ServiceReportRepository.allActiveReports`), then partitions NEW / IN_PROGRESS client-side. The `/service/reports` paging and ordering contract is unchanged. |
+| §C Filtering | Material 3 filter sheet over the existing catalog taxonomy: category, incident type (narrowed to the category), settlement, train, date (Mind / Ma / Elmúlt 7 nap). AND-combined, badge + match counts, `SZŰRŐK TÖRLÉSE` (which keeps the sort). Operates on the complete dataset. |
+| §D Sorting | Six client-side modes, default `Legújabb elöl`; Hungarian `Collator` for alphabetical modes; stable tie-break (occurredAt DESC, then id). Partition-then-sort, so the backend's NEW-first order cannot leak in. |
+| §E Deletion | `DELETE /api/v1/service/reports/{reportId}` → 204. Demo-gated **structurally**: the controller bean exists only under `local`/`demo` **and** `orszem.demo.deletion-enabled=true`. Requires an authenticated actor plus the new `REPORT_DELETE` capability, which is only minted when the same switch is on. Hard delete from any status; the report's audit rows go with it and the deletion is itself audited with `target_id = NULL` so nothing dangles. |
+| §F Error UX | New `ApiErrorCode.TIMEOUT`; `safeApiCall` no longer propagates `Throwable.message`, so hostnames/TLS/library names cannot reach the UI. Both apps map no-network / timeout / 5xx / validation / auth to fixed Hungarian strings with Retry. The Public App keeps its form contents and its idempotency UUID across retries; the Service App keeps already-loaded rows when a refresh fails. |
+| §G Analytics | Analytics read `reports` directly, so every count follows a deletion with no "deleted" bucket — asserted end to end. |
+
+**Backend tests: 69 / 69 green** (`./gradlew build`) — 58 pre-existing plus 11 new
+(`DemoReportDeletionIT` ×9, `DemoReportDeletionDisabledIT` ×2). AT-050
+(`PresentationFlowIT`) still green.
+
+**Android unit tests: 58 / 58 green** (`./gradlew testDebugUnitTest`) — up from 19.
+
+**Contract:** `@redocly/cli lint` valid, 2 warnings (unchanged from `main`).
+
+**APKs:** `scripts/build-demo-apks.sh` → `orszem-public-demo-v1.1.apk`,
+`orszem-szolgalat-demo-v1.1.apk`; versionCode 2 / versionName 1.1.0; base URL
+`https://129-159-31-175.sslip.io/`; no cleartext, no custom trust anchors.
+
+### Consciously deferred
+
+- **Archive filtering/sorting** — the active set is inherently small, but the
+  archive grows without bound in a pilot, so loading it whole just to sort it is
+  not proportionate. The archive keeps its incremental cursor paging. A
+  partial-page "sort" was explicitly avoided as misleading. Reusing
+  `ReportFilters`/`applySort` there is a small change once archive paging is
+  revisited.
+- Android instrumented (Compose UI) tests are written against the modules but
+  still not executed here — no emulator or device in this environment.
+
+---
+
 ## Environment notes
 
 | Tool | Status |
