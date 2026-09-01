@@ -1,8 +1,13 @@
 package hu.orszem.publicapp.feature.reportcreate
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -60,32 +66,96 @@ fun ReportFormScreen(
     var pickerOpen by remember { mutableStateOf(false) }
     var dateTimeOpen by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+
     // GPS permission is requested only on the explicit button press (BUSINESS_RULES §11).
     val locationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { grants ->
-        if (grants.values.any { it }) viewModel.onLocateRequested() else viewModel.onLocationPermissionDenied()
+        if (grants.values.any { it }) {
+            viewModel.onLocateRequested()
+        } else {
+            // `shouldShowRequestPermissionRationale` is false after a denial only
+            // when the user chose "don't ask again" — the one signal Android gives
+            // for a permanent denial, and it exists only on the Activity.
+            val activity = context as? Activity
+            val canAskAgain = activity != null && grants.keys.any {
+                ActivityCompat.shouldShowRequestPermissionRationale(activity, it)
+            }
+            viewModel.onLocationPermissionDenied(permanently = !canAskAgain)
+        }
     }
 
     LaunchedEffect(state.submitted) { if (state.submitted) onSubmitted() }
 
-    val locationDenied = stringResource(R.string.location_denied)
-    val locationFailed = stringResource(R.string.location_failed)
+    // One distinct message (and where useful, one action) per location state.
+    val locationTexts = mapOf(
+        LocationMessage.PERMISSION_REQUIRED to stringResource(R.string.location_permission_required),
+        LocationMessage.PERMISSION_DENIED_FOREVER to stringResource(R.string.location_permission_denied_forever),
+        LocationMessage.SERVICES_DISABLED to stringResource(R.string.location_services_disabled),
+        LocationMessage.UNAVAILABLE to stringResource(R.string.location_unavailable),
+        LocationMessage.GEOCODING_FAILED to stringResource(R.string.location_geocoding_failed),
+    )
+    val openSettingsLabel = stringResource(R.string.location_open_settings)
+    val openAppSettingsLabel = stringResource(R.string.location_open_app_settings)
+    val grantLabel = stringResource(R.string.location_grant)
+    val retryLabel = stringResource(R.string.action_retry)
+
     LaunchedEffect(state.locationMessage) {
-        when (state.locationMessage) {
-            LocationMessage.DENIED -> snackbar.showSnackbar(locationDenied)
-            LocationMessage.FAILED -> snackbar.showSnackbar(locationFailed)
-            null -> Unit
+        val message = state.locationMessage ?: return@LaunchedEffect
+        val actionLabel = when (message.action) {
+            LocationAction.OPEN_LOCATION_SETTINGS -> openSettingsLabel
+            LocationAction.OPEN_APP_SETTINGS -> openAppSettingsLabel
+            LocationAction.REQUEST_PERMISSION -> grantLabel
+            LocationAction.RETRY -> retryLabel
+            LocationAction.NONE -> null
         }
+        val result = snackbar.showSnackbar(
+            message = locationTexts.getValue(message),
+            actionLabel = actionLabel,
+            duration = androidx.compose.material3.SnackbarDuration.Long,
+        )
+        if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+            when (message.action) {
+                LocationAction.OPEN_LOCATION_SETTINGS ->
+                    context.startActivity(
+                        Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                LocationAction.OPEN_APP_SETTINGS ->
+                    context.startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", context.packageName, null),
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                LocationAction.REQUEST_PERMISSION ->
+                    locationPermission.launch(
+                        arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION),
+                    )
+                LocationAction.RETRY -> viewModel.onLocateRequested()
+                LocationAction.NONE -> Unit
+            }
+        }
+        viewModel.dismissLocationMessage()
     }
 
-    val netError = stringResource(R.string.error_network)
-    val genericError = stringResource(R.string.error_generic)
-    val retryLabel = stringResource(R.string.action_retry)
+    val submitTexts = mapOf(
+        FormErrorReason.NETWORK to stringResource(R.string.error_network),
+        FormErrorReason.TIMEOUT to stringResource(R.string.error_timeout),
+        FormErrorReason.SERVER to stringResource(R.string.error_server),
+        FormErrorReason.RATE_LIMITED to stringResource(R.string.error_rate_limited),
+        FormErrorReason.CONFLICT to stringResource(R.string.error_conflict),
+        FormErrorReason.VALIDATION to stringResource(R.string.error_validation),
+        FormErrorReason.GENERIC to stringResource(R.string.error_generic),
+    )
     LaunchedEffect(state.submitError) {
         val error = state.submitError ?: return@LaunchedEffect
-        val message = if (error == FormErrorReason.NETWORK) netError else genericError
-        val result = snackbar.showSnackbar(message = message, actionLabel = retryLabel)
+        val result = snackbar.showSnackbar(
+            message = submitTexts.getValue(error),
+            actionLabel = retryLabel.takeIf { error.retryable },
+            duration = androidx.compose.material3.SnackbarDuration.Long,
+        )
         if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) viewModel.onRetry()
         viewModel.dismissSubmitError()
     }

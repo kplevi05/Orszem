@@ -10,6 +10,7 @@ import hu.orszem.identity.domain.ServiceUser
 import hu.orszem.identity.domain.ServiceUserRepository
 import hu.orszem.identity.domain.UserRole
 import hu.orszem.identity.domain.UserStatus
+import hu.orszem.shared.config.OrszemProperties
 import hu.orszem.shared.error.InvalidCredentialsException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -33,7 +34,10 @@ class LoginUseCaseTest {
     private val encoder = mock<org.springframework.security.crypto.password.PasswordEncoder>()
     private val jwt = mock<JwtService>()
     private val audit = mock<AuditPort>()
-    private val useCase = LoginUseCase(users, encoder, jwt, audit)
+    // Demo deletion off here: this suite is about authentication, not the
+    // Demo v1.1 capability switch (covered by ServiceAuthIT / DemoReportDeletionIT).
+    private val properties = OrszemProperties()
+    private val useCase = LoginUseCase(users, encoder, jwt, audit, properties)
 
     @Test
     fun `successful login issues a token and audits success`() {

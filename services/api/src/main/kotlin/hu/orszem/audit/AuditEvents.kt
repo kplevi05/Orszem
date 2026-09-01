@@ -21,4 +21,11 @@ enum class AuditAction {
     SERVICE_LOGIN_FAILURE,
     REPORT_ACCEPTED,
     REPORT_ARCHIVED,
+
+    /**
+     * Demo v1.1 hard deletion. Recorded with a null target_id: the report row no
+     * longer exists, so pointing at it would leave a dangling reference. The id
+     * and the status it had are kept in the metadata instead.
+     */
+    REPORT_DELETED,
 }

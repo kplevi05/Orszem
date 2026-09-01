@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.HandlerMethodValidationException
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.servlet.NoHandlerFoundException
 
 @RestControllerAdvice
@@ -60,6 +61,18 @@ class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException::class, MethodArgumentTypeMismatchException::class)
     fun handleBadParam(ex: Exception): ResponseEntity<ProblemResponse> =
         problem(ErrorCode.VALIDATION_ERROR, "Hiányzó vagy érvénytelen kérésparaméter.")
+
+    /**
+      * A known path called with a method it does not support. Without this the
+      * catch-all below would report it as an internal error, which is both wrong
+      * and alarming. It is also the response a caller sees for the Demo v1.1
+      * delete route in a deployment where demo deletion is switched off: the
+      * controller bean does not exist, so DELETE is simply not an allowed method
+      * on that path.
+      */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    fun handleMethodNotAllowed(ex: HttpRequestMethodNotSupportedException): ResponseEntity<ProblemResponse> =
+        problem(ErrorCode.METHOD_NOT_ALLOWED, "A kért művelet ezen az útvonalon nem engedélyezett.")
 
     @ExceptionHandler(NoHandlerFoundException::class)
     fun handleNotFound(ex: NoHandlerFoundException): ResponseEntity<ProblemResponse> =

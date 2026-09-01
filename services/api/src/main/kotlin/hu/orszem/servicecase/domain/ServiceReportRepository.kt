@@ -19,4 +19,11 @@ interface ServiceReportRepository {
 
     /** Atomic `IN_PROGRESS -> ARCHIVED`. */
     fun archive(id: UUID, actorUserId: UUID, now: Instant): TransitionOutcome
+
+    /**
+     * Demo v1.1: permanently removes a report in any status, together with the
+     * audit rows that pointed at it, so no orphaned references remain.
+     * Returns the status the report had, or null when it did not exist.
+     */
+    fun deletePermanently(id: UUID): ReportStatus?
 }

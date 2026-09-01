@@ -14,7 +14,9 @@ import hu.orszem.core.network.dto.ServiceUserProfileDto
 import hu.orszem.core.network.dto.SettlementStatisticsResponseDto
 import hu.orszem.core.network.dto.TrainStatisticsResponseDto
 import retrofit2.Response
+import okhttp3.ResponseBody
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -60,6 +62,14 @@ interface OrszemApi {
 
     @POST("api/v1/service/reports/{reportId}/archive")
     suspend fun archiveReport(@Path("reportId") reportId: String): Response<ServiceReportDetailDto>
+
+    /**
+     * Demo v1.1 only: permanent (hard) deletion for pilot/test-data cleanup.
+     * Present on the server solely when the deployment enables demo deletion, and
+     * always requires an authenticated service context. Responds 204 with no body.
+     */
+    @DELETE("api/v1/service/reports/{reportId}")
+    suspend fun deleteReport(@Path("reportId") reportId: String): Response<ResponseBody>
 
     @GET("api/v1/service/analytics/summary")
     suspend fun analyticsSummary(): Response<AnalyticsSummaryDto>

@@ -14,6 +14,7 @@ enum class ErrorCode(val status: HttpStatus, val title: String) {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Authentication failed"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Unauthorized"),
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "Report not found"),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed"),
     REPORT_NOT_ACCEPTABLE(HttpStatus.CONFLICT, "Invalid report state"),
     REPORT_NOT_ARCHIVABLE(HttpStatus.CONFLICT, "Invalid report state"),
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),

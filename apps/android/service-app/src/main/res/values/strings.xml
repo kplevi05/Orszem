@@ -7,7 +7,7 @@
     <string name="login_password">Jelszó</string>
     <string name="login_submit">BELÉPÉS</string>
     <string name="login_error">Hibás azonosító vagy jelszó.</string>
-    <string name="login_network">Hálózati hiba. Próbálja újra.</string>
+    <string name="login_network">A szolgáltatás jelenleg nem érhető el. Ellenőrizze az internetkapcsolatot, majd próbálja újra.</string>
     <string name="login_show_password">Jelszó megjelenítése</string>
 
     <string name="tab_reports">Bejelentések</string>
@@ -16,7 +16,41 @@
 
     <string name="reports_active_count">%d aktív</string>
     <string name="reports_empty">Jelenleg nincs aktív bejelentés.</string>
+    <string name="reports_empty_new">Jelenleg nincs új bejelentés.</string>
+    <string name="reports_empty_in_progress">Jelenleg nincs folyamatban lévő eset.</string>
+    <string name="reports_empty_filtered">A szűrési feltételeknek egy bejelentés sem felel meg.</string>
     <string name="reports_error">Nem sikerült betölteni a bejelentéseket.</string>
+
+    <!-- Workflow tabs (Demo v1.1 §B) -->
+    <string name="reports_tab_new">ÚJ (%d)</string>
+    <string name="reports_tab_in_progress">FOLYAMATBAN (%d)</string>
+    <string name="reports_match_count">%d találat</string>
+
+    <!-- Filtering (Demo v1.1 §C) -->
+    <string name="filter_title">Szűrők</string>
+    <string name="filter_open">Szűrők megnyitása</string>
+    <string name="filter_active_badge">%d aktív szűrő</string>
+    <string name="filter_clear">SZŰRŐK TÖRLÉSE</string>
+    <string name="filter_apply">KÉSZ</string>
+    <string name="filter_category">Kategória</string>
+    <string name="filter_event_type">Incidens típusa</string>
+    <string name="filter_settlement">Település</string>
+    <string name="filter_train">Vonat</string>
+    <string name="filter_date">Időszak</string>
+    <string name="filter_any">Mind</string>
+    <string name="filter_date_all">Mind</string>
+    <string name="filter_date_today">Ma</string>
+    <string name="filter_date_last7">Elmúlt 7 nap</string>
+
+    <!-- Sorting (Demo v1.1 §D) -->
+    <string name="sort_title">Rendezés</string>
+    <string name="sort_open">Rendezés módja</string>
+    <string name="sort_newest">Legújabb elöl</string>
+    <string name="sort_oldest">Legrégebbi elöl</string>
+    <string name="sort_category">Kategória A–Z</string>
+    <string name="sort_event_type">Incidens típusa A–Z</string>
+    <string name="sort_settlement">Település A–Z</string>
+    <string name="sort_train">Vonat A–Z</string>
 
     <string name="status_new">ÚJ</string>
     <string name="status_in_progress">FOLYAMATBAN</string>
@@ -36,6 +70,15 @@
     <string name="detail_accept">ESET ELFOGADÁSA</string>
     <string name="detail_archive">ESET LEZÁRÁSA ÉS ARCHIVÁLÁSA</string>
     <string name="detail_error">Nem sikerült betölteni az esetet.</string>
+
+    <!-- Demo-only deletion (Demo v1.1 §E) -->
+    <string name="detail_delete">BEJELENTÉS TÖRLÉSE</string>
+    <string name="detail_delete_confirm_title">Bejelentés törlése</string>
+    <string name="detail_delete_confirm_message">Biztosan törölni szeretné ezt a bejelentést? A művelet nem vonható vissza.</string>
+    <string name="detail_delete_cancel">MÉGSE</string>
+    <string name="detail_delete_confirm">TÖRLÉS</string>
+    <string name="detail_delete_success">A bejelentés törölve.</string>
+    <string name="detail_delete_failed">A bejelentés törlése nem sikerült. Kérjük, próbálja újra.</string>
     <string name="detail_state_changed">Az eset állapota időközben megváltozott.</string>
     <string name="detail_reload">Újratöltés</string>
 
@@ -57,4 +100,10 @@
     <string name="session_expired">A munkamenet lejárt. Jelentkezzen be újra.</string>
     <string name="action_retry">ÚJRA</string>
     <string name="action_logout">Kijelentkezés</string>
+
+    <!-- Network / server states (Demo v1.1 §F) -->
+    <string name="error_network">A szolgáltatás jelenleg nem érhető el. Ellenőrizze az internetkapcsolatot, majd próbálja újra.</string>
+    <string name="error_timeout">A kapcsolat időtúllépés miatt megszakadt. Kérjük, próbálja újra.</string>
+    <string name="error_server">A szolgáltatás átmenetileg nem elérhető. Kérjük, próbálja újra kicsit később.</string>
+    <string name="error_generic">Váratlan hiba történt. Kérjük, próbálja újra.</string>
 </resources>

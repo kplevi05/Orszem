@@ -21,7 +21,46 @@ import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 
-enum class FormErrorReason { NETWORK, GENERIC, CONFLICT }
+/**
+ * User-facing submission failure reasons (Demo v1.1 §F).
+ *
+ * Every value maps to a fixed Hungarian string resource. Backend/Retrofit/OkHttp
+ * messages, exception class names and hostnames are never surfaced.
+ */
+enum class FormErrorReason {
+    /** No connection, DNS failure, connection refused/reset. */
+    NETWORK,
+    TIMEOUT,
+    /** Backend reachable but failing (HTTP 5xx). */
+    SERVER,
+    RATE_LIMITED,
+    /** The id already exists with different content; a retry needs a fresh id. */
+    CONFLICT,
+    VALIDATION,
+    GENERIC,
+    ;
+
+    /** Whether offering a Retry action makes sense for this reason. */
+    val retryable: Boolean
+        get() = this != VALIDATION
+}
+
+/** What the user can do about the current location problem. */
+enum class LocationAction { NONE, REQUEST_PERMISSION, OPEN_APP_SETTINGS, OPEN_LOCATION_SETTINGS, RETRY }
+
+/**
+ * Distinct, user-explainable location states (Demo v1.1 §A).
+ *
+ * None of these ever blocks submission: the settlement field stays editable and
+ * a manually typed settlement is always accepted.
+ */
+enum class LocationMessage(val action: LocationAction) {
+    PERMISSION_REQUIRED(LocationAction.REQUEST_PERMISSION),
+    PERMISSION_DENIED_FOREVER(LocationAction.OPEN_APP_SETTINGS),
+    SERVICES_DISABLED(LocationAction.OPEN_LOCATION_SETTINGS),
+    UNAVAILABLE(LocationAction.RETRY),
+    GEOCODING_FAILED(LocationAction.NONE),
+}
 
 data class ReportFormState(
     val catalogLoading: Boolean = true,
@@ -44,8 +83,6 @@ data class ReportFormState(
     val canSubmit: Boolean
         get() = !submitting && trainIdentifier.isNotBlank() && settlement.isNotBlank() && selectedEventType != null
 }
-
-enum class LocationMessage { DENIED, FAILED }
 
 data class CatalogCategory(val code: String, val label: String, val eventTypes: List<EventType>)
 
@@ -89,8 +126,25 @@ class ReportFormViewModel @Inject constructor(
 
     fun onOccurredAtChanged(instant: Instant) = _state.update { it.copy(occurredAt = instant, timeError = false) }
 
-    fun onLocationPermissionDenied() =
-        _state.update { it.copy(locating = false, locationMessage = LocationMessage.DENIED) }
+    /**
+     * The runtime permission prompt was answered with "deny".
+     *
+     * [permanently] comes from the Activity (`shouldShowRequestPermissionRationale`
+     * is false after a denial), which is the only place that distinction is available.
+     */
+    fun onLocationPermissionDenied(permanently: Boolean = false) =
+        _state.update {
+            it.copy(
+                locating = false,
+                locationMessage = if (permanently) {
+                    LocationMessage.PERMISSION_DENIED_FOREVER
+                } else {
+                    LocationMessage.PERMISSION_REQUIRED
+                },
+            )
+        }
+
+    fun dismissLocationMessage() = _state.update { it.copy(locationMessage = null) }
 
     fun onLocateRequested() {
         _state.update { it.copy(locating = true, locationMessage = null) }
@@ -99,11 +153,20 @@ class ReportFormViewModel @Inject constructor(
             _state.update {
                 when (result) {
                     is SettlementLookupResult.Success ->
-                        it.copy(locating = false, settlement = result.settlement, settlementError = false)
-                    SettlementLookupResult.PermissionDenied ->
-                        it.copy(locating = false, locationMessage = LocationMessage.DENIED)
-                    SettlementLookupResult.Failed ->
-                        it.copy(locating = false, locationMessage = LocationMessage.FAILED)
+                        it.copy(
+                            locating = false,
+                            settlement = result.settlement,
+                            settlementError = false,
+                            locationMessage = null,
+                        )
+                    SettlementLookupResult.PermissionMissing ->
+                        it.copy(locating = false, locationMessage = LocationMessage.PERMISSION_REQUIRED)
+                    SettlementLookupResult.LocationServicesDisabled ->
+                        it.copy(locating = false, locationMessage = LocationMessage.SERVICES_DISABLED)
+                    SettlementLookupResult.Unavailable ->
+                        it.copy(locating = false, locationMessage = LocationMessage.UNAVAILABLE)
+                    SettlementLookupResult.GeocodingFailed ->
+                        it.copy(locating = false, locationMessage = LocationMessage.GEOCODING_FAILED)
                 }
             }
         }
@@ -124,14 +187,8 @@ class ReportFormViewModel @Inject constructor(
             _state.update {
                 when (outcome) {
                     is Outcome.Success -> it.copy(submitting = false, submitted = true)
-                    is Outcome.Failure -> it.copy(
-                        submitting = false,
-                        submitError = when (outcome.error.code) {
-                            ApiErrorCode.NETWORK, ApiErrorCode.RATE_LIMITED -> FormErrorReason.NETWORK
-                            ApiErrorCode.REPORT_ID_CONFLICT -> FormErrorReason.CONFLICT
-                            else -> FormErrorReason.GENERIC
-                        },
-                    )
+                    // Every field the user typed is preserved so a retry costs nothing.
+                    is Outcome.Failure -> it.copy(submitting = false, submitError = outcome.error.code.toFormReason())
                 }
             }
         }
@@ -144,6 +201,19 @@ class ReportFormViewModel @Inject constructor(
     }
 
     fun dismissSubmitError() = _state.update { it.copy(submitError = null) }
+
+    private fun ApiErrorCode.toFormReason(): FormErrorReason = when (this) {
+        ApiErrorCode.NETWORK -> FormErrorReason.NETWORK
+        ApiErrorCode.TIMEOUT -> FormErrorReason.TIMEOUT
+        ApiErrorCode.INTERNAL_ERROR -> FormErrorReason.SERVER
+        ApiErrorCode.RATE_LIMITED -> FormErrorReason.RATE_LIMITED
+        ApiErrorCode.REPORT_ID_CONFLICT -> FormErrorReason.CONFLICT
+        ApiErrorCode.VALIDATION_ERROR,
+        ApiErrorCode.EVENT_TYPE_INVALID,
+        ApiErrorCode.OCCURRED_AT_IN_FUTURE,
+        -> FormErrorReason.VALIDATION
+        else -> FormErrorReason.GENERIC
+    }
 
     private fun validate(): Boolean {
         val s = _state.value

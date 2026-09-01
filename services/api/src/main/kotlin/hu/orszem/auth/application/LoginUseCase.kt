@@ -8,6 +8,7 @@ import hu.orszem.auth.infrastructure.IssuedToken
 import hu.orszem.auth.infrastructure.JwtService
 import hu.orszem.identity.domain.ServiceUser
 import hu.orszem.identity.domain.ServiceUserRepository
+import hu.orszem.shared.config.OrszemProperties
 import hu.orszem.shared.error.InvalidCredentialsException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -20,6 +21,7 @@ class LoginUseCase(
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
     private val audit: AuditPort,
+    private val properties: OrszemProperties,
 ) {
     // Non-matching hash used to keep timing similar when the username is unknown.
     private val dummyHash =
@@ -56,6 +58,6 @@ class LoginUseCase(
         username = username,
         displayName = displayName,
         role = role.name,
-        capabilities = Capabilities.forRole(role),
+        capabilities = Capabilities.forRole(role, demoDeletionEnabled = properties.demo.deletionEnabled),
     )
 }
