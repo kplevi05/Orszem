@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: orszem-api
+  profiles:
+    default: local
+  datasource:
+    url: ${ORSZEM_DB_URL:jdbc:postgresql://localhost:5432/orszem}
+    username: ${ORSZEM_DB_USERNAME:orszem}
+    password: ${ORSZEM_DB_PASSWORD:orszem}
+    hikari:
+      connection-init-sql: SET TIME ZONE 'UTC'
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+  jackson:
+    default-property-inclusion: always
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${ORSZEM_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+orszem:
+  business-time-zone: Europe/Budapest
+  auth:
+    jwt:
+      secret: ${ORSZEM_JWT_SECRET:}
+      issuer: orszem-demo
+      ttl: PT8H
+  public-report:
+    max-future-skew: PT5M
+    rate-limit:
+      enabled: true
+      capacity: 20
+      window: PT5M
+  demo:
+    seed-enabled: false
+
+logging:
+  level:
+    root: INFO
+    hu.orszem: INFO
+    org.flywaydb: INFO

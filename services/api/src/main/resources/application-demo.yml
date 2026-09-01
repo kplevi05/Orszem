@@ -1,0 +1,14 @@
+# Demo environment profile.
+# Loads the demo event catalog and enables the demo seed/reset capability.
+# The JWT secret and DB credentials MUST come from the environment / secret store.
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+
+orszem:
+  auth:
+    jwt:
+      secret: ${ORSZEM_JWT_SECRET:}
+  demo:
+    seed-enabled: true
+    reset-token: ${ORSZEM_DEMO_RESET_TOKEN:}

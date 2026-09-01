@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Őrszem Szolgálat</string>
+
+    <string name="login_title">ŐRSZEM SZOLGÁLAT</string>
+    <string name="login_username">Azonosító</string>
+    <string name="login_password">Jelszó</string>
+    <string name="login_submit">BELÉPÉS</string>
+    <string name="login_error">Hibás azonosító vagy jelszó.</string>
+    <string name="login_network">Hálózati hiba. Próbálja újra.</string>
+    <string name="login_show_password">Jelszó megjelenítése</string>
+
+    <string name="tab_reports">Bejelentések</string>
+    <string name="tab_archive">Archívum</string>
+    <string name="tab_statistics">Statisztika</string>
+
+    <string name="reports_active_count">%d aktív</string>
+    <string name="reports_empty">Jelenleg nincs aktív bejelentés.</string>
+    <string name="reports_error">Nem sikerült betölteni a bejelentéseket.</string>
+
+    <string name="status_new">ÚJ</string>
+    <string name="status_in_progress">FOLYAMATBAN</string>
+    <string name="status_archived">ARCHIVÁLT</string>
+
+    <string name="detail_title">Eset részletei</string>
+    <string name="detail_category">Kategória</string>
+    <string name="detail_train">Vonat</string>
+    <string name="detail_settlement">Település</string>
+    <string name="detail_occurred">Esemény időpontja</string>
+    <string name="detail_received">Beérkezés</string>
+    <string name="detail_status">Státusz</string>
+    <string name="detail_accepted_at">Elfogadás ideje</string>
+    <string name="detail_accepted_by">Elfogadó</string>
+    <string name="detail_archived_at">Archiválás ideje</string>
+    <string name="detail_archived_by">Archiváló</string>
+    <string name="detail_accept">ESET ELFOGADÁSA</string>
+    <string name="detail_archive">ESET LEZÁRÁSA ÉS ARCHIVÁLÁSA</string>
+    <string name="detail_error">Nem sikerült betölteni az esetet.</string>
+    <string name="detail_state_changed">Az eset állapota időközben megváltozott.</string>
+    <string name="detail_reload">Újratöltés</string>
+
+    <string name="archive_empty">Nincs archivált eset.</string>
+    <string name="archive_error">Nem sikerült betölteni az archívumot.</string>
+
+    <string name="stats_title">Intelligens statisztika</string>
+    <string name="stats_subtitle">Automatikusan számított összesítések</string>
+    <string name="stats_kpi_total">Összes</string>
+    <string name="stats_kpi_today">Ma</string>
+    <string name="stats_kpi_active">Aktív</string>
+    <string name="stats_kpi_archived">Archivált</string>
+    <string name="stats_top_events">Leggyakoribb események</string>
+    <string name="stats_top_settlements">Legproblémásabb települések</string>
+    <string name="stats_top_trains">Legtöbb bejelentéssel rendelkező vonatok</string>
+    <string name="stats_categories">Kategória-megoszlás</string>
+    <string name="stats_error">Nem sikerült betölteni a statisztikát.</string>
+
+    <string name="session_expired">A munkamenet lejárt. Jelentkezzen be újra.</string>
+    <string name="action_retry">ÚJRA</string>
+    <string name="action_logout">Kijelentkezés</string>
+</resources>

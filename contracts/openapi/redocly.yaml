@@ -1,0 +1,12 @@
+# Redocly lint configuration for the canonical Őrszem Demo v1 contract.
+extends:
+  - recommended
+
+rules:
+  # The Demo v1 contract is intentionally terse; these are style-only.
+  tag-description: off
+  operation-4xx-response: warn
+  operation-operationId-unique: error
+  operation-operationId: error
+  no-unused-components: warn
+  security-defined: error

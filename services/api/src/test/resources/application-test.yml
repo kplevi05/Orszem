@@ -1,0 +1,9 @@
+# Test-only overrides layered on top of the `local` profile.
+orszem:
+  demo:
+    reset-token: test-demo-reset-token
+  public-report:
+    rate-limit:
+      # High by default so functional tests never trip the limiter;
+      # PublicReportRateLimitIT lowers it via @TestPropertySource.
+      capacity: 100000

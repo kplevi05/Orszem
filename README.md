@@ -1,39 +1,89 @@
-# Őrszem Demo v1 — Planning Pack v1.3
+# Őrszem Demo v1
 
-Ez a csomag a Claude Code-dal történő implementáció előtti kanonikus technikai terv.
+Anonymous rail-safety reporting (**Public App**) → shared backend → service case
+handling and analytics (**Service App**).
 
-## Fő dokumentumok
+`Public App → API → PostgreSQL → Service App → esetkezelés → Analytics`
 
-- `CLAUDE.md`
-- `docs/product/DEMO_V1_SCOPE.md`
-- `docs/product/EVENT_CATALOG.md`
-- `docs/product/DEMO_SEED_DATA.md`
-- `docs/ux/DEMO_V1_SCREENS.md`
-- `docs/architecture/ARCHITECTURE.md`
-- `docs/architecture/DATABASE_SCHEMA.md`
-- `docs/architecture/BUSINESS_RULES.md`
-- `docs/testing/DEMO_V1_ACCEPTANCE_TESTS.md`
-- `docs/implementation/IMPLEMENTATION_PLAN.md`
-- `docs/DECISIONS_REQUIRING_OWNER.md`
+The canonical requirements are in `MASTER_PROMPT_DEMO_V1_FINAL.md` and the
+documents it references. Implementation status: `docs/implementation/BUILD_STATUS.md`.
 
-## Gépileg használható szerződések
+## Repository layout
 
-- `contracts/openapi/orszem-v1.yaml`
-- `contracts/catalog/event-types.demo-v1.json`
-- `services/api/src/main/resources/db/migration/V1__init_demo_schema.sql`
-- `services/api/src/main/resources/db/migration/R__demo_event_catalog.sql`
+| Path | Contents |
+| --- | --- |
+| `contracts/openapi/orszem-v1.yaml` | Canonical HTTP contract (OpenAPI 3.1) |
+| `contracts/catalog/event-types.demo-v1.json` | Machine-readable event catalog |
+| `services/api/` | Kotlin / Spring Boot modular-monolith backend |
+| `apps/android/` | `:public-app` + `:service-app` (two separate APKs) + shared `core/*` |
+| `infra/` | Docker Compose (PostgreSQL + API) and the API Dockerfile |
+| `scripts/` | `verify.sh`, `reset-demo.sh`, `seed-demo.sh`, `dev-backend-test.sh` |
+| `docs/` | Product / UX / architecture / testing / implementation docs, ADRs |
 
-## Demo seed
+## Quick start (local)
 
-- `services/api/src/main/resources/db/demo/000_reset_demo.sql`
-- `services/api/src/main/resources/db/demo/010_demo_service_user.sql`
-- `services/api/src/main/resources/db/demo/020_demo_reports.sql`
-- `services/api/src/main/resources/db/demo/demo-reports.seed.json`
-- `scripts/reset-demo.sh`
+### 1. Backend + database
 
-A demo seed kizárólag `local/demo` környezetre készült.
+```bash
+export ORSZEM_JWT_SECRET="$(head -c 48 /dev/urandom | base64)"
+docker compose -f infra/compose/docker-compose.yml up -d db
+cd services/api && ./gradlew bootRun --args='--spring.profiles.active=local'
+```
 
-## Claude Code handoff
+or run everything (DB + API image):
 
-- `MASTER_PROMPT_DEMO_V1_FINAL.md`
-- `docs/implementation/CLAUDE_HANDOFF.md`
+```bash
+export ORSZEM_JWT_SECRET="$(head -c 48 /dev/urandom | base64)"
+docker compose -f infra/compose/docker-compose.yml up -d
+```
+
+The `local`/`demo` profiles load the event catalog and enable the demo seed.
+
+### 2. Demo baseline
+
+```bash
+export DATABASE_URL="postgresql://orszem:orszem@localhost:5432/orszem"
+scripts/reset-demo.sh
+```
+
+or, against a running API in the `demo` profile:
+
+```bash
+curl -X POST -H "X-Demo-Reset-Token: $ORSZEM_DEMO_RESET_TOKEN" \
+  http://localhost:8080/api/v1/admin/demo/reset
+```
+
+Baseline after reset: **120 reports** (8 NEW / 6 IN_PROGRESS / 106 ARCHIVED),
+16 "today" reports, one `demo.service` user.
+
+### 3. Android apps
+
+```bash
+cd apps/android
+./gradlew :public-app:assembleRelease :service-app:assembleRelease
+./gradlew testDebugUnitTest        # ViewModel / repository / validation tests
+```
+
+APK outputs:
+`apps/android/public-app/build/outputs/apk/release/public-app-release.apk`,
+`apps/android/service-app/build/outputs/apk/release/service-app-release.apk`.
+
+Point the apps at the backend with `-PORSZEM_API_BASE_URL=...`
+(default `http://10.0.2.2:8080/` for the Android emulator).
+
+### 4. Demo login
+
+- username: `demo.service`
+- password: `OrszemDemo!2026`
+
+Demo-only fixture. The database stores only an Argon2id hash.
+
+## Verification
+
+```bash
+scripts/verify.sh                      # OpenAPI lint + backend build & tests
+cd services/api && ./gradlew build     # backend only (needs Docker for Testcontainers)
+```
+
+See `docs/testing/DEMO_V1_ACCEPTANCE_TESTS.md` for the acceptance contract and
+`docs/DEMO_PRESENTATION.md` for the AT-050 presentation walkthrough.

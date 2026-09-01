@@ -1,0 +1,20 @@
+# Local development profile.
+# Loads the demo event catalog (repeatable migration) from the demo location.
+# NOT a production configuration.
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+
+orszem:
+  auth:
+    jwt:
+      # Development-only signing secret. Overridden by ORSZEM_JWT_SECRET in any
+      # shared or public environment. Never used in production.
+      secret: ${ORSZEM_JWT_SECRET:local-dev-only-orszem-demo-signing-secret-change-me-32b+}
+  demo:
+    seed-enabled: true
+    reset-token: ${ORSZEM_DEMO_RESET_TOKEN:local-demo-reset}
+
+logging:
+  level:
+    hu.orszem: DEBUG
