@@ -25,11 +25,11 @@ import java.util.UUID
  *  1. the active profile is `local` or `demo`, and
  *  2. `orszem.demo.deletion-enabled=true`.
  *
- * Outside that configuration there is no handler, so an authenticated caller gets
- * 404 and an anonymous one is already stopped by the security chain: every
- * `/api/v1/service/` path requires authentication, so the Public App (and any
- * other anonymous caller) can never
- * reach this, whatever the environment.
+ * Outside that configuration there is no DELETE handler. The path still exists
+ * for GET, so an authenticated caller gets 405 METHOD_NOT_ALLOWED; an anonymous
+ * one is already stopped by the security chain, since every `/api/v1/service/`
+ * path requires authentication. The Public App — and any other anonymous caller
+ * — therefore can never reach this, whatever the environment.
  *
  * This is not the production moderator/RBAC model and must not grow into one:
  * no roles, no hierarchy, no moderation workflow — one capability, one switch.
