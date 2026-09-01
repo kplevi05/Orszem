@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Őrszem</string>
+
+    <string name="home_tagline">Jelentsen be gyorsan egy vonaton tapasztalt biztonsági eseményt.</string>
+    <string name="home_start_report">BEJELENTÉS INDÍTÁSA</string>
+
+    <string name="form_title">Új bejelentés</string>
+    <string name="form_when">Mikor történt?</string>
+    <string name="form_when_change">Időpont módosítása</string>
+    <string name="form_train">Melyik vonaton?</string>
+    <string name="form_train_placeholder">pl. IC 123</string>
+    <string name="form_settlement">Melyik település közelében?</string>
+    <string name="form_settlement_placeholder">pl. Budapest</string>
+    <string name="form_locate">HELYZET MEGHATÁROZÁSA</string>
+    <string name="form_event">Mi történt?</string>
+    <string name="form_event_choose">Válasszon eseményt…</string>
+    <string name="form_submit">BEJELENTÉS KÜLDÉSE</string>
+    <string name="form_search_hint">Keresés az eseményekben</string>
+
+    <string name="error_train_required">A vonat megadása kötelező.</string>
+    <string name="error_settlement_required">A település megadása kötelező.</string>
+    <string name="error_event_required">Válasszon eseménytípust.</string>
+    <string name="error_time_future">Az esemény időpontja nem lehet a jövőben.</string>
+    <string name="error_network">Hálózati hiba. A bejelentés adatai megmaradtak.</string>
+    <string name="error_generic">Nem sikerült elküldeni a bejelentést.</string>
+    <string name="action_retry">ÚJRA</string>
+
+    <string name="catalog_error">Nem sikerült betölteni az eseménylistát.</string>
+    <string name="catalog_loading">Eseménylista betöltése…</string>
+
+    <string name="location_denied">A helymeghatározás nem engedélyezett. Adja meg a települést kézzel.</string>
+    <string name="location_failed">A helymeghatározás nem sikerült. Adja meg a települést kézzel.</string>
+    <string name="location_working">Helymeghatározás…</string>
+
+    <string name="success_title">Bejelentés elküldve</string>
+    <string name="success_body">Köszönjük! A szolgálat megkapta a bejelentést.</string>
+    <string name="success_new">ÚJ BEJELENTÉS</string>
+    <string name="success_home">KEZDŐLAP</string>
+</resources>

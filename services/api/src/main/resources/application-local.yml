@@ -13,6 +13,7 @@ orszem:
       secret: ${ORSZEM_JWT_SECRET:local-dev-only-orszem-demo-signing-secret-change-me-32b+}
   demo:
     seed-enabled: true
+    reset-token: ${ORSZEM_DEMO_RESET_TOKEN:local-demo-reset}
 
 logging:
   level:

@@ -49,5 +49,7 @@ data class OrszemProperties(
 
     data class Demo(
         val seedEnabled: Boolean = false,
+        /** Shared secret for the demo reset endpoint. Blank disables the endpoint. */
+        val resetToken: String = "",
     )
 }

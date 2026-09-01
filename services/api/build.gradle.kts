@@ -55,7 +55,7 @@ dependencies {
     // recent Docker Desktop socket proxies (unversioned /info -> HTTP 400).
     testImplementation("com.github.docker-java:docker-java-core:3.5.3")
     testImplementation("com.github.docker-java:docker-java-transport-httpclient5:3.5.3")
-    testImplementation("io.rest-assured:rest-assured:5.5.1")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 }
 

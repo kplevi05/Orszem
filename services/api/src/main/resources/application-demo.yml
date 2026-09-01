@@ -11,3 +11,4 @@ orszem:
       secret: ${ORSZEM_JWT_SECRET:}
   demo:
     seed-enabled: true
+    reset-token: ${ORSZEM_DEMO_RESET_TOKEN:}

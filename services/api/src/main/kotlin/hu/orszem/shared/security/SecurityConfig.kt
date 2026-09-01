@@ -41,6 +41,9 @@ class SecurityConfig(
                     "/actuator/health/**",
                     "/actuator/info",
                     "/error",
+                    // Demo-only; the controller enforces its own shared-secret and
+                    // does not exist outside the local/demo profiles.
+                    "/api/v1/admin/demo/**",
                 ).permitAll()
                 auth.requestMatchers("/api/v1/service/**").authenticated()
                 auth.anyRequest().denyAll()
