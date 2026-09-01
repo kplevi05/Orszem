@@ -70,12 +70,22 @@ test and the AT-050 end-to-end flow (`PresentationFlowIT`).
 **Network layer** conforms to `orszem-v1.yaml`: `OrszemApi` Retrofit interface,
 hand-written DTOs, `safeApiCall` mapping problem+json → the contract error codes.
 
-**Build:** two release APKs via
-`./gradlew :public-app:assembleRelease :service-app:assembleRelease`;
-unit tests via `./gradlew testDebugUnitTest`. Building on the reference machine
-required adding SDK platform 35 + a JDK 21 toolchain and building from a short
-path (`C:\oa` junction) to avoid a Windows/OneDrive path issue in AGP.
-Verification status is tracked in the completion report.
+**Build verified on the reference machine:**
+
+- `./gradlew :public-app:assembleDebug :service-app:assembleDebug` → both APKs. ✅
+- `./gradlew testDebugUnitTest` → **19 unit tests, 0 failures** across the four
+  ViewModel test classes. ✅
+- `./gradlew :public-app:assembleRelease :service-app:assembleRelease` → both
+  minified release APKs. ✅
+
+Setup needed on that machine: SDK platform 35 + build-tools 35.0.0 added (only
+API 37 was present); Temurin JDK 21 in `.toolchain/`; `local.properties` with
+`sdk.dir`; the build was run from a short path (`C:\oa` directory junction) to
+avoid a Windows/OneDrive `MAX_PATH` issue in AGP's annotation-extraction task.
+On Linux CI (`.github/workflows/android.yml`) none of this is needed.
+
+**API Docker image:** `docker build -f infra/docker/api.Dockerfile .` → builds
+`orszem-api` (verified). ✅
 
 ## Known non-blocking limitations
 
