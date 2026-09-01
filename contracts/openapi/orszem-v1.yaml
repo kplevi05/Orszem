@@ -1,0 +1,1008 @@
+openapi: 3.1.0
+info:
+  title: Őrszem Demo v1 API
+  version: 1.0.0
+  description: >-
+    Kanonikus REST/JSON szerződés az Őrszem Demo v1 Public Android és
+    Őrszem Szolgálat Android kliensekhez. A public report API anonim;
+    minden /service végpont a login kivételével Bearer JWT tokent igényel.
+servers:
+  - url: /api/v1
+    description: API v1 base path
+tags:
+  - name: Public Catalog
+  - name: Public Reports
+  - name: Service Auth
+  - name: Service Reports
+  - name: Service Analytics
+
+paths:
+  /public/event-types:
+    get:
+      tags: [Public Catalog]
+      operationId: listPublicEventTypes
+      summary: Aktív eseménytípusok lekérése
+      description: >-
+        A Public App legördülő listájának kanonikus szerveroldali forrása.
+        Csak aktív eseménytípusokat ad vissza, sortOrder szerint rendezve.
+      security: []
+      responses:
+        '200':
+          description: Aktív eseménytípusok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeListResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /public/reports:
+    post:
+      tags: [Public Reports]
+      operationId: createPublicReport
+      summary: Anonim bejelentés létrehozása
+      description: >-
+        A report ID-t a Public App generálja. Azonos ID és azonos üzleti
+        tartalom idempotens ismétlés. Azonos ID eltérő tartalommal 409 konfliktus.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicReportCreateRequest'
+      responses:
+        '201':
+          description: Új report létrejött
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicReportCreateResponse'
+        '200':
+          description: Azonos tartalmú idempotens ismétlés; új rekord nem jött létre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicReportCreateResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Az ID már létezik eltérő üzleti tartalommal
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                reportIdConflict:
+                  value:
+                    type: about:blank
+                    title: Report ID conflict
+                    status: 409
+                    code: REPORT_ID_CONFLICT
+                    detail: A report azonosító már létezik eltérő tartalommal.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/auth/login:
+    post:
+      tags: [Service Auth]
+      operationId: serviceLogin
+      summary: Demo szolgálati belépés
+      description: >-
+        Felhasználónév és jelszó ellenőrzése után aláírt JWT access tokent ad.
+        Demo v1-ben nincs refresh token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceLoginRequest'
+      responses:
+        '200':
+          description: Sikeres belépés
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceLoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          description: Hibás azonosító vagy jelszó, illetve nem aktív user
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                invalidCredentials:
+                  value:
+                    type: about:blank
+                    title: Authentication failed
+                    status: 401
+                    code: INVALID_CREDENTIALS
+                    detail: Hibás azonosító vagy jelszó.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/me:
+    get:
+      tags: [Service Auth]
+      operationId: getCurrentServiceUser
+      summary: Aktuális szolgálati profil
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Aktuális user és informatív capability-lista
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceUserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/reports:
+    get:
+      tags: [Service Reports]
+      operationId: listActiveServiceReports
+      summary: Aktív esetek listája
+      description: >-
+        Csak NEW és IN_PROGRESS esetek kérhetők. Alapértelmezett rendezés:
+        NEW esetek előre, azon belül receivedAt szerint csökkenő sorrend.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ActiveStatusFilter'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/PageLimit'
+      responses:
+        '200':
+          description: Aktív esetek
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportListResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/reports/{reportId}:
+    get:
+      tags: [Service Reports]
+      operationId: getServiceReport
+      summary: Eset részletei
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: Eset részletei
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceReportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/ReportNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/reports/{reportId}/accept:
+    post:
+      tags: [Service Reports]
+      operationId: acceptServiceReport
+      summary: Új eset elfogadása
+      description: Kizárólag NEW állapotból engedélyezett. Atomikus állapotátmenet.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: Az eset IN_PROGRESS állapotba került
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceReportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/ReportNotFound'
+        '409':
+          description: Az eset aktuális állapota miatt nem fogadható el
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                notAcceptable:
+                  value:
+                    type: about:blank
+                    title: Invalid report state
+                    status: 409
+                    code: REPORT_NOT_ACCEPTABLE
+                    detail: Csak NEW állapotú eset fogadható el.
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/reports/{reportId}/archive:
+    post:
+      tags: [Service Reports]
+      operationId: archiveServiceReport
+      summary: Folyamatban lévő eset lezárása és archiválása
+      description: Kizárólag IN_PROGRESS állapotból engedélyezett.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: Az eset ARCHIVED állapotba került
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceReportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/ReportNotFound'
+        '409':
+          description: Az eset aktuális állapota miatt nem archiválható
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                notArchivable:
+                  value:
+                    type: about:blank
+                    title: Invalid report state
+                    status: 409
+                    code: REPORT_NOT_ARCHIVABLE
+                    detail: Csak IN_PROGRESS állapotú eset archiválható.
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/archive:
+    get:
+      tags: [Service Reports]
+      operationId: listArchivedServiceReports
+      summary: Archivált esetek listája
+      description: Archivált esetek archivedAt szerint csökkenő sorrendben.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/PageLimit'
+      responses:
+        '200':
+          description: Archivált esetek
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportListResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/analytics/summary:
+    get:
+      tags: [Service Analytics]
+      operationId: getAnalyticsSummary
+      summary: Fő KPI-k
+      description: >-
+        A todayReports a backend konfigurált üzleti időzónájának naptári napja szerint
+        értendő. Demo v1 alapértelmezés: Europe/Budapest.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Összesített Demo v1 KPI-k
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/analytics/event-types:
+    get:
+      tags: [Service Analytics]
+      operationId: getEventTypeStatistics
+      summary: Eseménytípus szerinti statisztika
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Eseménytípus statisztika darabszámmal és aránnyal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeStatisticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/analytics/categories:
+    get:
+      tags: [Service Analytics]
+      operationId: getCategoryStatistics
+      summary: Eseménykategória szerinti megoszlás
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Kategóriák megoszlása
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryStatisticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/analytics/settlements:
+    get:
+      tags: [Service Analytics]
+      operationId: getSettlementStatistics
+      summary: Település szerinti statisztika
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Települések report darabszám szerint csökkenő sorrendben
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementStatisticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /service/analytics/trains:
+    get:
+      tags: [Service Analytics]
+      operationId: getTrainStatistics
+      summary: Vonat szerinti statisztika
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Vonatok report darabszám szerint csökkenő sorrendben
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainStatisticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ReportId:
+      name: reportId
+      in: path
+      required: true
+      description: Report UUID
+      schema:
+        type: string
+        format: uuid
+
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque lapozási cursor az előző válaszból
+      schema:
+        type: string
+        minLength: 1
+
+    PageLimit:
+      name: limit
+      in: query
+      required: false
+      description: Maximális elemszám oldalanként
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 30
+
+    ActiveStatusFilter:
+      name: status
+      in: query
+      required: false
+      description: Aktív állapotok vesszővel elválasztva
+      style: form
+      explode: false
+      schema:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          enum: [NEW, IN_PROGRESS]
+        default: [NEW, IN_PROGRESS]
+
+  responses:
+    ValidationError:
+      description: Bemeneti validációs hiba
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            validation:
+              value:
+                type: about:blank
+                title: Validation failed
+                status: 400
+                code: VALIDATION_ERROR
+                detail: Egy vagy több mező érvénytelen.
+                fieldErrors:
+                  - field: settlement
+                    code: NOT_BLANK
+                    message: A település megadása kötelező.
+
+    Unauthorized:
+      description: Hiányzó, hibás vagy lejárt access token
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            unauthorized:
+              value:
+                type: about:blank
+                title: Unauthorized
+                status: 401
+                code: UNAUTHORIZED
+                detail: Érvényes szolgálati bejelentkezés szükséges.
+
+    ReportNotFound:
+      description: A report nem található
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            notFound:
+              value:
+                type: about:blank
+                title: Report not found
+                status: 404
+                code: REPORT_NOT_FOUND
+                detail: A kért eset nem található.
+
+    RateLimited:
+      description: Túl sok kérés
+      headers:
+        Retry-After:
+          description: Javasolt várakozási idő másodpercben
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            rateLimited:
+              value:
+                type: about:blank
+                title: Too many requests
+                status: 429
+                code: RATE_LIMITED
+                detail: Túl sok kérés érkezett rövid időn belül.
+
+    InternalError:
+      description: Nem várt szerverhiba
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  schemas:
+    ReportStatus:
+      type: string
+      enum: [NEW, IN_PROGRESS, ARCHIVED]
+
+    EventType:
+      type: object
+      additionalProperties: false
+      required: [code, categoryCode, categoryLabel, categorySortOrder, label, sortOrder]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: KNIFE_ATTACK
+        categoryCode:
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: VIOLENCE
+        categoryLabel:
+          type: string
+          minLength: 1
+          maxLength: 120
+          example: Erőszak és közvetlen veszély
+        categorySortOrder:
+          type: integer
+          minimum: 0
+          example: 10
+        label:
+          type: string
+          minLength: 1
+          maxLength: 120
+          example: Késelés
+        description:
+          type: [string, 'null']
+          maxLength: 500
+        sortOrder:
+          type: integer
+          minimum: 0
+          example: 20
+
+    EventTypeListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventType'
+
+    PublicReportCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [id, eventTypeCode, trainIdentifier, settlement, occurredAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventTypeCode:
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: KNIFE_ATTACK
+        trainIdentifier:
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: IC 123
+        settlement:
+          type: string
+          minLength: 1
+          maxLength: 128
+          example: Budapest
+        occurredAt:
+          type: string
+          format: date-time
+          example: '2026-09-01T18:42:00Z'
+
+    PublicReportCreateResponse:
+      type: object
+      additionalProperties: false
+      required: [id, status, receivedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          const: NEW
+          description: A create művelet eredeti létrehozási állapota.
+        receivedAt:
+          type: string
+          format: date-time
+
+    ServiceLoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: demo.service
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
+          format: password
+
+    ServiceLoginResponse:
+      type: object
+      additionalProperties: false
+      required: [accessToken, tokenType, expiresAt]
+      properties:
+        accessToken:
+          type: string
+          minLength: 1
+          description: Aláírt JWT access token
+        tokenType:
+          type: string
+          const: Bearer
+        expiresAt:
+          type: string
+          format: date-time
+
+    ServiceUserProfile:
+      type: object
+      additionalProperties: false
+      required: [id, username, displayName, role, capabilities]
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          maxLength: 100
+        displayName:
+          type: string
+          maxLength: 150
+        role:
+          type: string
+          minLength: 1
+          description: Informatív szerepkör; a kliens jogosultsági döntéseit a capabilities alapján jelenítse meg.
+          example: SERVICE_USER
+        capabilities:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - REPORT_READ_ACTIVE
+              - REPORT_ACCEPT
+              - REPORT_ARCHIVE
+              - ARCHIVE_READ
+              - ANALYTICS_READ
+
+    EventTypeEmbedded:
+      type: object
+      additionalProperties: false
+      required: [code, categoryCode, categoryLabel, label]
+      properties:
+        code:
+          type: string
+          maxLength: 64
+        categoryCode:
+          type: string
+          maxLength: 64
+        categoryLabel:
+          type: string
+          maxLength: 120
+        label:
+          type: string
+          maxLength: 120
+
+    ServiceActorSummary:
+      type: object
+      additionalProperties: false
+      required: [id, displayName]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+          maxLength: 150
+
+    ServiceReportListItem:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - eventType
+        - trainIdentifier
+        - settlement
+        - occurredAt
+        - receivedAt
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          $ref: '#/components/schemas/EventTypeEmbedded'
+        trainIdentifier:
+          type: string
+          maxLength: 64
+        settlement:
+          type: string
+          maxLength: 128
+        occurredAt:
+          type: string
+          format: date-time
+        receivedAt:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ReportStatus'
+        acceptedAt:
+          type: [string, 'null']
+          format: date-time
+        archivedAt:
+          type: [string, 'null']
+          format: date-time
+
+    ServiceReportDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - eventType
+        - trainIdentifier
+        - settlement
+        - occurredAt
+        - receivedAt
+        - status
+        - acceptedAt
+        - archivedAt
+        - acceptedBy
+        - archivedBy
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          $ref: '#/components/schemas/EventTypeEmbedded'
+        trainIdentifier:
+          type: string
+          maxLength: 64
+        settlement:
+          type: string
+          maxLength: 128
+        occurredAt:
+          type: string
+          format: date-time
+        receivedAt:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ReportStatus'
+        acceptedAt:
+          type: [string, 'null']
+          format: date-time
+        archivedAt:
+          type: [string, 'null']
+          format: date-time
+        acceptedBy:
+          oneOf:
+            - $ref: '#/components/schemas/ServiceActorSummary'
+            - type: 'null'
+        archivedBy:
+          oneOf:
+            - $ref: '#/components/schemas/ServiceActorSummary'
+            - type: 'null'
+
+    ReportListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceReportListItem'
+        nextCursor:
+          type: [string, 'null']
+          description: Opaque cursor; null, ha nincs következő oldal.
+
+    AnalyticsSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - totalReports
+        - todayReports
+        - activeReports
+        - archivedReports
+        - generatedAt
+      properties:
+        totalReports:
+          type: integer
+          minimum: 0
+        todayReports:
+          type: integer
+          minimum: 0
+        activeReports:
+          type: integer
+          minimum: 0
+          description: NEW + IN_PROGRESS
+        archivedReports:
+          type: integer
+          minimum: 0
+        generatedAt:
+          type: string
+          format: date-time
+
+    EventTypeStat:
+      type: object
+      additionalProperties: false
+      required: [eventTypeCode, categoryCode, categoryLabel, label, count, percentage]
+      properties:
+        eventTypeCode:
+          type: string
+          maxLength: 64
+        categoryCode:
+          type: string
+          maxLength: 64
+        categoryLabel:
+          type: string
+          maxLength: 120
+        label:
+          type: string
+          maxLength: 120
+        count:
+          type: integer
+          minimum: 0
+        percentage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+
+    EventTypeStatisticsResponse:
+      type: object
+      additionalProperties: false
+      required: [items, generatedAt]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventTypeStat'
+        generatedAt:
+          type: string
+          format: date-time
+
+    CategoryStat:
+      type: object
+      additionalProperties: false
+      required: [categoryCode, categoryLabel, count, percentage]
+      properties:
+        categoryCode:
+          type: string
+          maxLength: 64
+        categoryLabel:
+          type: string
+          maxLength: 120
+        count:
+          type: integer
+          minimum: 0
+        percentage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+
+    CategoryStatisticsResponse:
+      type: object
+      additionalProperties: false
+      required: [items, generatedAt]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryStat'
+        generatedAt:
+          type: string
+          format: date-time
+
+    SettlementStat:
+      type: object
+      additionalProperties: false
+      required: [settlement, count]
+      properties:
+        settlement:
+          type: string
+          maxLength: 128
+        count:
+          type: integer
+          minimum: 0
+
+    SettlementStatisticsResponse:
+      type: object
+      additionalProperties: false
+      required: [items, generatedAt]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettlementStat'
+        generatedAt:
+          type: string
+          format: date-time
+
+    TrainStat:
+      type: object
+      additionalProperties: false
+      required: [trainIdentifier, count]
+      properties:
+        trainIdentifier:
+          type: string
+          maxLength: 64
+        count:
+          type: integer
+          minimum: 0
+
+    TrainStatisticsResponse:
+      type: object
+      additionalProperties: false
+      required: [items, generatedAt]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainStat'
+        generatedAt:
+          type: string
+          format: date-time
+
+    FieldError:
+      type: object
+      additionalProperties: false
+      required: [field, code, message]
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+
+    ProblemDetails:
+      type: object
+      additionalProperties: true
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        code:
+          type: string
+          minLength: 1
+          description: Stabil, gépileg feldolgozható Őrszem hibakód
+        detail:
+          type: string
+        instance:
+          type: string
+        correlationId:
+          type: string
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'

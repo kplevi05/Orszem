@@ -1,0 +1,1789 @@
+{
+  "seedVersion": "demo-v1.0",
+  "timezone": "Europe/Budapest",
+  "baseline": {
+    "totalReports": 120,
+    "todayReportsAfterReset": 16,
+    "newReports": 8,
+    "inProgressReports": 6,
+    "activeReports": 14,
+    "archivedReports": 106
+  },
+  "serviceUser": {
+    "username": "demo.service",
+    "displayName": "Demo Szolgálat",
+    "role": "SERVICE_USER",
+    "demoPassword": "OrszemDemo!2026",
+    "note": "Kizárólag local/demo környezetben használható."
+  },
+  "reports": [
+    {
+      "id": "73c81c0f-2b15-5849-ab0d-e4a9aefaf292",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "IC 123",
+      "settlement": "Budapest",
+      "status": "NEW",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.96
+      }
+    },
+    {
+      "id": "fb4b692d-c0cd-530d-9929-6c9632c701ad",
+      "eventTypeCode": "SUSPICIOUS_PACKAGE",
+      "eventTypeLabel": "Gyanús csomag",
+      "categoryCode": "SUSPICIOUS_ACTIVITY",
+      "trainIdentifier": "S70",
+      "settlement": "Vác",
+      "status": "NEW",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.908
+      }
+    },
+    {
+      "id": "4f000e8f-4c46-5808-a435-1ff55469f8fe",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "EC 45",
+      "settlement": "Budapest",
+      "status": "NEW",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.856
+      }
+    },
+    {
+      "id": "76b5b590-323f-50c6-a180-13272a271609",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 245",
+      "settlement": "Gödöllő",
+      "status": "NEW",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.804
+      }
+    },
+    {
+      "id": "13925d1a-40cd-5859-b9e1-094829704ea5",
+      "eventTypeCode": "AGGRESSIVE_BEHAVIOR",
+      "eventTypeLabel": "Agresszív viselkedés",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "Z30",
+      "settlement": "Szolnok",
+      "status": "NEW",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.752
+      }
+    },
+    {
+      "id": "42228fcb-400a-5884-b8b6-13b35b7d02ec",
+      "eventTypeCode": "KNIFE_ATTACK",
+      "eventTypeLabel": "Késelés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "IC 123",
+      "settlement": "Budapest",
+      "status": "NEW",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.7
+      }
+    },
+    {
+      "id": "b5d71205-1051-593b-b0e0-b1d96a9af6ac",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "G70",
+      "settlement": "Nagykáta",
+      "status": "NEW",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.648
+      }
+    },
+    {
+      "id": "60b71625-1646-5db4-a4ba-ef505d96ac8b",
+      "eventTypeCode": "GRAFFITI",
+      "eventTypeLabel": "Graffiti",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "S70",
+      "settlement": "Szolnok",
+      "status": "NEW",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.596
+      }
+    },
+    {
+      "id": "67a864ca-bcde-5b5a-9244-34f7c2592ef1",
+      "eventTypeCode": "UNCONSCIOUS_PERSON",
+      "eventTypeLabel": "Eszméletlen személy",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "S70",
+      "settlement": "Veresegyház",
+      "status": "IN_PROGRESS",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.544
+      }
+    },
+    {
+      "id": "c8715ee8-3369-5b6d-8637-dd674c9fb3f8",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "R 452",
+      "settlement": "Veresegyház",
+      "status": "IN_PROGRESS",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.492
+      }
+    },
+    {
+      "id": "16daaf51-993d-50d2-973f-e134f17dc92a",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "S70",
+      "settlement": "Monor",
+      "status": "IN_PROGRESS",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.44
+      }
+    },
+    {
+      "id": "f1538d60-48df-5758-b959-437cd73461fd",
+      "eventTypeCode": "WEAPON_THREAT",
+      "eventTypeLabel": "Fegyverrel fenyegetés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "S60",
+      "settlement": "Monor",
+      "status": "IN_PROGRESS",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.388
+      }
+    },
+    {
+      "id": "cb124023-c320-5875-82aa-65c13b87c108",
+      "eventTypeCode": "UNCONSCIOUS_PERSON",
+      "eventTypeLabel": "Eszméletlen személy",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "R 452",
+      "settlement": "Monor",
+      "status": "IN_PROGRESS",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.336
+      }
+    },
+    {
+      "id": "0106c0b9-1422-560c-a271-377c7606fc61",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "R 452",
+      "settlement": "Cegléd",
+      "status": "IN_PROGRESS",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.284
+      }
+    },
+    {
+      "id": "a0b72db8-16f5-55d3-8a59-26dffbc284ac",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "G70",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.232
+      }
+    },
+    {
+      "id": "6a39d232-7415-525c-8208-7a8f8b315c7e",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "S60",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "todayFraction",
+        "fraction": 0.18
+      }
+    },
+    {
+      "id": "ab119065-860b-577f-8c64-db499a595da2",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 197",
+      "settlement": "Nagykáta",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 1,
+        "hour": 12,
+        "minute": 28
+      }
+    },
+    {
+      "id": "6f6461c1-4124-5fd5-8950-d3dc54b47a74",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S60",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 1,
+        "hour": 17,
+        "minute": 41
+      }
+    },
+    {
+      "id": "4d93808e-1e96-52e3-8d2a-4c474e572446",
+      "eventTypeCode": "ROBBERY",
+      "eventTypeLabel": "Rablás",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "S60",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 1,
+        "hour": 7,
+        "minute": 54
+      }
+    },
+    {
+      "id": "4586b4ca-bcfd-5132-8897-a11e15ac6f89",
+      "eventTypeCode": "PASSENGER_HARASSMENT",
+      "eventTypeLabel": "Utasok zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "EC 45",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 1,
+        "hour": 12,
+        "minute": 7
+      }
+    },
+    {
+      "id": "63efc89e-ef18-505d-bb32-815f10078666",
+      "eventTypeCode": "DOOR_OBSTRUCTION",
+      "eventTypeLabel": "Ajtó szándékos akadályozása",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "Z30",
+      "settlement": "Aszód",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 2,
+        "hour": 17,
+        "minute": 20
+      }
+    },
+    {
+      "id": "3b9acd86-a963-5bdf-bb3c-cda9459bf55c",
+      "eventTypeCode": "PASSENGER_HARASSMENT",
+      "eventTypeLabel": "Utasok zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 245",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 2,
+        "hour": 7,
+        "minute": 33
+      }
+    },
+    {
+      "id": "3f20097f-aff6-5ff7-9979-c2d34f29a35d",
+      "eventTypeCode": "SUSPECTED_DRUG_USE",
+      "eventTypeLabel": "Kábítószer-használat gyanúja",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IR 87",
+      "settlement": "Hatvan",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 2,
+        "hour": 12,
+        "minute": 46
+      }
+    },
+    {
+      "id": "25dbf969-cddb-53ad-a4f1-55b60d22dfbf",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "S70",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 3,
+        "hour": 17,
+        "minute": 59
+      }
+    },
+    {
+      "id": "16e7e8d6-8e2a-5261-bf71-de18ae9726d0",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 123",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 3,
+        "hour": 7,
+        "minute": 12
+      }
+    },
+    {
+      "id": "51538f06-fbc6-5ddc-ba8c-85aa86664158",
+      "eventTypeCode": "UNCONSCIOUS_PERSON",
+      "eventTypeLabel": "Eszméletlen személy",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "IC 123",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 3,
+        "hour": 12,
+        "minute": 25
+      }
+    },
+    {
+      "id": "ab13607f-adb3-5be7-966f-c54d2bcc2399",
+      "eventTypeCode": "WEAPON_THREAT",
+      "eventTypeLabel": "Fegyverrel fenyegetés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "Z30",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 3,
+        "hour": 17,
+        "minute": 38
+      }
+    },
+    {
+      "id": "b9a78a04-79c0-5c59-903c-5d6f5cadf569",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "EC 45",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 4,
+        "hour": 7,
+        "minute": 51
+      }
+    },
+    {
+      "id": "e3766764-e1a1-58a4-8237-f0aa0a61ab0b",
+      "eventTypeCode": "SMOKING",
+      "eventTypeLabel": "Dohányzás",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "Z30",
+      "settlement": "Nagykáta",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 4,
+        "hour": 12,
+        "minute": 4
+      }
+    },
+    {
+      "id": "5246bca5-41a8-5dcb-b6b5-12f343c9ca7d",
+      "eventTypeCode": "ILLNESS",
+      "eventTypeLabel": "Rosszullét",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "IC 123",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 4,
+        "hour": 17,
+        "minute": 17
+      }
+    },
+    {
+      "id": "9459d870-b948-553c-b6f4-842b9032131a",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 123",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 5,
+        "hour": 7,
+        "minute": 30
+      }
+    },
+    {
+      "id": "ed4d76e5-04ca-528b-9244-6e5e87617919",
+      "eventTypeCode": "INJURED_PERSON",
+      "eventTypeLabel": "Sérült személy",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "EC 45",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 5,
+        "hour": 12,
+        "minute": 43
+      }
+    },
+    {
+      "id": "110cc6e9-2930-5004-a457-2edb1003a0f2",
+      "eventTypeCode": "ILLNESS",
+      "eventTypeLabel": "Rosszullét",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "IC 197",
+      "settlement": "Nagykáta",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 5,
+        "hour": 17,
+        "minute": 56
+      }
+    },
+    {
+      "id": "774a6b2d-6953-56ad-810f-9dcbfc991b19",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "Z30",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 5,
+        "hour": 7,
+        "minute": 9
+      }
+    },
+    {
+      "id": "ae67e886-3095-5908-8a7e-9969a5d08c6b",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "R 452",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 6,
+        "hour": 12,
+        "minute": 22
+      }
+    },
+    {
+      "id": "594fdb22-5529-5301-8773-c7a403e953b1",
+      "eventTypeCode": "SMOKING",
+      "eventTypeLabel": "Dohányzás",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "G70",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 6,
+        "hour": 17,
+        "minute": 35
+      }
+    },
+    {
+      "id": "ebb1209c-4c20-5912-adbc-62aee3bc322d",
+      "eventTypeCode": "SUSPECTED_DRUG_USE",
+      "eventTypeLabel": "Kábítószer-használat gyanúja",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 245",
+      "settlement": "Monor",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 6,
+        "hour": 7,
+        "minute": 48
+      }
+    },
+    {
+      "id": "8a69ee04-cf0c-52b6-a9f8-a5d803898887",
+      "eventTypeCode": "SUSPECTED_DRUG_USE",
+      "eventTypeLabel": "Kábítószer-használat gyanúja",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "EC 45",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 7,
+        "hour": 12,
+        "minute": 1
+      }
+    },
+    {
+      "id": "0e399dec-9966-501f-8b9e-1997e70d9d62",
+      "eventTypeCode": "KNIFE_ATTACK",
+      "eventTypeLabel": "Késelés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "EC 45",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 7,
+        "hour": 17,
+        "minute": 14
+      }
+    },
+    {
+      "id": "89dce63f-1063-56e3-abe3-62ff1b90440d",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "G70",
+      "settlement": "Gyömrő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 7,
+        "hour": 7,
+        "minute": 27
+      }
+    },
+    {
+      "id": "3852e5e5-751a-5d4f-b156-5a8e85d5047c",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S70",
+      "settlement": "Gyömrő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 7,
+        "hour": 12,
+        "minute": 40
+      }
+    },
+    {
+      "id": "e079b0bc-4e9c-5f38-88ad-0de09c0829a3",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "S60",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 8,
+        "hour": 17,
+        "minute": 53
+      }
+    },
+    {
+      "id": "6224676d-d5ac-5472-b537-de096da2997a",
+      "eventTypeCode": "STAFF_HARASSMENT",
+      "eventTypeLabel": "Személyzet zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S70",
+      "settlement": "Hatvan",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 8,
+        "hour": 7,
+        "minute": 6
+      }
+    },
+    {
+      "id": "d98019b3-bd81-54dc-a115-8169f31a131b",
+      "eventTypeCode": "SMOKING",
+      "eventTypeLabel": "Dohányzás",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "IC 245",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 8,
+        "hour": 12,
+        "minute": 19
+      }
+    },
+    {
+      "id": "a44a6507-7723-5ba2-9fbc-5dc7ab162ca3",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "G70",
+      "settlement": "Hatvan",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 9,
+        "hour": 17,
+        "minute": 32
+      }
+    },
+    {
+      "id": "7d951337-c3de-5488-a932-76112de75424",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 123",
+      "settlement": "Hatvan",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 9,
+        "hour": 7,
+        "minute": 45
+      }
+    },
+    {
+      "id": "55b2eece-63c4-5c47-81d5-b350e895db2a",
+      "eventTypeCode": "FIRE_OR_SMOKE",
+      "eventTypeLabel": "Tűz vagy füst",
+      "categoryCode": "SAFETY_HAZARD",
+      "trainIdentifier": "S70",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 9,
+        "hour": 12,
+        "minute": 58
+      }
+    },
+    {
+      "id": "ea937650-c122-53e9-9fb7-b78a79a55b9d",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IR 87",
+      "settlement": "Veresegyház",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 9,
+        "hour": 17,
+        "minute": 11
+      }
+    },
+    {
+      "id": "71a1eb92-c53b-5dcb-930d-6295f2ac4d50",
+      "eventTypeCode": "PASSENGER_HARASSMENT",
+      "eventTypeLabel": "Utasok zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 245",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 10,
+        "hour": 7,
+        "minute": 24
+      }
+    },
+    {
+      "id": "c94806b9-c66e-512f-8467-275d841a2de1",
+      "eventTypeCode": "DOOR_OBSTRUCTION",
+      "eventTypeLabel": "Ajtó szándékos akadályozása",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "Z30",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 10,
+        "hour": 12,
+        "minute": 37
+      }
+    },
+    {
+      "id": "1271313e-4aaa-56ad-b3be-045ef4b809ef",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 123",
+      "settlement": "Gyömrő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 10,
+        "hour": 17,
+        "minute": 50
+      }
+    },
+    {
+      "id": "6055a615-6fc2-5baf-9da9-13d9d4de067c",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "IR 87",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 11,
+        "hour": 7,
+        "minute": 3
+      }
+    },
+    {
+      "id": "2056c997-ad2f-532d-9335-f9af78ae2f23",
+      "eventTypeCode": "STAFF_HARASSMENT",
+      "eventTypeLabel": "Személyzet zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 123",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 11,
+        "hour": 12,
+        "minute": 16
+      }
+    },
+    {
+      "id": "492ba71d-6703-505c-ab75-cd12e5dd16b8",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 123",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 11,
+        "hour": 17,
+        "minute": 29
+      }
+    },
+    {
+      "id": "cbcdb0d1-4723-5e51-b006-12d22ea714b6",
+      "eventTypeCode": "SUSPICIOUS_PACKAGE",
+      "eventTypeLabel": "Gyanús csomag",
+      "categoryCode": "SUSPICIOUS_ACTIVITY",
+      "trainIdentifier": "Z30",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 11,
+        "hour": 7,
+        "minute": 42
+      }
+    },
+    {
+      "id": "e7df8b8d-1c3f-5b61-96f9-42c4e06023d0",
+      "eventTypeCode": "SMOKING",
+      "eventTypeLabel": "Dohányzás",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "IC 123",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 12,
+        "hour": 12,
+        "minute": 55
+      }
+    },
+    {
+      "id": "680fbdba-c59a-575e-bc3c-3840d6b443dc",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "EC 45",
+      "settlement": "Monor",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 12,
+        "hour": 17,
+        "minute": 8
+      }
+    },
+    {
+      "id": "33d7f3d7-4b72-5f3e-8994-47b9f67e18b3",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 245",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 12,
+        "hour": 7,
+        "minute": 21
+      }
+    },
+    {
+      "id": "95cf880f-324e-5e84-95df-5d6f200d898d",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "EC 45",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 13,
+        "hour": 12,
+        "minute": 34
+      }
+    },
+    {
+      "id": "5c593a83-f279-5b5b-a52f-c137ffa1c6dd",
+      "eventTypeCode": "GRAFFITI",
+      "eventTypeLabel": "Graffiti",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 123",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 13,
+        "hour": 17,
+        "minute": 47
+      }
+    },
+    {
+      "id": "d25d7818-7864-5e41-ac90-8596ea3768cc",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "S80",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 13,
+        "hour": 7,
+        "minute": 0
+      }
+    },
+    {
+      "id": "79affcd8-fb87-5504-abd5-806c350f8f79",
+      "eventTypeCode": "AGGRESSIVE_BEHAVIOR",
+      "eventTypeLabel": "Agresszív viselkedés",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 123",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 13,
+        "hour": 12,
+        "minute": 13
+      }
+    },
+    {
+      "id": "90387bc8-c35b-55e4-b139-69482e0987ba",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S70",
+      "settlement": "Gyömrő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 14,
+        "hour": 17,
+        "minute": 26
+      }
+    },
+    {
+      "id": "7760ffb4-c827-53e2-81fa-4b462ef5f4fa",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S70",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 14,
+        "hour": 7,
+        "minute": 39
+      }
+    },
+    {
+      "id": "a6daef8b-62f2-5323-b2fa-5aa0a97000a8",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "S80",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 14,
+        "hour": 12,
+        "minute": 52
+      }
+    },
+    {
+      "id": "0a458302-63cf-5898-8fd6-7e2b346aa7a5",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S80",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 15,
+        "hour": 17,
+        "minute": 5
+      }
+    },
+    {
+      "id": "4144aa6e-37c4-5a67-a69a-cc769c8e3a28",
+      "eventTypeCode": "FIRE_OR_SMOKE",
+      "eventTypeLabel": "Tűz vagy füst",
+      "categoryCode": "SAFETY_HAZARD",
+      "trainIdentifier": "G70",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 15,
+        "hour": 7,
+        "minute": 18
+      }
+    },
+    {
+      "id": "80a6cbca-0f5f-547f-90ce-bc18e0136e45",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "Z30",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 15,
+        "hour": 12,
+        "minute": 31
+      }
+    },
+    {
+      "id": "750cc14f-71c3-5d56-8781-5d9d9b830184",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 245",
+      "settlement": "Aszód",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 16,
+        "hour": 17,
+        "minute": 44
+      }
+    },
+    {
+      "id": "0f885179-725d-5a73-a479-bb66c1b0e301",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "EC 45",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 16,
+        "hour": 7,
+        "minute": 57
+      }
+    },
+    {
+      "id": "2b341e7b-5064-5a64-a85a-14334062a1a0",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "S60",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 16,
+        "hour": 12,
+        "minute": 10
+      }
+    },
+    {
+      "id": "963fa5f8-973f-52ed-a259-074cec1d51a4",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "EC 45",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 16,
+        "hour": 17,
+        "minute": 23
+      }
+    },
+    {
+      "id": "9f16ef5c-b543-5be4-993c-12aef9238174",
+      "eventTypeCode": "SUSPICIOUS_PACKAGE",
+      "eventTypeLabel": "Gyanús csomag",
+      "categoryCode": "SUSPICIOUS_ACTIVITY",
+      "trainIdentifier": "IC 197",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 17,
+        "hour": 7,
+        "minute": 36
+      }
+    },
+    {
+      "id": "e6aab9fa-66d6-52ab-9cca-c10befedd232",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 245",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 17,
+        "hour": 12,
+        "minute": 49
+      }
+    },
+    {
+      "id": "907ce588-deac-5b3f-a379-a7e43ddf374c",
+      "eventTypeCode": "ROBBERY",
+      "eventTypeLabel": "Rablás",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "IC 123",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 17,
+        "hour": 17,
+        "minute": 2
+      }
+    },
+    {
+      "id": "725fbdb7-a7b6-5b1f-af0a-fa99f0141408",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "G70",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 18,
+        "hour": 7,
+        "minute": 15
+      }
+    },
+    {
+      "id": "445429ef-efef-54ba-bb85-3ab3a3c2326a",
+      "eventTypeCode": "SMOKING",
+      "eventTypeLabel": "Dohányzás",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "IC 245",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 18,
+        "hour": 12,
+        "minute": 28
+      }
+    },
+    {
+      "id": "b4b6be4e-ec8c-58e2-92a7-d575b36e2ea1",
+      "eventTypeCode": "SMOKING",
+      "eventTypeLabel": "Dohányzás",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "S70",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 18,
+        "hour": 17,
+        "minute": 41
+      }
+    },
+    {
+      "id": "74f95044-2301-591c-a7e6-1c527e1e1b1e",
+      "eventTypeCode": "PASSENGER_HARASSMENT",
+      "eventTypeLabel": "Utasok zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S80",
+      "settlement": "Nagykáta",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 18,
+        "hour": 7,
+        "minute": 54
+      }
+    },
+    {
+      "id": "7c2c1296-fb93-5e32-a196-f276fafc8be9",
+      "eventTypeCode": "SUSPICIOUS_PACKAGE",
+      "eventTypeLabel": "Gyanús csomag",
+      "categoryCode": "SUSPICIOUS_ACTIVITY",
+      "trainIdentifier": "S70",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 19,
+        "hour": 12,
+        "minute": 7
+      }
+    },
+    {
+      "id": "a419c5bb-e037-500c-856b-2b6f04312dc8",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "Z30",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 19,
+        "hour": 17,
+        "minute": 20
+      }
+    },
+    {
+      "id": "6e8e2b27-2f26-5042-86b9-5e3cd6f1fbcc",
+      "eventTypeCode": "ILLNESS",
+      "eventTypeLabel": "Rosszullét",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "Z30",
+      "settlement": "Monor",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 19,
+        "hour": 7,
+        "minute": 33
+      }
+    },
+    {
+      "id": "daa060a3-328a-50b6-9947-55634a678040",
+      "eventTypeCode": "AGGRESSIVE_BEHAVIOR",
+      "eventTypeLabel": "Agresszív viselkedés",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "G70",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 20,
+        "hour": 12,
+        "minute": 46
+      }
+    },
+    {
+      "id": "54ec881a-5e1a-5a57-ad1b-15a4b3e4c441",
+      "eventTypeCode": "AGGRESSIVE_BEHAVIOR",
+      "eventTypeLabel": "Agresszív viselkedés",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "Z30",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 20,
+        "hour": 17,
+        "minute": 59
+      }
+    },
+    {
+      "id": "dcf6b5a2-9181-5b8a-8d89-a8efb2e80e25",
+      "eventTypeCode": "SUSPECTED_DRUG_USE",
+      "eventTypeLabel": "Kábítószer-használat gyanúja",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "EC 45",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 20,
+        "hour": 7,
+        "minute": 12
+      }
+    },
+    {
+      "id": "71dbdb24-811d-5ea1-9ae6-8deeb2cd999b",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 245",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 20,
+        "hour": 12,
+        "minute": 25
+      }
+    },
+    {
+      "id": "480b6f28-02d4-507a-8cdf-17b1a27979a6",
+      "eventTypeCode": "PASSENGER_HARASSMENT",
+      "eventTypeLabel": "Utasok zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "IC 123",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 21,
+        "hour": 17,
+        "minute": 38
+      }
+    },
+    {
+      "id": "3c61cf30-c846-55b7-9f59-30f0585b1617",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S70",
+      "settlement": "Hatvan",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 21,
+        "hour": 7,
+        "minute": 51
+      }
+    },
+    {
+      "id": "c841d218-b707-577c-9fb1-0f260a13dc99",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "EC 45",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 21,
+        "hour": 12,
+        "minute": 4
+      }
+    },
+    {
+      "id": "a6143d67-203b-510e-b323-3f311839b789",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 123",
+      "settlement": "Hatvan",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 22,
+        "hour": 17,
+        "minute": 17
+      }
+    },
+    {
+      "id": "1cbfc4d4-0b6c-5d59-b0d7-5eeb8a60807c",
+      "eventTypeCode": "ILLNESS",
+      "eventTypeLabel": "Rosszullét",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "Z30",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 22,
+        "hour": 7,
+        "minute": 30
+      }
+    },
+    {
+      "id": "cf69f0f2-d958-5276-904f-ad2db68d894c",
+      "eventTypeCode": "SUSPICIOUS_PACKAGE",
+      "eventTypeLabel": "Gyanús csomag",
+      "categoryCode": "SUSPICIOUS_ACTIVITY",
+      "trainIdentifier": "S70",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 22,
+        "hour": 12,
+        "minute": 43
+      }
+    },
+    {
+      "id": "ee39a2a1-d52c-5433-9244-316eeed674fe",
+      "eventTypeCode": "INJURED_PERSON",
+      "eventTypeLabel": "Sérült személy",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "S80",
+      "settlement": "Monor",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 22,
+        "hour": 17,
+        "minute": 56
+      }
+    },
+    {
+      "id": "e3ca58c9-1501-574e-b754-519072936eea",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "IR 87",
+      "settlement": "Hatvan",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 23,
+        "hour": 7,
+        "minute": 9
+      }
+    },
+    {
+      "id": "9478fb84-c757-5f60-94f9-2db0ac3a8696",
+      "eventTypeCode": "SUSPICIOUS_PACKAGE",
+      "eventTypeLabel": "Gyanús csomag",
+      "categoryCode": "SUSPICIOUS_ACTIVITY",
+      "trainIdentifier": "IC 245",
+      "settlement": "Veresegyház",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 23,
+        "hour": 12,
+        "minute": 22
+      }
+    },
+    {
+      "id": "01224592-7e5a-5862-9009-7cfea8af4422",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 123",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 23,
+        "hour": 17,
+        "minute": 35
+      }
+    },
+    {
+      "id": "401e04f4-e6fc-518c-829f-b5435a30b1c8",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "EC 45",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 24,
+        "hour": 7,
+        "minute": 48
+      }
+    },
+    {
+      "id": "f87e0164-d609-5a53-a3ef-574669dbaf4c",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 123",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 24,
+        "hour": 12,
+        "minute": 1
+      }
+    },
+    {
+      "id": "58a9d407-1b8a-5f62-825a-646e99050f98",
+      "eventTypeCode": "PASSENGER_HARASSMENT",
+      "eventTypeLabel": "Utasok zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S70",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 24,
+        "hour": 17,
+        "minute": 14
+      }
+    },
+    {
+      "id": "8e10f557-8800-5410-86d7-df3b143c1cb0",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "IC 197",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 24,
+        "hour": 7,
+        "minute": 27
+      }
+    },
+    {
+      "id": "a3f25c2d-b6ed-5ff5-83a1-9dfd21ac80c7",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "IC 245",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 25,
+        "hour": 12,
+        "minute": 40
+      }
+    },
+    {
+      "id": "e88dc6c1-27e1-5a18-a636-6e7ec4c2d448",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "S70",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 25,
+        "hour": 17,
+        "minute": 53
+      }
+    },
+    {
+      "id": "8238b64e-06d5-5548-bb6b-5d56db469be4",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "G70",
+      "settlement": "Monor",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 25,
+        "hour": 7,
+        "minute": 6
+      }
+    },
+    {
+      "id": "1661d53e-4b67-5e39-bade-6009e11ef09a",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "IR 87",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 26,
+        "hour": 12,
+        "minute": 19
+      }
+    },
+    {
+      "id": "7ae97bd2-911c-5259-9d3e-980f0d2cf754",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "IR 87",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 26,
+        "hour": 17,
+        "minute": 32
+      }
+    },
+    {
+      "id": "1087d909-0ad3-5bfa-b760-97ea7cb0afe4",
+      "eventTypeCode": "VANDALISM",
+      "eventTypeLabel": "Rongálás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "S60",
+      "settlement": "Aszód",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 26,
+        "hour": 7,
+        "minute": 45
+      }
+    },
+    {
+      "id": "047fcf25-d1fb-5277-b6bf-e54dd246eef5",
+      "eventTypeCode": "LITTERING",
+      "eventTypeLabel": "Szemetelés",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "IC 123",
+      "settlement": "Gyömrő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 26,
+        "hour": 12,
+        "minute": 58
+      }
+    },
+    {
+      "id": "c7fada28-6c82-57a0-94de-973ec61a17e2",
+      "eventTypeCode": "KNIFE_ATTACK",
+      "eventTypeLabel": "Késelés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "S60",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 27,
+        "hour": 17,
+        "minute": 11
+      }
+    },
+    {
+      "id": "cb4a0deb-7135-506a-b2f6-26c19c40d465",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "S60",
+      "settlement": "Hatvan",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 27,
+        "hour": 7,
+        "minute": 24
+      }
+    },
+    {
+      "id": "0a47be37-112d-5cee-a4e4-8158111097f0",
+      "eventTypeCode": "PASSENGER_HARASSMENT",
+      "eventTypeLabel": "Utasok zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "S80",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 27,
+        "hour": 12,
+        "minute": 37
+      }
+    },
+    {
+      "id": "078c8c76-9922-5f6a-ace9-1db883f212e1",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "IR 87",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 28,
+        "hour": 17,
+        "minute": 50
+      }
+    },
+    {
+      "id": "fc6cc01d-e497-50b9-a55a-fc9ec850e8cd",
+      "eventTypeCode": "FIGHT",
+      "eventTypeLabel": "Verekedés",
+      "categoryCode": "VIOLENCE_DANGER",
+      "trainIdentifier": "S80",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 28,
+        "hour": 7,
+        "minute": 3
+      }
+    },
+    {
+      "id": "fad34a0c-ac14-52af-8355-52bc423043a0",
+      "eventTypeCode": "SMOKING",
+      "eventTypeLabel": "Dohányzás",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "IC 123",
+      "settlement": "Gödöllő",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 28,
+        "hour": 12,
+        "minute": 16
+      }
+    },
+    {
+      "id": "89190a5b-c79f-5cc8-9abe-b251ddf305cb",
+      "eventTypeCode": "ILLNESS",
+      "eventTypeLabel": "Rosszullét",
+      "categoryCode": "MEDICAL_WELFARE",
+      "trainIdentifier": "S70",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 28,
+        "hour": 17,
+        "minute": 29
+      }
+    },
+    {
+      "id": "1e80475b-af4d-57fa-bd07-a790adabc4ce",
+      "eventTypeCode": "AGGRESSIVE_BEHAVIOR",
+      "eventTypeLabel": "Agresszív viselkedés",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "EC 45",
+      "settlement": "Szolnok",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 29,
+        "hour": 7,
+        "minute": 42
+      }
+    },
+    {
+      "id": "020a7ec1-b86a-5dbe-bfbc-7c872edb8c28",
+      "eventTypeCode": "SMOKING",
+      "eventTypeLabel": "Dohányzás",
+      "categoryCode": "RULE_VIOLATION_OTHER",
+      "trainIdentifier": "IR 87",
+      "settlement": "Vác",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 29,
+        "hour": 12,
+        "minute": 55
+      }
+    },
+    {
+      "id": "f2e7759d-10d1-50c2-bb06-37286d655994",
+      "eventTypeCode": "GRAFFITI",
+      "eventTypeLabel": "Graffiti",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 245",
+      "settlement": "Nagykáta",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 29,
+        "hour": 17,
+        "minute": 8
+      }
+    },
+    {
+      "id": "a51e11b5-8c4d-52b0-b8cf-825a6a097efa",
+      "eventTypeCode": "LOUD_BEHAVIOR",
+      "eventTypeLabel": "Hangoskodás",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "G70",
+      "settlement": "Monor",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 30,
+        "hour": 7,
+        "minute": 21
+      }
+    },
+    {
+      "id": "da636746-9102-55fe-a12d-33938612d808",
+      "eventTypeCode": "THEFT",
+      "eventTypeLabel": "Lopás",
+      "categoryCode": "THEFT_PROPERTY",
+      "trainIdentifier": "IC 197",
+      "settlement": "Budapest",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 30,
+        "hour": 12,
+        "minute": 34
+      }
+    },
+    {
+      "id": "283f766a-72ce-5dec-9f1f-4aa84e5f4e8f",
+      "eventTypeCode": "STAFF_HARASSMENT",
+      "eventTypeLabel": "Személyzet zaklatása",
+      "categoryCode": "DISTURBANCE_HARASSMENT",
+      "trainIdentifier": "EC 45",
+      "settlement": "Cegléd",
+      "status": "ARCHIVED",
+      "timeSpec": {
+        "kind": "daysAgoLocal",
+        "daysAgo": 30,
+        "hour": 17,
+        "minute": 47
+      }
+    }
+  ]
+}

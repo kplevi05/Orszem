@@ -1,0 +1,557 @@
+{
+  "catalogVersion": "demo-v1.0",
+  "language": "hu-HU",
+  "categories": [
+    {
+      "id": "df861f1b-023d-59da-82f5-eff2fd925a48",
+      "code": "VIOLENCE_DANGER",
+      "label": "Erőszak és közvetlen veszély",
+      "sortOrder": 10,
+      "active": true,
+      "eventTypes": [
+        {
+          "id": "49d4dcf1-e227-5fd0-a0d1-631a0d7c6bd7",
+          "code": "FIGHT",
+          "label": "Verekedés",
+          "description": "Két vagy több személy közötti fizikai konfliktus.",
+          "sortOrder": 10,
+          "active": true
+        },
+        {
+          "id": "12b90cf8-da85-5ed1-9113-627b81ad2214",
+          "code": "KNIFE_ATTACK",
+          "label": "Késelés",
+          "description": "Késsel vagy más szúró-vágó eszközzel elkövetett támadás vagy annak közvetlen észlelése.",
+          "sortOrder": 20,
+          "active": true
+        },
+        {
+          "id": "e22bdc11-ee09-5d71-9a82-491640bd42a5",
+          "code": "PHYSICAL_ASSAULT",
+          "label": "Fizikai bántalmazás",
+          "description": "Egy személy fizikai bántalmazása, amely nem verekedésként írható le.",
+          "sortOrder": 30,
+          "active": true
+        },
+        {
+          "id": "151e0958-8b74-5d21-9fad-cea629139408",
+          "code": "THREAT",
+          "label": "Fenyegetés",
+          "description": "Személy elleni komoly verbális vagy egyértelmű fenyegetés.",
+          "sortOrder": 40,
+          "active": true
+        },
+        {
+          "id": "a2de2852-5ca0-5374-b922-a82e5e6dbd2b",
+          "code": "WEAPON_THREAT",
+          "label": "Fegyverrel fenyegetés",
+          "description": "Fegyverrel vagy fegyvernek látszó eszközzel történő fenyegetés.",
+          "sortOrder": 50,
+          "active": true
+        },
+        {
+          "id": "e54c0643-2517-5474-b933-d3eaf1e4ffd5",
+          "code": "ROBBERY",
+          "label": "Rablás",
+          "description": "Erőszakkal vagy fenyegetéssel történő értékelvétel.",
+          "sortOrder": 60,
+          "active": true
+        },
+        {
+          "id": "3f65c847-597f-565e-ae8c-ff2dcf41b5c0",
+          "code": "PASSENGER_ASSAULT",
+          "label": "Utas megtámadása",
+          "description": "Utas elleni közvetlen fizikai támadás.",
+          "sortOrder": 70,
+          "active": true
+        },
+        {
+          "id": "2a2c1e21-e97b-58dd-84ee-dd482ae3a635",
+          "code": "STAFF_ASSAULT",
+          "label": "Személyzet megtámadása",
+          "description": "Vasúti vagy szolgálati személyzet elleni közvetlen fizikai támadás.",
+          "sortOrder": 80,
+          "active": true
+        },
+        {
+          "id": "8527fb09-33c0-5a85-ab01-9e0f151d5170",
+          "code": "GROUP_CONFLICT",
+          "label": "Csoportos konfliktus",
+          "description": "Több személyt vagy csoportot érintő, eszkalálódó fizikai konfliktus.",
+          "sortOrder": 90,
+          "active": true
+        },
+        {
+          "id": "375463ef-c2f5-543d-996b-fa91c6945150",
+          "code": "SEXUAL_ASSAULT_SUSPECTED",
+          "label": "Szexuális erőszak gyanúja",
+          "description": "Szexuális jellegű kényszerítés vagy erőszak észlelésének gyanúja.",
+          "sortOrder": 100,
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "8439e91a-a8bd-51da-9571-7e255614070e",
+      "code": "DISTURBANCE_HARASSMENT",
+      "label": "Rendzavarás és zaklatás",
+      "sortOrder": 20,
+      "active": true,
+      "eventTypes": [
+        {
+          "id": "9f9b734d-422f-57aa-b62f-1a35e3d349b2",
+          "code": "LOUD_BEHAVIOR",
+          "label": "Hangoskodás",
+          "description": "Tartósan vagy szélsőségesen zavaró hangoskodás.",
+          "sortOrder": 10,
+          "active": true
+        },
+        {
+          "id": "79cf13c0-033b-540e-a5e9-5eebd5639da8",
+          "code": "SHOUTING",
+          "label": "Kiabálás",
+          "description": "A környezetet zavaró vagy konfliktushoz kapcsolódó kiabálás.",
+          "sortOrder": 20,
+          "active": true
+        },
+        {
+          "id": "b52143ef-aa21-56ec-87ef-b5878a22143c",
+          "code": "AGGRESSIVE_BEHAVIOR",
+          "label": "Agresszív viselkedés",
+          "description": "Fenyegető, támadó vagy erősen agresszív magatartás fizikai támadás nélkül.",
+          "sortOrder": 30,
+          "active": true
+        },
+        {
+          "id": "0660ce72-3895-574a-acc5-f0330eff463c",
+          "code": "DISORDERLY_CONDUCT",
+          "label": "Rendbontás",
+          "description": "A rendet vagy az utasok biztonságérzetét jelentősen zavaró magatartás.",
+          "sortOrder": 40,
+          "active": true
+        },
+        {
+          "id": "3cb74333-408f-5026-b482-032b6c0e021d",
+          "code": "PASSENGER_HARASSMENT",
+          "label": "Utasok zaklatása",
+          "description": "Egy vagy több utas ismételt vagy célzott zaklatása.",
+          "sortOrder": 50,
+          "active": true
+        },
+        {
+          "id": "3ec1c02e-aa66-5690-b645-bbc5ea0c6625",
+          "code": "STAFF_HARASSMENT",
+          "label": "Személyzet zaklatása",
+          "description": "Vasúti vagy szolgálati személyzet célzott zaklatása.",
+          "sortOrder": 60,
+          "active": true
+        },
+        {
+          "id": "fb0c0da7-5df8-5dc2-b7e7-3323a61de653",
+          "code": "SEXUAL_HARASSMENT",
+          "label": "Szexuális zaklatás",
+          "description": "Nem kívánt, szexuális jellegű zaklató magatartás.",
+          "sortOrder": 70,
+          "active": true
+        },
+        {
+          "id": "77d3ec33-b4a4-5429-96ba-19c67926fa5d",
+          "code": "VERBAL_CONFLICT",
+          "label": "Szóbeli konfliktus",
+          "description": "Heves vita vagy verbális konfliktus, amely még nem vált fizikaivá.",
+          "sortOrder": 80,
+          "active": true
+        },
+        {
+          "id": "6e1917e1-57e3-58c9-b5b0-3c47528d095c",
+          "code": "INTOXICATED_PERSON",
+          "label": "Erősen ittas személy",
+          "description": "Erősen ittas személy, akinek állapota rendzavarást vagy biztonsági problémát okoz.",
+          "sortOrder": 90,
+          "active": true
+        },
+        {
+          "id": "8132ffd7-9791-5dce-98c8-d39ab221406d",
+          "code": "SUSPECTED_DRUG_USE",
+          "label": "Kábítószer-használat gyanúja",
+          "description": "Kábítószer vagy más tiltott szer használatának észlelt gyanúja.",
+          "sortOrder": 100,
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "0c996cd5-bcf5-5a1c-b3ac-3e616fe36f9d",
+      "code": "THEFT_PROPERTY",
+      "label": "Lopás és vagyon elleni esemény",
+      "sortOrder": 30,
+      "active": true,
+      "eventTypes": [
+        {
+          "id": "bdb1453c-fecd-599b-ac4b-4c251bdc6869",
+          "code": "THEFT",
+          "label": "Lopás",
+          "description": "Tulajdon jogosulatlan eltulajdonítása.",
+          "sortOrder": 10,
+          "active": true
+        },
+        {
+          "id": "4c58d06b-b357-5bca-9ee0-fea8ee077c2b",
+          "code": "ATTEMPTED_THEFT",
+          "label": "Lopási kísérlet",
+          "description": "Észlelt, de be nem fejezett lopási kísérlet.",
+          "sortOrder": 20,
+          "active": true
+        },
+        {
+          "id": "83af7822-3666-53b6-af8a-84400f9c0ff1",
+          "code": "PICKPOCKETING",
+          "label": "Zsebtolvajlás",
+          "description": "Személyes tárgy észrevétlen eltulajdonítása vagy annak kísérlete.",
+          "sortOrder": 30,
+          "active": true
+        },
+        {
+          "id": "7cae9215-a3d8-5308-a23b-9492d17b1d03",
+          "code": "BAGGAGE_THEFT",
+          "label": "Csomag vagy poggyász eltulajdonítása",
+          "description": "Csomag, táska vagy poggyász eltulajdonítása.",
+          "sortOrder": 40,
+          "active": true
+        },
+        {
+          "id": "50ce2fd5-08a9-55ac-8d11-43059757ed2f",
+          "code": "VANDALISM",
+          "label": "Rongálás",
+          "description": "Vasúti vagy utastéri tulajdon szándékos megrongálása.",
+          "sortOrder": 50,
+          "active": true
+        },
+        {
+          "id": "2d517d40-ab46-5b94-951f-68c6ef81ed0e",
+          "code": "GRAFFITI",
+          "label": "Graffiti",
+          "description": "Vasúti jármű vagy berendezés összefirkálása, festése.",
+          "sortOrder": 60,
+          "active": true
+        },
+        {
+          "id": "3ae139fc-a366-57c9-9ee6-0425f1d4ae3c",
+          "code": "SEAT_DAMAGE",
+          "label": "Ülés megrongálása",
+          "description": "Ülés vagy annak tartozékainak szándékos megrongálása.",
+          "sortOrder": 70,
+          "active": true
+        },
+        {
+          "id": "b65af358-9bd9-59a7-9ec8-934aa08076af",
+          "code": "WINDOW_DAMAGE",
+          "label": "Ablak megrongálása",
+          "description": "Vonatablak megrongálása vagy betörése.",
+          "sortOrder": 80,
+          "active": true
+        },
+        {
+          "id": "d5af7358-1592-51d2-8478-35756b063bb6",
+          "code": "TRAIN_EQUIPMENT_DAMAGE",
+          "label": "Vonati berendezés megrongálása",
+          "description": "A jármű egyéb utastéri vagy műszaki berendezésének megrongálása.",
+          "sortOrder": 90,
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "e2ce825b-44cc-5cc0-95bd-03d471b321ca",
+      "code": "SUSPICIOUS_ACTIVITY",
+      "label": "Gyanús személy, tárgy vagy tevékenység",
+      "sortOrder": 40,
+      "active": true,
+      "eventTypes": [
+        {
+          "id": "167d4754-5e71-5e9a-8710-409a7a7b9146",
+          "code": "SUSPICIOUS_PERSON",
+          "label": "Gyanús személy",
+          "description": "Olyan személy, akinek viselkedése konkrét biztonsági aggályt kelt.",
+          "sortOrder": 10,
+          "active": true
+        },
+        {
+          "id": "6fbc604d-7544-56a6-a5f5-aa83c62e80f1",
+          "code": "SUSPICIOUS_GROUP",
+          "label": "Gyanús csoport",
+          "description": "Olyan csoport, amelynek viselkedése konkrét biztonsági aggályt kelt.",
+          "sortOrder": 20,
+          "active": true
+        },
+        {
+          "id": "891f2e26-aace-5a57-b850-25f65a17320e",
+          "code": "SUSPICIOUS_PACKAGE",
+          "label": "Gyanús csomag",
+          "description": "Tulajdonságai vagy elhelyezése miatt gyanúsnak tűnő csomag.",
+          "sortOrder": 30,
+          "active": true
+        },
+        {
+          "id": "ca395227-aadc-581e-a205-b82ab8b4a3d9",
+          "code": "UNATTENDED_PACKAGE",
+          "label": "Elhagyott csomag",
+          "description": "Gazdátlannak vagy felügyelet nélkül hagyottnak tűnő csomag.",
+          "sortOrder": 40,
+          "active": true
+        },
+        {
+          "id": "d08d41d9-3b12-5752-a5b7-d0e121d3cc0c",
+          "code": "SUSPICIOUS_OBJECT",
+          "label": "Gyanús tárgy",
+          "description": "Nem csomag jellegű, biztonsági aggályt keltő ismeretlen tárgy.",
+          "sortOrder": 50,
+          "active": true
+        },
+        {
+          "id": "877f53b1-6988-53b0-8b75-cb7aba0f89dd",
+          "code": "SUSPECTED_WEAPON",
+          "label": "Fegyvernek tűnő tárgy",
+          "description": "Lőfegyvernek, késnek vagy más fegyvernek tűnő tárgy észlelése fenyegetés nélkül.",
+          "sortOrder": 60,
+          "active": true
+        },
+        {
+          "id": "07383ed1-feb2-5130-9c9c-14ad75768cb5",
+          "code": "SUSPECTED_EXPLOSIVE",
+          "label": "Robbanóanyag vagy robbanószerkezet gyanúja",
+          "description": "Robbanóanyagra vagy robbanószerkezetre utaló konkrét gyanú.",
+          "sortOrder": 70,
+          "active": true
+        },
+        {
+          "id": "61ca4e31-6a28-59b3-ad0b-f626a7829a77",
+          "code": "TAMPERING_WITH_EQUIPMENT",
+          "label": "Gyanús beavatkozás vasúti berendezésbe",
+          "description": "Vasúti vagy vonati berendezés jogosulatlannak tűnő manipulálása.",
+          "sortOrder": 80,
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "690fe8ad-eb28-50a0-a6b6-929e5692917c",
+      "code": "MEDICAL_WELFARE",
+      "label": "Egészségügyi és segítségnyújtási esemény",
+      "sortOrder": 50,
+      "active": true,
+      "eventTypes": [
+        {
+          "id": "bcbdf72b-bc37-5900-9188-0904de38cd93",
+          "code": "ILLNESS",
+          "label": "Rosszullét",
+          "description": "Olyan rosszullét, amely segítséget vagy személyzeti beavatkozást igényelhet.",
+          "sortOrder": 10,
+          "active": true
+        },
+        {
+          "id": "702d319a-eb0e-50f8-9b3a-8d516cb7fae0",
+          "code": "UNCONSCIOUS_PERSON",
+          "label": "Eszméletlen személy",
+          "description": "Eszméletlen vagy nem reagáló személy észlelése.",
+          "sortOrder": 20,
+          "active": true
+        },
+        {
+          "id": "5e93942a-f057-5c84-896e-f098cf67b605",
+          "code": "INJURED_PERSON",
+          "label": "Sérült személy",
+          "description": "Láthatóan sérült vagy sérülés miatt segítségre szoruló személy.",
+          "sortOrder": 30,
+          "active": true
+        },
+        {
+          "id": "3b0d521c-fe2b-5965-ad55-1e0390cd0910",
+          "code": "PERSON_NEEDS_HELP",
+          "label": "Segítségre szoruló személy",
+          "description": "Olyan személy, aki láthatóan segítségre szorul, de a probléma nem sorolható pontosabban más eseménytípusba.",
+          "sortOrder": 40,
+          "active": true
+        },
+        {
+          "id": "2b9b4623-a94e-55f2-b71b-c7d28d4b6aa3",
+          "code": "CONFUSED_PERSON",
+          "label": "Zavart vagy dezorientált személy",
+          "description": "Zavartnak, tájékozatlannak vagy dezorientáltnak tűnő személy.",
+          "sortOrder": 50,
+          "active": true
+        },
+        {
+          "id": "990f8aff-f20a-5f9b-8fd8-051c78daf265",
+          "code": "UNACCOMPANIED_CHILD",
+          "label": "Felügyelet nélkül maradt gyermek",
+          "description": "Kísérő nélkül vagy veszélyeztetett helyzetben lévő gyermek.",
+          "sortOrder": 60,
+          "active": true
+        },
+        {
+          "id": "f06b57c3-872d-5b1c-8c48-cd5d5159b647",
+          "code": "POSSIBLE_OVERDOSE",
+          "label": "Túladagolás gyanúja",
+          "description": "Gyógyszer vagy szer túladagolására utaló állapot gyanúja.",
+          "sortOrder": 70,
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "cbe8fd3d-6466-5739-bb78-3b2432e72777",
+      "code": "SAFETY_HAZARD",
+      "label": "Közlekedésbiztonsági és műszaki veszély",
+      "sortOrder": 60,
+      "active": true,
+      "eventTypes": [
+        {
+          "id": "a28dd568-985e-58b7-b0be-2a6c4b4c18a3",
+          "code": "FIRE_OR_SMOKE",
+          "label": "Tűz vagy füst",
+          "description": "Tűz, füst vagy égésre utaló jel a vonaton vagy közvetlen környezetében.",
+          "sortOrder": 10,
+          "active": true
+        },
+        {
+          "id": "e06250d6-320f-5ad4-bd90-a3e2facc046b",
+          "code": "DOOR_MALFUNCTION",
+          "label": "Ajtó meghibásodása",
+          "description": "Utasbiztonságot érintő ajtóhiba vagy rendellenes működés.",
+          "sortOrder": 20,
+          "active": true
+        },
+        {
+          "id": "48d8cacc-6ff4-5e3a-b85e-3c96afb6f96d",
+          "code": "BROKEN_GLASS_HAZARD",
+          "label": "Törött üveg vagy sérülésveszély",
+          "description": "Törött üveg vagy más éles, sérülésveszélyt okozó elem.",
+          "sortOrder": 30,
+          "active": true
+        },
+        {
+          "id": "fa911fde-e753-5899-af5b-275c04d5af58",
+          "code": "CARRIAGE_OBSTRUCTION",
+          "label": "Közlekedést akadályozó tárgy",
+          "description": "A kocsiban történő biztonságos közlekedést akadályozó tárgy.",
+          "sortOrder": 40,
+          "active": true
+        },
+        {
+          "id": "1eaf4529-d064-5dc4-a189-3ce2620da1dd",
+          "code": "LIQUID_SPILL",
+          "label": "Csúszásveszélyes kiömlött folyadék",
+          "description": "Olyan kiömlött folyadék, amely elcsúszás vagy elesés veszélyét okozza.",
+          "sortOrder": 50,
+          "active": true
+        },
+        {
+          "id": "e1910d1e-6c8c-5a28-bf8a-fdcad3eafb48",
+          "code": "EMERGENCY_EXIT_BLOCKED",
+          "label": "Vészkijárat akadályozva",
+          "description": "Vészkijárat vagy menekülési útvonal akadályozása.",
+          "sortOrder": 60,
+          "active": true
+        },
+        {
+          "id": "48316545-33f0-5eb6-8324-ad9606644748",
+          "code": "EMERGENCY_EQUIPMENT_DAMAGED",
+          "label": "Vészhelyzeti berendezés sérült",
+          "description": "Vészjelző, vésznyitó vagy más vészhelyzeti berendezés sérülése.",
+          "sortOrder": 70,
+          "active": true
+        },
+        {
+          "id": "e06ff3dd-8ba3-552a-8ef6-c3aab74987df",
+          "code": "DANGEROUS_BEHAVIOR_NEAR_DOOR",
+          "label": "Veszélyes viselkedés az ajtónál",
+          "description": "Ajtó, peron vagy ki-/beszállási terület közelében végzett közvetlenül veszélyes magatartás.",
+          "sortOrder": 80,
+          "active": true
+        },
+        {
+          "id": "487ec720-bb79-5a75-89a7-14abcc88ea1e",
+          "code": "PERSON_ON_TRACK_OR_DANGER_ZONE",
+          "label": "Személy a vágányon vagy veszélyzónában",
+          "description": "Személy észlelése vágányon vagy más, közvetlen vasúti veszélyzónában.",
+          "sortOrder": 90,
+          "active": true
+        },
+        {
+          "id": "0542bca3-1cfe-53f3-a4e9-bca528d0fbf5",
+          "code": "ELECTRICAL_OR_SPARK_HAZARD",
+          "label": "Elektromos hiba vagy szikrázás gyanúja",
+          "description": "Szikrázás, elektromos rendellenesség vagy hasonló veszély észlelése.",
+          "sortOrder": 100,
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "a344875a-25fa-5310-9aaf-22bab8760fcc",
+      "code": "RULE_VIOLATION_OTHER",
+      "label": "Szabályszegés és egyéb biztonsági esemény",
+      "sortOrder": 70,
+      "active": true,
+      "eventTypes": [
+        {
+          "id": "2c42e307-ec1b-5a78-b103-b72bd8c4d4a1",
+          "code": "SMOKING",
+          "label": "Dohányzás",
+          "description": "Dohányzás a vonaton vagy más tiltott vasúti területen.",
+          "sortOrder": 10,
+          "active": true
+        },
+        {
+          "id": "8507be76-7225-5f76-894f-63dff8bc7b58",
+          "code": "VAPING",
+          "label": "Elektromos cigaretta használata",
+          "description": "E-cigaretta vagy hasonló eszköz használata tiltott helyen.",
+          "sortOrder": 20,
+          "active": true
+        },
+        {
+          "id": "8d4a452b-a351-5613-ad94-2ca45e7ec397",
+          "code": "LITTERING",
+          "label": "Szemetelés",
+          "description": "Hulladék szándékos eldobása vagy jelentős szemetelés.",
+          "sortOrder": 30,
+          "active": true
+        },
+        {
+          "id": "a09c9cf9-659e-5736-8469-b5139afb8a40",
+          "code": "DOOR_OBSTRUCTION",
+          "label": "Ajtó szándékos akadályozása",
+          "description": "Vonatajtó szándékos kitámasztása vagy akadályozása.",
+          "sortOrder": 40,
+          "active": true
+        },
+        {
+          "id": "f8f00f8e-7d49-58aa-8328-b4751864507a",
+          "code": "AISLE_OBSTRUCTION",
+          "label": "Átjáró szándékos akadályozása",
+          "description": "Folyosó vagy átjáró szándékos eltorlaszolása személyekkel vagy tárgyakkal.",
+          "sortOrder": 50,
+          "active": true
+        },
+        {
+          "id": "9dbd46b5-bd41-5530-8d63-f0c1aafa3eaf",
+          "code": "MISUSE_OF_EMERGENCY_EQUIPMENT",
+          "label": "Vészhelyzeti berendezés indokolatlan használata",
+          "description": "Vészjelző, vészfék vagy más vészhelyzeti eszköz indokolatlan működtetése.",
+          "sortOrder": 60,
+          "active": true
+        },
+        {
+          "id": "f7454933-9080-59fb-9b3d-25db73b86bc1",
+          "code": "OTHER_SAFETY_EVENT",
+          "label": "Egyéb biztonsági esemény",
+          "description": "Más felsorolt eseménytípusba nem illő, de biztonsági szempontból releváns esemény.",
+          "sortOrder": 70,
+          "active": true
+        }
+      ]
+    }
+  ]
+}

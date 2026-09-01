@@ -1,0 +1,43 @@
+# Gradle
+.gradle/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin / Java
+*.class
+out/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.p12
+*.pem
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Docker/local runtime data
+docker-data/
+postgres-data/
+
+# Temporary / generated
+tmp/
+temp/
+*.tmp
