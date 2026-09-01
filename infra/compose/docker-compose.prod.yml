@@ -1,0 +1,115 @@
+# Őrszem Demo v1 — remote deployment stack (Oracle Cloud, ARM64 / aarch64).
+#
+#   Internet -> Caddy :80/:443 (automatic TLS) -> api:8080 -> db:5432
+#
+# Only Caddy publishes ports. PostgreSQL and the API are reachable **only**
+# on the internal `orszem-internal` Docker network.
+#
+# Usage (from the repository root on the server):
+#   docker compose --env-file .env -f infra/compose/docker-compose.prod.yml up -d
+# or simply: scripts/deploy.sh
+name: orszem
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${ORSZEM_DB_NAME:-orszem}
+      POSTGRES_USER: ${ORSZEM_DB_USERNAME:-orszem}
+      POSTGRES_PASSWORD: ${ORSZEM_DB_PASSWORD:?ORSZEM_DB_PASSWORD is required}
+      TZ: UTC
+      PGTZ: UTC
+    # Deliberately NO `ports:` — 5432 must never be publicly reachable.
+    volumes:
+      - orszem-db:/var/lib/postgresql/data
+    networks:
+      - orszem-internal
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - max_connections=50
+      - -c
+      - effective_cache_size=768MB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ORSZEM_DB_USERNAME:-orszem} -d ${ORSZEM_DB_NAME:-orszem}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1200m
+
+  api:
+    image: ${ORSZEM_API_IMAGE:-orszem-api:demo}
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${ORSZEM_PROFILE:-demo}
+      ORSZEM_DB_URL: jdbc:postgresql://db:5432/${ORSZEM_DB_NAME:-orszem}
+      ORSZEM_DB_USERNAME: ${ORSZEM_DB_USERNAME:-orszem}
+      ORSZEM_DB_PASSWORD: ${ORSZEM_DB_PASSWORD:?ORSZEM_DB_PASSWORD is required}
+      ORSZEM_JWT_SECRET: ${ORSZEM_JWT_SECRET:?ORSZEM_JWT_SECRET is required (>= 32 bytes)}
+      ORSZEM_DEMO_RESET_TOKEN: ${ORSZEM_DEMO_RESET_TOKEN:?ORSZEM_DEMO_RESET_TOKEN is required}
+      # 1 OCPU / 6 GB VM: keep the JVM small enough to coexist with PostgreSQL.
+      JAVA_OPTS: ${ORSZEM_JAVA_OPTS:--Xms192m -Xmx900m -XX:MaxMetaspaceSize=256m -XX:+UseSerialGC -XX:MaxRAMPercentage=65 -Duser.timezone=UTC}
+    # Deliberately NO `ports:` — 8080 must never be publicly reachable.
+    networks:
+      - orszem-internal
+    healthcheck:
+      # The runtime image ships curl; /bin/sh is dash, so no bashisms here.
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health/readiness | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 1600m
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      ORSZEM_PUBLIC_HOST: ${ORSZEM_PUBLIC_HOST:?ORSZEM_PUBLIC_HOST is required}
+      ORSZEM_ACME_EMAIL: ${ORSZEM_ACME_EMAIL:-}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - orszem-internal
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+networks:
+  orszem-internal:
+    driver: bridge
+
+volumes:
+  orszem-db:
+  caddy-data:
+  caddy-config:
