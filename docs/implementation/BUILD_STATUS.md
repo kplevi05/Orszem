@@ -14,6 +14,18 @@ _Newest milestone on top._
 
 ---
 
+## Final acceptance ✅
+
+- `./gradlew clean test` (backend, from a clean tree) → **58 / 58 green**, every
+  P0 acceptance test plus `PresentationFlowIT` (AT-050, executed from a clean
+  demo reset with all expected metrics).
+- `./gradlew testDebugUnitTest` (Android) → **19 / 19 green**.
+- `./gradlew :public-app:assembleRelease :service-app:assembleRelease` → two APKs.
+- `docker build -f infra/docker/api.Dockerfile .` → `orszem-api` image.
+- `@redocly/cli lint` → contract valid.
+
+M0–M7 complete.
+
 ## M7 — Hardening & presentation ✅ (backend)
 
 - `RequestLoggingFilter` — one structured line per request (method, path, status,
