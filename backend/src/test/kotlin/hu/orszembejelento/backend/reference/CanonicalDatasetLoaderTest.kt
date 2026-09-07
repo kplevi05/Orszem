@@ -1,5 +1,6 @@
 package hu.orszembejelento.backend.reference
 
+import hu.orszembejelento.backend.reference.domain.CoverageComponentStatus
 import hu.orszembejelento.backend.reference.domain.CoverageStatus
 import hu.orszembejelento.backend.reference.domain.ReuseStatus
 import hu.orszembejelento.backend.reference.domain.VerificationStatus
@@ -31,7 +32,12 @@ class CanonicalDatasetLoaderTest {
         val m = result.dataset.manifest
         check(m.datasetVersion == "1.0")
         check(m.verificationStatus == VerificationStatus.VERIFIED)
-        check(m.coverageStatus == CoverageStatus.PARTIAL)
+        // The fixture defaults every coverage component to COMPLETE, so the derived
+        // blanket status is COMPLETE too.
+        check(m.coverageStatus == CoverageStatus.COMPLETE)
+        check(m.coverage.settlements == CoverageComponentStatus.COMPLETE)
+        check(m.coverage.railwayLines == CoverageComponentStatus.COMPLETE)
+        check(m.coverage.settlementRailwayLines == CoverageComponentStatus.COMPLETE)
         check(m.reuseStatus == ReuseStatus.PENDING)
         check(m.settlementCount == 3)
         check(m.railwayLineCount == 2)
@@ -67,6 +73,49 @@ class CanonicalDatasetLoaderTest {
         ReferenceDatasetFixture.write(tmp, version = "1.0", reuse = "MAYBE")
         val result = loader.load(tmp) as CanonicalDatasetLoader.LoadResult.Invalid
         check(result.issues.any { it.contains("reuseStatus") })
+    }
+
+    @Test
+    fun `an invalid coverage component value is rejected`(@TempDir tmp: Path) {
+        ReferenceDatasetFixture.write(tmp, version = "1.0", railwayLinesCoverage = "SORT-OF")
+        val result = loader.load(tmp) as CanonicalDatasetLoader.LoadResult.Invalid
+        check(result.issues.any { it.contains("railwayLines") && it.contains("SORT-OF") })
+    }
+
+    @Test
+    fun `an overall COMPLETE claim contradicted by a PARTIAL component is rejected`(@TempDir tmp: Path) {
+        // A hand-written manifest is needed here: ReferenceDatasetFixture always derives
+        // the blanket status from its components, so it cannot express this contradiction.
+        val dir = tmp
+        Files.createDirectories(dir)
+        Files.writeString(dir.resolve("settlements.csv"), "ksh_code,name,county_name\n00001,Alfa,\n")
+        Files.writeString(dir.resolve("railway-lines.csv"), "line_code,display_name\n")
+        Files.writeString(dir.resolve("settlement-railway-lines.csv"), "ksh_code,line_code\n")
+        val manifest = """
+            {
+              "datasetVersion": "1.0",
+              "verificationStatus": "VERIFIED",
+              "coverageStatus": "COMPLETE",
+              "reuseStatus": "CLEARED",
+              "sources": {},
+              "canonicalFiles": {
+                "settlements.csv": "${ReferenceDatasetFixture.sha256Hex(dir.resolve("settlements.csv"))}",
+                "railway-lines.csv": "${ReferenceDatasetFixture.sha256Hex(dir.resolve("railway-lines.csv"))}",
+                "settlement-railway-lines.csv": "${ReferenceDatasetFixture.sha256Hex(dir.resolve("settlement-railway-lines.csv"))}"
+              },
+              "counts": { "settlements": 1, "railwayLines": 0, "settlementRailwayLineMappings": 0 },
+              "coverage": {
+                "settlements": "COMPLETE",
+                "railwayLines": "PARTIAL",
+                "settlementRailwayLines": "COMPLETE",
+                "settlementsWithVerifiedRelations": 0
+              }
+            }
+        """.trimIndent()
+        Files.writeString(dir.resolve("manifest.json"), manifest)
+
+        val result = loader.load(dir) as CanonicalDatasetLoader.LoadResult.Invalid
+        check(result.issues.any { it.contains("coverageStatus is COMPLETE") })
     }
 
     @Test
@@ -140,19 +189,22 @@ class CanonicalDatasetLoaderTest {
     }
 
     @Test
-    fun `a coverageStatus of COMPLETE that the data does not support is rejected`(@TempDir tmp: Path) {
+    fun `a COMPLETE relation mapping is accepted even though most settlements have no relation`(@TempDir tmp: Path) {
+        // Not a bug: most Hungarian settlements genuinely have no railway line, so a
+        // correctly COMPLETE relation mapping is still expected to leave most settlements
+        // uncovered. There is no "covered < total" heuristic here (see the loader comment
+        // and ADR 0006) - only the component/overall consistency check applies.
         ReferenceDatasetFixture.write(
             tmp,
             version = "1.0",
-            coverage = "COMPLETE",
             settlements = listOf(Triple("00001", "Alfa", null), Triple("00002", "Beta", null)),
             lines = listOf("1" to "Line 1"),
-            relations = listOf("00001" to "1"), // 00002 has no relation
+            relations = listOf("00001" to "1"), // 00002 genuinely has no railway
             countsOverride = Triple(2, 1, 1),
             coveredOverride = 1,
         )
-        val result = loader.load(tmp) as CanonicalDatasetLoader.LoadResult.Invalid
-        check(result.issues.any { it.contains("COMPLETE") })
+        val result = loader.load(tmp)
+        check(result is CanonicalDatasetLoader.LoadResult.Valid) { "expected valid, got $result" }
     }
 
     @Test
@@ -182,7 +234,12 @@ class CanonicalDatasetLoaderTest {
                 "railwayLines": $lineCount,
                 "settlementRailwayLineMappings": $mappingCount
               },
-              "coverage": { "settlementsWithVerifiedRelations": 0 }
+              "coverage": {
+                "settlements": "COMPLETE",
+                "railwayLines": "COMPLETE",
+                "settlementRailwayLines": "COMPLETE",
+                "settlementsWithVerifiedRelations": 0
+              }
             }
         """.trimIndent()
         Files.writeString(dir.resolve("manifest.json"), manifest)

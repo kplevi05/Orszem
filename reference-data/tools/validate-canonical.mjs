@@ -47,6 +47,23 @@ if (!['PENDING', 'CLEARED'].includes(manifest.reuseStatus)) {
 }
 if (!manifest.datasetVersion) fail('datasetVersion is missing');
 
+// Coverage is tracked per component (ADR 0006): absence means something different in each
+// roster, so a single blanket flag cannot drive the importer's deactivation decisions.
+const coverageComponents = ['settlements', 'railwayLines', 'settlementRailwayLines'];
+for (const component of coverageComponents) {
+  const value = manifest.coverage?.[component];
+  if (!['COMPLETE', 'PARTIAL'].includes(value)) {
+    fail(`coverage.${component} must be COMPLETE or PARTIAL, got ${value}`);
+  }
+}
+// The blanket status must not overclaim relative to its own components.
+if (
+  manifest.coverageStatus === 'COMPLETE' &&
+  coverageComponents.some((c) => manifest.coverage?.[c] === 'PARTIAL')
+) {
+  fail('coverageStatus is COMPLETE but at least one coverage component is PARTIAL');
+}
+
 // Every source must carry enough provenance to be re-checked by a person later.
 for (const [name, source] of Object.entries(manifest.sources ?? {})) {
   for (const field of ['source', 'retrievedAt', 'sourceVersionOrDate', 'used']) {
@@ -173,14 +190,11 @@ if (manifest.coverage?.settlementsWithVerifiedRelations !== covered.size) {
   );
 }
 
-// A dataset claiming COMPLETE while most settlements have no relation would be a false
-// statement about the country, so the two fields are cross-checked rather than trusted.
-if (manifest.coverageStatus === 'COMPLETE' && covered.size < settlements.length) {
-  fail(
-    `coverageStatus is COMPLETE but only ${covered.size} of ${settlements.length} settlements ` +
-      'have a verified relation',
-  );
-}
+// There is deliberately no "covered < total settlements => reject COMPLETE" check here.
+// That would assume nearly every settlement has a railway line, which is false - most
+// genuinely do not, no matter how complete the mapping is. The real structural guard is
+// the component/overall consistency check above: an overall COMPLETE claim may not
+// contradict a PARTIAL component (ADR 0006).
 
 // ------------------------------------------------------------------- report
 

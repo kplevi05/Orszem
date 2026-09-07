@@ -4,7 +4,9 @@ import hu.orszembejelento.backend.reference.domain.CandidateRailwayLine
 import hu.orszembejelento.backend.reference.domain.CandidateRelation
 import hu.orszembejelento.backend.reference.domain.CandidateSettlement
 import hu.orszembejelento.backend.reference.domain.CanonicalDataset
+import hu.orszembejelento.backend.reference.domain.CoverageComponentStatus
 import hu.orszembejelento.backend.reference.domain.CoverageStatus
+import hu.orszembejelento.backend.reference.domain.DatasetCoverage
 import hu.orszembejelento.backend.reference.domain.DatasetManifest
 import hu.orszembejelento.backend.reference.domain.ExistingReferenceRow
 import hu.orszembejelento.backend.reference.domain.KshCode
@@ -29,11 +31,18 @@ class ReferenceDiffTest {
         settlements: List<CandidateSettlement>,
         lines: List<CandidateRailwayLine>,
         relations: List<CandidateRelation>,
+        // COMPLETE by default: most tests below exercise ordinary insert/update/reactivate
+        // behaviour, where the coverage axis is irrelevant. The PARTIAL-preserves-absence
+        // tests override the one component they are exercising.
+        settlementsCoverage: CoverageComponentStatus = CoverageComponentStatus.COMPLETE,
+        railwayLinesCoverage: CoverageComponentStatus = CoverageComponentStatus.COMPLETE,
+        relationsCoverage: CoverageComponentStatus = CoverageComponentStatus.COMPLETE,
     ) = CanonicalDataset(
         manifest = DatasetManifest(
             datasetVersion = "test",
             verificationStatus = VerificationStatus.VERIFIED,
             coverageStatus = CoverageStatus.PARTIAL,
+            coverage = DatasetCoverage(settlementsCoverage, railwayLinesCoverage, relationsCoverage),
             reuseStatus = ReuseStatus.CLEARED,
             canonicalFileChecksums = emptyMap(),
             settlementCount = settlements.size,
@@ -178,5 +187,119 @@ class ReferenceDiffTest {
         check(diff.linesToInsert.isEmpty() && diff.linesToDeactivate.isEmpty())
         check(diff.relationsToAdd.isEmpty() && diff.relationsToRemove.isEmpty())
         check(diff.isEmpty)
+    }
+
+    // --------------------------------------------- ADR 0006: per-component coverage
+
+    @Test
+    fun `PARTIAL relation coverage preserves a relation absent from the new snapshot`() {
+        val diff = diffReferenceDataset(
+            dataset(
+                listOf(CandidateSettlement(ksh1, "Alfa", null)),
+                listOf(CandidateRailwayLine("1", "Line 1")),
+                relations = listOf(CandidateRelation(ksh1, "1")), // ksh2-line1 not repeated here
+                relationsCoverage = CoverageComponentStatus.PARTIAL,
+            ),
+            existingSettlements = mapOf(
+                "00001" to ExistingReferenceRow(UUID.randomUUID(), active = true),
+                "00002" to ExistingReferenceRow(UUID.randomUUID(), active = true),
+            ),
+            existingRailwayLines = mapOf("1" to ExistingReferenceRow(UUID.randomUUID(), active = true)),
+            existingRelations = setOf("00001" to "1", "00002" to "1"),
+        )
+        check(diff.relationsToRemove.isEmpty()) { "PARTIAL relation coverage must never remove a relation" }
+        check(diff.relationsPreservedDespiteAbsence == setOf(CandidateRelation(ksh2, "1")))
+    }
+
+    @Test
+    fun `COMPLETE relation coverage removes a relation absent from the new snapshot`() {
+        val diff = diffReferenceDataset(
+            dataset(
+                listOf(CandidateSettlement(ksh1, "Alfa", null)),
+                listOf(CandidateRailwayLine("1", "Line 1")),
+                relations = listOf(CandidateRelation(ksh1, "1")),
+                relationsCoverage = CoverageComponentStatus.COMPLETE,
+            ),
+            existingSettlements = mapOf(
+                "00001" to ExistingReferenceRow(UUID.randomUUID(), active = true),
+                "00002" to ExistingReferenceRow(UUID.randomUUID(), active = true),
+            ),
+            existingRailwayLines = mapOf("1" to ExistingReferenceRow(UUID.randomUUID(), active = true)),
+            existingRelations = setOf("00001" to "1", "00002" to "1"),
+        )
+        check(diff.relationsToRemove == setOf(CandidateRelation(ksh2, "1")))
+        check(diff.relationsPreservedDespiteAbsence.isEmpty())
+    }
+
+    @Test
+    fun `PARTIAL railway-line coverage cannot deactivate an omitted existing line`() {
+        val diff = diffReferenceDataset(
+            dataset(emptyList(), emptyList(), emptyList(), railwayLinesCoverage = CoverageComponentStatus.PARTIAL),
+            existingSettlements = emptyMap(),
+            existingRailwayLines = mapOf("1" to ExistingReferenceRow(UUID.randomUUID(), active = true)),
+            existingRelations = emptySet(),
+        )
+        check(diff.linesToDeactivate.isEmpty()) { "PARTIAL railway-line coverage must never deactivate a line" }
+        check(diff.linesPreservedDespiteAbsence == setOf("1"))
+    }
+
+    @Test
+    fun `COMPLETE railway-line coverage can deactivate an omitted line`() {
+        val diff = diffReferenceDataset(
+            dataset(emptyList(), emptyList(), emptyList(), railwayLinesCoverage = CoverageComponentStatus.COMPLETE),
+            existingSettlements = emptyMap(),
+            existingRailwayLines = mapOf("1" to ExistingReferenceRow(UUID.randomUUID(), active = true)),
+            existingRelations = emptySet(),
+        )
+        check(diff.linesToDeactivate == setOf("1"))
+        check(diff.linesPreservedDespiteAbsence.isEmpty())
+    }
+
+    @Test
+    fun `PARTIAL settlement coverage cannot deactivate an omitted existing settlement`() {
+        val diff = diffReferenceDataset(
+            dataset(emptyList(), emptyList(), emptyList(), settlementsCoverage = CoverageComponentStatus.PARTIAL),
+            existingSettlements = mapOf("00001" to ExistingReferenceRow(UUID.randomUUID(), active = true)),
+            existingRailwayLines = emptyMap(),
+            existingRelations = emptySet(),
+        )
+        check(diff.settlementsToDeactivate.isEmpty())
+        check(diff.settlementsPreservedDespiteAbsence == setOf(ksh1))
+    }
+
+    @Test
+    fun `COMPLETE settlement coverage can still deactivate a settlement KSH no longer lists`() {
+        val diff = diffReferenceDataset(
+            dataset(emptyList(), emptyList(), emptyList(), settlementsCoverage = CoverageComponentStatus.COMPLETE),
+            existingSettlements = mapOf("00001" to ExistingReferenceRow(UUID.randomUUID(), active = true)),
+            existingRailwayLines = emptyMap(),
+            existingRelations = emptySet(),
+        )
+        check(diff.settlementsToDeactivate == setOf(ksh1))
+        check(diff.settlementsPreservedDespiteAbsence.isEmpty())
+    }
+
+    @Test
+    fun `the three coverage components are independent of one another`() {
+        // settlements PARTIAL, lines COMPLETE, relations PARTIAL - the middle one still
+        // deactivates while its siblings preserve, proving one component's status cannot
+        // leak into another's decision.
+        val diff = diffReferenceDataset(
+            dataset(
+                emptyList(),
+                emptyList(),
+                emptyList(),
+                settlementsCoverage = CoverageComponentStatus.PARTIAL,
+                railwayLinesCoverage = CoverageComponentStatus.COMPLETE,
+                relationsCoverage = CoverageComponentStatus.PARTIAL,
+            ),
+            existingSettlements = mapOf("00001" to ExistingReferenceRow(UUID.randomUUID(), active = true)),
+            existingRailwayLines = mapOf("1" to ExistingReferenceRow(UUID.randomUUID(), active = true)),
+            existingRelations = setOf("00001" to "1"),
+        )
+        check(diff.settlementsToDeactivate.isEmpty() && diff.settlementsPreservedDespiteAbsence == setOf(ksh1))
+        check(diff.linesToDeactivate == setOf("1") && diff.linesPreservedDespiteAbsence.isEmpty())
+        check(diff.relationsToRemove.isEmpty())
+        check(diff.relationsPreservedDespiteAbsence == setOf(CandidateRelation(ksh1, "1")))
     }
 }

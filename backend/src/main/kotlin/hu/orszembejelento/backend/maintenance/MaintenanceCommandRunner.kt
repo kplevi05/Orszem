@@ -176,20 +176,31 @@ class MaintenanceCommandRunner(
             "  settlements   +${diff.settlementsToInsert.size} new   " +
                 "${diff.settlementsToUpdate.size} upserted   " +
                 "${diff.settlementsToReactivate.size} reactivated   " +
-                "${diff.settlementsToDeactivate.size} deactivated",
+                "${diff.settlementsToDeactivate.size} deactivated" +
+                preservedSuffix(diff.settlementsPreservedDespiteAbsence.size),
         )
         console(
             "  railway lines +${diff.linesToInsert.size} new   " +
                 "${diff.linesToUpdate.size} upserted   " +
                 "${diff.linesToReactivate.size} reactivated   " +
-                "${diff.linesToDeactivate.size} deactivated",
+                "${diff.linesToDeactivate.size} deactivated" +
+                preservedSuffix(diff.linesPreservedDespiteAbsence.size),
         )
         console(
             "  relations     +${diff.relationsToAdd.size} add   " +
-                "-${diff.relationsToRemove.size} remove",
+                "-${diff.relationsToRemove.size} remove" +
+                preservedSuffix(diff.relationsPreservedDespiteAbsence.size),
         )
         if (diff.isEmpty) console("  (no changes)")
     }
+
+    /**
+     * Absence under PARTIAL coverage is preserved, not removed (ADR 0006) - surfaced here
+     * so an operator can see what the importer deliberately left alone, rather than that
+     * silently looking identical to "nothing was different".
+     */
+    private fun preservedSuffix(preservedCount: Int): String =
+        if (preservedCount > 0) "   ($preservedCount preserved - absent from a PARTIAL-coverage snapshot)" else ""
 
     /**
      * Writes straight to the console, never through the logging framework.

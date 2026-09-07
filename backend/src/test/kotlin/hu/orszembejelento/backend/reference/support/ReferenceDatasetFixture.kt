@@ -28,8 +28,14 @@ object ReferenceDatasetFixture {
         dir: Path,
         version: String,
         verification: String = "VERIFIED",
-        coverage: String = "PARTIAL",
         reuse: String = "CLEARED",
+        // Default every component to COMPLETE: most tests exercise ordinary upsert/
+        // deactivate/reactivate behaviour and expect absence to mean removal, exactly like
+        // the old single-flag model. Tests of the PARTIAL-preserves-absence rule (ADR 0006)
+        // override the specific component they are exercising.
+        settlementsCoverage: String = "COMPLETE",
+        railwayLinesCoverage: String = "COMPLETE",
+        relationsCoverage: String = "COMPLETE",
         settlements: List<Triple<String, String, String?>> = defaultSettlements,
         lines: List<Pair<String, String>> = defaultLines,
         relations: List<Pair<String, String>> = defaultRelations,
@@ -58,12 +64,19 @@ object ReferenceDatasetFixture {
         val covered = coveredOverride ?: relations.map { it.first }.toSet().size
         val (settlementCount, lineCount, mappingCount) = countsOverride
             ?: Triple(settlements.size, lines.size, relations.size)
+        // The blanket status must not overclaim relative to its own components (ADR 0006).
+        val overallCoverageStatus =
+            if (settlementsCoverage == "COMPLETE" && railwayLinesCoverage == "COMPLETE" && relationsCoverage == "COMPLETE") {
+                "COMPLETE"
+            } else {
+                "PARTIAL"
+            }
 
         val manifest = """
             {
               "datasetVersion": "$version",
               "verificationStatus": "$verification",
-              "coverageStatus": "$coverage",
+              "coverageStatus": "$overallCoverageStatus",
               "reuseStatus": "$reuse",
               "sources": {
                 "TEST": { "source": "synthetic test fixture, not a real source", "used": "test only" }
@@ -79,6 +92,9 @@ object ReferenceDatasetFixture {
                 "settlementRailwayLineMappings": $mappingCount
               },
               "coverage": {
+                "settlements": "$settlementsCoverage",
+                "railwayLines": "$railwayLinesCoverage",
+                "settlementRailwayLines": "$relationsCoverage",
                 "settlementsWithVerifiedRelations": $covered
               }
             }

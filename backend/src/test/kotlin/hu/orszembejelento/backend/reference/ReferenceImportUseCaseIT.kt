@@ -221,6 +221,129 @@ class ReferenceImportUseCaseIT : AbstractAuthIntegrationTest() {
         check(settlementActive("00001"))
     }
 
+    // -------------------------------------------------- ADR 0006: per-component coverage
+
+    @Test
+    fun `PARTIAL relation coverage preserves a relation missing from a later snapshot`(@TempDir tmp: Path) {
+        val v1 = ReferenceDatasetFixture.write(
+            tmp.resolve("v1"),
+            version = "cov-rel-v1",
+            settlements = listOf(Triple("00001", "Alfa", null), Triple("00002", "Beta", null)),
+            lines = listOf("1" to "Line 1"),
+            relations = listOf("00001" to "1", "00002" to "1"), // A and B
+            countsOverride = Triple(2, 1, 2),
+            coveredOverride = 2,
+        )
+        referenceImport.import(v1)
+        check(relationCount() == 2)
+
+        val v2 = ReferenceDatasetFixture.write(
+            tmp.resolve("v2"),
+            version = "cov-rel-v2",
+            settlements = listOf(Triple("00001", "Alfa", null), Triple("00002", "Beta", null)),
+            lines = listOf("1" to "Line 1"),
+            relations = listOf("00001" to "1"), // only A - B omitted
+            relationsCoverage = "PARTIAL",
+            countsOverride = Triple(2, 1, 1),
+            coveredOverride = 1,
+        )
+        val outcome = referenceImport.import(v2) as ReferenceImportOutcome.Applied
+        check(outcome.diff.relationsToRemove.isEmpty())
+        check(outcome.diff.relationsPreservedDespiteAbsence.size == 1)
+
+        check(relationCount() == 2) { "B must survive: PARTIAL relation coverage is not evidence it no longer exists" }
+        check(relationExists("00001", "1") && relationExists("00002", "1"))
+    }
+
+    @Test
+    fun `COMPLETE relation coverage removes a relation missing from a later snapshot`(@TempDir tmp: Path) {
+        val v1 = ReferenceDatasetFixture.write(
+            tmp.resolve("v1"),
+            version = "cov-rel-c-v1",
+            settlements = listOf(Triple("00001", "Alfa", null), Triple("00002", "Beta", null)),
+            lines = listOf("1" to "Line 1"),
+            relations = listOf("00001" to "1", "00002" to "1"),
+            countsOverride = Triple(2, 1, 2),
+            coveredOverride = 2,
+        )
+        referenceImport.import(v1)
+
+        val v2 = ReferenceDatasetFixture.write(
+            tmp.resolve("v2"),
+            version = "cov-rel-c-v2",
+            settlements = listOf(Triple("00001", "Alfa", null), Triple("00002", "Beta", null)),
+            lines = listOf("1" to "Line 1"),
+            relations = listOf("00001" to "1"),
+            relationsCoverage = "COMPLETE",
+            countsOverride = Triple(2, 1, 1),
+            coveredOverride = 1,
+        )
+        referenceImport.import(v2)
+
+        check(relationCount() == 1) { "COMPLETE relation coverage may remove what a newer snapshot omits" }
+        check(relationExists("00001", "1") && !relationExists("00002", "1"))
+    }
+
+    @Test
+    fun `PARTIAL railway-line coverage cannot deactivate an omitted existing line`(@TempDir tmp: Path) {
+        val v1 = ReferenceDatasetFixture.write(
+            tmp.resolve("v1"),
+            version = "cov-line-p-v1",
+            settlements = emptyList(),
+            lines = listOf("1" to "Line 1"),
+            relations = emptyList(),
+            countsOverride = Triple(0, 1, 0),
+            coveredOverride = 0,
+        )
+        referenceImport.import(v1)
+
+        val v2 = ReferenceDatasetFixture.write(
+            tmp.resolve("v2"),
+            version = "cov-line-p-v2",
+            settlements = emptyList(),
+            lines = emptyList(), // line "1" omitted
+            relations = emptyList(),
+            railwayLinesCoverage = "PARTIAL",
+            countsOverride = Triple(0, 0, 0),
+            coveredOverride = 0,
+        )
+        val outcome = referenceImport.import(v2) as ReferenceImportOutcome.Applied
+        check(outcome.diff.linesToDeactivate.isEmpty())
+        check(outcome.diff.linesPreservedDespiteAbsence == setOf("1"))
+
+        val active = jdbc.sql("SELECT active FROM railway_lines WHERE line_code = '1'").query(Boolean::class.java).single()
+        check(active) { "PARTIAL railway-line coverage is not evidence the line no longer exists" }
+    }
+
+    @Test
+    fun `COMPLETE railway-line coverage deactivates an omitted, unassigned line`(@TempDir tmp: Path) {
+        val v1 = ReferenceDatasetFixture.write(
+            tmp.resolve("v1"),
+            version = "cov-line-c-v1",
+            settlements = emptyList(),
+            lines = listOf("1" to "Line 1"),
+            relations = emptyList(),
+            countsOverride = Triple(0, 1, 0),
+            coveredOverride = 0,
+        )
+        referenceImport.import(v1)
+
+        val v2 = ReferenceDatasetFixture.write(
+            tmp.resolve("v2"),
+            version = "cov-line-c-v2",
+            settlements = emptyList(),
+            lines = emptyList(),
+            relations = emptyList(),
+            railwayLinesCoverage = "COMPLETE",
+            countsOverride = Triple(0, 0, 0),
+            coveredOverride = 0,
+        )
+        referenceImport.import(v2)
+
+        val active = jdbc.sql("SELECT active FROM railway_lines WHERE line_code = '1'").query(Boolean::class.java).single()
+        check(!active) { "COMPLETE railway-line coverage, with nothing depending on the line, may deactivate it" }
+    }
+
     // -------------------------------------------------------------- line in use
 
     @Test
@@ -328,4 +451,16 @@ class ReferenceImportUseCaseIT : AbstractAuthIntegrationTest() {
     private fun settlementActive(ksh: String): Boolean =
         jdbc.sql("SELECT active FROM settlements WHERE ksh_code = :ksh").param("ksh", ksh)
             .query(Boolean::class.java).single()
+
+    private fun relationExists(ksh: String, lineCode: String): Boolean =
+        jdbc.sql(
+            """
+            SELECT EXISTS (
+                SELECT 1 FROM settlement_railway_lines m
+                  JOIN settlements s ON s.id = m.settlement_id
+                  JOIN railway_lines l ON l.id = m.railway_line_id
+                 WHERE s.ksh_code = :ksh AND l.line_code = :line
+            )
+            """.trimIndent(),
+        ).param("ksh", ksh).param("line", lineCode).query(Boolean::class.java).single()
 }

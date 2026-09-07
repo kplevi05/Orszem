@@ -116,9 +116,26 @@ gated:
 The whole operation runs inside one transaction behind a PostgreSQL advisory lock, so two
 `reference-import` runs against the same server never interleave. A settlement or railway
 line already known keeps its internal UUID across versions (matched by `ksh_code` /
-`line_code`); one no longer present in the dataset is deactivated, never deleted. An
-`REFERENCE_DATASET_IMPORTED` audit row and a `reference_dataset_imports` provenance row are
-written only on an actual, successful import.
+`line_code`). An `REFERENCE_DATASET_IMPORTED` audit row and a `reference_dataset_imports`
+provenance row are written only on an actual, successful import.
+
+**Absence from a newer dataset is deactivation only where the manifest says the relevant
+roster is `COMPLETE`.** Coverage is tracked per component
+(`coverage.settlements` / `.railwayLines` / `.settlementRailwayLines` — see ADR 0006), not
+as one flag: for the real dataset, `settlements` is `COMPLETE` (KSH publishes the full
+registry, so a settlement genuinely retired by KSH is deactivated), while `railwayLines` and
+`settlementRailwayLines` are `PARTIAL` — a line or relation missing from a newer snapshot is
+left exactly as it is, because the HÜSZ annexes not mentioning it is not evidence it stopped
+existing. `reference-diff` prints what was preserved this way so it is never a silent
+no-op:
+
+```
+  railway lines +0 new   12 upserted   0 reactivated   0 deactivated   (3 preserved - absent from a PARTIAL-coverage snapshot)
+```
+
+There is no flag to force removal of a row a `PARTIAL` component omitted. If a line or
+relation genuinely needs retracting, that is a deliberate, separate action to design later —
+never a side effect of a routine import.
 
 ```
 $ ./scripts/orszem-admin reference-import reference-data/local-research

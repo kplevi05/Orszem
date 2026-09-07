@@ -466,6 +466,23 @@ const manifest = {
   },
 
   coverage: {
+    /**
+     * Coverage is per-component, not one blanket flag, because absence means something
+     * different in each roster - see ADR 0006 and PHASE_3B_DECISION_GATE.md SS7.
+     *
+     * settlements: COMPLETE - KSH publishes the full settlement registry, so this dataset
+     * lists every settlement KSH recognises.
+     *
+     * railwayLines / settlementRailwayLines: PARTIAL - the HUSZ annexes were extracted with
+     * a deterministic parser and a quarantine step that makes no claim of network-wide
+     * completeness. The backend importer treats a component absent under PARTIAL as
+     * "unknown", never as "removed" - it will not deactivate a railway line or delete a
+     * relation just because a later snapshot omits it.
+     */
+    settlements: args.settlementsCoverage ?? 'COMPLETE',
+    railwayLines: args.railwayLinesCoverage ?? 'PARTIAL',
+    settlementRailwayLines: args.relationsCoverage ?? 'PARTIAL',
+
     settlementsWithVerifiedRelations: covered.size,
     settlementsWithoutVerifiedRelations: settlementsOut.length - covered.size,
     railwayLinesWithVerifiedRelations: new Set(relationsOut.map((r) => r[1])).size,

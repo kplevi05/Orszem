@@ -294,4 +294,37 @@ The real VPE-derived dataset stays `reuseStatus: PENDING` (§6) and therefore **
 currently be imported anywhere, including production** — the importer's own gate enforces
 that, not discipline. It remains research/candidate material until VPE confirms in writing.
 
+---
+
+## 11. Distribution boundary verification — and a finding requiring owner action
+
+Requested explicitly: prove the PENDING dataset is not imported, packaged or deployed
+anywhere, and check whether the repository is public.
+
+| Check | Result |
+|---|---|
+| Imported by a normal command | **No.** `reference-import` refuses any `reuseStatus != CLEARED` dataset; tested (`ReferenceImportUseCaseIT`). |
+| Packaged into an Android APK | **No.** No reference to `reference-data/` anywhere under `android/`; nothing under any `assets/` source directory. |
+| Bundled into Public Web | **No.** No reference to `reference-data/` anywhere under `web/`; `web/public-web/public/` holds only PWA icons and its own web manifest. |
+| Packaged into backend runtime resources / container artifacts | **No.** No `processResources` hook copies it in; `unzip -l build/libs/backend.jar` lists zero CSV or manifest files. There is **no Dockerfile anywhere in this repository** - no container artifact exists to package it into. |
+| Deployed | **No.** `deploy/caddy/Caddyfile`, `deploy/systemd/orszem-backend.service` and `deploy/env/backend.env.example` contain no reference to it. The `reference-data` CI workflow only runs the offline validator against the committed snapshot; it has no deploy step. |
+
+**Finding: this GitHub repository is public.** Confirmed via the GitHub API on 2026-09-08
+(`kplevi05/Orszem`, `visibility: public`). The VPE-derived canonical dataset —
+`reference-data/current/{settlements,railway-lines,settlement-railway-lines}.csv` and its
+`manifest.json` — is committed to that public history and visible to anyone right now.
+
+This does not contradict the checks above: the importer's `reuseStatus: PENDING` gate
+protects the *running service* from importing uncleared data. **It says nothing about a
+git repository**, and it was never designed to. A dataset can simultaneously be correctly
+blocked from ever reaching a database, and already sitting in public view in the
+repository that holds it — those are two different exposure surfaces, and only the first
+one this system's code can control.
+
+**This is reported rather than acted on.** Removing the files, rewriting history, or
+changing the repository's visibility are each either a scope decision or a destructive,
+hard-to-reverse operation - recorded as **B10** and **A6** in
+`DECISIONS_REQUIRING_OWNER.md`, with options, for the owner to choose from. Nothing in this
+codebase change touches the repository's visibility or its history.
+
 **Phase 3C does not begin until the owner accepts this gate.**

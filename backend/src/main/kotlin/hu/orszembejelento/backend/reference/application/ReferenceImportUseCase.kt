@@ -166,7 +166,11 @@ class ReferenceImportUseCase(
                 now = now,
             )
         }
-        repository.deactivateSettlementsNotIn(dataset.settlements.map { it.kshCode.value }, now)
+        // Only ever the codes diffReferenceDataset already decided are safe to deactivate -
+        // empty whenever settlement coverage is PARTIAL (ADR 0006).
+        for (kshCode in diff.settlementsToDeactivate) {
+            repository.deactivateSettlement(settlementIdByKsh.getValue(kshCode.value), now)
+        }
 
         val lineIdByCode = existingLines.mapValuesTo(HashMap()) { it.value.id }
         for (candidate in diff.linesToInsert) {
@@ -187,8 +191,12 @@ class ReferenceImportUseCase(
             val id = lineIdByCode.getValue(candidate.lineCode)
             repository.updateRailwayLine(id = id, displayName = candidate.displayName, active = true, now = now)
         }
-        // Safe now: the conflict check above already proved none of these are in use.
-        repository.deactivateRailwayLinesNotIn(dataset.railwayLines.map { it.lineCode }, now)
+        // Only ever the codes diffReferenceDataset already decided are safe to deactivate -
+        // empty whenever railway-line coverage is PARTIAL. Safe now regardless: the
+        // conflict check above already proved none of these are assigned to a service area.
+        for (lineCode in diff.linesToDeactivate) {
+            repository.deactivateRailwayLine(lineIdByCode.getValue(lineCode), now)
+        }
 
         for (relation in diff.relationsToRemove) {
             val settlementId = settlementIdByKsh[relation.kshCode.value]

@@ -71,6 +71,54 @@ the dataset path is settled. It is documented here as a binding constraint on th
 work, and Phase 3C must add tests proving both directions: a `PARTIAL` settlement with one
 relation still requires explicit selection, and a `COMPLETE` scope permits inference.
 
+## Decision 3 — coverage is per-component, and the importer never deletes on a hunch
+
+Decision 2 already established that `PARTIAL` means "absence is not evidence of anything."
+Building the importer surfaced that this applies to *import updates*, not only to routing:
+if a relation existed in a previous `VERIFIED`/`PARTIAL` snapshot and is merely absent from
+a later `PARTIAL` snapshot, deleting it would infer a negative fact the data cannot support
+— exactly the failure mode `PARTIAL` exists to prevent, just applied to writes instead of
+reads.
+
+It also surfaced that one blanket `coverageStatus` cannot drive this decision correctly,
+because "PARTIAL" means something different depending on *which* roster is incomplete. The
+real dataset is a clean illustration: KSH publishes every Hungarian settlement (that roster
+really is complete), while the HÜSZ-annex-derived line and relation rosters are not. One
+flag cannot say both things at once. The manifest now carries coverage per component:
+
+```json
+{
+  "coverageStatus": "PARTIAL",
+  "coverage": {
+    "settlements": "COMPLETE",
+    "railwayLines": "PARTIAL",
+    "settlementRailwayLines": "PARTIAL"
+  }
+}
+```
+
+`coverageStatus` remains as an overall summary and must not overclaim: it may say
+`COMPLETE` only when every component does. The **import** decision is made per component,
+never from the blanket field:
+
+- **Component is `COMPLETE`:** absence from the new dataset may be treated as removal —
+  the importer deactivates the settlement/line, or removes the relation.
+- **Component is `PARTIAL`:** absence is preserved. The importer performs every upsert
+  (insert, update, reactivate) exactly as before, but never deactivates a row or removes a
+  relation on the strength of a `PARTIAL` roster simply omitting it.
+
+For the real dataset today, this means: a KSH settlement lifecycle change (a settlement
+merging, renaming, or being retired) can still deactivate the corresponding row, because
+`settlements` coverage is genuinely `COMPLETE`. A railway line or a settlement<->line
+relation missing from a newer snapshot is left untouched, because both of those rosters are
+`PARTIAL` — the annexes not mentioning a line next time around is not evidence the line was
+decommissioned.
+
+**Explicitly not built:** a general `--force` to remove a previously verified line or
+relation. If evidence-backed removal is ever needed (a line genuinely decommissioned, a
+relation genuinely retracted), that is a separate, deliberate command to design later — not
+a side effect of a routine import that happens to omit a row.
+
 ## Consequences
 
 - The manifest schema, the offline builder, and the offline validator all carry
@@ -82,3 +130,11 @@ relation still requires explicit selection, and a `COMPLETE` scope permits infer
 - `docs/DECISIONS_REQUIRING_OWNER.md` (B9) still tracks obtaining that written confirmation
   as an owner action; this ADR does not resolve it, it only makes the system behave
   correctly while it stays open.
+- Deactivation is no longer a bulk "not in this dataset" statement. `diffReferenceDataset`
+  decides, per component, which absent rows are even candidates for removal; the importer
+  applies only those, one row at a time, by internal id. There is no code path left that
+  can deactivate or remove a row the diff did not name.
+- The gate in Decision 1 protects the *running service*; it says nothing about this
+  repository's own visibility. That is a separate exposure surface, tracked as its own
+  finding in `PHASE_3B_DECISION_GATE.md` §11 and `DECISIONS_REQUIRING_OWNER.md` B10/A6 —
+  this ADR does not resolve it either.

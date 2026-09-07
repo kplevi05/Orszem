@@ -4,7 +4,9 @@ import hu.orszembejelento.backend.reference.domain.CandidateRailwayLine
 import hu.orszembejelento.backend.reference.domain.CandidateRelation
 import hu.orszembejelento.backend.reference.domain.CandidateSettlement
 import hu.orszembejelento.backend.reference.domain.CanonicalDataset
+import hu.orszembejelento.backend.reference.domain.CoverageComponentStatus
 import hu.orszembejelento.backend.reference.domain.CoverageStatus
+import hu.orszembejelento.backend.reference.domain.DatasetCoverage
 import hu.orszembejelento.backend.reference.domain.DatasetManifest
 import hu.orszembejelento.backend.reference.domain.KshCode
 import hu.orszembejelento.backend.reference.domain.ReuseStatus
@@ -58,6 +60,13 @@ class CanonicalDatasetLoader(private val objectMapper: ObjectMapper) {
         val datasetVersion = manifestNode.path("datasetVersion").asString(null)
         if (datasetVersion.isNullOrBlank()) issues += "datasetVersion is missing"
 
+        // Coverage is tracked per component (ADR 0006), not as one blanket flag: absence of
+        // a row means something different depending on which roster is incomplete.
+        val coverageNode = manifestNode.path("coverage")
+        val settlementsCoverage = enumOrIssue<CoverageComponentStatus>(coverageNode, "settlements", issues)
+        val railwayLinesCoverage = enumOrIssue<CoverageComponentStatus>(coverageNode, "railwayLines", issues)
+        val relationsCoverage = enumOrIssue<CoverageComponentStatus>(coverageNode, "settlementRailwayLines", issues)
+
         val canonicalFilesNode = manifestNode.path("canonicalFiles")
         val checksums = mutableMapOf<String, String>()
         canonicalFilesNode.propertyNames().forEach { name ->
@@ -79,9 +88,21 @@ class CanonicalDatasetLoader(private val objectMapper: ObjectMapper) {
 
         // If the fundamentals are already broken, there is no safe further parsing to do.
         if (verificationStatus == null || coverageStatus == null || reuseStatus == null ||
+            settlementsCoverage == null || railwayLinesCoverage == null || relationsCoverage == null ||
             datasetVersion.isNullOrBlank() || issues.isNotEmpty()
         ) {
             return LoadResult.Invalid(issues.ifEmpty { listOf("manifest.json is missing required fields") })
+        }
+
+        // The blanket status must not overclaim relative to its own components: a manifest
+        // that says COMPLETE overall while one component is PARTIAL is self-contradictory.
+        if (coverageStatus == CoverageStatus.COMPLETE &&
+            (settlementsCoverage == CoverageComponentStatus.PARTIAL ||
+                railwayLinesCoverage == CoverageComponentStatus.PARTIAL ||
+                relationsCoverage == CoverageComponentStatus.PARTIAL)
+        ) {
+            issues += "coverageStatus is COMPLETE but at least one coverage component is PARTIAL"
+            return LoadResult.Invalid(issues)
         }
 
         val settlements = readCsv(
@@ -151,7 +172,6 @@ class CanonicalDatasetLoader(private val objectMapper: ObjectMapper) {
         checkCount(counts, "settlementRailwayLineMappings", candidateRelations.size, issues)
 
         val coveredSettlements = candidateRelations.map { it.kshCode.value }.toSet()
-        val coverageNode = manifestNode.path("coverage")
         if (coverageNode.has("settlementsWithVerifiedRelations")) {
             val claimed = coverageNode.path("settlementsWithVerifiedRelations").asInt(-1)
             if (claimed != coveredSettlements.size) {
@@ -160,12 +180,11 @@ class CanonicalDatasetLoader(private val objectMapper: ObjectMapper) {
             }
         }
 
-        // A COMPLETE claim the data does not support would be a false statement about the
-        // country - refuse it structurally rather than trust the label.
-        if (coverageStatus == CoverageStatus.COMPLETE && coveredSettlements.size < candidateSettlements.size) {
-            issues += "coverageStatus is COMPLETE but only ${coveredSettlements.size} of " +
-                "${candidateSettlements.size} settlements have a verified relation"
-        }
+        // There is deliberately no "coveredSettlements < total settlements => reject
+        // COMPLETE" check here. That would assume nearly every settlement has a railway
+        // line, which is false - most genuinely do not, no matter how complete the mapping
+        // is. The real structural guard is the component/overall consistency check above:
+        // an overall COMPLETE claim may not contradict a PARTIAL component.
 
         if (issues.isNotEmpty()) return LoadResult.Invalid(issues)
 
@@ -173,6 +192,7 @@ class CanonicalDatasetLoader(private val objectMapper: ObjectMapper) {
             datasetVersion = datasetVersion,
             verificationStatus = verificationStatus,
             coverageStatus = coverageStatus,
+            coverage = DatasetCoverage(settlementsCoverage, railwayLinesCoverage, relationsCoverage),
             reuseStatus = reuseStatus,
             canonicalFileChecksums = checksums,
             settlementCount = candidateSettlements.size,

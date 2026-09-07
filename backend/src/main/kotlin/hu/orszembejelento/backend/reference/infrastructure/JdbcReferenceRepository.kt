@@ -123,22 +123,21 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .update()
     }
 
-    fun deactivateSettlementsNotIn(keptKshCodes: Collection<String>, now: Instant): Int =
-        if (keptKshCodes.isEmpty()) {
-            jdbc.sql("UPDATE settlements SET active = FALSE, updated_at = :now WHERE active")
-                .param("now", timestamp(now)).update()
-        } else {
-            jdbc.sql(
-                """
-                UPDATE settlements
-                   SET active = FALSE, updated_at = :now
-                 WHERE active AND ksh_code <> ALL (:codes)
-                """.trimIndent(),
-            )
-                .param("now", timestamp(now))
-                .param("codes", keptKshCodes.toTypedArray())
-                .update()
-        }
+    /**
+     * Deactivates exactly one settlement by its internal id.
+     *
+     * Deliberately per-row rather than a bulk "deactivate everything not in this dataset"
+     * statement: which rows may be deactivated at all depends on [DatasetCoverage] (ADR
+     * 0006), a decision [diffReferenceDataset] already made. This method only ever applies
+     * to the codes [ReferenceDiff.settlementsToDeactivate] names — under PARTIAL settlement
+     * coverage that set is empty, so nothing here is ever called.
+     */
+    fun deactivateSettlement(id: UUID, now: Instant) {
+        jdbc.sql("UPDATE settlements SET active = FALSE, updated_at = :now WHERE id = :id")
+            .param("now", timestamp(now))
+            .param("id", id)
+            .update()
+    }
 
     /**
      * Current settlements keyed by their stable external identity, with just enough state
@@ -240,22 +239,17 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .list()
             .toMap()
 
-    fun deactivateRailwayLinesNotIn(keptLineCodes: Collection<String>, now: Instant): Int =
-        if (keptLineCodes.isEmpty()) {
-            jdbc.sql("UPDATE railway_lines SET active = FALSE, updated_at = :now WHERE active")
-                .param("now", timestamp(now)).update()
-        } else {
-            jdbc.sql(
-                """
-                UPDATE railway_lines
-                   SET active = FALSE, updated_at = :now
-                 WHERE active AND line_code <> ALL (:codes)
-                """.trimIndent(),
-            )
-                .param("now", timestamp(now))
-                .param("codes", keptLineCodes.toTypedArray())
-                .update()
-        }
+    /**
+     * Deactivates exactly one railway line by its internal id. Per-row for the same reason
+     * as [deactivateSettlement]: which lines may be deactivated at all was already decided
+     * by coverage-aware diffing, and this only ever applies to that precomputed set.
+     */
+    fun deactivateRailwayLine(id: UUID, now: Instant) {
+        jdbc.sql("UPDATE railway_lines SET active = FALSE, updated_at = :now WHERE id = :id")
+            .param("now", timestamp(now))
+            .param("id", id)
+            .update()
+    }
 
     /**
      * Line codes that are currently assigned to a service area.

@@ -19,6 +19,40 @@ enum class VerificationStatus { VERIFIED, UNVERIFIED }
 enum class CoverageStatus { COMPLETE, PARTIAL }
 
 /**
+ * A per-component coverage claim: does this roster/mapping include everything, or only
+ * what could be verified so far?
+ *
+ * "PARTIAL" means a different thing depending on which component it describes, which is
+ * exactly why coverage cannot be one blanket flag - see [DatasetCoverage].
+ */
+enum class CoverageComponentStatus { COMPLETE, PARTIAL }
+
+/**
+ * Coverage tracked separately per component, because absence means something different in
+ * each roster:
+ *
+ * - [settlements]: does this dataset list every settlement KSH recognises? For the real
+ *   dataset this is COMPLETE - KSH publishes the full registry.
+ * - [railwayLines]: does this dataset list every railway line in the network? Currently
+ *   PARTIAL - the HÜSZ annexes were extracted with a deterministic parser and quarantine
+ *   step that does not claim network-wide completeness.
+ * - [settlementRailwayLines]: does this dataset capture every settlement<->line relation
+ *   that exists? Currently PARTIAL - the annexes enumerate service points, not every
+ *   settlement a line crosses (see `PHASE_3B_DECISION_GATE.md` SS7).
+ *
+ * The importer (ADR 0006) uses these, not the blanket [CoverageStatus], to decide whether a
+ * row's absence from a newer dataset is evidence it should be deactivated/removed, or
+ * merely evidence the dataset does not (yet) know about it. Absence under a COMPLETE
+ * component may be treated as removal; absence under a PARTIAL component must be preserved
+ * - anything else would let incomplete data assert a negative fact it cannot support.
+ */
+data class DatasetCoverage(
+    val settlements: CoverageComponentStatus,
+    val railwayLines: CoverageComponentStatus,
+    val settlementRailwayLines: CoverageComponentStatus,
+)
+
+/**
  * Whether reuse/redistribution rights for this dataset are cleared, independent of whether
  * its content is correct.
  *
@@ -32,6 +66,7 @@ data class DatasetManifest(
     val datasetVersion: String,
     val verificationStatus: VerificationStatus,
     val coverageStatus: CoverageStatus,
+    val coverage: DatasetCoverage,
     val reuseStatus: ReuseStatus,
     val canonicalFileChecksums: Map<String, String>,
     val settlementCount: Int,
