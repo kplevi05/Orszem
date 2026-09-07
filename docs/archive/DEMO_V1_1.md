@@ -114,14 +114,18 @@ key for `745f5fa8…a51a`, because opening a keystore requires its password, whi
 deliberately never handled by tooling nor recorded anywhere. Until that check is run, this
 document does not assert that the JKS is the upgrade path, and neither should anyone else.
 
-To confirm it, the owner runs the command below and compares the printed SHA-256 with
-`745f5fa8c69f4742bb4ba5cc8044dab008a14d2e649ecc027751fa001065a51a`. `keytool` prompts for
-the password interactively, so it is never passed as an argument, never appears in shell
-history, and is never written to a file:
+To confirm it, the owner runs the command below, finds the `SHA256:` line under
+*Certificate fingerprints*, and compares it with
+`745f5fa8c69f4742bb4ba5cc8044dab008a14d2e649ecc027751fa001065a51a`.
 
 ```bash
-keytool -list -v -keystore <path-to>/orszem-pilot.jks | grep -A1 "SHA256:"
+keytool -list -v -keystore <path-to>/orszem-pilot.jks
 ```
+
+`keytool` asks for the store password interactively, so it is never passed as a command
+argument, never lands in shell history, and is never written to a file. Do **not** add
+`-storepass`, and do not pipe the command into `grep` — the password prompt can be
+swallowed by the pipe. Read the fingerprint off the screen instead.
 
 If the fingerprints match, that keystore holds the pilot upgrade identity. If they do not,
 the key that signed the distributed pilot APKs is elsewhere and must be located before any

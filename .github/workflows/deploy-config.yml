@@ -30,6 +30,12 @@ jobs:
           sudo install -m 0755 caddy /usr/local/bin/caddy
           caddy version
 
+      # `caddy validate` provisions the config, which includes opening the file loggers,
+      # so the log directory the Caddyfile names must exist and be writable first. On the
+      # server the runbook creates it; here the runner has to.
+      - name: Create Caddy log directory
+        run: sudo mkdir -p /var/log/caddy && sudo chown "$USER" /var/log/caddy
+
       - name: Validate Caddyfile
         run: caddy validate --config deploy/caddy/Caddyfile --adapter caddyfile
 
