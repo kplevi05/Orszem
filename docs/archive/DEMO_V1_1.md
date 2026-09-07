@@ -123,13 +123,23 @@ Run on the archived commit, before any V2 restructuring, on Windows 11 with Temu
 | Command | Result |
 |---|---|
 | `apps/android> ./gradlew testDebugUnitTest :public-app:assembleDebug :service-app:assembleDebug` | **BUILD SUCCESSFUL** in 1m 37s — 58 unit tests, 0 failures, 0 errors, 0 skipped |
-| `services/api> ./gradlew build` | recorded in section 5.1 |
+| `services/api> ./gradlew compileKotlin compileTestKotlin test` (unit tests only) | **BUILD SUCCESSFUL** in 42s — 17 unit tests, 0 failures, 0 errors |
 
 V1 was verified as-is. No V1 defect was fixed during archiving.
 
-### 5.1 Backend verification
+### 5.1 Backend verification — partial
 
-<!-- BACKEND_VERIFICATION -->
+The backend was compiled and its Docker-free unit tests were run from a worktree checked
+out at this tag: main and test sources compile, and all 17 unit tests pass.
+
+**The 53 integration tests were NOT run.** Every one of them starts a PostgreSQL container
+through Testcontainers, and the Docker engine on the build machine would not start during
+the archiving session (Docker Desktop was running but never provisioned its WSL backend).
+
+This is an environment limitation, not an observed V1 defect. Nothing indicates the
+integration tests would fail; they simply were not executed, and this record does not claim
+otherwise. They can be run later with `services/api> ./gradlew build` from a checkout of
+`demo-v1.1-final` on a machine with a working Docker engine.
 
 ## 6. Known limitations of Demo v1.1
 
