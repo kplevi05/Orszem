@@ -48,21 +48,26 @@ class DatabaseBaselineIT : AbstractPostgresIntegrationTest() {
     }
 
     @Test
-    fun `V001 applied and validates`() {
+    fun `every migration applied in order and validates`() {
         val applied = jdbcTemplate.queryForList(
             "SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank",
         )
-        check(applied.size == 1) { "expected exactly one migration, found: $applied" }
-        check(applied[0]["version"] == "001") { "unexpected version: ${applied[0]}" }
-        check(applied[0]["success"] == true) { "V001 did not apply successfully" }
+
+        // Pinned explicitly rather than counted loosely: an unexpected extra migration, or
+        // one applied out of order, should fail here rather than surface as a schema
+        // mystery later.
+        check(applied.map { it["version"] } == listOf("001", "002")) {
+            "unexpected migration history: $applied"
+        }
+        check(applied.all { it["success"] == true }) { "a migration did not apply successfully: $applied" }
 
         // Re-validating catches a checksum change, which is how an edit to an already
-        // applied migration would show up.
+        // applied migration would show up. V001 in particular is immutable.
         flyway.validate()
     }
 
     @Test
-    fun `creates exactly the Phase 2 tables`() {
+    fun `creates exactly the tables the implemented phases own`() {
         val tables = jdbcTemplate.queryForList(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
             String::class.java,
@@ -71,13 +76,23 @@ class DatabaseBaselineIT : AbstractPostgresIntegrationTest() {
         check(
             tables == setOf(
                 "flyway_schema_history",
+                // Phase 2 - identity, sessions, audit
                 "users",
                 "auth_sessions",
                 "refresh_tokens",
                 "audit_events",
+                // Phase 3 - reference data, service-area scope
+                "settlements",
+                "railway_lines",
+                "settlement_railway_lines",
+                "reference_dataset_imports",
+                "service_areas",
+                "service_area_railway_lines",
+                "user_service_areas",
             ),
         ) {
-            "unexpected schema. Phase 2 owns no report, taxonomy or service-area tables. Found: $tables"
+            "unexpected schema. Reports, taxonomy, stations and sections belong to later " +
+                "phases and must not exist yet. Found: $tables"
         }
     }
 
