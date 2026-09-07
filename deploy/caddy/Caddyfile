@@ -1,0 +1,91 @@
+# Őrszem V2 — public edge.
+#
+# Three hosts, one backend:
+#
+#   www.orszembejelento.hu  -> permanent redirect to the apex
+#   orszembejelento.hu      -> static Public Web, with /api/* proxied to the backend
+#   api.orszembejelento.hu  -> the same backend, for the Android clients
+#
+# Both routes reach the SAME backend and the same use cases. The API is never
+# implemented twice.
+#
+# Requirements before this file can obtain certificates:
+#   - A records for all three names must resolve to this machine's public IPv4
+#     (see docs/deployment/DNS.md). ACME HTTP-01 fails otherwise.
+#   - The backend must be listening on 127.0.0.1:8081 (see deploy/systemd/).
+#
+# The backend binds to loopback only and is never reachable from the internet
+# except through this proxy. PostgreSQL is never proxied and never published.
+{
+	# Admin API on loopback only.
+	admin 127.0.0.1:2019
+
+	# Advertise HTTP/3 only if UDP/443 is actually open in both firewalld and the
+	# OCI security list. It is not, so restrict to HTTP/1.1 and HTTP/2.
+	servers {
+		protocols h1 h2
+	}
+}
+
+# Shared response headers. Snippets keep the three sites from drifting apart.
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+}
+
+(backend_proxy) {
+	reverse_proxy 127.0.0.1:8081
+}
+
+www.orszembejelento.hu {
+	import security_headers
+	redir https://orszembejelento.hu{uri} permanent
+}
+
+orszembejelento.hu {
+	import security_headers
+	encode zstd gzip
+
+	# Same-origin API. This is why the browser needs no CORS header at all.
+	handle /api/* {
+		import backend_proxy
+	}
+
+	# Static Public Web build output (web/public-web/dist), deployed by the runbook.
+	handle {
+		root * /home/opc/apps/orszem-v2/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output file /var/log/caddy/orszembejelento.log
+		format console
+	}
+}
+
+api.orszembejelento.hu {
+	import security_headers
+	encode zstd gzip
+
+	handle /api/* {
+		import backend_proxy
+	}
+
+	# Nothing else is served on the API host. Actuator, the OpenAPI document and
+	# Swagger UI stay on loopback and are not exposed publicly.
+	handle {
+		respond 404
+	}
+
+	log {
+		output file /var/log/caddy/api-orszembejelento.log
+		format console
+	}
+}
