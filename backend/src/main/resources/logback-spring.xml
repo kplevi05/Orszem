@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Őrszem V2 logging baseline.
+
+  NEVER LOG, in any environment, at any level:
+    - passwords or password hashes
+    - access tokens, refresh tokens, session identifiers
+    - Authorization header values
+    - X-Report-Access-Token header values (introduced with the report feature)
+    - signing secrets, database passwords, any value read from the environment
+    - raw GPS coordinates
+
+  Request/response body logging stays off in every profile. If a future feature needs
+  request diagnostics, add a targeted, redacting logger for it - never a global body dump.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Explicitly disabled: logs full request bodies including credentials. -->
+    <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter" level="OFF"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

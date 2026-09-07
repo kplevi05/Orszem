@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: orszem-backend
+
+  datasource:
+    # Every value comes from the environment. The URL has a development-friendly
+    # default; the credentials deliberately have none, so a misconfigured deployment
+    # fails loudly at startup instead of silently reaching the wrong database.
+    url: ${ORSZEM_DB_URL:jdbc:postgresql://localhost:5432/orszem_v2}
+    username: ${ORSZEM_DB_USERNAME}
+    password: ${ORSZEM_DB_PASSWORD}
+    hikari:
+      connection-init-sql: SET TIME ZONE 'UTC'
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    # Destructive schema drops are never available, in any environment.
+    clean-disabled: true
+
+server:
+  # Bind to loopback by default: the public edge is Caddy, never Spring Boot itself.
+  address: ${ORSZEM_BIND_ADDRESS:127.0.0.1}
+  port: ${ORSZEM_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Health only. No env, beans, mappings, configprops, loggers or heapdump.
+        include: health
+  endpoint:
+    health:
+      # Never reveal component status, disk paths or datasource detail publicly.
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+orszem:
+  api:
+    name: orszem-backend
+    version: v1
+
+logging:
+  level:
+    root: INFO
+    hu.orszembejelento: INFO
+    org.flywaydb: INFO

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Őrszem Szolgálat</string>
+    <string name="shell_headline">Őrszem Szolgálat</string>
+    <string name="shell_body">Szolgálati alkalmazás. Fejlesztés alatt: a bejelentéskezelés még nem érhető el.</string>
+    <string name="shell_version">Verzió: %1$s</string>
+</resources>

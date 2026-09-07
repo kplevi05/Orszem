@@ -1,0 +1,73 @@
+name: backend
+
+# No path filters. Demo v1 filtered by path, which meant a root-level or infrastructure
+# change ran no CI at all. Running all three pipelines on every push is simpler and honest.
+on:
+  # Both triggers on purpose. Push covers branches before a PR is opened; pull_request
+  # independently verifies every PR, including PRs from forks, which a push trigger in
+  # this repository never sees.
+  #
+  # A branch that already has an open PR therefore runs twice for one commit: push and
+  # pull_request use different refs, so the per-ref concurrency group below does not
+  # collapse them. That duplication is accepted deliberately - deduplicating by head SHA
+  # would make one of the two runs show up on the PR as "cancelled", which is worse than
+  # a few extra minutes of CI.
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Runs unit tests plus the Testcontainers integration tests against a real
+      # PostgreSQL. GitHub-hosted runners provide Docker, so this is not skipped.
+      - name: Build and test
+        working-directory: backend
+        run: ./gradlew build --no-daemon
+
+      # Surface failures in the job summary as well as the log, so a failing build can
+      # be diagnosed from the run page without downloading the artifact.
+      - name: Summarise test failures
+        if: failure()
+        working-directory: backend
+        run: |
+          echo '## Backend test failures' >> "$GITHUB_STEP_SUMMARY"
+          for f in build/test-results/test/TEST-*.xml; do
+            [ -e "$f" ] || continue
+            if grep -qE '<(failure|error)' "$f"; then
+              echo "### $(basename "$f")" >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+              sed -n 's/.*\(<\(failure\|error\)[^>]*message="[^"]*"\).*/\1/p' "$f" | head -20 >> "$GITHUB_STEP_SUMMARY"
+              grep -A25 -E '<(failure|error)' "$f" | head -60 >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+          cat "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-report
+          path: |
+            backend/build/reports/tests/test
+            backend/build/test-results/test
+          retention-days: 7

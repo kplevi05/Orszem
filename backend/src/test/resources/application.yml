@@ -1,0 +1,11 @@
+# Test-only overrides.
+#
+# The main configuration deliberately gives ORSZEM_DB_USERNAME / ORSZEM_DB_PASSWORD no
+# defaults, so a misconfigured deployment fails loudly. Tests must not depend on the
+# developer's environment, so placeholder values are supplied here; the actual connection
+# is provided by the Testcontainers @ServiceConnection bean, which takes precedence.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/unused
+    username: test
+    password: test

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Őrszem</string>
+    <string name="shell_headline">Őrszem</string>
+    <string name="shell_body">Vasúti észlelések bejelentése. Az alkalmazás fejlesztés alatt áll, a bejelentési folyamat még nem érhető el.</string>
+    <string name="shell_version">Verzió: %1$s</string>
+</resources>

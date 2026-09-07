@@ -1,0 +1,47 @@
+[Unit]
+Description=Őrszem V2 backend
+Documentation=https://github.com/kplevi05/Orszem
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=orszem
+Group=orszem
+
+WorkingDirectory=/home/opc/apps/orszem-v2
+
+# Secrets live only here: mode 0600, owned by root, never committed.
+# See deploy/env/backend.env.example for the required keys.
+EnvironmentFile=/etc/orszem/backend.env
+
+# A prebuilt artifact is deployed; production source is never compiled on the server.
+ExecStart=/usr/bin/java -XX:MaxRAMPercentage=60 -jar /home/opc/apps/orszem-v2/backend.jar
+
+Restart=on-failure
+RestartSec=5s
+SuccessExitStatus=143
+TimeoutStopSec=30
+
+# Hardening. The service needs nothing but its own directory and the network.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+ReadWritePaths=/home/opc/apps/orszem-v2
+
+# Journal only; no application log files to rotate.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=orszem-backend
+
+[Install]
+WantedBy=multi-user.target
