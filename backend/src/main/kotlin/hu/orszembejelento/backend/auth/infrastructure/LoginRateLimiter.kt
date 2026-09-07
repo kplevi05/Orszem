@@ -83,6 +83,18 @@ class LoginRateLimiter(
         serviceId?.let { serviceIdAttempts.invalidate(it) }
     }
 
+    /**
+     * Clears every bucket.
+     *
+     * Used by tests, which all originate from 127.0.0.1 and would otherwise share one IP
+     * budget: a test that deliberately exhausts the limiter would throttle every test that
+     * ran after it in the same context.
+     */
+    fun resetAll() {
+        serviceIdAttempts.invalidateAll()
+        ipAttempts.invalidateAll()
+    }
+
     private fun buildCache(window: Duration, maximumSize: Long): Cache<String, AtomicInteger> =
         Caffeine.newBuilder()
             .expireAfterWrite(window)

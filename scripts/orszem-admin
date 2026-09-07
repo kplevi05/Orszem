@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+#
+# Őrszem maintenance CLI.
+#
+# Administrator creation and administrator password recovery are the two operations that
+# could hand someone complete control of the system. They are therefore gated on shell
+# access to the server rather than on any credential, and there is deliberately no HTTP
+# equivalent, no remote maintenance interface and no master password.
+#
+# Usage:
+#   ./scripts/orszem-admin create-super-admin
+#   ./scripts/orszem-admin reset-super-admin-password SZ-123456
+#
+# Requires the same database configuration the service uses:
+#   ORSZEM_DB_URL, ORSZEM_DB_USERNAME, ORSZEM_DB_PASSWORD
+#
+# On the server these normally come from the systemd environment file:
+#   set -a; . /etc/orszem/backend.env; set +a
+#
+# The generated credential is printed to this terminal exactly once. It is never written
+# to a log, a file or a command argument, and only its Argon2id hash is stored.
+set -euo pipefail
+
+JAR="${ORSZEM_BACKEND_JAR:-backend/build/libs/backend.jar}"
+
+usage() {
+  cat <<'USAGE'
+Őrszem maintenance CLI
+
+  create-super-admin
+      Creates a SUPER_ADMIN with a random service ID and a one-time temporary
+      credential. The account must change its password on first sign-in.
+
+  reset-super-admin-password <SERVICE_ID>
+      Issues a new temporary credential for an existing, active SUPER_ADMIN and
+      revokes all of its sessions. Refuses any account that is not a SUPER_ADMIN,
+      and never reactivates a deactivated one.
+
+Environment:
+  ORSZEM_DB_URL, ORSZEM_DB_USERNAME, ORSZEM_DB_PASSWORD   required
+  ORSZEM_BACKEND_JAR                                      defaults to backend/build/libs/backend.jar
+USAGE
+}
+
+run_maintenance() {
+  if [ ! -f "$JAR" ]; then
+    echo "ERROR: backend jar not found at $JAR" >&2
+    echo "Build it first:  cd backend && ./gradlew bootJar" >&2
+    exit 1
+  fi
+
+  for required in ORSZEM_DB_URL ORSZEM_DB_USERNAME ORSZEM_DB_PASSWORD; do
+    if [ -z "${!required:-}" ]; then
+      echo "ERROR: $required is not set." >&2
+      echo "On the server:  set -a; . /etc/orszem/backend.env; set +a" >&2
+      exit 1
+    fi
+  done
+
+  # web-application-type=none is what makes this a maintenance process rather than a
+  # service instance: no port is opened and no endpoint is exposed. The runner refuses
+  # to act if it ever finds itself inside a web context.
+  exec java \
+    -jar "$JAR" \
+    --spring.main.web-application-type=none \
+    --spring.main.banner-mode=off \
+    "$@"
+}
+
+case "${1:-}" in
+  create-super-admin)
+    run_maintenance --orszem.maintenance.action=create-super-admin
+    ;;
+
+  reset-super-admin-password)
+    if [ $# -lt 2 ]; then
+      echo "ERROR: a service ID is required, e.g. SZ-123456" >&2
+      exit 2
+    fi
+    # The service ID is an identifier, not a secret, so passing it as an argument is fine.
+    # A password never is, and none is ever accepted here.
+    run_maintenance \
+      --orszem.maintenance.action=reset-super-admin-password \
+      --orszem.maintenance.service-id="$2"
+    ;;
+
+  -h | --help | help | "")
+    usage
+    ;;
+
+  *)
+    echo "ERROR: unknown command '$1'" >&2
+    echo >&2
+    usage >&2
+    exit 2
+    ;;
+esac

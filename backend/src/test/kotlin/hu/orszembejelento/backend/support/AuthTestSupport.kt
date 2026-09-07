@@ -2,6 +2,7 @@ package hu.orszembejelento.backend.support
 
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.ObjectMapper
+import hu.orszembejelento.backend.auth.infrastructure.LoginRateLimiter
 import hu.orszembejelento.backend.identity.application.CreateSuperAdminUseCase
 import hu.orszembejelento.backend.identity.domain.PasswordHasher
 import hu.orszembejelento.backend.identity.domain.PasswordNormalizer
@@ -64,6 +65,7 @@ abstract class AbstractAuthIntegrationTest {
     @Autowired protected lateinit var objectMapper: ObjectMapper
     @Autowired protected lateinit var createSuperAdmin: CreateSuperAdminUseCase
     @Autowired protected lateinit var clock: Clock
+    @Autowired protected lateinit var rateLimiter: LoginRateLimiter
 
     @Value("\${local.server.port}")
     protected var port: Int = 0
@@ -76,6 +78,9 @@ abstract class AbstractAuthIntegrationTest {
     fun resetDatabaseAndClock() {
         // Order matters: audit references users, refresh tokens reference sessions.
         jdbc.sql("TRUNCATE audit_events, refresh_tokens, auth_sessions, users CASCADE").update()
+        // Every test calls from 127.0.0.1, so they share one IP bucket; without this a
+        // throttling test would poison every test that runs after it.
+        rateLimiter.resetAll()
         mutableClock.set(Instant.parse("2026-01-01T12:00:00Z"))
     }
 
