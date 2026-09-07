@@ -1,0 +1,148 @@
+/*
+ * Public Őrszem identity. The palette matches the Public Android app's tokens
+ * (android/public-app/src/main/kotlin/hu/orszembejelento/app/ui/Color.kt), so the two
+ * clients read as one product.
+ */
+:root {
+  --background: #f4f8fc;
+  --surface: #ffffff;
+  --primary: #2477b9;
+  --primary-dark: #0d3b66;
+  --on-primary: #ffffff;
+  --text: #12212f;
+  --text-muted: #5a6b7a;
+  --border: #dbe6f0;
+
+  --max-width: 68rem;
+  --radius: 12px;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+.header {
+  background: var(--primary-dark);
+  color: var(--on-primary);
+}
+
+.header__inner {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding-block: 1rem;
+}
+
+.brand {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.brand__tag {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.main {
+  flex: 1;
+  padding-block: 2.5rem 3rem;
+}
+
+.hero__title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1.2;
+  color: var(--primary-dark);
+}
+
+.hero__lead {
+  margin: 0;
+  max-width: 46rem;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+}
+
+.notice {
+  margin: 1.5rem 0 0;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+}
+
+.cards {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.card {
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.card__title {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  color: var(--primary-dark);
+}
+
+.card__body {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.footer__text {
+  margin: 0;
+  padding-block: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
