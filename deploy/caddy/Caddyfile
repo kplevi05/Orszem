@@ -39,6 +39,28 @@
 	}
 }
 
+(block_internal_paths) {
+	# Spring Boot management, OpenAPI and Swagger UI must never be publicly routed.
+	# These handle blocks are imported FIRST in every site, and handle blocks are
+	# mutually exclusive and evaluated in source order, so they win over any later
+	# proxy or file_server block. Verified by scripts/verify-caddy-routing.sh.
+	handle /actuator* {
+		respond 404
+	}
+	handle /v3/api-docs* {
+		respond 404
+	}
+	handle /swagger-ui* {
+		respond 404
+	}
+	handle /swagger-ui.html {
+		respond 404
+	}
+	handle /webjars* {
+		respond 404
+	}
+}
+
 (backend_proxy) {
 	reverse_proxy 127.0.0.1:8081
 }
@@ -51,6 +73,8 @@ www.orszembejelento.hu {
 orszembejelento.hu {
 	import security_headers
 	encode zstd gzip
+
+	import block_internal_paths
 
 	# Same-origin API. This is why the browser needs no CORS header at all.
 	handle /api/* {
@@ -73,6 +97,8 @@ orszembejelento.hu {
 api.orszembejelento.hu {
 	import security_headers
 	encode zstd gzip
+
+	import block_internal_paths
 
 	handle /api/* {
 		import backend_proxy

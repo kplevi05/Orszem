@@ -6,6 +6,7 @@ plain Gradle and npm commands, documented in the root `README.md`.
 | Script | Purpose |
 |---|---|
 | `dev-db.sh` | start a throwaway PostgreSQL for local backend development |
+| `verify-caddy-routing.sh` | assert the public Caddy routing policy: only `/api/*` is exposed |
 
 Deployment is **not** scripted from a developer machine. It is a documented procedure the
 owner runs on the server; see `docs/deployment/SERVER_RUNBOOK.md`.

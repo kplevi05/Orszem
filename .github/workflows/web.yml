@@ -1,10 +1,17 @@
 name: web
 
 on:
-  # Every branch. Push-triggered runs attach to the head commit, so they appear as
-  # checks on a pull request too - one run per commit instead of two. Add
-  # `pull_request:` if outside contributors ever open PRs from forks.
+  # Both triggers on purpose. Push covers branches before a PR is opened; pull_request
+  # independently verifies every PR, including PRs from forks, which a push trigger in
+  # this repository never sees.
+  #
+  # A branch that already has an open PR therefore runs twice for one commit: push and
+  # pull_request use different refs, so the per-ref concurrency group below does not
+  # collapse them. That duplication is accepted deliberately - deduplicating by head SHA
+  # would make one of the two runs show up on the PR as "cancelled", which is worse than
+  # a few extra minutes of CI.
   push:
+  pull_request:
 
 permissions:
   contents: read

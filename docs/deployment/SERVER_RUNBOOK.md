@@ -145,12 +145,37 @@ curl -s   https://orszembejelento.hu/api/v1/meta       # same-origin API route
 curl -s   https://api.orszembejelento.hu/api/v1/meta   # Android route, same backend
 ```
 
-Then confirm nothing leaked:
+Then confirm nothing leaked. Every one of these must return **404**, on both hosts:
 
 ```bash
-curl -s https://api.orszembejelento.hu/actuator/health   # expect 404 - not exposed publicly
-curl -s https://api.orszembejelento.hu/v3/api-docs       # expect 404
+for host in orszembejelento.hu api.orszembejelento.hu; do
+  for path in /actuator /actuator/health /actuator/env /v3/api-docs \
+              /v3/api-docs/swagger-config /swagger-ui.html /swagger-ui/index.html /webjars/x.js; do
+    printf '%s%s -> %s\n' "$host" "$path" \
+      "$(curl -s -o /dev/null -w '%{http_code}' "https://$host$path")"
+  done
+done
+
 sudo ss -lntp | grep -E '0\.0\.0\.0:(8081|5432)' && echo 'EXPOSED - fix immediately'
+```
+
+### The public routing policy
+
+Only the intended `/api/*` surface is publicly routed. Spring Boot's management endpoints,
+the generated OpenAPI document and Swagger UI are served by the backend on loopback but are
+**never** reachable through the edge — the `block_internal_paths` snippet in the Caddyfile
+returns 404 for them ahead of any proxy or file-server block, on every host.
+
+This is enforced automatically rather than by convention. `scripts/verify-caddy-routing.sh`
+adapts the real Caddyfile, runs Caddy against a stub upstream that reports whether it was
+reached at all, and asserts each route. It runs in CI on every push and pull request
+(`.github/workflows/deploy-config.yml`), and it has been negative-tested: deliberately
+making the API host blanket-proxy everything makes it fail with ten violations.
+
+Run it locally the same way:
+
+```bash
+./scripts/verify-caddy-routing.sh
 ```
 
 ## 6. Updating later

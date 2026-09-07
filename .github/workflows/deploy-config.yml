@@ -1,0 +1,56 @@
+name: deploy-config
+
+on:
+  # Both triggers on purpose. Push covers branches before a PR is opened; pull_request
+  # independently verifies every PR, including PRs from forks, which a push trigger in
+  # this repository never sees.
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-config-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  caddy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Caddy
+        env:
+          CADDY_VERSION: 2.11.4
+        run: |
+          curl -fsSL -o caddy.tar.gz \
+            "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_amd64.tar.gz"
+          tar -xzf caddy.tar.gz caddy
+          sudo install -m 0755 caddy /usr/local/bin/caddy
+          caddy version
+
+      - name: Validate Caddyfile
+        run: caddy validate --config deploy/caddy/Caddyfile --adapter caddyfile
+
+      # `caddy fmt --diff` is informational and always exits 0, so it cannot gate.
+      # Comparing the formatted output against the file does.
+      - name: Check Caddyfile is formatted
+        run: caddy fmt deploy/caddy/Caddyfile | diff -u deploy/caddy/Caddyfile -
+
+      # Runs the real Caddyfile against a stub upstream and asserts that only the
+      # intended /api/* surface is publicly routed - actuator, the OpenAPI document and
+      # Swagger UI must stay unreachable through the edge, on every host.
+      - name: Verify public routing policy
+        run: ./scripts/verify-caddy-routing.sh
+
+      - name: Ensure no secret material is committed under deploy/
+        run: |
+          if git ls-files deploy | grep -qiE '\.(jks|keystore|p12|pem|key)$|(^|/)\.env$'; then
+            echo "secret-shaped file committed under deploy/"; exit 1
+          fi
+          if grep -rIqE '(password|secret|token)[[:space:]]*[:=][[:space:]]*["'"'"']?[A-Za-z0-9!@#$%^&*_+-]{8,}' \
+               deploy --exclude='*.example'; then
+            echo "possible credential committed under deploy/"; exit 1
+          fi
+          echo "deploy/ carries no secret material"

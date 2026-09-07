@@ -101,20 +101,38 @@ pilot identity : 745f5fa8c69f4742bb4ba5cc8044dab008a14d2e649ecc027751fa001065a51
   Scheme v4 signed (`.idsig` present), and was produced by a manual run that no repository script
   reproduces.
 
-The candidate keystore for `745f5fa8…a51a` is `orszem-pilot.jks` in the owner's private signing
-directory outside this repository. That could **not** be confirmed here, because reading a keystore
-requires its password, which is deliberately never handled by tooling nor recorded anywhere. The
-owner can confirm it themselves:
+### What the upgrade identity actually is
+
+**The upgrade identity for the pilot builds is the private key corresponding to the
+measured certificate `745f5fa8…a51a`.** That is the only thing established by measurement,
+and it is stated independently of where that key is stored.
+
+A file named `orszem-pilot.jks` exists in the owner's private signing directory outside
+this repository, and its modification time is consistent with the `pilot-apks/` build.
+**That makes it a candidate and nothing more.** It has *not* been verified to contain the
+key for `745f5fa8…a51a`, because opening a keystore requires its password, which is
+deliberately never handled by tooling nor recorded anywhere. Until that check is run, this
+document does not assert that the JKS is the upgrade path, and neither should anyone else.
+
+To confirm it, the owner runs the command below and compares the printed SHA-256 with
+`745f5fa8c69f4742bb4ba5cc8044dab008a14d2e649ecc027751fa001065a51a`. `keytool` prompts for
+the password interactively, so it is never passed as an argument, never appears in shell
+history, and is never written to a file:
 
 ```bash
-keytool -list -v -keystore <path-to>/orszem-pilot.jks
+keytool -list -v -keystore <path-to>/orszem-pilot.jks | grep -A1 "SHA256:"
 ```
 
-**Consequence:** whichever set was actually distributed determines the upgrade path. If the
-`pilot-apks/` set was distributed, then the private keystore holding `745f5fa8…a51a` is the **only**
-way to publish an in-place update to installed V1 builds. That keystore and its password must be
-backed up outside the build machine. Neither is committed here, and **neither is reused for V2** —
-V2 receives a new long-term release identity, described in `docs/deployment/ANDROID_SIGNING.md`.
+If the fingerprints match, that keystore holds the pilot upgrade identity. If they do not,
+the key that signed the distributed pilot APKs is elsewhere and must be located before any
+in-place V1 update is possible.
+
+**Consequence:** whichever set was actually distributed determines which identity governs
+upgrades. If the `pilot-apks/` set was the distributed one, then in-place updates to
+installed V1 builds require the private key behind `745f5fa8…a51a` — wherever it turns out
+to live — and that key plus its password must be backed up off the build machine. Neither
+is committed here, and **neither is reused for V2**: V2 receives a new long-term release
+identity, described in `docs/deployment/ANDROID_SIGNING.md`.
 
 ## 5. Verification performed at archive time
 
@@ -123,23 +141,52 @@ Run on the archived commit, before any V2 restructuring, on Windows 11 with Temu
 | Command | Result |
 |---|---|
 | `apps/android> ./gradlew testDebugUnitTest :public-app:assembleDebug :service-app:assembleDebug` | **BUILD SUCCESSFUL** in 1m 37s — 58 unit tests, 0 failures, 0 errors, 0 skipped |
-| `services/api> ./gradlew compileKotlin compileTestKotlin test` (unit tests only) | **BUILD SUCCESSFUL** in 42s — 17 unit tests, 0 failures, 0 errors |
+| `services/api> ./gradlew build` (full, clean worktree, Docker running) | **BUILD FAILED** — 69 tests, 52 failed. See 5.1 |
 
-V1 was verified as-is. No V1 defect was fixed during archiving.
+V1 was verified as-is. **No V1 defect was fixed during archiving**, and no V1 file was
+modified to make anything pass.
 
-### 5.1 Backend verification — partial
+### 5.1 Backend verification — full build attempted, integration tests fail on this toolchain
 
-The backend was compiled and its Docker-free unit tests were run from a worktree checked
-out at this tag: main and test sources compile, and all 17 unit tests pass.
+The full build was run from a clean worktree checked out at `demo-v1.1-final`, with the
+Docker engine confirmed running (Docker Desktop, server version 29.4.3).
 
-**The 53 integration tests were NOT run.** Every one of them starts a PostgreSQL container
-through Testcontainers, and the Docker engine on the build machine would not start during
-the archiving session (Docker Desktop was running but never provisioned its WSL backend).
+Result: **69 tests, 52 failures, 0 errors.** The split is exact and total:
 
-This is an environment limitation, not an observed V1 defect. Nothing indicates the
-integration tests would fail; they simply were not executed, and this record does not claim
-otherwise. They can be run later with `services/api> ./gradlew build` from a checkout of
-`demo-v1.1-final` on a machine with a working Docker engine.
+| Kind | Classes | Tests | Result |
+|---|---|---|---|
+| Unit (no container) | 4 | 17 | **all pass** |
+| Integration (`*IT`, Testcontainers) | 13 | 52 | **all fail** |
+
+Every one of the 52 failures has the same root cause, raised before any application code
+executes:
+
+```
+Could not find a valid Docker environment
+  org.testcontainers.dockerclient.DockerClientProviderStrategy.getFirstValidStrategy
+```
+
+Docker's `/info` response reaching Testcontainers contains `"ServerVersion":""`, so the
+`NpipeSocketClientProviderStrategy` rejects the environment and no container is ever
+started. The remaining stack frames are cascade failures — Spring's
+`ApplicationContext failure threshold (1) exceeded` for each subsequent test class.
+
+**This is a toolchain incompatibility, not a V1 product defect.** The evidence:
+
+- V1 pins Testcontainers **1.21.3** and force-upgrades docker-java to **3.5.3**, itself a
+  workaround for Docker Desktop's socket proxy that was already needed in 2026-09. That
+  pinned combination cannot negotiate with Docker Desktop 29.4.3.
+- The V2 backend, in the same session, on the same machine, against the same daemon, runs
+  its Testcontainers PostgreSQL integration tests successfully using Testcontainers
+  **2.0.5**. Docker itself is demonstrably fine.
+- All failures occur at container-provisioning time. No V1 business assertion was reached,
+  so nothing here says anything about whether V1's behaviour is correct.
+
+**What this record does and does not claim.** It does not claim the V1 integration suite
+passes; it was last known green when the demo was built, and it has not been reproduced
+since. It also does not claim V1 is broken. To actually re-run it, use a Docker version
+contemporary with the pin, or raise V1's Testcontainers version — the latter would be
+modifying archived code, which is deliberately not done here.
 
 ## 6. Known limitations of Demo v1.1
 
@@ -156,6 +203,9 @@ otherwise. They can be run later with `services/api> ./gradlew build` from a che
   The report state machine was exactly `NEW → IN_PROGRESS → ARCHIVED`, with no editing or reopening.
 - **Every backend integration test requires Docker.** There is no H2 or slice-test tier, and the demo
   seed reaches the database through Flyway `locations` rather than through test fixtures.
+  Because Testcontainers is pinned to 1.21.3 with a hand-forced docker-java 3.5.3, **the
+  integration suite is no longer reproducible on a current Docker Desktop** — see 5.1. The
+  archived suite is effectively frozen against the Docker version of its time.
 - **`MANIFEST.sha256` was already stale** at archive time: it listed the pre-implementation file set
   and an outdated migration path.
 - **Database contents are not in Git.** The V1 database is archived separately; see

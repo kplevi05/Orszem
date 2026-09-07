@@ -18,6 +18,11 @@ owner's access.
 | A2 | Retire the public V1 deployment | `deployment/V1_DECOMMISSION.md` | security: the demo credential is public |
 | A3 | Delegate `orszembejelento.hu` and create the A records | `deployment/DNS.md` | blocks HTTPS and any V2 deployment |
 | A4 | Generate and back up the V2 release keystore | `deployment/ANDROID_SIGNING.md` | blocks any V2 distribution |
+| A5 | Confirm which keystore holds the V1 pilot signing identity `745f5fa8…a51a`, then back it up | `archive/DEMO_V1_1.md` §4 | blocks any in-place update to installed V1 pilot builds |
+
+A5 is a one-command check. `orszem-pilot.jks` is only a *candidate* until its certificate
+fingerprint is compared against the measured pilot APK certificate; if it does not match,
+the signing key for the distributed pilot builds is somewhere else and needs locating.
 
 ---
 
