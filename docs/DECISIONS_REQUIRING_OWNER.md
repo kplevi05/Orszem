@@ -72,6 +72,26 @@ Who moderates, on what basis, and what states does moderation produce?
 *Affects:* the report state machine. Demo v1's `NEW → IN_PROGRESS → ARCHIVED` was a
 demonstration simplification and is **not** automatically the V2 model.
 
+### B8. Budapest — city or districts?
+
+The KSH Helységnévtár lists **both** `Budapest` (KSH code 13578) and its 23 districts as
+separate settlements, and the imported reference data therefore contains all 24. A report
+in Budapest can be attributed to either. The choice determines what a service area covers
+and how a Budapest report routes.
+
+*Affects:* reference data, routing and service-area configuration. Relevant to Phase 3.
+See [`PHASE_3B_DECISION_GATE.md`](PHASE_3B_DECISION_GATE.md) §3.
+
+### B9. VPE reuse confirmation
+
+VPE publishes no explicit reuse licence for the HÜSZ annexes the railway reference data is
+derived from. The current basis — mandatory regulatory publication by a body performing a
+public task, factual rows only, source document not redistributed — is sound for internal
+use, but is not a written grant.
+
+*Affects:* external distribution of the derived dataset only, not the running service. See
+[`PHASE_3B_DECISION_GATE.md`](PHASE_3B_DECISION_GATE.md) §6.
+
 ---
 
 ## C. Explicitly deferred
