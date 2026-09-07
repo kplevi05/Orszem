@@ -24,6 +24,7 @@ out/
 *.p12
 *.pem
 *.key
+keystore.properties
 
 # OS
 .DS_Store
@@ -54,3 +55,8 @@ node_modules/
 *.aab
 .kotlin/
 
+
+# Web (Public Web)
+web/**/node_modules/
+web/**/dist/
+web/**/.vite/
