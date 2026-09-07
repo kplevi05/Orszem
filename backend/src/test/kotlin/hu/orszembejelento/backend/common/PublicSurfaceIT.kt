@@ -65,13 +65,25 @@ class PublicSurfaceIT : AbstractPostgresIntegrationTest() {
     }
 
     @Test
-    fun `sensitive actuator endpoints are not exposed`() {
+    fun `sensitive actuator endpoints are not reachable`() {
+        // Two independent layers keep these closed, and either one is sufficient:
+        //   * they are not in `management.endpoints.web.exposure.include`, so Actuator
+        //     itself would answer 404;
+        //   * Spring Security's default-deny rule now answers 401 first.
+        // The assertion therefore accepts both, but never a 200 and never a body: what
+        // matters is that no configuration, bean graph or heap dump is ever returned.
         listOf("env", "beans", "configprops", "mappings", "loggers", "heapdump", "threaddump")
             .forEach { endpoint ->
-                val status = get("/actuator/$endpoint").statusCode()
-                check(status == 404) {
-                    "/actuator/$endpoint must not be exposed, got $status"
+                val response = get("/actuator/$endpoint")
+                check(response.statusCode() == 404 || response.statusCode() == 401) {
+                    "/actuator/$endpoint must not be reachable, got ${response.statusCode()}"
                 }
+                listOf("jdbc:postgresql", "password", "ORSZEM_DB", "classpath", "beans")
+                    .forEach { leak ->
+                        check(!response.body().contains(leak, ignoreCase = true)) {
+                            "/actuator/$endpoint leaked '$leak'"
+                        }
+                    }
             }
     }
 }

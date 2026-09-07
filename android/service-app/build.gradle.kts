@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 // Release signing is configured only when the owner supplies it, through a gitignored
@@ -88,6 +89,14 @@ android {
     lint {
         abortOnError = true
     }
+
+    testOptions {
+        unitTests {
+            // OkHttp touches android.util.Log, which is a throwing stub in unit tests.
+            // Returning defaults lets the real client run on the JVM unchanged.
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 kotlin {
@@ -107,7 +116,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Conventional, small networking stack. No custom framework.
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
+
+    // Instrumented tests: the real Android Keystore only exists on a device or emulator,
+    // so the crypto that protects the refresh token cannot be covered by a JVM test.
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.okhttp.mockwebserver)
 }

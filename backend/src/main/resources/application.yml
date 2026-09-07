@@ -55,8 +55,36 @@ orszem:
     name: orszem-backend
     version: v1
 
+  # --- Authentication -------------------------------------------------------
+  # Short access tokens are affordable here: tokens are opaque and revalidated against
+  # the database on every request, so revocation takes effect immediately.
+  auth:
+    access-token-lifetime: ${ORSZEM_ACCESS_TOKEN_LIFETIME:15m}
+    # Absolute session lifetime. Refresh rotation never extends beyond this.
+    session-lifetime: ${ORSZEM_SESSION_LIFETIME:30d}
+    # Peers whose X-Forwarded-For may be believed. Loopback only, matching the
+    # deployment: Spring binds 127.0.0.1 and Caddy on the same host is the sole ingress.
+    # Widen only if a proxy moves to another machine, and never to a range that could
+    # contain a client - the header is client-supplied and only means anything when a
+    # trusted proxy wrote it.
+    trusted-proxies: ${ORSZEM_TRUSTED_PROXIES:127.0.0.1/32,::1/128}
+
+    rate-limit:
+      enabled: ${ORSZEM_RATE_LIMIT_ENABLED:true}
+      # Provisional pilot values, deliberately conservative and expected to be tuned
+      # once there is real traffic to measure. Counters are in-memory and reset when
+      # the backend restarts - acceptable for a single-server pilot.
+      per-service-id-attempts: ${ORSZEM_RATE_LIMIT_SERVICE_ID_ATTEMPTS:10}
+      per-ip-attempts: ${ORSZEM_RATE_LIMIT_IP_ATTEMPTS:40}
+      window: ${ORSZEM_RATE_LIMIT_WINDOW:15m}
+      retry-after: ${ORSZEM_RATE_LIMIT_RETRY_AFTER:1m}
+      maximum-tracked-keys: ${ORSZEM_RATE_LIMIT_MAX_KEYS:100000}
+
 logging:
   level:
     root: INFO
     hu.orszembejelento: INFO
     org.flywaydb: INFO
+    # Spring Security at DEBUG would print filter chains and principal details on every
+    # request; kept at INFO so nothing about credentials reaches the log.
+    org.springframework.security: INFO

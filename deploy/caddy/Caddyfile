@@ -62,7 +62,15 @@
 }
 
 (backend_proxy) {
-	reverse_proxy 127.0.0.1:8081
+	reverse_proxy 127.0.0.1:8081 {
+		# Overwrite rather than append, so the backend receives exactly one value that
+		# Caddy determined from the real TCP peer. Caddy would otherwise append to any
+		# X-Forwarded-For the client sent, leaving attacker-controlled entries in the
+		# header. The backend is defensive about this anyway (it reads the rightmost
+		# entry and only from a trusted peer), but there is no reason to forward a
+		# forged value at all.
+		header_up X-Forwarded-For {remote_host}
+	}
 }
 
 www.orszembejelento.hu {

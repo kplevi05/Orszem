@@ -1,7 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Őrszem Szolgálat</string>
-    <string name="shell_headline">Őrszem Szolgálat</string>
-    <string name="shell_body">Szolgálati alkalmazás. Fejlesztés alatt: a bejelentéskezelés még nem érhető el.</string>
-    <string name="shell_version">Verzió: %1$s</string>
+
+    <!-- Session restore -->
+    <string name="restoring_session">Munkamenet helyreállítása…</string>
+
+    <!-- Login -->
+    <string name="login_title">Bejelentkezés</string>
+    <string name="login_subtitle">Szolgálati azonosítóval és jelszóval.</string>
+    <string name="field_service_id">Szolgálati azonosító</string>
+    <string name="field_service_id_hint">SZ-123456</string>
+    <string name="field_password">Jelszó</string>
+    <string name="action_login">Bejelentkezés</string>
+
+    <!-- Forced password change -->
+    <string name="password_change_title">Jelszócsere szükséges</string>
+    <string name="password_change_subtitle">A(z) %1$s azonosítóhoz új jelszót kell beállítani.</string>
+    <string name="password_rule_length">A jelszó legalább 15 karakter hosszú legyen. Szóköz és ékezet is használható.</string>
+    <string name="field_new_password">Új jelszó</string>
+    <string name="field_confirm_password">Új jelszó ismét</string>
+    <string name="action_set_password">Jelszó beállítása</string>
+    <string name="action_cancel">Mégse</string>
+
+    <!-- Home -->
+    <string name="home_title">Őrszem Szolgálat</string>
+    <string name="home_signed_in_as">Bejelentkezve: %1$s · %2$s</string>
+    <string name="home_placeholder">A bejelentéskezelés még nem érhető el. Ez a fázis csak a bejelentkezést és a fiókkezelést tartalmazza.</string>
+    <string name="action_account">Fiók</string>
+
+    <!-- Account -->
+    <string name="account_title">Fiók</string>
+    <string name="account_service_id">Szolgálati azonosító: %1$s</string>
+    <string name="account_role">Szerepkör: %1$s</string>
+    <string name="account_change_password">Jelszó módosítása</string>
+    <string name="account_change_password_warning">A jelszó módosítása minden eszközön megszünteti a meglévő munkameneteket.</string>
+    <string name="field_current_password">Jelenlegi jelszó</string>
+    <string name="action_change_password">Jelszó módosítása</string>
+    <string name="account_password_changed">A jelszó módosítva.</string>
+    <string name="action_logout">Kijelentkezés</string>
+    <string name="action_logout_all">Kijelentkezés minden eszközről</string>
+    <string name="account_logout_all_hint">Minden munkamenet megszűnik, ezen az eszközön is.</string>
+    <string name="action_back">Vissza</string>
+
+    <!-- Password field -->
+    <string name="password_show">Jelszó megjelenítése</string>
+    <string name="password_hide">Jelszó elrejtése</string>
+
+    <!-- Errors. Wording is generic on purpose: the server does not disclose whether an
+         account exists, and the app must not imply otherwise. -->
+    <string name="error_invalid_credentials">Hibás azonosító vagy jelszó.</string>
+    <string name="error_password_policy">A jelszó nem felel meg a követelményeknek. Legalább 15 karakter, és nem lehet gyakori jelszó.</string>
+    <string name="error_password_mismatch">A két jelszó nem egyezik.</string>
+    <string name="error_rate_limited">Túl sok próbálkozás. Kérjük, várjon egy kicsit.</string>
+    <string name="error_network">A kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot.</string>
+    <string name="error_unexpected">Váratlan hiba történt.</string>
 </resources>

@@ -40,7 +40,7 @@ cat > "$WORK/stub.js" <<'JS'
 const http = require('http');
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('UPSTREAM_REACHED ' + req.url);
+  res.end('UPSTREAM_REACHED ' + req.url + ' XFF=' + (req.headers['x-forwarded-for'] || 'none'));
 }).listen(process.argv[2], '127.0.0.1');
 JS
 node "$WORK/stub.js" "$UPSTREAM_PORT" &
@@ -157,6 +157,38 @@ echo
 echo "== API host serves nothing but the API =="
 assert api.orszembejelento.hu /                   404 blocked "no site root on the API host"
 assert api.orszembejelento.hu /index.html         404 blocked "no static content on the API host"
+
+echo
+echo "== the edge is authoritative for X-Forwarded-For =="
+# The backend rate-limits per client IP, and behind this proxy the only way it can learn
+# the real client is X-Forwarded-For. A client that could forge that header would get an
+# unlimited supply of fresh rate-limit buckets, and could attribute its attempts to
+# someone else's address. Caddy must therefore overwrite whatever the client sent.
+assert_forwarded_for() {
+  local description="$1" sent="$2"
+  local body observed
+  if [ -n "$sent" ]; then
+    body="$(curl -s -H 'Host: api.orszembejelento.hu' -H "X-Forwarded-For: $sent" \
+      "http://127.0.0.1:$EDGE_PORT/api/v1/meta")"
+  else
+    body="$(curl -s -H 'Host: api.orszembejelento.hu' "http://127.0.0.1:$EDGE_PORT/api/v1/meta")"
+  fi
+  observed="${body##*XFF=}"
+
+  # Whatever arrives must be exactly one address, and must be the loopback peer Caddy
+  # actually saw - not the value the client asked for.
+  if [ "$observed" = "127.0.0.1" ]; then
+    printf 'ok    %-46s -> XFF=%s\n' "$description" "$observed"
+  else
+    printf 'FAIL  %-46s -> XFF=%s (expected only the real peer, 127.0.0.1)\n' "$description" "$observed"
+    fail=1
+  fi
+}
+assert_forwarded_for "no forwarded header sent"            ""
+assert_forwarded_for "forged single value"                 "203.0.113.9"
+assert_forwarded_for "forged chain"                        "203.0.113.9, 198.51.100.4"
+assert_forwarded_for "forged value with a port"            "203.0.113.9:1234"
+assert_forwarded_for "forged loopback (impersonating Caddy)" "127.0.0.1"
 
 echo
 echo "== www redirects to the apex =="
