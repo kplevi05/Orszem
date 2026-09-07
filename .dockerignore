@@ -1,9 +1,0 @@
-.git
-.toolchain
-apps
-docs
-node_modules
-**/build
-**/.gradle
-*.log
-.github
