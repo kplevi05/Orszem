@@ -11,7 +11,7 @@ Do not redesign the product. Do not implement features belonging to a later phas
 
 ## Current phase
 
-**Phase 1 (technical baseline) is complete.** Phase 2 is authentication.
+**Phase 2 (authentication foundation) is complete.** Phase 3 is reference data and the report domain.
 
 Nothing beyond the current phase is implemented. If a task seems to require a feature from
 a later phase, stop and raise it rather than inventing behaviour.

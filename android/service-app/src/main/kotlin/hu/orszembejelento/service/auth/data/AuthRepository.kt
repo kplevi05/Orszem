@@ -48,11 +48,15 @@ class AuthRepository(
 
     suspend fun login(serviceId: String, password: String): AuthOutcome = call {
         val response = api.login(LoginRequest(serviceId.trim(), password))
-        when {
-            response.isSuccessful -> adopt(response.body()!!)
-            errorCodeOf(response) == ApiErrorCode.PASSWORD_CHANGE_REQUIRED ->
-                AuthOutcome.PasswordChangeRequired(serviceId.trim())
-            else -> AuthOutcome.Failure(failureKind(response))
+        if (response.isSuccessful) return@call adopt(response.body()!!)
+
+        // Read once and reuse: the error body is a one-shot stream, so reading it a second
+        // time yields nothing and every failure would collapse to "unexpected".
+        val code = errorCodeOf(response)
+        if (code == ApiErrorCode.PASSWORD_CHANGE_REQUIRED) {
+            AuthOutcome.PasswordChangeRequired(serviceId.trim())
+        } else {
+            AuthOutcome.Failure(failureKind(code))
         }
     }
 
@@ -158,11 +162,19 @@ class AuthRepository(
             AuthOutcome.Failure(AuthErrorKind.NETWORK)
         }
 
+    /**
+     * Reads the stable error code from the body.
+     *
+     * The body is a one-shot stream, so this must be called at most once per response and
+     * its result reused — never called again to re-derive the same value.
+     */
     private fun errorCodeOf(response: Response<*>): String? = runCatching {
         response.errorBody()?.string()?.let { json.decodeFromString<ApiErrorBody>(it).code }
     }.getOrNull()
 
-    private fun failureKind(response: Response<*>): AuthErrorKind = when (errorCodeOf(response)) {
+    private fun failureKind(response: Response<*>): AuthErrorKind = failureKind(errorCodeOf(response))
+
+    private fun failureKind(code: String?): AuthErrorKind = when (code) {
         ApiErrorCode.INVALID_CREDENTIALS -> AuthErrorKind.INVALID_CREDENTIALS
         ApiErrorCode.PASSWORD_POLICY_VIOLATION -> AuthErrorKind.PASSWORD_POLICY
         ApiErrorCode.RATE_LIMITED -> AuthErrorKind.RATE_LIMITED

@@ -89,6 +89,14 @@ android {
     lint {
         abortOnError = true
     }
+
+    testOptions {
+        unitTests {
+            // OkHttp touches android.util.Log, which is a throwing stub in unit tests.
+            // Returning defaults lets the real client run on the JVM unchanged.
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 kotlin {
