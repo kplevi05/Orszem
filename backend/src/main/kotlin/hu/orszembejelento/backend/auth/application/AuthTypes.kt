@@ -47,5 +47,21 @@ class PasswordChangeRequiredException : RuntimeException("password change requir
 /** An access or refresh credential was malformed, unknown, expired, consumed or revoked. */
 class SessionInvalidException : RuntimeException("session invalid")
 
+/**
+ * Outcome of a refresh attempt.
+ *
+ * Refresh returns a result rather than throwing on failure, because a failed refresh may
+ * still need to *commit* work: detecting a reused token revokes the session, and that
+ * revocation must survive. Signalling failure with an exception would roll the transaction
+ * back and undo the revocation — leaving the reused session alive, which is precisely the
+ * opposite of what reuse detection exists to do.
+ *
+ * The controller maps [Failed] to the same generic response as any other session failure.
+ */
+sealed interface RefreshResult {
+    data class Rotated(val credentials: IssuedCredentials) : RefreshResult
+    data object Failed : RefreshResult
+}
+
 /** Too many recent failed attempts for this service ID or source IP. */
 class RateLimitedException(val retryAfterSeconds: Long) : RuntimeException("rate limited")

@@ -7,7 +7,9 @@ import hu.orszembejelento.backend.auth.application.IssuedCredentials
 import hu.orszembejelento.backend.auth.application.LoginUseCase
 import hu.orszembejelento.backend.auth.application.LogoutAllUseCase
 import hu.orszembejelento.backend.auth.application.LogoutUseCase
+import hu.orszembejelento.backend.auth.application.RefreshResult
 import hu.orszembejelento.backend.auth.application.RefreshUseCase
+import hu.orszembejelento.backend.auth.application.SessionInvalidException
 import hu.orszembejelento.backend.common.web.ApiPaths
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -80,7 +82,12 @@ class ServiceAuthController(
             "token. Presenting an already-consumed token revokes the whole session.",
     )
     fun refresh(@Valid @RequestBody request: RefreshRequest): ResponseEntity<TokenResponse> =
-        credentials(refreshUseCase.refresh(request.refreshToken))
+        when (val result = refreshUseCase.refresh(request.refreshToken)) {
+            is RefreshResult.Rotated -> credentials(result.credentials)
+            // Mapped to the same generic failure as any other invalid session, so the
+            // response never reveals whether reuse was detected.
+            RefreshResult.Failed -> throw SessionInvalidException()
+        }
 
     @PostMapping("/logout")
     @Operation(summary = "Revoke the current session")
