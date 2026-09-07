@@ -157,8 +157,17 @@ service. It is not a written grant.
 
 **Recommendation:** obtain written confirmation from VPE (KTI VPE Igazgatóság) before the
 derived dataset is distributed externally, for example published as an open file or
-shipped inside a downloadable client build. This does not block Phase 3B or 3C, because
-neither distributes the dataset outside the deployment.
+shipped inside a downloadable client build.
+
+This is now enforced, not just documented: the manifest carries a third, independent
+status field, `reuseStatus: PENDING | CLEARED` (see
+[ADR 0006](architecture/adr/0006-reference-import-gates-and-partial-coverage-routing.md)),
+separate from `verificationStatus` and `coverageStatus`. The real dataset is
+`reuseStatus: PENDING`, and **the backend reference importer refuses to import a `PENDING`
+dataset into a production database.** The dataset therefore stays research/candidate
+material — the running service does not depend on it — until VPE confirms in writing and
+that one field changes to `CLEARED`. This does not block Phase 3B or 3C, because neither
+requires the real dataset to be imported yet.
 
 This is the only unresolved licensing question. It is an owner action, at no cost.
 
@@ -264,15 +273,25 @@ current path, and not required.**
 
 | | State |
 |---|---|
-| Phase 3A — schema, scope, routing model | **complete** (V002; 155 backend tests green) |
-| Phase 3B — canonical dataset | **complete and validated**; importer outstanding |
-| Phase 3B — backend reference importer (§24 / §25 / §50) | **not started — the next work item** |
+| Phase 3A — schema, scope, routing model | **complete** (V002; tests green) |
+| Phase 3B — canonical dataset | **complete and validated** |
+| Phase 3B — backend reference importer (§24 / §25 / §50) | **complete** (185 backend tests green) |
 | Phase 3C — routing service and Public reference API | **not started, correctly gated** |
 
-The importer is the remaining Phase 3B deliverable: `validate` / `diff` / `import`
-maintenance commands, transactional, serialised by advisory lock, idempotent with UUID
-preservation, `REFERENCE_DATASET_VERSION_CONFLICT` and `REFERENCE_LINE_IN_USE` errors, a
-provenance row in `reference_dataset_imports`, and a `REFERENCE_DATASET_IMPORTED` audit
-event.
+The importer (`ReferenceImportUseCase`, wired into `scripts/orszem-admin
+reference-validate` / `reference-diff` / `reference-import`) is transactional, serialised by
+a PostgreSQL advisory lock, idempotent with UUID preservation by `ksh_code` / `line_code`,
+and refuses an unverified dataset, an uncleared-reuse dataset, a version/content conflict,
+and deactivating a railway line still assigned to a service area
+(`REFERENCE_LINE_IN_USE`) — with a full transaction rollback on every refusal. It writes a
+provenance row in `reference_dataset_imports` and a `REFERENCE_DATASET_IMPORTED` audit
+event on a real import. See
+[ADR 0006](architecture/adr/0006-reference-import-gates-and-partial-coverage-routing.md) for
+the `reuseStatus` gate and the PARTIAL-coverage routing constraint it also records for
+Phase 3C, and `docs/deployment/MAINTENANCE_CLI.md` for usage.
 
-**Phase 3C does not begin until the importer lands and the owner accepts this gate.**
+The real VPE-derived dataset stays `reuseStatus: PENDING` (§6) and therefore **cannot
+currently be imported anywhere, including production** — the importer's own gate enforces
+that, not discipline. It remains research/candidate material until VPE confirms in writing.
+
+**Phase 3C does not begin until the owner accepts this gate.**

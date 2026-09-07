@@ -6,7 +6,7 @@
  * can run it without network access and without depending on KSH, VPE, MÁV or GYSEV being
  * reachable. The committed snapshot is what gets validated.
  *
- * Usage: node validate-canonical.mjs reference-data/current/manifest.json
+ * Usage: node validate-canonical.mjs reference-data/local-research/manifest.json
  */
 
 import fs from 'node:fs';
@@ -38,6 +38,12 @@ if (!['VERIFIED', 'UNVERIFIED'].includes(manifest.verificationStatus)) {
 }
 if (!['COMPLETE', 'PARTIAL'].includes(manifest.coverageStatus)) {
   fail(`coverageStatus must be COMPLETE or PARTIAL, got ${manifest.coverageStatus}`);
+}
+// A third, independent axis: whether reuse rights are cleared. VERIFIED proves the data is
+// factually right and says nothing about redistribution rights, so this cannot be folded
+// into verificationStatus without losing information a downstream importer needs.
+if (!['PENDING', 'CLEARED'].includes(manifest.reuseStatus)) {
+  fail(`reuseStatus must be PENDING or CLEARED, got ${manifest.reuseStatus}`);
 }
 if (!manifest.datasetVersion) fail('datasetVersion is missing');
 
@@ -178,7 +184,9 @@ if (manifest.coverageStatus === 'COMPLETE' && covered.size < settlements.length)
 
 // ------------------------------------------------------------------- report
 
-console.log(`dataset ${manifest.datasetVersion}  ${manifest.verificationStatus} / ${manifest.coverageStatus}`);
+console.log(
+  `dataset ${manifest.datasetVersion}  ${manifest.verificationStatus} / ${manifest.coverageStatus} / reuse:${manifest.reuseStatus}`,
+);
 console.log(`  settlements                    ${settlements.length}`);
 console.log(`  railway lines                  ${lines.length}`);
 console.log(`  settlement-line relations      ${relations.length}`);

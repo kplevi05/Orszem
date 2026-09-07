@@ -409,6 +409,19 @@ const manifest = {
   verificationStatus: 'VERIFIED',
   coverageStatus: 'PARTIAL',
 
+  /**
+   * Correctness and reuse rights are a THIRD independent axis, distinct from both of the
+   * above. VERIFIED proves the data is factually right; it says nothing about whether we
+   * are cleared to redistribute it outside the running service.
+   *
+   * PENDING: the reuse basis recorded under `sources` is sound for internal use and for
+   * running the service, but no source has issued an explicit written reuse grant. The
+   * backend importer refuses to import a PENDING dataset into a production database — see
+   * ADR 0006. CLEARED is set only once that written confirmation exists, and is never
+   * assumed by this tool.
+   */
+  reuseStatus: args.reuseStatus ?? 'PENDING',
+
   sources: {
     KSH: {
       source: 'Központi Statisztikai Hivatal — Magyarország helységnévtára',

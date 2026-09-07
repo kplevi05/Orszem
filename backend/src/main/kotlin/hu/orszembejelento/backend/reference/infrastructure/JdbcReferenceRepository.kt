@@ -1,7 +1,9 @@
 package hu.orszembejelento.backend.reference.infrastructure
 
+import hu.orszembejelento.backend.reference.domain.ExistingReferenceRow
 import hu.orszembejelento.backend.reference.domain.KshCode
 import hu.orszembejelento.backend.reference.domain.RailwayLine
+import hu.orszembejelento.backend.reference.domain.ReferenceDatasetImport
 import hu.orszembejelento.backend.reference.domain.Settlement
 import java.sql.ResultSet
 import java.time.Instant
@@ -138,9 +140,17 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
                 .update()
         }
 
-    fun allSettlementKshCodes(): Map<String, UUID> =
-        jdbc.sql("SELECT ksh_code, id FROM settlements")
-            .query { rs, _ -> rs.getString("ksh_code") to rs.getObject("id", UUID::class.java) }
+    /**
+     * Current settlements keyed by their stable external identity, with just enough state
+     * (id, active) for the importer to decide insert vs. update vs. reactivate without a
+     * second round trip.
+     */
+    fun allSettlementKshCodes(): Map<String, ExistingReferenceRow> =
+        jdbc.sql("SELECT ksh_code, id, active FROM settlements")
+            .query { rs, _ ->
+                rs.getString("ksh_code") to
+                    ExistingReferenceRow(rs.getObject("id", UUID::class.java), rs.getBoolean("active"))
+            }
             .list()
             .toMap()
 
@@ -221,11 +231,31 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .update()
     }
 
-    fun allRailwayLineCodes(): Map<String, UUID> =
-        jdbc.sql("SELECT line_code, id FROM railway_lines")
-            .query { rs, _ -> rs.getString("line_code") to rs.getObject("id", UUID::class.java) }
+    fun allRailwayLineCodes(): Map<String, ExistingReferenceRow> =
+        jdbc.sql("SELECT line_code, id, active FROM railway_lines")
+            .query { rs, _ ->
+                rs.getString("line_code") to
+                    ExistingReferenceRow(rs.getObject("id", UUID::class.java), rs.getBoolean("active"))
+            }
             .list()
             .toMap()
+
+    fun deactivateRailwayLinesNotIn(keptLineCodes: Collection<String>, now: Instant): Int =
+        if (keptLineCodes.isEmpty()) {
+            jdbc.sql("UPDATE railway_lines SET active = FALSE, updated_at = :now WHERE active")
+                .param("now", timestamp(now)).update()
+        } else {
+            jdbc.sql(
+                """
+                UPDATE railway_lines
+                   SET active = FALSE, updated_at = :now
+                 WHERE active AND line_code <> ALL (:codes)
+                """.trimIndent(),
+            )
+                .param("now", timestamp(now))
+                .param("codes", keptLineCodes.toTypedArray())
+                .update()
+        }
 
     /**
      * Line codes that are currently assigned to a service area.
@@ -260,6 +290,13 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .update()
     }
 
+    fun deleteRelation(settlementId: UUID, railwayLineId: UUID) {
+        jdbc.sql("DELETE FROM settlement_railway_lines WHERE settlement_id = :s AND railway_line_id = :l")
+            .param("s", settlementId)
+            .param("l", railwayLineId)
+            .update()
+    }
+
     fun deleteAllRelations(): Int = jdbc.sql("DELETE FROM settlement_railway_lines").update()
 
     fun countRelations(): Int =
@@ -278,6 +315,82 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .query { rs, _ -> rs.getString("ksh") to rs.getString("line") }
             .list()
             .toSet()
+
+    // ------------------------------------------------------ import serialisation
+
+    /**
+     * Serialises every reference-dataset import against every other one, for the lifetime
+     * of the current transaction only.
+     *
+     * A transaction-scoped advisory lock rather than a row lock: nothing to lock yet exists
+     * before the first import ever runs, and the whole operation - not one row - is what
+     * must not overlap with another import. [LOCK_KEY] is an arbitrary constant reserved
+     * exclusively for this purpose; nothing else in the schema takes an advisory lock, so
+     * there is no collision to guard against.
+     */
+    fun acquireImportLock() {
+        jdbc.sql("SELECT pg_advisory_xact_lock(:key)")
+            .param("key", LOCK_KEY)
+            .query { _, _ -> true }
+            .list()
+    }
+
+    fun findImportByVersion(datasetVersion: String): ReferenceDatasetImport? =
+        jdbc.sql(
+            """
+            SELECT id, dataset_version, manifest_sha256, imported_at,
+                   settlement_count, railway_line_count, mapping_count, source_metadata
+              FROM reference_dataset_imports
+             WHERE dataset_version = :version
+            """.trimIndent(),
+        )
+            .param("version", datasetVersion)
+            .query { rs, _ ->
+                ReferenceDatasetImport(
+                    id = rs.getObject("id", UUID::class.java),
+                    datasetVersion = rs.getString("dataset_version"),
+                    manifestSha256 = rs.getBytes("manifest_sha256"),
+                    importedAt = rs.getTimestamp("imported_at").toInstant(),
+                    settlementCount = rs.getInt("settlement_count"),
+                    railwayLineCount = rs.getInt("railway_line_count"),
+                    mappingCount = rs.getInt("mapping_count"),
+                    sourceMetadataJson = rs.getString("source_metadata"),
+                )
+            }
+            .optional()
+            .orElse(null)
+
+    fun insertImportProvenance(
+        id: UUID,
+        datasetVersion: String,
+        manifestSha256: ByteArray,
+        importedAt: Instant,
+        settlementCount: Int,
+        railwayLineCount: Int,
+        mappingCount: Int,
+        sourceMetadataJson: String,
+    ) {
+        jdbc.sql(
+            """
+            INSERT INTO reference_dataset_imports (
+                id, dataset_version, manifest_sha256, imported_at,
+                settlement_count, railway_line_count, mapping_count, source_metadata
+            ) VALUES (
+                :id, :version, :sha256, :importedAt,
+                :settlements, :lines, :mappings, CAST(:sourceMetadata AS jsonb)
+            )
+            """.trimIndent(),
+        )
+            .param("id", id)
+            .param("version", datasetVersion)
+            .param("sha256", manifestSha256)
+            .param("importedAt", timestamp(importedAt))
+            .param("settlements", settlementCount)
+            .param("lines", railwayLineCount)
+            .param("mappings", mappingCount)
+            .param("sourceMetadata", sourceMetadataJson)
+            .update()
+    }
 
     // ----------------------------------------------------------------- mapping
 
@@ -311,6 +424,11 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             SELECT id, line_code, display_name, active, created_at, updated_at
               FROM railway_lines
         """
+
+        // An arbitrary, never-reused constant identifying the reference-dataset-import
+        // advisory lock. Picked once; changing it would only matter if something else in
+        // the schema also took advisory locks, which nothing does.
+        const val LOCK_KEY = 7_281_004_419_887_233L
 
         fun timestamp(instant: Instant): java.sql.Timestamp = java.sql.Timestamp.from(instant)
     }

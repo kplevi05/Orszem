@@ -83,3 +83,38 @@ data class ServiceArea(
 }
 
 enum class ServiceAreaStatus { ACTIVE, INACTIVE }
+
+/**
+ * Provenance for a completed reference dataset import: which dataset version produced the
+ * current reference state, and a checksum of the exact manifest that was accepted.
+ *
+ * [manifestSha256] is what makes a repeated import of the same [datasetVersion] idempotent:
+ * a second import naming the same version is a no-op only if the manifest content matches
+ * exactly; otherwise the version is being reused for different content, which is refused.
+ */
+data class ReferenceDatasetImport(
+    val id: UUID,
+    val datasetVersion: String,
+    val manifestSha256: ByteArray,
+    val importedAt: Instant,
+    val settlementCount: Int,
+    val railwayLineCount: Int,
+    val mappingCount: Int,
+    val sourceMetadataJson: String,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ReferenceDatasetImport) return false
+        return id == other.id && datasetVersion == other.datasetVersion &&
+            manifestSha256.contentEquals(other.manifestSha256) && importedAt == other.importedAt &&
+            settlementCount == other.settlementCount && railwayLineCount == other.railwayLineCount &&
+            mappingCount == other.mappingCount && sourceMetadataJson == other.sourceMetadataJson
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + datasetVersion.hashCode()
+        result = 31 * result + manifestSha256.contentHashCode()
+        return result
+    }
+}
