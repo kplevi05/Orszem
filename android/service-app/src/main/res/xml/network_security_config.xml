@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Release policy: HTTPS only.
+
+  Cleartext is refused outright, so a misconfigured build cannot silently send bearer
+  tokens over plain HTTP. Only the system trust anchors are accepted; no user-installed
+  CA can intercept traffic to the API.
+
+  The debug variant overlays a version of this file that additionally permits cleartext to
+  the local development hosts. See src/debug/res/xml/network_security_config.xml.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

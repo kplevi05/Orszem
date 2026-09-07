@@ -124,13 +124,36 @@ abstract class AbstractAuthIntegrationTest {
 
     // ---------------------------------------------------------------- HTTP helpers
 
-    protected fun post(path: String, body: String, bearer: String? = null): HttpResponse<String> {
+    protected fun post(
+        path: String,
+        body: String,
+        bearer: String? = null,
+        headers: Map<String, String> = emptyMap(),
+    ): HttpResponse<String> {
         val builder = HttpRequest.newBuilder(URI.create("http://127.0.0.1:$port$path"))
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body))
         bearer?.let { builder.header("Authorization", "Bearer $it") }
+        headers.forEach { (name, value) -> builder.header(name, value) }
         return http.send(builder.build(), HttpResponse.BodyHandlers.ofString())
     }
+
+    /**
+     * A login that presents itself as coming from [clientIp].
+     *
+     * The test client connects over loopback, which the resolver treats as a trusted proxy,
+     * so this reproduces exactly what Caddy does in production: the peer is loopback and the
+     * originating client is named in `X-Forwarded-For`.
+     */
+    protected fun loginFromIp(
+        serviceId: ServiceId,
+        password: String,
+        clientIp: String,
+    ): HttpResponse<String> = post(
+        "/api/v1/service/auth/login",
+        """{"serviceId":"${serviceId.value}","password":${objectMapper.writeValueAsString(password)}}""",
+        headers = mapOf("X-Forwarded-For" to clientIp),
+    )
 
     protected fun get(path: String, bearer: String? = null): HttpResponse<String> {
         val builder = HttpRequest.newBuilder(URI.create("http://127.0.0.1:$port$path")).GET()

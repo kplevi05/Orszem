@@ -149,9 +149,77 @@ class PasswordPolicyTest {
     }
 
     @Test
-    fun `blocklist is small enough to review by hand`() {
-        check(blocklist.size in 30..500) {
-            "the blocklist is meant to stay curated and reviewable, size was ${blocklist.size}"
+    fun `blocklist stays bounded`() {
+        // Big enough to be a real screen, small enough to stay reviewable and to load
+        // instantly. A jump well past this means someone imported a raw corpus without
+        // filtering it to what the length policy can actually reach.
+        check(blocklist.size in 1_000..20_000) {
+            "unexpected blocklist size ${blocklist.size}"
+        }
+    }
+
+    @Test
+    fun `rejects passwords from the upstream common-password snapshot`() {
+        // Entries that come from the pinned SecLists snapshot rather than the curated list,
+        // proving the upstream source is actually loaded and consulted.
+        listOf(
+            "flashflashrevolution",
+            "abuse_alicia_abuse",
+            "dichengqian2009",
+        ).forEach { candidate ->
+            check(violationOf(candidate) == PasswordPolicyViolation.COMMON_PASSWORD) {
+                "should have been blocked by the upstream snapshot: $candidate"
+            }
+        }
+    }
+
+    @Test
+    fun `rejects Orszem-specific passwords`() {
+        // These are project terms; no general-purpose corpus would contain them, so they
+        // prove the curated list is loaded alongside the upstream one.
+        listOf(
+            "orszembejelento",
+            "orszemszolgalat",
+            "orszemsuperadmin",
+            "szolgalatiuser123",
+        ).forEach { candidate ->
+            check(violationOf(candidate) == PasswordPolicyViolation.COMMON_PASSWORD) {
+                "should have been blocked as an Őrszem-specific password: $candidate"
+            }
+        }
+    }
+
+    @Test
+    fun `both sources are loaded, not just one`() {
+        // Guards against a loader regression that silently reads a single file.
+        val fromUpstream = violationOf("flashflashrevolution")
+        val fromCurated = violationOf("orszembejelento")
+        check(fromUpstream == PasswordPolicyViolation.COMMON_PASSWORD)
+        check(fromCurated == PasswordPolicyViolation.COMMON_PASSWORD)
+    }
+
+    @Test
+    fun `blocklist matching ignores case and surrounding whitespace`() {
+        listOf(
+            "FlashFlashRevolution",
+            "  flashflashrevolution  ",
+            "ORSZEMBEJELENTO",
+        ).forEach { candidate ->
+            check(violationOf(candidate) == PasswordPolicyViolation.COMMON_PASSWORD) {
+                "folding should have caught: '$candidate'"
+            }
+        }
+    }
+
+    @Test
+    fun `a strong passphrase is still accepted`() {
+        // The blocklist must not be so broad that ordinary good passwords are refused.
+        listOf(
+            "kek vonat fut az egen",
+            "harom alma meg egy korte",
+            "Vasúti őrszem 2026 tavasz",
+        ).forEach { candidate ->
+            policy.validate(PasswordNormalizer.normalize(candidate))
         }
     }
 }

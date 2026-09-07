@@ -177,4 +177,61 @@ class AuditAndRateLimitIT : AbstractAuthIntegrationTest() {
         repeat(3) { login(user.serviceId, "wrong again $it") }
         check(login(user.serviceId, STRONG_PASSWORD).statusCode() == 200)
     }
+
+    // ------------------------------------------------- per-client-IP bucketing
+
+    @Test
+    fun `distinct client IPs behind the proxy get independent budgets`() {
+        // The behaviour that would be lost if the backend used the TCP peer address: behind
+        // Caddy every user shares 127.0.0.1, so one guesser would throttle the whole world.
+        val attacker = "203.0.113.7"
+        val innocent = "198.51.100.4"
+
+        // Exhaust the attacker's IP budget by spraying many distinct accounts, so the
+        // per-service-ID limiter is not what trips.
+        repeat(45) { index ->
+            val target = hu.orszembejelento.backend.identity.domain.ServiceId.ofTrusted("SZ-%06d".format(index))
+            loginFromIp(target, "wrong password $index", attacker)
+        }
+
+        val attackerBlocked = loginFromIp(
+            hu.orszembejelento.backend.identity.domain.ServiceId.ofTrusted("SZ-500000"),
+            "another guess",
+            attacker,
+        )
+        check(attackerBlocked.statusCode() == 429) {
+            "the offending IP must be throttled, got ${attackerBlocked.statusCode()}"
+        }
+
+        // The innocent user, on a different address, must be entirely unaffected.
+        val victim = givenUser()
+        val innocentResponse = loginFromIp(victim.serviceId, STRONG_PASSWORD, innocent)
+        check(innocentResponse.statusCode() == 200) {
+            "a different client IP must have its own budget, got ${innocentResponse.statusCode()} " +
+                innocentResponse.body()
+        }
+    }
+
+    @Test
+    fun `a forged forwarded chain is attributed to the real client, not the leftmost entry`() {
+        val victim = givenUser()
+
+        // The attacker prepends a victim address hoping to burn the victim's budget. The
+        // rightmost entry is the one a trusted proxy wrote, so the attempts land on the
+        // attacker's own bucket.
+        repeat(45) { index ->
+            val target = hu.orszembejelento.backend.identity.domain.ServiceId.ofTrusted("SZ-%06d".format(index))
+            post(
+                "/api/v1/service/auth/login",
+                """{"serviceId":"${target.value}","password":"wrong $index"}""",
+                headers = mapOf("X-Forwarded-For" to "198.51.100.4, 203.0.113.99"),
+            )
+        }
+
+        // The address the attacker tried to frame is still able to sign in.
+        val framed = loginFromIp(victim.serviceId, STRONG_PASSWORD, "198.51.100.4")
+        check(framed.statusCode() == 200) {
+            "a forged leftmost entry must not throttle the address it names, got ${framed.statusCode()}"
+        }
+    }
 }

@@ -129,4 +129,10 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
+
+    // Instrumented tests: the real Android Keystore only exists on a device or emulator,
+    // so the crypto that protects the refresh token cannot be covered by a JVM test.
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.okhttp.mockwebserver)
 }

@@ -62,6 +62,13 @@ orszem:
     access-token-lifetime: ${ORSZEM_ACCESS_TOKEN_LIFETIME:15m}
     # Absolute session lifetime. Refresh rotation never extends beyond this.
     session-lifetime: ${ORSZEM_SESSION_LIFETIME:30d}
+    # Peers whose X-Forwarded-For may be believed. Loopback only, matching the
+    # deployment: Spring binds 127.0.0.1 and Caddy on the same host is the sole ingress.
+    # Widen only if a proxy moves to another machine, and never to a range that could
+    # contain a client - the header is client-supplied and only means anything when a
+    # trusted proxy wrote it.
+    trusted-proxies: ${ORSZEM_TRUSTED_PROXIES:127.0.0.1/32,::1/128}
+
     rate-limit:
       enabled: ${ORSZEM_RATE_LIMIT_ENABLED:true}
       # Provisional pilot values, deliberately conservative and expected to be tuned

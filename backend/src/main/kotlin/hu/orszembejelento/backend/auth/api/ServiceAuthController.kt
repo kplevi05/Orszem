@@ -10,6 +10,7 @@ import hu.orszembejelento.backend.auth.application.LogoutUseCase
 import hu.orszembejelento.backend.auth.application.RefreshResult
 import hu.orszembejelento.backend.auth.application.RefreshUseCase
 import hu.orszembejelento.backend.auth.application.SessionInvalidException
+import hu.orszembejelento.backend.auth.infrastructure.ClientIpResolver
 import hu.orszembejelento.backend.common.web.ApiPaths
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -42,6 +43,7 @@ class ServiceAuthController(
     private val logoutUseCase: LogoutUseCase,
     private val logoutAllUseCase: LogoutAllUseCase,
     private val changeOwnPassword: ChangeOwnPasswordUseCase,
+    private val clientIpResolver: ClientIpResolver,
 ) {
 
     @PostMapping("/login")
@@ -55,7 +57,7 @@ class ServiceAuthController(
         @Valid @RequestBody request: LoginRequest,
         httpRequest: HttpServletRequest,
     ): ResponseEntity<TokenResponse> =
-        credentials(loginUseCase.login(request.serviceId, request.password, httpRequest.remoteAddr))
+        credentials(loginUseCase.login(request.serviceId, request.password, clientIpResolver.resolve(httpRequest)))
 
     @PostMapping("/complete-password-change")
     @Operation(
@@ -71,7 +73,7 @@ class ServiceAuthController(
             rawServiceId = request.serviceId,
             rawTemporaryPassword = request.temporaryPassword,
             rawNewPassword = request.newPassword,
-            sourceIp = httpRequest.remoteAddr,
+            sourceIp = clientIpResolver.resolve(httpRequest),
         ),
     )
 

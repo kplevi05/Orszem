@@ -22,6 +22,17 @@ data class AuthProperties(
     val sessionLifetime: Duration = Duration.ofDays(30),
 
     val rateLimit: RateLimitProperties = RateLimitProperties(),
+
+    /**
+     * Peers whose `X-Forwarded-For` header may be believed, as bare addresses or CIDR
+     * blocks.
+     *
+     * Defaults to loopback only, which matches the deployment: Spring binds `127.0.0.1`
+     * and Caddy on the same host is the sole ingress. Widen this only if a proxy is ever
+     * moved to another machine, and never to a range that could contain a client — the
+     * header is client-supplied and is only meaningful when a trusted proxy wrote it.
+     */
+    val trustedProxies: List<String> = listOf("127.0.0.1/32", "::1/128"),
 ) {
     data class RateLimitProperties(
         val enabled: Boolean = true,

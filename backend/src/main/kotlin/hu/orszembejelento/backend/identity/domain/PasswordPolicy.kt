@@ -97,21 +97,37 @@ class CommonPasswordBlocklist(private val entries: Set<String>) {
     val size: Int get() = entries.size
 
     companion object {
-        private const val RESOURCE = "/security/common-passwords.txt"
+        /**
+         * Two sources, loaded together:
+         *
+         *  * a curated Őrszem-specific list — product, domain and deployment terms, plus
+         *    the long-but-weak shapes the length rule alone does not catch;
+         *  * a pinned, MIT-licensed SecLists snapshot, filtered to the entries a user could
+         *    actually choose under this policy.
+         *
+         * Both carry their provenance in their own header.
+         */
+        private val RESOURCES = listOf(
+            "/security/common-passwords.txt",
+            "/security/common-passwords-upstream.txt",
+        )
 
         private fun fold(value: String): String =
             Normalizer.normalize(value, Normalizer.Form.NFC).trim().lowercase(Locale.ROOT)
 
         fun loadDefault(): CommonPasswordBlocklist {
-            val stream = CommonPasswordBlocklist::class.java.getResourceAsStream(RESOURCE)
-                ?: error("common password blocklist resource $RESOURCE is missing")
+            val entries = RESOURCES.flatMap { resource ->
+                val stream = CommonPasswordBlocklist::class.java.getResourceAsStream(resource)
+                    ?: error("common password blocklist resource $resource is missing")
 
-            val entries = stream.bufferedReader(Charsets.UTF_8).useLines { lines ->
-                lines.map { it.trim() }
-                    .filter { it.isNotEmpty() && !it.startsWith("#") }
-                    .map { fold(it) }
-                    .toSet()
-            }
+                stream.bufferedReader(Charsets.UTF_8).useLines { lines ->
+                    lines.map { it.trim() }
+                        .filter { it.isNotEmpty() && !it.startsWith("#") }
+                        .map { fold(it) }
+                        .toList()
+                }
+            }.toSet()
+
             return CommonPasswordBlocklist(entries)
         }
     }
