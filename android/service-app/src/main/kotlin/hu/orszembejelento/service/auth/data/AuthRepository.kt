@@ -104,9 +104,36 @@ class AuthRepository(
     // ------------------------------------------------------------------ account
 
     suspend fun changePassword(currentPassword: String, newPassword: String): AuthOutcome = call {
-        val bearer = bearerOrNull() ?: return@call AuthOutcome.SessionEnded
-        val response = api.changePassword(bearer, ChangePasswordRequest(currentPassword, newPassword))
+        val response = withFreshToken { bearer ->
+            api.changePassword(bearer, ChangePasswordRequest(currentPassword, newPassword))
+        } ?: return@call AuthOutcome.SessionEnded
+
         if (response.isSuccessful) adopt(response.body()!!) else AuthOutcome.Failure(failureKind(response))
+    }
+
+    /**
+     * Runs a protected call, and on a 401 refreshes **once** and retries **once**.
+     *
+     * Bounded deliberately: a retry loop against an expired session would hammer the server
+     * and, because refresh tokens rotate, could turn one stale access token into a cascade of
+     * replays. One refresh, one retry, then give up.
+     *
+     * Retrying is safe even for a state-changing call because the backend authenticates in a
+     * servlet filter, before any controller or use case runs — a request rejected with 401
+     * cannot have changed anything, so it cannot be applied twice.
+     *
+     * The refresh itself goes through [SingleFlight], so several protected calls failing at
+     * once still produce exactly one refresh.
+     */
+    private suspend fun <T> withFreshToken(call: suspend (String) -> Response<T>): Response<T>? {
+        val bearer = bearerOrNull() ?: return null
+        val response = call(bearer)
+        if (response.code() != HTTP_UNAUTHORIZED) return response
+
+        return when (refresh()) {
+            is AuthOutcome.Success -> bearerOrNull()?.let { call(it) }
+            else -> null
+        }
     }
 
     suspend fun logout(): AuthOutcome {
@@ -153,6 +180,10 @@ class AuthRepository(
         accessToken = null
         cachedIdentity = null
         tokenStore.clear()
+    }
+
+    private companion object {
+        const val HTTP_UNAUTHORIZED = 401
     }
 
     private inline fun call(block: () -> AuthOutcome): AuthOutcome =
