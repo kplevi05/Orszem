@@ -31,6 +31,16 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // Spring Security's Argon2PasswordEncoder delegates to BouncyCastle's Argon2
+    // implementation; without this on the classpath it cannot hash at all.
+    implementation("org.bouncycastle:bcprov-jdk18on:1.85.2")
+
+    // Bounded, self-expiring in-memory rate-limit buckets. Chosen over a hand-rolled
+    // ConcurrentHashMap, which would grow without limit under a distributed guessing
+    // attack. Version comes from the Spring Boot BOM.
+    implementation("com.github.ben-manes.caffeine:caffeine")
     // Provides the DataSource that Flyway migrates and that the baseline test asserts against.
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
