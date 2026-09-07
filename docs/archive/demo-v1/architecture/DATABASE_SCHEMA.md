@@ -1,3 +1,10 @@
+> **ARCHIVED — Demo v1.1 historical record.**
+> This document describes the Demo v1 / v1.1 product as it stood at tag `demo-v1.1-final`
+> (commit `38540f6`). It does **not** govern Őrszem V2 and must never be cited as a V2
+> requirement or source of truth. See `docs/archive/DEMO_V1_1.md` for the archive record.
+>
+> *Archivált Demo v1.1 dokumentum — kizárólag történeti referencia. A V2-re nem érvényes.*
+
 # Őrszem — Demo v1 adatbázisséma
 
 **Dokumentum státusza:** implementációs adatmodell — v1.0  
