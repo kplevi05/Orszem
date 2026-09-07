@@ -27,10 +27,25 @@ It doubles as the worked example in `BACKEND_LAYERING.md`.
 **Flyway is fully configured with an empty migration directory.**
 
 At startup Flyway connects, discovers `classpath:db/migration`, finds no migrations, and
-creates `flyway_schema_history`. `DatabaseBaselineIT` asserts exactly that, plus that the
-public schema contains *nothing else* — a guard against a placeholder table creeping in.
-Connectivity and migration discovery are therefore genuinely verified, and the first real
-migration arrives in Phase 2 with the first persistent feature.
+still creates `flyway_schema_history`. `DatabaseBaselineIT` asserts exactly that, plus that
+the public schema contains *nothing else* — a guard against a placeholder table creeping
+in. Connectivity and migration discovery are therefore genuinely verified, and the first
+real migration arrives in Phase 2 with the first persistent feature.
+
+### Why the test asserts on the Flyway bean, not just on tables
+
+Writing `spring.flyway.*` in `application.yml` proves nothing by itself. Spring Boot 4
+moved `FlywayAutoConfiguration` out of the core autoconfiguration jar into a separate
+module, so a build depending only on `org.flywaydb:flyway-core` puts Flyway on the
+classpath, accepts the configuration without complaint, and **never runs it**: no bean, no
+history table, no migration ever applied.
+
+This baseline had exactly that defect, and it was caught only because the test asserted
+observable behaviour rather than the presence of configuration. The fix is to depend on
+`org.springframework.boot:spring-boot-starter-flyway`. `DatabaseBaselineIT` now also
+asserts that the `Flyway` bean exists, points at the intended location, and has `clean`
+disabled — so a regression that silently disables migrations fails the build instead of
+surfacing much later as a migration that mysteriously did not apply.
 
 ## Alternatives rejected
 

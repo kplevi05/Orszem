@@ -35,7 +35,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-    implementation("org.flywaydb:flyway-core")
+    // Spring Boot 4 moved FlywayAutoConfiguration into its own module: depending on
+    // flyway-core alone leaves Flyway on the classpath but never running, with no bean
+    // and no migration ever applied. The starter is what activates it.
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.flywaydb:flyway-database-postgresql")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")

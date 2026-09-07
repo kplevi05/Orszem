@@ -36,10 +36,31 @@ jobs:
         working-directory: backend
         run: ./gradlew build --no-daemon
 
+      # Surface failures in the job summary as well as the log, so a failing build can
+      # be diagnosed from the run page without downloading the artifact.
+      - name: Summarise test failures
+        if: failure()
+        working-directory: backend
+        run: |
+          echo '## Backend test failures' >> "$GITHUB_STEP_SUMMARY"
+          for f in build/test-results/test/TEST-*.xml; do
+            [ -e "$f" ] || continue
+            if grep -qE '<(failure|error)' "$f"; then
+              echo "### $(basename "$f")" >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+              sed -n 's/.*\(<\(failure\|error\)[^>]*message="[^"]*"\).*/\1/p' "$f" | head -20 >> "$GITHUB_STEP_SUMMARY"
+              grep -A25 -E '<(failure|error)' "$f" | head -60 >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+          cat "$GITHUB_STEP_SUMMARY"
+
       - name: Upload test report on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-report
-          path: backend/build/reports/tests/test
+          path: |
+            backend/build/reports/tests/test
+            backend/build/test-results/test
           retention-days: 7
