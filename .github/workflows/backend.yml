@@ -1,11 +1,12 @@
 name: backend
 
 # No path filters. Demo v1 filtered by path, which meant a root-level or infrastructure
-# change ran no CI at all. Running all three pipelines on every PR is simpler and honest.
+# change ran no CI at all. Running all three pipelines on every push is simpler and honest.
 on:
+  # Every branch. Push-triggered runs attach to the head commit, so they appear as
+  # checks on a pull request too - one run per commit instead of two. Add
+  # `pull_request:` if outside contributors ever open PRs from forks.
   push:
-    branches: [main]
-  pull_request:
 
 permissions:
   contents: read

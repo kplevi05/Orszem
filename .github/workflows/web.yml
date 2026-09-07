@@ -1,9 +1,10 @@
 name: web
 
 on:
+  # Every branch. Push-triggered runs attach to the head commit, so they appear as
+  # checks on a pull request too - one run per commit instead of two. Add
+  # `pull_request:` if outside contributors ever open PRs from forks.
   push:
-    branches: [main]
-  pull_request:
 
 permissions:
   contents: read
