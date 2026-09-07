@@ -48,9 +48,21 @@ jobs:
         working-directory: android
         run: ./gradlew :public-app:assembleDebug :service-app:assembleDebug --no-daemon
 
+      - name: Unit tests
+        working-directory: android
+        run: ./gradlew testDebugUnitTest --no-daemon
+
       - name: Lint
         working-directory: android
         run: ./gradlew lint --no-daemon
+
+      - name: Upload unit test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-report
+          path: android/*/build/reports/tests/testDebugUnitTest
+          retention-days: 7
 
       - name: Upload lint report on failure
         if: failure()
