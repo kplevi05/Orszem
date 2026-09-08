@@ -68,13 +68,17 @@ last touched it) is enough for the questions that do come up.
 | COMPLETE | 0 | no | `NO_VERIFIED_RAILWAY_LINE_REFERENCE` |
 | COMPLETE | 1 | no | inferred, then resolved as if selected |
 | COMPLETE | 2+ | no | `RAILWAY_LINE_NOT_SELECTED` |
-| PARTIAL | any | no | `RAILWAY_LINE_NOT_SELECTED`, always — never inferred |
+| PARTIAL | 0 | no | `NO_VERIFIED_RAILWAY_LINE_REFERENCE` |
+| PARTIAL | 1+ | no | `RAILWAY_LINE_NOT_SELECTED` — never inferred |
 | any | — | yes, unrelated/unknown | `REFERENCE_MISMATCH` |
 | any | — | yes, verified (active or not) | resolved |
 
-"Active candidates" is the count from [Correction](#correction-2026-09-08--the-inference-candidate-set-must-be-active-only)
-below, not every verified relation — that distinction is the entire subject of the
-correction.
+"Active candidates" is the count from
+[Correction 1](#correction-1-2026-09-08--the-inference-candidate-set-must-be-active-only),
+not every verified relation. Zero active candidates producing the same result under both
+COMPLETE and PARTIAL is
+[Correction 2](#correction-2-2026-09-08--zero-active-candidates-means-the-same-thing-under-partial-as-under-complete)
+below.
 
 "Resolved" then checks operational state, never reference data again:
 
@@ -87,11 +91,13 @@ correction.
 
 Two things are easy to get wrong here, so they are stated explicitly:
 
-- **PARTIAL never infers, at any candidate count** — including exactly one. The tempting
-  shortcut ("there's only one, so it must be that one") is precisely the failure mode ADR
-  0006 exists to prevent: under PARTIAL, a settlement with one known relation might have
-  others the dataset hasn't captured yet, so "the only one we know about" is not "the only
-  one".
+- **PARTIAL never infers, at any *nonzero* candidate count** — including exactly one. The
+  tempting shortcut ("there's only one, so it must be that one") is precisely the failure
+  mode ADR 0006 exists to prevent: under PARTIAL, a settlement with one known relation
+  might have others the dataset hasn't captured yet, so "the only one we know about" is not
+  "the only one". This does **not** extend to a *zero*-candidate PARTIAL settlement — see
+  Correction 2: zero is reported the same way regardless of coverage, because it is not an
+  inference at all, only a statement that nothing is currently on record.
 - **An explicit line is always validated against a verified relation, regardless of
   coverage, and regardless of whether that line is currently active.** A client's selection
   is a hint to narrow the search, never a substitute for verification —
@@ -102,7 +108,7 @@ Two things are easy to get wrong here, so they are stated explicitly:
   never `REFERENCE_MISMATCH`, which would incorrectly suggest the relation itself was never
   real.
 
-### Correction, 2026-09-08 — the inference candidate set must be active-only
+### Correction 1, 2026-09-08 — the inference candidate set must be active-only
 
 The first implementation of step 3 above read *every* verified relation
 (`findVerifiedLinesOfSettlement`, since removed) for automatic inference, while the public
@@ -133,6 +139,32 @@ regardless of activity), but it is not a *candidate* for automatic inference. Co
 One consequence worth naming plainly: `RAILWAY_LINE_INACTIVE` is now reachable **only**
 through explicit selection. An inferred line is always active, because inactive lines are
 no longer inference candidates at all.
+
+### Correction 2, 2026-09-08 — zero active candidates means the same thing under PARTIAL as under COMPLETE
+
+Correction 1 fixed *which* relations count as candidates. This correction fixes what a
+**zero**-candidate result means once that fix was in place.
+
+The original matrix had PARTIAL short-circuit to `RAILWAY_LINE_NOT_SELECTED` unconditionally,
+for *any* active-candidate count including zero — reasoning that PARTIAL coverage can never
+safely conclude anything, so it should never claim `NO_VERIFIED_RAILWAY_LINE_REFERENCE`
+either. That conflated two different questions. `NO_VERIFIED_RAILWAY_LINE_REFERENCE` was
+never a claim that PARTIAL coverage is entitled to make about the country ("no railway
+exists here") — see that reason's KDoc, tightened by this same correction. It is only a
+claim about the *current verified reference state*: "there is no active line relation on
+record for this settlement right now." That claim is exactly as true, and exactly as
+honestly limited, whether the coverage that produced it is COMPLETE or PARTIAL. Routing an
+empty candidate set to `RAILWAY_LINE_NOT_SELECTED` was also a UX mismatch in its own right:
+that reason means "please choose among the options", and there were no options to choose
+among.
+
+**Fixed:** the coverage check now applies only when there is at least one active candidate
+to decide about. Zero active candidates is reported as
+`NO_VERIFIED_RAILWAY_LINE_REFERENCE` unconditionally - COMPLETE or PARTIAL alike, and
+regardless of whether an *inactive* (non-candidate) relation exists. One or more active
+candidates still goes through the coverage check exactly as Correction 1 left it: COMPLETE
+infers a lone candidate, PARTIAL never does, two or more is always
+`RAILWAY_LINE_NOT_SELECTED` under either coverage.
 
 ## Decision 4 — the public reference API returns 503, never a misleading empty result
 

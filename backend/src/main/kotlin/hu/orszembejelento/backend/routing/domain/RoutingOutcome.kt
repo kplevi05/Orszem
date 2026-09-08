@@ -10,14 +10,28 @@ import java.util.UUID
  * guess: nothing here is inferred from a similarity score or a client's unverified claim.
  */
 enum class UnclassifiedReason {
-    /** COMPLETE relation coverage, and the settlement has zero verified relations. */
+    /**
+     * The settlement has zero currently *active* verified railway-line relations, under
+     * either COMPLETE or PARTIAL relation coverage.
+     *
+     * This means only that the current verified reference state has no active line
+     * relation on record for this settlement right now. **It must never be read, stated,
+     * or documented as proof that no railway line physically exists there** - not even
+     * under COMPLETE coverage, and certainly not under PARTIAL, where the dataset does not
+     * claim to enumerate every settlement a line crosses in the first place (ADR 0006).
+     * "No verified reference" and "no railway" are different claims; this reason makes
+     * only the first one, and only about *active* relations - a settlement whose only
+     * relation is to a currently-inactive line reaches this reason too, since an inactive
+     * relation is never an inference candidate (see `RoutingService`).
+     */
     NO_VERIFIED_RAILWAY_LINE_REFERENCE,
 
     /**
      * No railway line was supplied by the caller, and the current reference state cannot
-     * safely narrow it down to exactly one: either relation coverage is PARTIAL (absence
-     * of another relation is not evidence there is only one - ADR 0006/0007), or coverage
-     * is COMPLETE but the settlement has more than one verified relation.
+     * safely narrow it down to exactly one active candidate: either relation coverage is
+     * PARTIAL (absence of another relation is not evidence there is only one - ADR
+     * 0006/0007, so even a single active candidate is not auto-inferred), or coverage is
+     * COMPLETE but the settlement has two or more active verified relations.
      */
     RAILWAY_LINE_NOT_SELECTED,
 

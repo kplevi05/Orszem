@@ -50,16 +50,19 @@ import org.springframework.transaction.annotation.Transactional
  *    about what is selectable). An inactive relation is a verified fact (see step 2), but
  *    it is not a candidate for automatic inference: offering to auto-resolve a line the
  *    public API would never have shown as an option is exactly the inconsistency this
- *    restriction exists to prevent. The *current* `settlementRailwayLines` coverage
- *    component then decides what the active-candidate count means:
- *    - **PARTIAL**: always [UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED], regardless of
- *      the active-candidate count - zero, one, or many. Under PARTIAL coverage, absence of
- *      another relation is not evidence there is only one (ADR 0006), so a single known
- *      relation is never auto-inferred.
- *    - **COMPLETE**: zero active candidates → [UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE]
- *      (even if an inactive verified relation exists - it is not a candidate, see above);
- *      exactly one active candidate → inferred and resolved as if it had been selected
- *      explicitly; more than one → [UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED].
+ *    restriction exists to prevent. The active-candidate count, and the *current*
+ *    `settlementRailwayLines` coverage component, together decide the result:
+ *    - **zero active candidates** → [UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE],
+ *      **regardless of coverage** - COMPLETE or PARTIAL alike. This reason means only that
+ *      the current verified reference state has no active line relation on record for the
+ *      settlement; see that reason's KDoc for why it must never be read as proof no
+ *      railway physically exists there, whichever coverage produced it.
+ *    - **exactly one active candidate, COMPLETE coverage** → inferred and resolved as if
+ *      it had been selected explicitly.
+ *    - **exactly one active candidate, PARTIAL coverage** → [UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED].
+ *      Under PARTIAL coverage, absence of another relation is not evidence there is only
+ *      one (ADR 0006), so a single known candidate is never auto-inferred.
+ *    - **two or more active candidates, any coverage** → [UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED].
  * 4. Once a line is resolved (by either path above), it is checked against operational
  *    state, never against reference data again:
  *    - inactive line → [UnclassifiedReason.RAILWAY_LINE_INACTIVE] (reachable only via the
@@ -106,21 +109,30 @@ class RoutingService(
     }
 
     private fun inferLine(settlementId: UUID, relationCoverage: CoverageComponentStatus): InferenceResult {
-        // PARTIAL: absence of another relation is not evidence there is only one, whatever
-        // the current count. Never infer from incomplete coverage - ADR 0006/0007.
-        if (relationCoverage == CoverageComponentStatus.PARTIAL) {
-            return InferenceResult.Reason(UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED)
-        }
-
         // Active candidates only, deliberately the same query the public reference API
         // uses for line availability (findActiveLinesOfSettlement): an inactive relation
         // is a verified fact, but never a candidate for automatic inference, so that
         // routing can never silently resolve a line the public API would never have
         // offered as a selectable option.
         val activeCandidates = referenceRepository.findActiveLinesOfSettlement(settlementId)
-        return when (activeCandidates.size) {
-            0 -> InferenceResult.Reason(UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE)
-            1 -> InferenceResult.Line(activeCandidates.single())
+
+        return when {
+            // Zero candidates is a fact about the *current verified reference state*, not
+            // a claim about physical reality - it holds regardless of coverage, because
+            // "we have no active verified relation right now" is true either way. See
+            // NO_VERIFIED_RAILWAY_LINE_REFERENCE's KDoc: it must never be read as proof no
+            // railway exists, only as "none is currently on record".
+            activeCandidates.isEmpty() ->
+                InferenceResult.Reason(UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE)
+
+            // Exactly one candidate is only ever auto-inferred under COMPLETE coverage.
+            // Under PARTIAL, absence of another relation is not evidence there is only
+            // one (ADR 0006) - the single candidate falls through to the `else` branch.
+            activeCandidates.size == 1 && relationCoverage == CoverageComponentStatus.COMPLETE ->
+                InferenceResult.Line(activeCandidates.single())
+
+            // Two or more candidates (any coverage), or exactly one under PARTIAL: the
+            // reference state cannot safely narrow this to one line on its own.
             else -> InferenceResult.Reason(UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED)
         }
     }

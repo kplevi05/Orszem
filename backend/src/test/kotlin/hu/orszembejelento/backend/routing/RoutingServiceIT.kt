@@ -132,18 +132,32 @@ class RoutingServiceIT : AbstractAuthIntegrationTest() {
     // --------------------------------------------------------------------- PARTIAL
 
     @Test
-    fun `PARTIAL coverage, zero relations, no selection yields RAILWAY_LINE_NOT_SELECTED - not NO_VERIFIED_RAILWAY_LINE_REFERENCE`() {
+    fun `PARTIAL coverage, zero active candidates, no selection yields NO_VERIFIED_RAILWAY_LINE_REFERENCE`() {
+        // Zero active candidates is a fact about the current reference state ("none on
+        // record right now"), not a claim of physical absence - it holds under PARTIAL
+        // exactly as it does under COMPLETE. See NO_VERIFIED_RAILWAY_LINE_REFERENCE's KDoc.
         setCurrentState("v1", "PARTIAL")
         val settlement = insertSettlement("00001")
 
         val outcome = routingService.route(settlement) as RoutingOutcome.Unclassified
-        check(outcome.reason == UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED) {
-            "PARTIAL coverage must never assert NO_VERIFIED_RAILWAY_LINE_REFERENCE - absence is not evidence"
-        }
+        check(outcome.reason == UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE)
     }
 
     @Test
-    fun `PARTIAL coverage, exactly one relation, no selection must NOT be inferred`() {
+    fun `PARTIAL coverage, zero active candidates but one INACTIVE relation, still yields NO_VERIFIED_RAILWAY_LINE_REFERENCE`() {
+        // An inactive relation is never an inference candidate, PARTIAL or COMPLETE alike
+        // (the earlier candidate-set fix) - so this must not fall through to
+        // RAILWAY_LINE_NOT_SELECTED just because a (non-candidate) relation exists.
+        setCurrentState("v1", "PARTIAL")
+        val settlement = insertSettlement("00001")
+        insertRelation(settlement, insertLine("1", active = false))
+
+        val outcome = routingService.route(settlement) as RoutingOutcome.Unclassified
+        check(outcome.reason == UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE)
+    }
+
+    @Test
+    fun `PARTIAL coverage, exactly one active candidate, no selection must NOT be inferred`() {
         setCurrentState("v1", "PARTIAL")
         val settlement = insertSettlement("00001")
         val line = insertLine("1")
@@ -158,7 +172,7 @@ class RoutingServiceIT : AbstractAuthIntegrationTest() {
     }
 
     @Test
-    fun `PARTIAL coverage, multiple relations, no selection yields RAILWAY_LINE_NOT_SELECTED`() {
+    fun `PARTIAL coverage, multiple active candidates, no selection yields RAILWAY_LINE_NOT_SELECTED`() {
         setCurrentState("v1", "PARTIAL")
         val settlement = insertSettlement("00001")
         insertRelation(settlement, insertLine("1"))
