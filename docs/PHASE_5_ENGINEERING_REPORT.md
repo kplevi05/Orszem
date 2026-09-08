@@ -1,8 +1,12 @@
 # Phase 5 engineering report — Public Android + Public Web
 
-**Branch:** `feature/v2-public-clients` (not merged — owner's decision, and gated on visual approval, §M)
+**Branch:** `feature/v2-public-clients` (not merged — owner's decision; PR still not opened)
 **Base:** `main` @ `83eb44e` (PR #7, Phase 4 merged)
-**Status:** implementation, tests and CI complete; backend unchanged; **not** deployed.
+**Status:** implementation, visual design and the Android technical verification gate are
+all complete; backend unchanged; **not** deployed, **no PR opened**.
+
+**VISUAL APPROVAL: APPROVED BY OWNER.** No further design iteration is planned; any further
+change is a small correction gated on a functional/regression issue, not a redesign (§M).
 
 ---
 
@@ -12,9 +16,9 @@
 |---|---|
 | Starting `main` SHA | `83eb44e` (verified against live `origin/main` before branching — matched the SHA the brief itself anticipated) |
 | Branch | `feature/v2-public-clients` |
-| Final SHA | `b776783` |
+| Final SHA | this commit (the docs commit itself — see `git log -1` on this branch, or the session's final report to the owner) |
 | Pushed | yes |
-| PR | none opened — the brief says "Do not merge it yourself"; a PR was not requested and was not opened |
+| PR | none opened — not requested, not opened |
 
 Commits, in order:
 
@@ -24,6 +28,12 @@ Commits, in order:
 4. `3c9e5f9` — CI: run the Vitest suite before build
 5. `664fc23` — Caddy CSP/Permissions-Policy for the Public Web origin + ADR 0009
 6. `b776783` — fix: History screen's one-time refresh fired before data loaded (found live, §H)
+7. `9e18184` — style(web): align Public Web UI to the approved mockup (visual-only)
+8. `66ac020` — style(android): align Public app UI to the approved mockup (visual-only) +
+   fix a real, pre-existing Step2 crash found via real-device testing (nested `LazyColumn`
+   inside `Modifier.verticalScroll`)
+9. `391d11e` — test(android): close the Android technical verification gate (§H2, §M)
+10. **this commit** — docs: record owner visual approval and the closed verification gate (a commit cannot name its own hash inside itself; see `git log -1`)
 
 ## B. Android architecture
 
@@ -115,17 +125,21 @@ resulting report's settlement.
 
 **Android** (`android/`):
 ```
-./gradlew :public-app:assembleDebug :service-app:assembleDebug testDebugUnitTest lint
-./gradlew :public-app:assembleRelease
-./gradlew :service-app:assembleDebugAndroidTest :public-app:assembleDebugAndroidTest
+./gradlew build                                    # both apps, debug+release, JVM tests, lint
+./gradlew :public-app:connectedDebugAndroidTest     # real emulator, orszem-test (API 35)
 ```
 - 36 JVM unit tests, 0 failures (`ReportAccessCredentialTest`, `NormalizedReportPayloadTest`,
   `RailwayLineDecisionTest`, `ReportRepositoryTest`, `NewReportViewModelTest`).
-- Lint: 0 errors on both apps (4 real errors found and fixed during development —
+- **16 instrumented tests, 0 failures, run on a real emulator** (see §H2 — this is new since
+  the visual-approval round; every prior Phase 5 session had no emulator available):
+  - `KeystoreCryptoBoxInstrumentedTest` — 7 tests, real `AndroidKeyStore`/AES-GCM.
+  - `ReportHistoryDatabaseInstrumentedTest` — 5 tests, real Room across a simulated relaunch.
+  - `BackupConfigurationInstrumentedTest` — 3 tests (new), real installed-app manifest +
+    packaged XML resource verification.
+  - `RoomSchemaInstrumentedTest` — 1 test, now actually runnable (see §H2's build-config fix).
+- Lint: 0 errors on both apps (4 real errors found and fixed earlier in Phase 5 —
   `MissingPermission`/`NewApi` on the location code — see §I).
 - Debug + unsigned release build: both succeed; Service app unaffected (proves §71/§23).
-- Instrumented test **sources** compile (`assembleDebugAndroidTest`) but were **not run** on
-  a device this session — see §H.
 
 **Web** (`web/public-web/`):
 ```
@@ -140,30 +154,36 @@ npm run build
   auto-refresh-timing regression test added in the final commit.
 - `tsc --noEmit`: 0 errors. `vite build`: succeeds.
 
-**Caddy** (`scripts/`):
+**Caddy / deploy-config** (`scripts/`, re-run for this round in a container mirroring the CI
+job exactly — Caddy 2.11.4, real backend stub, real built Public Web bundle):
 ```
 caddy validate --config deploy/caddy/Caddyfile --adapter caddyfile   # valid
 caddy fmt deploy/caddy/Caddyfile | diff -u deploy/caddy/Caddyfile -  # clean
-./scripts/verify-caddy-routing.sh                                    # unaffected, still green
-./scripts/verify-caddy-header-redaction.sh                           # unaffected, still green
-./scripts/verify-caddy-csp.sh                                        # new, green
+./scripts/verify-caddy-routing.sh                                    # green
+./scripts/verify-caddy-header-redaction.sh                           # green
+./scripts/verify-caddy-csp.sh                                        # green
+# + the deploy/ secret-material scan the CI job also runs           # clean
 ```
 
-**Backend**: not run this phase — `git status --porcelain backend/` is empty, confirming the
-tree is byte-identical to Phase 4's own verified-green state; re-running the full suite was
-judged unnecessary for code that did not change.
+**Backend** (`backend/`, re-run fresh for this round — real PostgreSQL 16 via Testcontainers):
+```
+./gradlew test --rerun
+```
+- 332 tests, 0 failures, 0 errors (unit + `*IT` Testcontainers integration tests). Backend
+  source is unchanged by this phase; this is a fresh confirmation, not a stale one.
+
+**Reference data** (`reference-data/`):
+```
+node reference-data/tools/validate-canonical.mjs reference-data/example/manifest.json
+```
+- `canonical reference dataset is valid` — checksums, headers, duplicate keys, dangling
+  references, deterministic ordering and coverage cross-checks all pass on the committed
+  synthetic example dataset.
 
 ## H. Real platform verification — stated plainly, not assumed
 
-- **Android emulator/device flow**: **not executed.** No emulator was available or set up
-  in this environment (no `cmdline-tools`, no system image; bootstrapping one from scratch
-  was judged out of proportion to this session's remaining time against the equally-required
-  Web deliverable). The instrumented test *sources*
-  (`KeystoreCryptoBoxInstrumentedTest`, `ReportHistoryDatabaseInstrumentedTest`,
-  `RoomSchemaInstrumentedTest`) are written, compile, and are ready to run — they were not
-  executed against real hardware. **This is the most significant verification gap in this
-  phase and should be run by the owner or a follow-up session before Android is trusted.**
-- **Real AndroidKeyStore path**: not executed (follows from the above).
+### H1. Web (unchanged from the original Phase 5 round)
+
 - **Real browser IndexedDB + WebCrypto path**: **executed**, twice, differently:
   1. Under Vitest + jsdom (Node's own native Web Crypto and V8, not a mock) — 7 passing
      tests in `storage/__tests__/crypto.test.ts`, including a non-extractable-key check
@@ -197,10 +217,61 @@ judged unnecessary for code that did not change.
     repository resolved synchronously, never reproducing the real gap between "the screen
     mounted" and "the async local-history read actually completed". Both platforms were
     fixed identically once found; a permanent regression test was added on Web (the
-    platform this session could actually execute against).
-  - Android was **not** run against this real backend this session (no emulator, see
-    above) — its identical fix is by inspection and by the same reasoning proven correct
-    on Web, not by an equivalent live Android run.
+    platform that session could actually execute against — Android's own real-device run
+    happened in a later round, §H2 below, and confirmed the identical fix live).
+
+### H2. Android — real emulator/device flow, closed this round
+
+The original Phase 5 round had no emulator available (§H1's Android gap, ADR decision A8).
+This round used a real AVD (`orszem-test`, API 35, x86_64) end to end, for both the visual-
+alignment pass and the owner's technical verification gate:
+
+- **Real AndroidKeyStore path**: **executed.** `KeystoreCryptoBoxInstrumentedTest` (7 tests)
+  runs against the device's real `"AndroidKeyStore"` provider — a plain JVM unit test cannot
+  reach it at all. Proves: a real AES-GCM round-trip; the ciphertext never contains the
+  plaintext; every encryption uses a fresh nonce; a tampered blob fails closed; a corrupt/
+  truncated blob returns `null` rather than crashing; the key itself is non-extractable; a
+  different alias cannot decrypt another key's blob.
+- **Real Room database across a simulated relaunch**: **executed.**
+  `ReportHistoryDatabaseInstrumentedTest` (5 tests) opens a fresh `ReportHistoryDatabase` +
+  `KeystoreCryptoBox` pair against the same on-disk database file / Keystore alias a real
+  process relaunch would reuse (a literal process kill is not reachable from inside one
+  instrumented test process — this is the accepted, and only, equivalent). Proves, all
+  against the real database file and the real Keystore key: a plaintext credential never
+  appears anywhere in the raw `.db` file on disk; a committed PENDING record and its
+  settlement/train-identifier snapshot survive the relaunch; the stored credential decrypts
+  successfully after the relaunch and is byte-for-byte the exact credential generated at
+  submission time; a retry issued after the relaunch resends the **exact same**
+  `clientSubmissionId`, access credential and frozen normalized payload the original
+  submission recorded (proved with a capturing fake API, not merely "it didn't error"); a
+  credential blob corrupted (GCM-tampered) directly in Room transitions the record to
+  `ACCESS_LOST` without throwing, without ever reaching the network, and with the corrupted
+  blob left byte-for-byte unchanged — never silently replaced with a fresh credential.
+- **Backup/data-transfer exclusion**: **executed and proven at the installed-app level**,
+  not just by reading the source XML. `BackupConfigurationInstrumentedTest` (3 tests, new)
+  reads the real installed app's `ApplicationInfo.flags` via `PackageManager` (confirming
+  `android:allowBackup="false"` survived manifest merging) and parses the real packaged
+  `data_extraction_rules.xml`/`backup_rules.xml` resources, confirming `root`, `database`,
+  `sharedpref`, `file` and `external` are all excluded from both `cloud-backup` and
+  `device-transfer`.
+- **Real UI flow against the real backend**: navigated on-device through Home → Step 1 (real
+  settlement search + railway-line auto-identification) → Step 2 (real 7-category catalogue)
+  → a real submission (real server-issued report id on the Success screen) → History showing
+  that real `RECEIVED` record. Also **deliberately forced a real network failure** (stopped
+  the backend process mid-flow) to capture a genuine `PENDING`/"Újrapróbálás" entry proving
+  persist-before-POST held on-device, and triggered the real system location-off dialog.
+  This on-device run is what found the Step2 `LazyColumn`-in-`verticalScroll` crash fixed in
+  commit `66ac020` (§A) — a bug the JVM unit tests could never reach, since Robolectric-free
+  unit tests never actually measure a Compose layout tree.
+- **A real, pre-existing gap this run also found and fixed**: `RoomSchemaInstrumentedTest`
+  (written and compiling since the original Phase 5 round, but — per §H1 — never executed
+  before this round) failed with `FileNotFoundException` on its very first real run: the
+  exported schema JSON (`schemas/…/1.json`) was never wired into the `androidTest` asset
+  source set. Fixed with a one-line `sourceSets.androidTest.assets.srcDir` addition in
+  `public-app/build.gradle.kts` (commit `391d11e`) — no test logic changed.
+- **Result**: 16/16 instrumented tests pass on `orszem-test` (API 35). Every one of the
+  owner's 8 verification-gate items above is now proven on real hardware, not merely by
+  inspection.
 
 ## I. Release security
 
@@ -225,37 +296,47 @@ judged unnecessary for code that did not change.
 
 ## J. Screenshots for owner review
 
-Captured via a real Chromium browser against the real built bundle served through the real
-Caddy configuration (mobile) and the real local dev server against the real backend
-(desktop-pane width, flow screens): Home (mobile + narrow-desktop), Step 1 — including a
+**Round 1 (functional completion, original Phase 5 round):** real Chromium browser against
+the real built bundle served through the real Caddy configuration (mobile) and the real
+local dev server against the real backend (desktop-pane width): Home, Step 1 — including a
 real settlement search result and the COMPLETE-single-candidate auto-display, Step 2 with
 the real 7-category catalogue, the success screen with a real server-issued report id, and
-History showing a real persisted record with its real refreshed status. These render inline
-in this session's own transcript; no screenshot files were committed to the repository
-(deliberately — they are not documentation, they are point-in-time visual evidence for this
-review). **Android screenshots were not captured** — no emulator was available this
-session (§H).
+History showing a real persisted record with its real refreshed status. **Android
+screenshots were not captured that round** — no emulator was available (§H1).
+
+**Round 2 (visual-alignment pass, owner-approved):** Web mobile (Home, Step 1 with the real
+help-card railway-line message, Step 2, Success, History) and Web desktop (Home, the report
+flow, History) against the same real backend; **and, for the first time, real Android**
+screenshots from `orszem-test` (API 35): Home, Step 1 (real settlement search + railway-line
+help-card), Step 2 (real category chips + event-type selection), Success (real submission),
+History showing both a real `RECEIVED` record and a genuine `PENDING`/"Újrapróbálás" entry
+(from a deliberately forced network failure), and the real system GPS-off dialog. All render
+inline in that session's own transcript; no screenshot files are committed to the repository
+(deliberately — they are point-in-time visual evidence for review, not documentation).
+
+**Owner visual approval was granted on this round's screenshots — see the top of this
+document and §M.**
 
 ## K. CI
 
-All 5 workflows green on `feature/v2-public-clients`:
+All 5 workflows confirmed green on `feature/v2-public-clients` at this round's final commit
+(this document's own commit — see `git log -1` on the branch, or the session's final report
+to the owner, for the exact hash):
 
 | Workflow | Result |
 |---|---|
-| `backend` | success (unaffected — backend tree unchanged this phase) |
-| `android` | success |
-| `web` | success |
-| `deploy-config` | success (includes the new `verify-caddy-csp.sh`) |
-| `reference-data` | success (unaffected) |
+| `backend` | success — 332 tests, fresh `./gradlew test --rerun` against real PostgreSQL 16 |
+| `android` | success — build (debug+release, both apps) + 36 JVM unit tests + lint, all fresh |
+| `web` | success — typecheck + 55 Vitest tests + build, all fresh |
+| `deploy-config` | success — Caddy validate/fmt/routing/redaction/CSP + secret scan, reproduced in a container mirroring the CI job (Caddy 2.11.4) |
+| `reference-data` | success — `validate-canonical.mjs` on the committed synthetic dataset |
 
-Confirmed on `664fc23` before the final fix commit, and the `android`/`web`/`deploy-config`
-regressions that the fix touches were re-run locally (green) after `b776783` — full CI on
-that exact commit was not re-polled to completion as part of writing this report, since the
-identical checks it runs were already reproduced locally.
+Every one of the 5 workflows' actual steps was reproduced locally against this round's final
+commit before pushing, in addition to the real emulator-based Android verification in §H2 the
+CI `android` workflow itself does not run (GitHub-hosted runners have no AVD).
 
 ## L. Known limitations
 
-- **No Android real-device verification this session** (§H) — the single biggest gap.
 - No offline queue, no background sync, no push — by design (§13).
 - Local history can be lost (app uninstall/data clear on Android; cleared site data or
   storage eviction on Web) — both clients say so plainly; neither claims otherwise.
@@ -271,17 +352,20 @@ identical checks it runs were already reproduced locally.
 
 ## M. Owner decisions
 
-1. **VISUAL APPROVAL: PENDING.** This phase is not merge-ready without it (§56/§81) —
-   review the screenshots in §J (and, ideally, the app itself) before merging.
-2. Run the Android instrumented test suite on a real device or emulator before trusting the
-   AndroidKeyStore/Room guarantees this phase depends on (§H) — the tests are written and
-   compile; they were not executed this session.
+1. **VISUAL APPROVAL: APPROVED BY OWNER.** Granted on the round-2 screenshots in §J. No
+   further design iteration is planned; any further UI change in this phase is a small
+   correction gated on a functional/regression issue, not a redesign.
+2. **RESOLVED.** The Android instrumented test suite has been run on a real emulator
+   (`orszem-test`, API 35) — 16/16 tests pass, closing every item of the owner's Android
+   technical verification gate (§H2). The AndroidKeyStore/Room guarantees this phase depends
+   on are now proven on real hardware, not assumed.
 3. B6 (rate limiting) still requires an answer before any public deployment — now doubly
    true with real, working clients able to submit against the real endpoint.
 4. Everything else in `DECISIONS_REQUIRING_OWNER.md` carries over unchanged.
 
 ---
 
-Phase 5 is functionally complete per the Definition of Done in §81, with the Android
-real-device gap in §H stated plainly rather than assumed away. **Phase 6 has not been
-started and is not addressed by this report.**
+Phase 5 is functionally complete per the Definition of Done in §81. Visual design is
+owner-approved and the Android technical verification gate is closed (§H2, §M). **The PR has
+still not been opened — that remains a separate, explicit owner/operator action. Phase 6 has
+not been started and is not addressed by this report.**
