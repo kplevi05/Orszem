@@ -45,6 +45,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    sourceSets {
+        // RoomSchemaInstrumentedTest's MigrationTestHelper reads the exported schema JSON
+        // (see the ksp room.schemaLocation arg below) from the test APK's own assets -
+        // without this it is never actually bundled, and the test fails with
+        // FileNotFoundException on every run, real device included.
+        getByName("androidTest") {
+            assets.srcDir("$projectDir/schemas")
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
