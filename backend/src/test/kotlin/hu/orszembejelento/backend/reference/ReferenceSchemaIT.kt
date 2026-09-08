@@ -279,9 +279,11 @@ class ReferenceSchemaIT : AbstractAuthIntegrationTest() {
             check(expected in tables) { "missing table $expected" }
         }
 
-        // Phase 3 owns no report or station tables.
-        listOf("reports", "stations", "operational_points", "sections_of_line").forEach { forbidden ->
-            check(forbidden !in tables) { "$forbidden belongs to a later phase, not Phase 3" }
+        // Phase 3 (this migration, V002) owns no report or station tables. `reports` was
+        // added later by V003 (Phase 4) and is deliberately not in this forbidden list any
+        // more; station/section-of-line tables still belong to a phase not yet built.
+        listOf("stations", "operational_points", "sections_of_line").forEach { forbidden ->
+            check(forbidden !in tables) { "$forbidden belongs to a later phase, not yet implemented" }
         }
     }
 }

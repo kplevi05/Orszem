@@ -77,9 +77,21 @@ sealed class RoutingOutcome {
         override val referenceDatasetVersion: String,
     ) : Decided()
 
+    /**
+     * [resolvedRailwayLineId] is present exactly when a specific line *was* resolved (by
+     * inference or explicit selection) and only then found unassigned or inactive -
+     * [UnclassifiedReason.RAILWAY_LINE_UNASSIGNED], [UnclassifiedReason.RAILWAY_LINE_INACTIVE]
+     * or [UnclassifiedReason.SERVICE_AREA_INACTIVE]. It is null for the reasons reached
+     * before any line was resolved at all -
+     * [UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE],
+     * [UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED] and [UnclassifiedReason.REFERENCE_MISMATCH].
+     * Added for Phase 4's report routing snapshot, which records exactly this distinction;
+     * `RoutingService`'s own decision logic (ADR 0007) is unchanged by it.
+     */
     data class Unclassified(
         val reason: UnclassifiedReason,
         override val referenceDatasetVersion: String,
+        val resolvedRailwayLineId: UUID? = null,
     ) : Decided()
 
     /** Infrastructure state: no reference dataset has ever been successfully imported. */

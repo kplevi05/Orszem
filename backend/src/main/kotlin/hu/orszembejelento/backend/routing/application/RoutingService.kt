@@ -138,13 +138,15 @@ class RoutingService(
     }
 
     private fun resolveLineToArea(line: RailwayLine, datasetVersion: String): RoutingOutcome {
-        if (!line.active) return RoutingOutcome.Unclassified(UnclassifiedReason.RAILWAY_LINE_INACTIVE, datasetVersion)
+        if (!line.active) {
+            return RoutingOutcome.Unclassified(UnclassifiedReason.RAILWAY_LINE_INACTIVE, datasetVersion, line.id)
+        }
 
         val area = serviceAreaRepository.findAreaOfRailwayLine(line.id)
-            ?: return RoutingOutcome.Unclassified(UnclassifiedReason.RAILWAY_LINE_UNASSIGNED, datasetVersion)
+            ?: return RoutingOutcome.Unclassified(UnclassifiedReason.RAILWAY_LINE_UNASSIGNED, datasetVersion, line.id)
 
         if (!area.isActive) {
-            return RoutingOutcome.Unclassified(UnclassifiedReason.SERVICE_AREA_INACTIVE, datasetVersion)
+            return RoutingOutcome.Unclassified(UnclassifiedReason.SERVICE_AREA_INACTIVE, datasetVersion, line.id)
         }
 
         return RoutingOutcome.Routed(area.id, line.id, datasetVersion)

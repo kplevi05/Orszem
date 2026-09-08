@@ -57,9 +57,13 @@ class SecurityConfig {
                     .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                     // API identity, deliberately public.
                     .requestMatchers("${ApiPaths.V1}/meta").permitAll()
-                    // The Public reference API: read-only settlement/railway-line lookups
-                    // for the anonymous Public client. No service-area or authorisation
-                    // information is ever returned from these - see PublicReferenceController.
+                    // Every anonymous Public endpoint: reference lookups, the event
+                    // catalogue, and report submission/status. No service-area or
+                    // authorisation information is ever returned from any of these - see
+                    // PublicReferenceController and PublicReportController. Report GET is
+                    // additionally protected by its own report-access-credential capability
+                    // inside the application layer (ADR 0008) - Spring Security has no
+                    // notion of that credential and never needs one.
                     .requestMatchers("${ApiPaths.V1}/public/**").permitAll()
                     // The three flows that by definition cannot present a valid access
                     // token yet. Each performs its own credential verification.
