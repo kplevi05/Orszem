@@ -52,12 +52,20 @@ jobs:
         working-directory: android
         run: ./gradlew testDebugUnitTest --no-daemon
 
-      # Compiles the instrumented tests without running them. They need a real device
-      # for the Android Keystore, which is verified locally rather than in CI, but this
-      # keeps them from silently rotting as the code around them changes.
+      # Compiles the instrumented tests without running them. They need a real device for
+      # the Android Keystore and a real Room/SQLite database, which are verified locally
+      # (or on a real device/emulator, owner-run) rather than in CI, but this keeps them
+      # from silently rotting as the code around them changes.
       - name: Compile instrumented tests
         working-directory: android
-        run: ./gradlew :service-app:assembleDebugAndroidTest --no-daemon
+        run: ./gradlew :service-app:assembleDebugAndroidTest :public-app:assembleDebugAndroidTest --no-daemon
+
+      # Unsigned - no release signing material is available to CI, and none is required
+      # to prove the build itself (minification, resource shrinking, manifest merging,
+      # the release-only strict network-security config) succeeds end to end.
+      - name: Build unsigned Public release APK
+        working-directory: android
+        run: ./gradlew :public-app:assembleRelease --no-daemon
 
       - name: Lint
         working-directory: android
