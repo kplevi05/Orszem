@@ -4,6 +4,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 // Release signing is configured only when the owner supplies it, through a gitignored
@@ -88,6 +90,22 @@ android {
     lint {
         abortOnError = true
     }
+
+    testOptions {
+        unitTests {
+            // Room/SQLite and OkHttp touch platform stubs that throw in plain JVM tests
+            // unless this is set; returning defaults lets repository-level unit tests run
+            // without a Robolectric dependency.
+            isReturnDefaultValues = true
+        }
+    }
+}
+
+ksp {
+    // Exported schema history, committed to the repo, so a future Room migration can be
+    // tested against every prior version rather than only the current one.
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.generateKotlin", "true")
 }
 
 kotlin {
@@ -106,8 +124,39 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.core)
+
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
+
+    // Local history database. No fallbackToDestructiveMigration - history survives an
+    // ordinary app update; see ReportHistoryDatabase's own KDoc.
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // Conventional, small networking stack. No custom framework.
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.room.testing)
+    // Only for a stand-in android.content.Context the LocationAssist constructor needs in
+    // one ViewModel test that never actually exercises the location/GPS path.
+    testImplementation(libs.mockito.core)
+
+    // Instrumented tests: the real Android Keystore and a real Room/SQLite database only
+    // exist on a device or emulator - the crypto and persistence guarantees this app
+    // depends on cannot be covered by a JVM unit test alone.
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.okhttp.mockwebserver)
+    androidTestImplementation(libs.room.testing)
 }

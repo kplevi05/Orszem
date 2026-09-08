@@ -1,0 +1,131 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "321aa66f8caa6cdce908b701b111cc95",
+    "entities": [
+      {
+        "tableName": "report_history",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`client_submission_id` TEXT NOT NULL, `public_report_id` TEXT, `encrypted_credential_blob` BLOB NOT NULL, `credential_crypto_version` INTEGER NOT NULL, `occurred_at` INTEGER NOT NULL, `train_identifier` TEXT, `settlement_id` TEXT NOT NULL, `settlement_name_snapshot` TEXT NOT NULL, `railway_line_id` TEXT, `railway_line_display_snapshot` TEXT, `category_display_snapshot` TEXT NOT NULL, `event_type_code` TEXT NOT NULL, `event_type_display_snapshot` TEXT NOT NULL, `submission_state` TEXT NOT NULL, `public_status` TEXT, `server_submitted_at` INTEGER, `local_created_at` INTEGER NOT NULL, `last_status_checked_at` INTEGER, `last_error_code` TEXT, PRIMARY KEY(`client_submission_id`))",
+        "fields": [
+          {
+            "fieldPath": "clientSubmissionId",
+            "columnName": "client_submission_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publicReportId",
+            "columnName": "public_report_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "encryptedCredentialBlob",
+            "columnName": "encrypted_credential_blob",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "credentialCryptoVersion",
+            "columnName": "credential_crypto_version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "occurredAt",
+            "columnName": "occurred_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "trainIdentifier",
+            "columnName": "train_identifier",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "settlementId",
+            "columnName": "settlement_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "settlementNameSnapshot",
+            "columnName": "settlement_name_snapshot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "railwayLineId",
+            "columnName": "railway_line_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "railwayLineDisplaySnapshot",
+            "columnName": "railway_line_display_snapshot",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "categoryDisplaySnapshot",
+            "columnName": "category_display_snapshot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventTypeCode",
+            "columnName": "event_type_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventTypeDisplaySnapshot",
+            "columnName": "event_type_display_snapshot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "submissionState",
+            "columnName": "submission_state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publicStatus",
+            "columnName": "public_status",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "serverSubmittedAt",
+            "columnName": "server_submitted_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "localCreatedAt",
+            "columnName": "local_created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastStatusCheckedAt",
+            "columnName": "last_status_checked_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastErrorCode",
+            "columnName": "last_error_code",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "client_submission_id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '321aa66f8caa6cdce908b701b111cc95')"
+    ]
+  }
+}

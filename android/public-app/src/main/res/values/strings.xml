@@ -1,7 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Őrszem</string>
-    <string name="shell_headline">Őrszem</string>
-    <string name="shell_body">Vasúti észlelések bejelentése. Az alkalmazás fejlesztés alatt áll, a bejelentési folyamat még nem érhető el.</string>
-    <string name="shell_version">Verzió: %1$s</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Kezdőlap</string>
+    <string name="nav_new_report">Új bejelentés</string>
+    <string name="nav_history">Előzmények</string>
+
+    <!-- Home -->
+    <string name="home_headline">Őrszem</string>
+    <string name="home_body">Vasúti környezetben tapasztalt eseményeket néhány lépésben, névtelenül lehet bejelenteni.</string>
+    <string name="home_new_report_cta">Új bejelentés</string>
+    <string name="home_recent_history_title">Legutóbbi bejelentések</string>
+    <string name="home_no_history">Még nincs bejelentés ezen a készüléken.</string>
+
+    <!-- Step 1 - Alapadatok -->
+    <string name="step1_title">1. Alapadatok</string>
+    <string name="field_occurred_at">Időpont</string>
+    <string name="field_train_identifier">Vonatszám (nem kötelező)</string>
+    <string name="field_settlement">Település</string>
+    <string name="field_settlement_hint">Település keresése</string>
+    <string name="action_locate_me">Helyzet meghatározása</string>
+    <string name="locate_me_searching">Helymeghatározás folyamatban…</string>
+    <string name="locate_me_failed">A helyzet meghatározása nem sikerült. Kérjük, keresse meg a települést kézzel.</string>
+    <string name="locate_me_permission_denied">A helymeghatározáshoz engedély szükséges.</string>
+    <string name="locate_me_permission_permanently_denied">A helymeghatározás engedélye tartósan elutasítva. Engedélyezze a rendszerbeállításokban, vagy keresse meg a települést kézzel.</string>
+    <string name="locate_me_geocoder_unavailable">A készülék nem támogatja a helyszín alapján történő település-keresést. Kérjük, keresse meg kézzel.</string>
+
+    <!-- Railway line decision matrix -->
+    <string name="line_none_verified">Ehhez a településhez jelenleg nincs ellenőrzött vasútvonal-kapcsolat nyilvántartva. Ez nem jelenti azt, hogy nincs vasútvonal a településen.</string>
+    <string name="line_auto_identified">Azonosított vasútvonal: %1$s</string>
+    <string name="line_choose_title">Melyik vasútvonalról van szó?</string>
+    <string name="line_choose_unsure">Nem tudom / nem vagyok biztos benne</string>
+    <string name="line_choose_unsure_partial">Nem tudom / másik vonal</string>
+
+    <string name="action_next">Tovább</string>
+    <string name="action_back">Vissza</string>
+
+    <!-- Step 2 - Esemény -->
+    <string name="step2_title">2. Esemény</string>
+    <string name="category_choose_title">Kategória</string>
+    <string name="event_type_choose_title">Esemény típusa</string>
+    <string name="action_submit">Bejelentés küldése</string>
+    <string name="catalog_load_failed">A kategórialista betöltése nem sikerült.</string>
+    <string name="action_retry">Újrapróbálás</string>
+
+    <!-- Success -->
+    <string name="success_title">Bejelentés elküldve</string>
+    <string name="success_report_id">Bejelentés azonosítója: %1$s</string>
+    <string name="success_event_type">Esemény: %1$s</string>
+    <string name="success_train">Vonatszám: %1$s</string>
+    <string name="success_settlement">Település: %1$s</string>
+    <string name="success_status">Állapot: %1$s</string>
+    <string name="action_new_report">Új bejelentés</string>
+    <string name="action_view_history">Előzmények</string>
+    <string name="action_home">Kezdőlap</string>
+
+    <!-- History -->
+    <string name="history_title">Előzmények</string>
+    <string name="history_empty">Még nincs bejelentés ezen a készüléken.</string>
+    <string name="history_unconfirmed">Beküldés nincs megerősítve</string>
+    <string name="history_access_lost">A bejelentéshez való helyi hozzáférés elveszett.</string>
+    <string name="history_conflict">A bejelentés állapota nem egyeztethető, kérjük indítson új bejelentést.</string>
+    <string name="history_last_checked">Utoljára ellenőrizve: %1$s</string>
+    <string name="history_refresh">Frissítés</string>
+    <string name="status_received">Beérkezett</string>
+    <string name="status_processing">Feldolgozás alatt</string>
+    <string name="status_closed">Lezárva</string>
+    <string name="history_storage_notice">Az előzmények csak ezen a készüléken tárolódnak, és törlődhetnek az alkalmazás vagy az adatok törlésekor.</string>
+
+    <!-- Errors -->
+    <string name="error_validation">A megadott adatok nem megfelelőek. Kérjük, ellenőrizze a mezőket.</string>
+    <string name="error_reference_unavailable">A vonatkoztatási adatok jelenleg nem érhetők el. Kérjük, próbálja meg később.</string>
+    <string name="error_network">Hálózati hiba történt. A bejelentés nincs megerősítve, próbálja újra.</string>
+    <string name="error_conflict">A bejelentés nem küldhető el emiatt az azonosító miatt. Kérjük, indítson új bejelentést.</string>
+    <string name="error_local_storage">A készülék nem tudta biztonságosan elmenteni a bejelentés helyi adatait, ezért a bejelentés nem lett elküldve.</string>
+    <string name="error_access_lost">A bejelentéshez való helyi hozzáférés nem érhető el ezen a készüléken.</string>
+    <string name="error_generic">Váratlan hiba történt.</string>
+
+    <!-- GPS-off dialog - exact copy, §31, do not change without owner approval -->
+    <string name="location_off_title">Helymeghatározás kikapcsolva</string>
+    <string name="location_off_message">A helymeghatározás használatához kapcsolja be a GPS szolgáltatást a készülékén.</string>
+    <string name="location_off_cancel">MÉGSE</string>
+    <string name="location_off_settings">BEÁLLÍTÁSOK MEGNYITÁSA</string>
 </resources>
