@@ -50,6 +50,19 @@ jobs:
       - name: Verify public routing policy
         run: ./scripts/verify-caddy-routing.sh
 
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Runs the real Caddyfile against a stub upstream and a real request carrying
+      # sentinel header values, and asserts X-Orszem-Report-Access (a live Public report
+      # credential, ADR 0008) and Authorization never appear in the access log - plus a
+      # negative control proving the check would actually catch the redaction rule being
+      # removed. See scripts/verify-caddy-header-redaction.sh's own header for detail.
+      - name: Verify access-log header redaction
+        run: ./scripts/verify-caddy-header-redaction.sh
+
       - name: Ensure no secret material is committed under deploy/
         run: |
           if git ls-files deploy | grep -qiE '\.(jks|keystore|p12|pem|key)$|(^|/)\.env$'; then
