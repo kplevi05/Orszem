@@ -135,6 +135,8 @@ a side effect of a routine import that happens to omit a row.
   applies only those, one row at a time, by internal id. There is no code path left that
   can deactivate or remove a row the diff did not name.
 - The gate in Decision 1 protects the *running service*; it says nothing about this
-  repository's own visibility. That is a separate exposure surface, tracked as its own
-  finding in `PHASE_3B_DECISION_GATE.md` §11 and `DECISIONS_REQUIRING_OWNER.md` B10/A6 —
-  this ADR does not resolve it either.
+  repository's own visibility. That is a separate exposure surface. It was found via a
+  read-only audit and then addressed by an owner-approved, branch-scoped history rewrite —
+  see `PHASE_3B_DECISION_GATE.md` §11–12 and `DECISIONS_REQUIRING_OWNER.md` B10/A6 for the
+  finding and the remediation. This ADR's gate did not resolve it and was never meant to;
+  the two are independent controls for independent surfaces.

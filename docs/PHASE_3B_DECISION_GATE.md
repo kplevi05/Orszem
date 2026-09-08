@@ -327,4 +327,63 @@ hard-to-reverse operation - recorded as **B10** and **A6** in
 `DECISIONS_REQUIRING_OWNER.md`, with options, for the owner to choose from. Nothing in this
 codebase change touches the repository's visibility or its history.
 
+---
+
+## 12. Remediation performed — read-only audit, then an owner-approved history rewrite
+
+§11 above is left as it was written: a report, not yet acted on. This section records what
+happened next, on explicit owner authorisation, choosing option 3 from §11/B10 (remove the
+row-level content) without options 1 (private) or 2 (await VPE) — both declined explicitly.
+**No paid service was introduced anywhere in this process.**
+
+### Exposure audit (read-only, performed before any history was touched)
+
+| Question | Finding |
+|---|---|
+| Which files carried substantial VPE-derived row-level content? | Exactly three: `railway-lines.csv` (231 rows), `settlement-railway-lines.csv` (967 rows), `needs-review.csv` (1,122 rows). `manifest.json` and `build-summary.json` held only aggregate counts/provenance — not treated as redistribution. |
+| Which commit introduced them? | Exactly one: the commit that first built the canonical dataset. Two later commits touched only `manifest.json` metadata (`reuseStatus`, then per-component `coverage`) — the three CSVs were byte-identical from introduction to the rewrite. |
+| Which refs reached that commit? | Exactly one branch: `feature/v2-reference-routing` (local and `origin/`). Not reachable from `main`, `demo-v1.1-final`, or any other branch/tag - verified directly by tree listing, not merely by ref-reachability. |
+| Any PR ref? | No. Five PRs existed in this repository, all merged, none for this branch. |
+| Any public fork? | No. `forks_count: 0`, `network_count: 0`, `stargazers_count: 0` at audit time. |
+| In `main` or the V1 archive tag? | No, confirmed by direct tree listing of both. |
+| Could the branch alone be rewritten cleanly from its Phase 2 base? | **Yes.** `git merge-base` of the branch and `main` was exactly that base commit; no other public ref reached any commit on the branch. |
+
+### The rewrite
+
+The branch's six commits were reconstructed from that same Phase 2 base, preserving every
+safe change (V002/domain/AreaScopePolicy, the importer implementation and its tests, the
+synthetic `CLEARED` fixtures, every ADR, the aggregate research findings, `reuseStatus` and
+the per-component coverage semantics) while never introducing the three sensitive files at
+any point in the new history. The public layout was restructured in the same pass -
+`reference-data/cleared/` (KSH, actually CC BY 4.0), `reference-data/example/` (a small,
+entirely fictional dataset that keeps the offline validator and the backend importer
+exercised in CI without any real derived content), and `reference-data/local-research/`
+(gitignored, real research continues there) - see `reference-data/README.md` for the full
+layout and rationale.
+
+Before the branch was force-pushed (with `--force-with-lease`, scoped to that one branch),
+all of the following were verified and are recorded in the corresponding session:
+
+1. the rewritten branch's merge-base with `main` was still the same Phase 2 commit;
+2. `main`'s SHA was unchanged;
+3. `demo-v1.1-final`'s SHA was unchanged;
+4. the three sensitive paths/blobs were absent from every commit reachable from the
+   rewritten branch;
+5. no synthetic fixture accidentally contained a copied real row;
+6. the working tree was clean;
+7. the full backend regression suite, and every CI workflow, passed on the new tip.
+
+The real VPE-derived files were preserved outside tracked Git state before any of this
+began, and continue as local research material - see
+`reference-data/local-research/README.md`.
+
+### What this does not resolve
+
+Git history is not the only place data can persist once public. The files were reachable
+in this repository's history for a bounded window before the rewrite; anything GitHub
+itself cached or indexed in that window, or that a crawler fetched, is outside what a git
+operation can retract. Zero forks and zero stars were confirmed during the audit, which
+bounds the realistic risk without eliminating it. Written VPE confirmation (B9) remains the
+only way to make the underlying reuse question moot rather than mitigated.
+
 **Phase 3C does not begin until the owner accepts this gate.**

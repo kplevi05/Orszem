@@ -19,14 +19,11 @@ owner's access.
 | A3 | Delegate `orszembejelento.hu` and create the A records | `deployment/DNS.md` | blocks HTTPS and any V2 deployment |
 | A4 | Generate and back up the V2 release keystore | `deployment/ANDROID_SIGNING.md` | blocks any V2 distribution |
 | A5 | Confirm which keystore holds the V1 pilot signing identity `745f5fa8…a51a`, then back it up | `archive/DEMO_V1_1.md` §4 | blocks any in-place update to installed V1 pilot builds |
-| **A6** | **Decide what to do about the VPE-derived reference data already being public** (see B10) | `PHASE_3B_DECISION_GATE.md` §11 | the exposure exists now, on every clone of a public repo |
+| ~~A6~~ | ~~Remediate the VPE-derived reference data being public~~ — **done**, `feature/v2-reference-routing` history rewritten 2026-09-08 | `PHASE_3B_DECISION_GATE.md` §11, `DECISIONS_REQUIRING_OWNER.md` B10 | resolved; B9 (VPE confirmation) remains open separately |
 
 A5 is a one-command check. `orszem-pilot.jks` is only a *candidate* until its certificate
 fingerprint is compared against the measured pilot APK certificate; if it does not match,
 the signing key for the distributed pilot builds is somewhere else and needs locating.
-
-**A6 is time-sensitive**, unlike the others: it concerns data already exposed, not a
-step not yet taken. See B10 below for the finding and the options.
 
 ---
 
@@ -96,44 +93,51 @@ use, but is not a written grant.
 *Affects:* external distribution of the derived dataset only, not the running service. See
 [`PHASE_3B_DECISION_GATE.md`](PHASE_3B_DECISION_GATE.md) §6.
 
-### B10. The VPE-derived dataset is already public — reuseStatus: PENDING notwithstanding
+### B10. The VPE-derived dataset was public — git-history remediation performed
 
-**Finding, not a request:** `github.com/kplevi05/Orszem` is a **public** repository
-(confirmed via the GitHub API on 2026-09-08). `reference-data/current/settlements.csv`,
-`railway-lines.csv`, `settlement-railway-lines.csv` and `manifest.json` — the VPE-derived
-canonical dataset — are committed to its history and are visible to anyone right now.
+**Resolved by an owner-approved history rewrite of `feature/v2-reference-routing`, 2026-09-08.**
+
+`github.com/kplevi05/Orszem` is a **public** repository (confirmed via the GitHub API on
+2026-09-08). `reference-data/current/settlements.csv`, `railway-lines.csv`,
+`settlement-railway-lines.csv`, `needs-review.csv` and `manifest.json` — the VPE-derived
+canonical dataset — had been committed to that branch's history and were visible to anyone.
 
 The backend importer's `reuseStatus: PENDING` gate (ADR 0006) stops the dataset from
-reaching a *running service* without written clearance. It does **nothing** about a public
-git repository: a gate inside the application cannot retroactively un-expose files that
-are already sitting in that repository's history. **PENDING must not be read as "the
-running service is safe, so this is fine" — the two are unrelated.** The exposure exists
-independently of anything the backend does or refuses.
+reaching a *running service* without written clearance. It did **nothing** about the public
+git repository: a gate inside the application cannot retroactively un-expose files already
+sitting in history. **PENDING must not be read as "the running service is safe, so this is
+fine" — the two are unrelated.**
 
-Verified not exposed anywhere else: the built backend jar contains zero reference-data
-files (no `processResources` hook copies them in, and there is no Dockerfile in this repo
-at all), and there is no reference to `reference-data/` anywhere under `android/` or
-`web/`. The `reference-data` CI workflow only validates the committed snapshot; it deploys
-nothing. The exposure is specifically and only: **this GitHub repository's git history**.
+**What was done, on explicit owner authorisation, conservatively and without a paid
+service:** a read-only exposure audit first confirmed the blast radius (see
+[`PHASE_3B_DECISION_GATE.md`](PHASE_3B_DECISION_GATE.md) §11 for the full account) — the
+exposure was exactly one branch, `feature/v2-reference-routing`, with no PR ref, no fork,
+and no reachability from `main`, `demo-v1.1-final`, or any Phase 0–2 ref. That branch's
+history (six commits from its base at `a773d7a`) was then reconstructed from that same
+base: the row-level VPE-derived files no longer appear in **any** commit reachable from the
+rewritten branch, verified before the branch was force-pushed with `--force-with-lease`,
+scoped to that one branch only. `main`, `demo-v1.1-final`, and every other ref were left
+untouched — confirmed unchanged before and after the push.
 
-**Options, roughly in order of speed:**
-1. Make the repository private. Fast and reversible, but does not retract anything already
-   fetched, cloned, or cached by GitHub or a third party during the time it was public.
-2. Pursue written VPE confirmation now (B9), given the exposure already exists — this
-   converts PENDING to CLEARED and the concern becomes moot for this specific data.
-3. Remove `reference-data/current/*.csv` and the manifest's derived content from the
-   working tree. On its own this does **not** remove the data from git history — GitHub
-   still serves old commits — so it only helps combined with (1), or with an explicit,
-   separately-approved history rewrite (force-push), which this project treats as a
-   destructive action requiring the owner's explicit sign-off before it is ever done.
-4. Decide the existing reuse basis (mandatory regulatory publication, factual-only
-   derivation, source document never redistributed — §5–6 of the decision gate report) is
-   sufficient to accept the current exposure, and downgrade this item accordingly. That is
-   a legal risk judgment for the owner, not an engineering one.
+The repository was **not** made private, and VPE confirmation was **not** awaited, per
+explicit instruction — this remediation stands on its own regardless of either.
 
-*Affects:* whether this data may stay where it currently is. No code change addresses this;
-only the owner's choice among the options above does. See
-[`PHASE_3B_DECISION_GATE.md`](PHASE_3B_DECISION_GATE.md) §11.
+**What this does and does not resolve:**
+- Resolved: the row-level dataset is no longer reachable from any commit in this
+  repository. A fresh clone of `feature/v2-reference-routing` cannot recover it via `git
+  log`.
+- **Not resolved, and not resolvable by a git operation:** the files were public for
+  roughly two hours before this rewrite. GitHub's own caching, search indexing, or any
+  crawler that happened to fetch the branch in that window may have already retained a
+  copy. Zero forks and zero stars were confirmed at the time (§4/§5 of the audit), which
+  bounds the realistic risk but does not eliminate it.
+- Still open, unchanged by this action: **B9** — written VPE confirmation is still required
+  before any VPE-derived row-level data is committed to a public repository again, or
+  distributed externally in any other form. The real research data continues locally under
+  `reference-data/local-research/` (gitignored — see that directory's README).
+
+*Affects:* whether the derived data may be recommitted or the repository's visibility
+changed. Those remain the owner's decisions; nothing here assumes either has happened.
 
 ---
 
