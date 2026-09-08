@@ -1,0 +1,18 @@
+# Manually reviewed settlement <-> railway line decisions.
+#
+# Each row is a decision a person made against an authoritative source. These live here as
+# reviewable data rather than as conditions in code, so that every exception can be audited,
+# diffed and revisited.
+#
+#   ksh_code   KSH settlement code (five digits)
+#   line_code  canonical HÜSZ line code
+#   decision   ACCEPT (admit this relation) or REJECT (never propose it)
+#   source     the authoritative source consulted
+#   reason     short justification
+#
+# The builder fails if a row references an unknown settlement or line, so a stale decision
+# cannot silently do nothing.
+#
+# No decisions have been recorded yet: all 967 current relations come from exact automatic
+# matches. The worklist is review/needs-review.csv.
+ksh_code,line_code,decision,source,reason

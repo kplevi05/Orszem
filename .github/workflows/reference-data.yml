@@ -1,0 +1,36 @@
+name: reference-data
+
+on:
+  # Both triggers on purpose. Push covers branches before a PR is opened; pull_request
+  # independently verifies every PR, including PRs from forks, which a push trigger in
+  # this repository never sees.
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reference-data-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Entirely offline, and entirely fictional data. The real VPE-derived canonical
+      # dataset is never committed to this repository (reuseStatus: PENDING - see ADR 0006
+      # and reference-data/local-research/README.md), so CI validates the small, clearly
+      # synthetic example dataset instead. This still exercises every check the validator
+      # performs - checksums, headers, duplicate keys, dangling references, deterministic
+      # ordering, count/coverage cross-checks - without depending on KSH, VPE, MÁV or GYSEV
+      # being reachable, and without redistributing anything derived from them.
+      - name: Validate example reference dataset
+        run: node reference-data/tools/validate-canonical.mjs reference-data/example/manifest.json

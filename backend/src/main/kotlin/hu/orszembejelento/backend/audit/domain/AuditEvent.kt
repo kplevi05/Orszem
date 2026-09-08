@@ -23,11 +23,12 @@ enum class AuditEventType {
     SESSION_REVOKED,
     LOGOUT_ALL,
     REFRESH_TOKEN_REUSE_DETECTED,
+    REFERENCE_DATASET_IMPORTED,
 }
 
 enum class AuditActorType { USER, SYSTEM }
 
-enum class AuditTargetType { USER, SESSION }
+enum class AuditTargetType { USER, SESSION, REFERENCE_DATASET }
 
 /**
  * One append-only audit row.

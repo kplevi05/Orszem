@@ -38,5 +38,9 @@ class IdentityConfig {
     fun serviceIdGenerator(): ServiceIdGenerator = ServiceIdGenerator()
 
     @Bean
+    fun areaScopePolicy(): hu.orszembejelento.backend.scope.domain.AreaScopePolicy =
+        hu.orszembejelento.backend.scope.domain.AreaScopePolicy()
+
+    @Bean
     fun temporaryCredentialGenerator(): TemporaryCredentialGenerator = TemporaryCredentialGenerator()
 }

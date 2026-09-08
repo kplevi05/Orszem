@@ -1,0 +1,16 @@
+{
+  "settlements": 3178,
+  "railwayLines": 231,
+  "relations": 967,
+  "settlementsWithRelations": 824,
+  "stationRows": 2111,
+  "sourceDataRows": 2116,
+  "extractionCoverage": 0.9976,
+  "needsReview": 1122,
+  "exact": 989,
+  "ambiguousMarker": 606,
+  "noMatch": 516,
+  "duplicateName": 0,
+  "manualAccepted": 0,
+  "manualRejected": 0
+}

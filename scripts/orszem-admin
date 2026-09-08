@@ -10,6 +10,14 @@
 # Usage:
 #   ./scripts/orszem-admin create-super-admin
 #   ./scripts/orszem-admin reset-super-admin-password SZ-123456
+#   ./scripts/orszem-admin reference-validate  reference-data/local-research
+#   ./scripts/orszem-admin reference-diff      reference-data/local-research
+#   ./scripts/orszem-admin reference-import    reference-data/local-research
+#
+# The three reference-* commands validate, preview and apply a canonical reference
+# dataset (see reference-data/README.md and ADR 0006). Only reference-import writes to
+# the database, and it refuses any dataset that is not verificationStatus: VERIFIED and
+# reuseStatus: CLEARED - there is no flag to bypass either check.
 #
 # Requires the same database configuration the service uses:
 #   ORSZEM_DB_URL, ORSZEM_DB_USERNAME, ORSZEM_DB_PASSWORD
@@ -35,6 +43,19 @@ usage() {
       Issues a new temporary credential for an existing, active SUPER_ADMIN and
       revokes all of its sessions. Refuses any account that is not a SUPER_ADMIN,
       and never reactivates a deactivated one.
+
+  reference-validate <DATASET_DIR>
+      Structural/content validation of a canonical reference dataset directory.
+      Read-only. Works on any dataset, including one that is not yet cleared.
+
+  reference-diff <DATASET_DIR>
+      Shows what importing the dataset would change against the current database.
+      Read-only; never writes.
+
+  reference-import <DATASET_DIR>
+      Imports the dataset. Refuses anything that is not verificationStatus: VERIFIED
+      and reuseStatus: CLEARED. Re-running the same dataset version is a no-op; the
+      same version with different content is refused. See ADR 0006.
 
 Environment:
   ORSZEM_DB_URL, ORSZEM_DB_USERNAME, ORSZEM_DB_PASSWORD   required
@@ -82,6 +103,16 @@ case "${1:-}" in
     run_maintenance \
       --orszem.maintenance.action=reset-super-admin-password \
       --orszem.maintenance.service-id="$2"
+    ;;
+
+  reference-validate | reference-diff | reference-import)
+    if [ $# -lt 2 ]; then
+      echo "ERROR: a dataset directory is required, e.g. reference-data/local-research" >&2
+      exit 2
+    fi
+    run_maintenance \
+      --orszem.maintenance.action="$1" \
+      --orszem.maintenance.dataset-dir="$2"
     ;;
 
   -h | --help | help | "")

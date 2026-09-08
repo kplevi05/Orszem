@@ -60,3 +60,10 @@ node_modules/
 web/**/node_modules/
 web/**/dist/
 web/**/.vite/
+
+# Reference-data local research material (see reference-data/local-research/README.md).
+# Real derived datasets whose reuseStatus is not CLEARED live here, never in a tracked
+# path. Everything in this directory is local-only: never committed, packaged, or
+# deployed. The directory's own README is the one exception (tracked, contains no data).
+reference-data/local-research/*
+!reference-data/local-research/README.md
