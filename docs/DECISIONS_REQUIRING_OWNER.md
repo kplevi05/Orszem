@@ -20,6 +20,8 @@ owner's access.
 | A4 | Generate and back up the V2 release keystore | `deployment/ANDROID_SIGNING.md` | blocks any V2 distribution |
 | A5 | Confirm which keystore holds the V1 pilot signing identity `745f5fa8…a51a`, then back it up | `archive/DEMO_V1_1.md` §4 | blocks any in-place update to installed V1 pilot builds |
 | ~~A6~~ | ~~Remediate the VPE-derived reference data being public~~ — **done**, `feature/v2-reference-routing` history rewritten 2026-09-08 | `PHASE_3B_DECISION_GATE.md` §11, `DECISIONS_REQUIRING_OWNER.md` B10 | resolved; B9 (VPE confirmation) remains open separately |
+| A7 | Give `feature/v2-public-clients` explicit visual approval (Home/Step 1/Step 2/success/history, both clients) | `PHASE_5_ENGINEERING_REPORT.md` §J/§M | blocks merging Phase 5 - required regardless of CI/test status |
+| A8 | Run the Public Android instrumented test suite on a real device or emulator | `PHASE_5_ENGINEERING_REPORT.md` §H | the AndroidKeyStore/Room guarantees Phase 5 depends on were not verified against real hardware this session |
 
 A5 is a one-command check. `orszem-pilot.jks` is only a *candidate* until its certificate
 fingerprint is compared against the measured pilot APK certificate; if it does not match,
