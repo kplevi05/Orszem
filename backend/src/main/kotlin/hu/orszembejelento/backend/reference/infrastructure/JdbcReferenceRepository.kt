@@ -1,5 +1,6 @@
 package hu.orszembejelento.backend.reference.infrastructure
 
+import hu.orszembejelento.backend.common.ReferenceStateLock
 import hu.orszembejelento.backend.reference.domain.CoverageComponentStatus
 import hu.orszembejelento.backend.reference.domain.CurrentReferenceState
 import hu.orszembejelento.backend.reference.domain.DatasetCoverage
@@ -333,18 +334,32 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
     // ------------------------------------------------------ import serialisation
 
     /**
-     * Serialises every reference-dataset import against every other one, for the lifetime
-     * of the current transaction only.
+     * Serialises a reference-dataset import against every other import **and** against
+     * every in-flight report submission, for the lifetime of the current transaction only.
      *
      * A transaction-scoped advisory lock rather than a row lock: nothing to lock yet exists
      * before the first import ever runs, and the whole operation - not one row - is what
-     * must not overlap with another import. [LOCK_KEY] is an arbitrary constant reserved
-     * exclusively for this purpose; nothing else in the schema takes an advisory lock, so
-     * there is no collision to guard against.
+     * must not overlap with another import or with a submission reading current state. See
+     * [ReferenceStateLock] for why this is the exclusive half of a shared/exclusive pair on
+     * one centralised key, and [acquireSharedReferenceStateLock] for the other half.
      */
     fun acquireImportLock() {
         jdbc.sql("SELECT pg_advisory_xact_lock(:key)")
-            .param("key", LOCK_KEY)
+            .param("key", ReferenceStateLock.KEY)
+            .query { _, _ -> true }
+            .list()
+    }
+
+    /**
+     * Held by a report submission for the lifetime of its transaction while it reads
+     * reference/service-area state and computes a routing snapshot - see
+     * [ReferenceStateLock]. Many submissions may hold this concurrently; only a concurrent
+     * [acquireImportLock] call blocks against it (and is blocked by it), so ordinary
+     * submission traffic never contends with itself over this lock.
+     */
+    fun acquireSharedReferenceStateLock() {
+        jdbc.sql("SELECT pg_advisory_xact_lock_shared(:key)")
+            .param("key", ReferenceStateLock.KEY)
             .query { _, _ -> true }
             .list()
     }
@@ -488,11 +503,6 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
                    is_current, source_metadata
               FROM reference_dataset_imports
         """
-
-        // An arbitrary, never-reused constant identifying the reference-dataset-import
-        // advisory lock. Picked once; changing it would only matter if something else in
-        // the schema also took advisory locks, which nothing does.
-        const val LOCK_KEY = 7_281_004_419_887_233L
 
         fun timestamp(instant: Instant): java.sql.Timestamp = java.sql.Timestamp.from(instant)
     }

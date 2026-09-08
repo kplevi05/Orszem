@@ -73,6 +73,38 @@
 	}
 }
 
+# Caddy's structured access log includes every request header by default - confirmed by
+# running this config against a real request, not assumed. X-Orszem-Report-Access carries a
+# Public report's bare access capability (ADR 0008), a live credential, not diagnostic data:
+# logging it would put it in a file with a completely different retention, access and
+# rotation policy than the database it is meant to protect. It is a custom header, so
+# nothing else protects it - this rule is the only thing that does.
+#
+# Authorization is listed here too, as explicit, verified defence-in-depth: Caddy 2.11.4
+# already redacts that one unconditionally as a built-in default (its value comes back as
+# the literal string "REDACTED" in the log even with this rule removed - confirmed by
+# testing, not assumed), so this line pins that behaviour explicitly rather than relying on
+# an undocumented default that a future Caddy version could change.
+#
+# This deletes both headers from the LOG ENTRY only, via Caddy's supported log field filter
+# (the "filter" log encoder wrapping the normal one). It does not touch the proxied request:
+# reverse_proxy above still forwards the real header values to the backend untouched. Proven
+# by scripts/verify-caddy-header-redaction.sh, including a negative control for
+# X-Orszem-Report-Access (the header actually at risk) that fails if its rule is removed or
+# its field path is wrong.
+(access_log) {
+	log {
+		output file {args[0]}
+		format filter {
+			wrap console
+			fields {
+				request>headers>X-Orszem-Report-Access delete
+				request>headers>Authorization delete
+			}
+		}
+	}
+}
+
 www.orszembejelento.hu {
 	import security_headers
 	redir https://orszembejelento.hu{uri} permanent
@@ -96,10 +128,7 @@ orszembejelento.hu {
 		file_server
 	}
 
-	log {
-		output file /var/log/caddy/orszembejelento.log
-		format console
-	}
+	import access_log /var/log/caddy/orszembejelento.log
 }
 
 api.orszembejelento.hu {
@@ -118,8 +147,5 @@ api.orszembejelento.hu {
 		respond 404
 	}
 
-	log {
-		output file /var/log/caddy/api-orszembejelento.log
-		format console
-	}
+	import access_log /var/log/caddy/api-orszembejelento.log
 }

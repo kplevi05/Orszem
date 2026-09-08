@@ -7,6 +7,14 @@ import hu.orszembejelento.backend.auth.application.SessionInvalidException
 import hu.orszembejelento.backend.identity.domain.PasswordPolicyException
 import hu.orszembejelento.backend.reference.domain.ReferenceDatasetUnavailableException
 import hu.orszembejelento.backend.reference.domain.SettlementQueryTooShortException
+import hu.orszembejelento.backend.reports.domain.IdempotencyKeyReusedException
+import hu.orszembejelento.backend.reports.domain.InvalidEventTypeException
+import hu.orszembejelento.backend.reports.domain.InvalidRailwayLineException
+import hu.orszembejelento.backend.reports.domain.InvalidReportAccessCredentialException
+import hu.orszembejelento.backend.reports.domain.InvalidSettlementException
+import hu.orszembejelento.backend.reports.domain.OccurredAtTooFarInFutureException
+import hu.orszembejelento.backend.reports.domain.ReportNotFoundException
+import hu.orszembejelento.backend.reports.domain.TrainIdentifierTooLongException
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
@@ -109,6 +117,42 @@ class ApiExceptionHandler {
         ErrorCode.REFERENCE_DATASET_UNAVAILABLE,
         "No reference dataset is currently available.",
     )
+
+    @ExceptionHandler(InvalidReportAccessCredentialException::class)
+    fun handleInvalidReportAccessCredential(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.BAD_REQUEST,
+        ErrorCode.INVALID_REPORT_ACCESS_CREDENTIAL,
+        "The report access credential is missing or malformed.",
+    )
+
+    @ExceptionHandler(InvalidEventTypeException::class)
+    fun handleInvalidEventType(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_EVENT_TYPE, "The event type is unknown or not active.")
+
+    @ExceptionHandler(InvalidSettlementException::class)
+    fun handleInvalidSettlement(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_SETTLEMENT, "The settlement is unknown or not active.")
+
+    @ExceptionHandler(InvalidRailwayLineException::class)
+    fun handleInvalidRailwayLine(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_RAILWAY_LINE, "The railway line is unknown.")
+
+    @ExceptionHandler(OccurredAtTooFarInFutureException::class, TrainIdentifierTooLongException::class)
+    fun handleReportValidation(exception: RuntimeException, request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, exception.message ?: "The request is invalid.")
+
+    @ExceptionHandler(IdempotencyKeyReusedException::class)
+    fun handleIdempotencyKeyReused(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.IDEMPOTENCY_KEY_REUSED,
+        "clientSubmissionId was already used with a different payload or credential.",
+    )
+
+    @ExceptionHandler(ReportNotFoundException::class)
+    fun handleReportNotFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.REPORT_NOT_FOUND, "No report matches the given id and access credential.")
 
     @ExceptionHandler(Exception::class)
     fun handleUnexpected(exception: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {

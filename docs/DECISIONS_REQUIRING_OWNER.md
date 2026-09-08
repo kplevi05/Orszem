@@ -36,6 +36,13 @@ that, or allow a limited optional note?
 *Affects:* report schema, moderation load, privacy exposure, and whether any text
 processing is ever needed. **Answer before the report feature is designed.**
 
+**Provisionally settled by Phase 4 (2026-09-08):** the Public reporting backend accepts no
+free text anywhere — a report is `occurredAt` + an optional structured `trainIdentifier`
+(a code, length-capped, never validated against a catalogue) + `settlementId` + an optional
+`railwayLineId` + `eventTypeCode` from the fixed taxonomy. No GPS, no photo/media, no notes
+field. This matches Demo v1's model. It is "provisional" in the sense that nothing prevents
+a later phase from adding an optional note; Phase 4 itself does not.
+
 ### B2. Service areas
 How is a service area defined, and can one user belong to more than one?
 
@@ -47,6 +54,12 @@ Demo v1 accepted free-text train identifiers. Does V2 use an authoritative catal
 railway API, and if so which?
 
 *Affects:* reference data, validation, and an external dependency. Relevant to Phase 3.
+
+**Still open after Phase 4.** `trainIdentifier` on a report is an optional, trimmed,
+length-capped (64 Unicode code points, `orszem.reports.train-identifier-max-code-points`)
+string with no further validation and no catalogue or timetable lookup - deliberately the
+simplest thing that satisfies "no free text of unbounded length", not an answer to this
+question. No paid railway API was introduced (§53 forbids it without owner approval).
 
 ### B4. Settlement list
 A controlled list of settlements, or free text as in Demo v1?
@@ -61,17 +74,46 @@ anonymisation?
 production deployment**, because retention cannot be applied retroactively to data already
 discarded or already kept.
 
+**Widened by Phase 4 (2026-09-08):** a report's client-generated access credential
+(`X-Orszem-Report-Access`, ADR 0008) also has no expiry - it remains valid for as long as
+the report row exists, with no rotation and no revocation mechanism. This was a deliberate
+non-decision, not an oversight: inventing an expiry window now would be exactly the kind of
+arbitrary, unjustified product threshold the phase brief asked not to invent. Whatever
+retention policy answers B5 also settles how long the credential itself remains meaningful
+- they are the same question asked from two angles, not two separate ones.
+
 ### B6. Spam and rate limiting
 The Public app is anonymous, so what are the concrete abuse limits and what happens when
 one is exceeded?
 
 *Affects:* the public report endpoint and its infrastructure.
 
+**Now concrete and still open (Phase 4, 2026-09-08):** the Public report submission
+endpoint (`POST /api/v1/public/reports`) shipped with **no rate limiting or abuse defence
+at all** - this is the endpoint B6 asks about, now real. `LoginRateLimiter` (Phase 2) is
+coupled to service-ID/IP dual-bucket semantics built for credential-guessing defence over
+an authenticated flow; reusing it here would mean touching auth semantics or inventing a
+materially different, unjustified threshold for an unrelated (anonymous, high-volume,
+legitimately-bursty) traffic shape - exactly what the phase brief said not to do (ADR 0008
+Decision 8). **Concrete answer needed before any public deployment**: per-IP/per-window
+limits, a CAPTCHA-equivalent (no paid CAPTCHA service without owner approval, §53), and
+what a limited client sees when throttled. See `PHASE_4_ENGINEERING_REPORT.md` §L for the
+full account of what is and is not defended today.
+
 ### B7. Moderation
 Who moderates, on what basis, and what states does moderation produce?
 
 *Affects:* the report state machine. Demo v1's `NEW → IN_PROGRESS → ARCHIVED` was a
 demonstration simplification and is **not** automatically the V2 model.
+
+**Reused provisionally by Phase 4 (2026-09-08), still unanswered.** `reports.status` uses
+exactly `NEW`/`IN_PROGRESS`/`ARCHIVED` because Phase 4 needed *some* internal vocabulary to
+give a freshly-created report a value, and every report Phase 4 creates is `NEW` by
+construction - nothing in Phase 4 transitions a report to either other state, and no
+moderation workflow exists yet. The Public-facing mapping (`RECEIVED`/`PROCESSING`/
+`CLOSED`, ADR 0008 Decision 6) was deliberately kept distinct from this internal vocabulary
+specifically so this question staying open does not leak into the Public API contract -
+changing the internal state machine's shape later needs no Public-facing migration.
 
 ### B8. Budapest — city or districts?
 

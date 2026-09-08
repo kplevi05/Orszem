@@ -46,6 +46,34 @@ enum class ErrorCode {
      * see ADR 0007.
      */
     REFERENCE_DATASET_UNAVAILABLE,
+
+    /**
+     * The `X-Orszem-Report-Access` header is missing or malformed, on **creation** only -
+     * see `GetPublicReportUseCase` and `InvalidReportAccessCredentialException` for why the
+     * lookup path never uses this code.
+     */
+    INVALID_REPORT_ACCESS_CREDENTIAL,
+
+    /** `eventTypeCode` is unknown or not active. */
+    INVALID_EVENT_TYPE,
+
+    /** `settlementId` is unknown or not active. */
+    INVALID_SETTLEMENT,
+
+    /** `railwayLineId` was supplied but is unknown. */
+    INVALID_RAILWAY_LINE,
+
+    /**
+     * `clientSubmissionId` already names a report whose stored payload or credential does
+     * not match this request - see `IdempotencyKeyReusedException`.
+     */
+    IDEMPOTENCY_KEY_REUSED,
+
+    /**
+     * Returned identically for an unknown public report id, a missing credential, a
+     * malformed credential, and a wrong credential - see `ReportNotFoundException`.
+     */
+    REPORT_NOT_FOUND,
 }
 
 /**
