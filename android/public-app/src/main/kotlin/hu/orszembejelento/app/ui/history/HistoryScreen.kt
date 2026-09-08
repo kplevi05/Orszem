@@ -16,7 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -32,7 +35,17 @@ import java.time.ZoneId
 fun HistoryScreen(viewModel: HistoryViewModel) {
     val history by viewModel.history.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.refreshAllSubmitted() }
+    // history.value is seeded emptyList() until Room's Flow actually emits (§21) - a
+    // LaunchedEffect(Unit) firing immediately would call refreshAllSubmitted() against that
+    // still-empty seed and refresh nothing. This mirrors the Web client's identical fix,
+    // found the same way: a real end-to-end run against a live backend, not a unit test
+    // against a synchronous fake DAO, which never surfaces this ordering.
+    var hasRefreshedOnce by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(history) {
+        if (hasRefreshedOnce || history.isEmpty()) return@LaunchedEffect
+        hasRefreshedOnce = true
+        viewModel.refreshAllSubmitted()
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(stringResource(R.string.history_title), style = MaterialTheme.typography.headlineSmall)
