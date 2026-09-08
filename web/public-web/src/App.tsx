@@ -1,58 +1,60 @@
+import { NavLink, Route, Routes } from 'react-router-dom'
+import { strings } from './strings'
+import { HomeScreen } from './routes/HomeScreen'
+import { HistoryScreen } from './routes/HistoryScreen'
+import { NewReportScreen } from './routes/NewReportScreen'
+import { HistoryIcon, HomeIcon, NewReportIcon } from './components/NavIcons'
+
 /**
- * Public Web application shell.
- *
- * Phase 1 is the responsive shell and visual identity only: no report submission, no
- * login (the Public Web is anonymous and has no sign-in at all), no offline queue.
+ * The exact three primary destinations the Phase 5 brief requires (§2) - no more, no
+ * fewer. One shared nav element handles both the mobile floating bottom bar and the
+ * desktop top bar via CSS (`styles.css`), rather than two separate implementations - the
+ * visual treatment of both is deliberately aligned to the approved mockup.
  */
 export function App() {
   return (
-    <div className="page">
-      <header className="header">
-        <div className="container header__inner">
-          <span className="brand">Őrszem</span>
-          <span className="brand__tag">Bejelentő</span>
-        </div>
+    <div className="app">
+      <header className="top-bar">
+        <span className="brand">
+          <span className="brand__mark" aria-hidden="true" />
+          {strings.appName}
+        </span>
+        <nav className="top-nav" aria-label="Elsődleges navigáció">
+          <PrimaryNavLinks />
+        </nav>
       </header>
 
-      <main className="container main">
-        <section className="hero">
-          <h1 className="hero__title">Vasúti észlelések bejelentése</h1>
-          <p className="hero__lead">
-            Az Őrszem lehetővé teszi, hogy a vasúti környezetben tapasztalt eseményeket
-            gyorsan és egyszerűen jelezni lehessen az illetékes szolgálat felé.
-          </p>
-          <p className="notice" role="status">
-            Az alkalmazás fejlesztés alatt áll. A bejelentési folyamat még nem érhető el.
-          </p>
-        </section>
-
-        <section className="cards">
-          <article className="card">
-            <h2 className="card__title">Egyszerű</h2>
-            <p className="card__body">
-              Néhány lépésben, felesleges kérdések nélkül lehet majd bejelentést tenni.
-            </p>
-          </article>
-          <article className="card">
-            <h2 className="card__title">Névtelen</h2>
-            <p className="card__body">
-              A nyilvános bejelentéshez nem kell fiókot létrehozni és nem kell bejelentkezni.
-            </p>
-          </article>
-          <article className="card">
-            <h2 className="card__title">Mobilon is</h2>
-            <p className="card__body">
-              A webes felület mellett Android alkalmazás is készül ugyanehhez a szolgáltatáshoz.
-            </p>
-          </article>
-        </section>
+      <main className="app__main">
+        <Routes>
+          <Route path="/" element={<HomeScreen />} />
+          <Route path="/uj-bejelentes" element={<NewReportScreen />} />
+          <Route path="/elozmenyek" element={<HistoryScreen />} />
+          <Route path="*" element={<HomeScreen />} />
+        </Routes>
       </main>
 
-      <footer className="footer">
-        <div className="container">
-          <p className="footer__text">Őrszem · orszembejelento.hu</p>
-        </div>
-      </footer>
+      <nav className="bottom-nav" aria-label="Elsődleges navigáció">
+        <PrimaryNavLinks />
+      </nav>
     </div>
+  )
+}
+
+function PrimaryNavLinks() {
+  return (
+    <>
+      <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}>
+        <HomeIcon />
+        {strings.navHome}
+      </NavLink>
+      <NavLink to="/uj-bejelentes" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}>
+        <NewReportIcon />
+        {strings.navNewReport}
+      </NavLink>
+      <NavLink to="/elozmenyek" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`}>
+        <HistoryIcon />
+        {strings.navHistory}
+      </NavLink>
+    </>
   )
 }

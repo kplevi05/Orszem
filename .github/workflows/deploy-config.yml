@@ -63,6 +63,24 @@ jobs:
       - name: Verify access-log header redaction
         run: ./scripts/verify-caddy-header-redaction.sh
 
+      # The CSP/Permissions-Policy check below serves the REAL built Public Web bundle
+      # through the real Caddyfile, so it needs an actual dist/ to exist first.
+      - name: Install Public Web dependencies
+        working-directory: web/public-web
+        run: npm ci
+
+      - name: Build Public Web
+        working-directory: web/public-web
+        run: npm run build
+
+      # Serves the real built web/public-web/dist through the real Caddyfile and asserts
+      # the Content-Security-Policy and Permissions-Policy headers on the served page - a
+      # live-browser check (loading the page and confirming no CSP violation appears in the
+      # console) was additionally performed manually for this phase; see
+      # scripts/verify-caddy-csp.sh's own header and PHASE_5_ENGINEERING_REPORT.md.
+      - name: Verify Public Web CSP and Permissions-Policy
+        run: ./scripts/verify-caddy-csp.sh
+
       - name: Ensure no secret material is committed under deploy/
         run: |
           if git ls-files deploy | grep -qiE '\.(jks|keystore|p12|pem|key)$|(^|/)\.env$'; then

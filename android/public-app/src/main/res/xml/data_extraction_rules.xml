@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Nothing is backed up or transferred off the device. The apps hold no user data in
-  Phase 1, and the reporting flow is designed to keep as little as possible locally.
+  Nothing is backed up or transferred off the device - the Room local-history database and
+  the Keystore-encrypted report-access credentials it holds (Phase 5) included. This is
+  deliberate, not an oversight: the encryption key is device-local (AndroidKeyStore), so a
+  restored database would be undecryptable anyway, and local history was never designed to
+  be a cross-device identity - see ADR 0008/0009 and CLAUDE.md.
 -->
 <data-extraction-rules>
     <cloud-backup>

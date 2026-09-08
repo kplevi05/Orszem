@@ -39,6 +39,22 @@
 	}
 }
 
+# Public Web only (§37-38 of the Phase 5 brief) - api.orszembejelento.hu serves no HTML and
+# needs neither header. The Public Web bundle is same-origin script/style only (no
+# third-party JavaScript, no CDN fonts, no CSS-in-JS - see CLAUDE.md and ADR 0009), so this
+# is the strict target policy, not a starting point loosened until something works. Proven
+# against the real built bundle by scripts/verify-caddy-csp.sh.
+(public_web_security_headers) {
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+		# The Public Web never uses device location (§39: settlement selection is manual
+		# search only, no navigator.geolocation) and never needs the camera or microphone -
+		# denying all three at the origin means even a future regression cannot silently
+		# start requesting them.
+		Permissions-Policy "geolocation=(), camera=(), microphone=()"
+	}
+}
+
 (block_internal_paths) {
 	# Spring Boot management, OpenAPI and Swagger UI must never be publicly routed.
 	# These handle blocks are imported FIRST in every site, and handle blocks are
@@ -112,6 +128,7 @@ www.orszembejelento.hu {
 
 orszembejelento.hu {
 	import security_headers
+	import public_web_security_headers
 	encode zstd gzip
 
 	import block_internal_paths
