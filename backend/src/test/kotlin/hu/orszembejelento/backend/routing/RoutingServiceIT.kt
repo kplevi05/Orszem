@@ -1,5 +1,6 @@
 package hu.orszembejelento.backend.routing
 
+import hu.orszembejelento.backend.reference.infrastructure.JdbcReferenceRepository
 import hu.orszembejelento.backend.routing.application.RoutingService
 import hu.orszembejelento.backend.routing.domain.RoutingOutcome
 import hu.orszembejelento.backend.routing.domain.UnclassifiedReason
@@ -22,6 +23,9 @@ class RoutingServiceIT : AbstractAuthIntegrationTest() {
 
     @Autowired
     private lateinit var routingService: RoutingService
+
+    @Autowired
+    private lateinit var referenceRepository: JdbcReferenceRepository
 
     @BeforeEach
     fun resetReferenceTables() {
@@ -199,29 +203,81 @@ class RoutingServiceIT : AbstractAuthIntegrationTest() {
         check(outcome.reason == UnclassifiedReason.REFERENCE_MISMATCH)
     }
 
-    // ------------------------------------------------------ operational-state checks
+    // -------------------------------------------- inactive-relation candidate semantics
 
     @Test
-    fun `an inactive resolved line yields RAILWAY_LINE_INACTIVE - inferred path`() {
+    fun `COMPLETE, one ACTIVE plus one INACTIVE relation, no selection infers the ACTIVE line`() {
+        setCurrentState("v1", "COMPLETE")
+        val settlement = insertSettlement("00001")
+        val activeLine = insertLine("1")
+        val inactiveLine = insertLine("2", active = false)
+        insertRelation(settlement, activeLine)
+        insertRelation(settlement, inactiveLine)
+        val area = insertArea("Area A")
+        assignLineToArea(activeLine, area)
+
+        val outcome = routingService.route(settlement) as RoutingOutcome.Routed
+        check(outcome.railwayLineId == activeLine) {
+            "the inactive relation must not be a candidate; only the active one may be inferred"
+        }
+        check(outcome.serviceAreaId == area)
+    }
+
+    @Test
+    fun `COMPLETE, only an INACTIVE relation, no selection has no active candidate and is not inferred`() {
         setCurrentState("v1", "COMPLETE")
         val settlement = insertSettlement("00001")
         val line = insertLine("1", active = false)
         insertRelation(settlement, line)
 
         val outcome = routingService.route(settlement) as RoutingOutcome.Unclassified
-        check(outcome.reason == UnclassifiedReason.RAILWAY_LINE_INACTIVE)
+        check(outcome.reason == UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE) {
+            "a settlement whose only verified relation is to an inactive line must behave " +
+                "as if it had zero candidates for automatic inference - it must never silently " +
+                "resolve a line the public API would never have offered as an option"
+        }
     }
 
     @Test
-    fun `an inactive explicitly selected line yields RAILWAY_LINE_INACTIVE`() {
+    fun `an inactive explicitly selected line yields RAILWAY_LINE_INACTIVE, not REFERENCE_MISMATCH`() {
         setCurrentState("v1", "COMPLETE")
         val settlement = insertSettlement("00001")
         val line = insertLine("1", active = false)
         insertRelation(settlement, line)
 
         val outcome = routingService.route(settlement, line) as RoutingOutcome.Unclassified
-        check(outcome.reason == UnclassifiedReason.RAILWAY_LINE_INACTIVE)
+        check(outcome.reason == UnclassifiedReason.RAILWAY_LINE_INACTIVE) {
+            "explicit selection of a genuinely-verified line must still surface its inactivity, " +
+                "never be reported as if the relation did not exist"
+        }
     }
+
+    @Test
+    fun `routing infers from exactly the candidate set the public API would list as available`() {
+        // Direct parity proof: build a settlement with a mix of active and inactive
+        // verified relations, read the same candidate set the public API's line listing
+        // reads (JdbcReferenceRepository.findActiveLinesOfSettlement), and confirm
+        // RoutingService's no-selection inference agrees with it exactly - not merely a
+        // property that happens to hold for one hand-picked line.
+        setCurrentState("v1", "COMPLETE")
+        val settlement = insertSettlement("00001")
+        val activeLine = insertLine("1")
+        val inactiveLine = insertLine("2", active = false)
+        insertRelation(settlement, activeLine)
+        insertRelation(settlement, inactiveLine)
+        val area = insertArea("Area A")
+        assignLineToArea(activeLine, area)
+
+        val publicApiCandidates = referenceRepository.findActiveLinesOfSettlement(settlement)
+        check(publicApiCandidates.map { it.id } == listOf(activeLine)) { "sanity check on the fixture" }
+
+        val outcome = routingService.route(settlement) as RoutingOutcome.Routed
+        check(outcome.railwayLineId == publicApiCandidates.single().id) {
+            "routing inferred a different line than the one the public API would have offered"
+        }
+    }
+
+    // ------------------------------------------------------ operational-state checks
 
     @Test
     fun `an active line with no service-area mapping yields RAILWAY_LINE_UNASSIGNED`() {

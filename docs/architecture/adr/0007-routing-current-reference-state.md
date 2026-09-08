@@ -62,7 +62,7 @@ last touched it) is enough for the questions that do come up.
 `RoutingService.route(settlementId, railwayLineId?)` is an application/domain service only
 — there is no HTTP routing endpoint, and it is read-only.
 
-| Coverage | Relations | Explicit line? | Result |
+| Coverage | Active candidates | Explicit line? | Result |
 |---|---|---|---|
 | (none) | — | — | `ReferenceDatasetUnavailable` — infrastructure, not a business result |
 | COMPLETE | 0 | no | `NO_VERIFIED_RAILWAY_LINE_REFERENCE` |
@@ -70,36 +70,69 @@ last touched it) is enough for the questions that do come up.
 | COMPLETE | 2+ | no | `RAILWAY_LINE_NOT_SELECTED` |
 | PARTIAL | any | no | `RAILWAY_LINE_NOT_SELECTED`, always — never inferred |
 | any | — | yes, unrelated/unknown | `REFERENCE_MISMATCH` |
-| any | — | yes, verified | resolved |
+| any | — | yes, verified (active or not) | resolved |
+
+"Active candidates" is the count from [Correction](#correction-2026-09-08--the-inference-candidate-set-must-be-active-only)
+below, not every verified relation — that distinction is the entire subject of the
+correction.
 
 "Resolved" then checks operational state, never reference data again:
 
 | Resolved line / area | Result |
 |---|---|
-| line inactive | `RAILWAY_LINE_INACTIVE` |
+| line inactive | `RAILWAY_LINE_INACTIVE` — reachable only via explicit selection; an inferred line is always active by construction, see the correction below |
 | line active, no service-area mapping | `RAILWAY_LINE_UNASSIGNED` |
 | line active, service area inactive | `SERVICE_AREA_INACTIVE` |
 | line active, service area active | `Routed` |
 
 Two things are easy to get wrong here, so they are stated explicitly:
 
-- **PARTIAL never infers, at any relation count** — including exactly one. The tempting
+- **PARTIAL never infers, at any candidate count** — including exactly one. The tempting
   shortcut ("there's only one, so it must be that one") is precisely the failure mode ADR
   0006 exists to prevent: under PARTIAL, a settlement with one known relation might have
   others the dataset hasn't captured yet, so "the only one we know about" is not "the only
   one".
 - **An explicit line is always validated against a verified relation, regardless of
-  coverage.** A client's selection is a hint to narrow the search, never a substitute for
-  verification — `REFERENCE_MISMATCH` fires identically whether coverage is COMPLETE or
-  PARTIAL, and identically whether the supplied id names a real, unrelated line or no line
-  at all.
-- **Inference reads every verified relation regardless of the line's active status**
-  (`findVerifiedLinesOfSettlement`), while the **public API's line listing shows active
-  lines only** (`findActiveLinesOfSettlement`, pre-existing from Phase 3A). These are
-  deliberately different queries for different audiences: routing needs to see an inactive
-  line in order to correctly report `RAILWAY_LINE_INACTIVE` rather than silently acting as
-  if the relation never existed, while a citizen picking a line to report against should
-  never be offered a defunct one.
+  coverage, and regardless of whether that line is currently active.** A client's selection
+  is a hint to narrow the search, never a substitute for verification —
+  `REFERENCE_MISMATCH` fires identically whether coverage is COMPLETE or PARTIAL, and
+  identically whether the supplied id names a real, unrelated line or no line at all. An
+  explicit selection of a line that *is* verified but currently inactive is
+  `RAILWAY_LINE_INACTIVE`, decided in the same operational-state step as an inferred line —
+  never `REFERENCE_MISMATCH`, which would incorrectly suggest the relation itself was never
+  real.
+
+### Correction, 2026-09-08 — the inference candidate set must be active-only
+
+The first implementation of step 3 above read *every* verified relation
+(`findVerifiedLinesOfSettlement`, since removed) for automatic inference, while the public
+API's line listing (Decision 4 below) always used active lines only
+(`findActiveLinesOfSettlement`, pre-existing from Phase 3A). That mismatch let the two
+disagree: a settlement with one active and one inactive relation would have the public API
+list exactly one selectable line while routing, given no explicit selection, saw *two*
+verified relations and refused with `RAILWAY_LINE_NOT_SELECTED` — and a settlement whose
+*only* relation was to an inactive line would have the public API list nothing at all,
+while routing silently inferred the inactive line and only then reported
+`RAILWAY_LINE_INACTIVE`, an outcome the client had no way to have anticipated from what it
+was shown.
+
+**Fixed:** automatic inference (step 3) now reads exactly the same query the public API
+uses — `findActiveLinesOfSettlement` — so the two can never drift apart again. An inactive
+relation remains a verified fact (`relationExists` still consults every relation,
+regardless of activity), but it is not a *candidate* for automatic inference. Concretely:
+
+- a settlement with one active and one inactive relation infers the active one, not
+  `RAILWAY_LINE_NOT_SELECTED`;
+- a settlement whose only relation is to an inactive line has **zero active candidates**,
+  so COMPLETE coverage now correctly reports `NO_VERIFIED_RAILWAY_LINE_REFERENCE` for it,
+  not a silently-inferred `RAILWAY_LINE_INACTIVE`;
+- explicit selection is unaffected by this correction: selecting that same inactive line
+  by id still reaches `RAILWAY_LINE_INACTIVE`, because explicit selection was never routed
+  through the candidate-counting step to begin with.
+
+One consequence worth naming plainly: `RAILWAY_LINE_INACTIVE` is now reachable **only**
+through explicit selection. An inferred line is always active, because inactive lines are
+no longer inference candidates at all.
 
 ## Decision 4 — the public reference API returns 503, never a misleading empty result
 
@@ -133,3 +166,11 @@ PARTIAL rule, surfaced to the client that will eventually let a citizen pick a l
   import wrote this specific relation", that is a new, deliberate addition — not a gap this
   ADR quietly leaves for someone to trip over, since [Decision 2](#decision-2--what-referencedatasetversion-means)
   states plainly what today's `referenceDatasetVersion` does and does not promise.
+- `RoutingService.route` does not validate that `settlementId` names a settlement that
+  exists — that is explicitly the caller's responsibility, documented on the method itself.
+  An unknown id degrades gracefully today only as a side effect of how the candidate query
+  is written (zero rows, same shape as a real settlement with none), never as a designed
+  business meaning. **Phase 4 must perform its own settlement-existence validation before
+  calling `route`, and must not treat that graceful degradation as a legitimate
+  `UNCLASSIFIED` outcome for an invalid id.** That validation is deliberately not built by
+  this ADR.

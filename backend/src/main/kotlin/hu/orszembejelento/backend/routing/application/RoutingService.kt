@@ -18,6 +18,15 @@ import org.springframework.transaction.annotation.Transactional
  * `service_areas` or its mapping table. A future Phase 4 report-submission flow is the
  * intended caller.
  *
+ * **Precondition, deliberately not enforced here:** [settlementId] is expected to already
+ * name a settlement the caller has validated exists - reference/input validation is the
+ * caller's responsibility, not this service's. An arbitrary or unknown UUID degrades
+ * gracefully today (zero candidates, same as a real settlement with none), purely as a side
+ * effect of how the query is written, not as a designed business meaning. **Phase 4 must
+ * not treat that graceful degradation as a legitimate `UNCLASSIFIED` business outcome for
+ * an unknown settlement** - it must validate the settlement itself before ever calling
+ * `route`. That validation is intentionally not built here.
+ *
  * The whole decision is read from the *current* reference state
  * ([JdbcReferenceRepository.findCurrentReferenceState]) and current service-area
  * configuration - never from a client-supplied guess. An explicitly supplied
@@ -29,23 +38,32 @@ import org.springframework.transaction.annotation.Transactional
  * 1. No current reference state at all → [RoutingOutcome.ReferenceDatasetUnavailable].
  *    Infrastructure, not a business result - see that type's KDoc.
  * 2. An explicit [railwayLineId] was supplied → it must resolve to an existing line with a
- *    verified relation to [settlementId], or the result is
+ *    verified relation to [settlementId] - **active or not** - or the result is
  *    [UnclassifiedReason.REFERENCE_MISMATCH]. This check runs regardless of whether
- *    relation coverage is COMPLETE or PARTIAL - "always validated", per ADR 0007.
- * 3. No explicit line: every verified relation of the settlement is read
- *    ([JdbcReferenceRepository.findVerifiedLinesOfSettlement], unfiltered by line-active
- *    status - see that method's KDoc), and the *current* `settlementRailwayLines`
- *    coverage component decides what absence, or ambiguity, means:
+ *    relation coverage is COMPLETE or PARTIAL - "always validated", per ADR 0007. Whether
+ *    the resolved line is currently active is decided afterwards, in step 4, exactly like
+ *    an inferred line - explicit selection of a verified line that happens to be inactive
+ *    is [UnclassifiedReason.RAILWAY_LINE_INACTIVE], never [UnclassifiedReason.REFERENCE_MISMATCH].
+ * 3. No explicit line: the **candidate set for inference is active verified relations
+ *    only** ([JdbcReferenceRepository.findActiveLinesOfSettlement] - the identical query
+ *    the public reference API uses for line availability, so the two can never disagree
+ *    about what is selectable). An inactive relation is a verified fact (see step 2), but
+ *    it is not a candidate for automatic inference: offering to auto-resolve a line the
+ *    public API would never have shown as an option is exactly the inconsistency this
+ *    restriction exists to prevent. The *current* `settlementRailwayLines` coverage
+ *    component then decides what the active-candidate count means:
  *    - **PARTIAL**: always [UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED], regardless of
- *      how many relations are currently known - zero, one, or many. Under PARTIAL
- *      coverage, absence of another relation is not evidence there is only one (ADR 0006),
- *      so a single known relation is never auto-inferred.
- *    - **COMPLETE**: zero relations → [UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE];
- *      exactly one → inferred and resolved as if it had been selected explicitly; more
- *      than one → [UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED].
+ *      the active-candidate count - zero, one, or many. Under PARTIAL coverage, absence of
+ *      another relation is not evidence there is only one (ADR 0006), so a single known
+ *      relation is never auto-inferred.
+ *    - **COMPLETE**: zero active candidates → [UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE]
+ *      (even if an inactive verified relation exists - it is not a candidate, see above);
+ *      exactly one active candidate → inferred and resolved as if it had been selected
+ *      explicitly; more than one → [UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED].
  * 4. Once a line is resolved (by either path above), it is checked against operational
  *    state, never against reference data again:
- *    - inactive line → [UnclassifiedReason.RAILWAY_LINE_INACTIVE]
+ *    - inactive line → [UnclassifiedReason.RAILWAY_LINE_INACTIVE] (reachable only via the
+ *      explicit-selection path, step 2 - an inferred line is always active by construction)
  *    - active line, no service-area mapping → [UnclassifiedReason.RAILWAY_LINE_UNASSIGNED]
  *    - active line, inactive service area → [UnclassifiedReason.SERVICE_AREA_INACTIVE]
  *    - active line, active service area → [RoutingOutcome.Routed]
@@ -94,10 +112,15 @@ class RoutingService(
             return InferenceResult.Reason(UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED)
         }
 
-        val relations = referenceRepository.findVerifiedLinesOfSettlement(settlementId)
-        return when (relations.size) {
+        // Active candidates only, deliberately the same query the public reference API
+        // uses for line availability (findActiveLinesOfSettlement): an inactive relation
+        // is a verified fact, but never a candidate for automatic inference, so that
+        // routing can never silently resolve a line the public API would never have
+        // offered as a selectable option.
+        val activeCandidates = referenceRepository.findActiveLinesOfSettlement(settlementId)
+        return when (activeCandidates.size) {
             0 -> InferenceResult.Reason(UnclassifiedReason.NO_VERIFIED_RAILWAY_LINE_REFERENCE)
-            1 -> InferenceResult.Line(relations.single())
+            1 -> InferenceResult.Line(activeCandidates.single())
             else -> InferenceResult.Reason(UnclassifiedReason.RAILWAY_LINE_NOT_SELECTED)
         }
     }

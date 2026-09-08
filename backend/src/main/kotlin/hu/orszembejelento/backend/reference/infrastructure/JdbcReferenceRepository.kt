@@ -172,7 +172,13 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .optional()
             .orElse(null)
 
-    /** The active lines validated as serving a settlement. Used by routing and the public API. */
+    /**
+     * The active, verified lines serving a settlement - the one candidate set both
+     * `RoutingService`'s no-selection inference and the public reference API's
+     * railway-line listing read, so the two can never disagree about what is selectable
+     * (ADR 0007). An inactive relation is excluded here even though it remains a verified
+     * fact; see [relationExists] for the check that still consults it.
+     */
     fun findActiveLinesOfSettlement(settlementId: UUID): List<RailwayLine> =
         jdbc.sql(
             """
@@ -188,30 +194,17 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .list()
 
     /**
-     * Every line with a verified relation to a settlement, active or not.
+     * Whether a validated reference relation exists, regardless of activity.
      *
-     * Used by `RoutingService`'s inference step (ADR 0007), deliberately unfiltered: a
-     * relation to a currently-inactive line is still a verified fact, and routing needs to
-     * see it in order to resolve it and correctly report `RAILWAY_LINE_INACTIVE` rather
-     * than silently acting as if the relation never existed. Contrast
-     * [findActiveLinesOfSettlement], which the public API uses instead - a citizen should
-     * not be offered an inactive line as a selectable option.
+     * This is the one place an inactive relation still matters as a fact: explicit
+     * selection of a railway line must be validated against every verified relation, not
+     * only active ones, so that selecting a line the settlement is genuinely (if
+     * currently inactively) related to reports `RAILWAY_LINE_INACTIVE` rather than the
+     * misleading `REFERENCE_MISMATCH` - see `RoutingService`. It is deliberately **not**
+     * used to build a candidate set for automatic inference; [findActiveLinesOfSettlement]
+     * is, so that routing and the public reference API always agree on what counts as a
+     * selectable line (ADR 0007).
      */
-    fun findVerifiedLinesOfSettlement(settlementId: UUID): List<RailwayLine> =
-        jdbc.sql(
-            """
-            SELECT l.id, l.line_code, l.display_name, l.active, l.created_at, l.updated_at
-              FROM railway_lines l
-              JOIN settlement_railway_lines m ON m.railway_line_id = l.id
-             WHERE m.settlement_id = :settlementId
-             ORDER BY l.line_code
-            """.trimIndent(),
-        )
-            .param("settlementId", settlementId)
-            .query(::mapRailwayLine)
-            .list()
-
-    /** Whether a validated reference relation exists, regardless of activity. */
     fun relationExists(settlementId: UUID, railwayLineId: UUID): Boolean =
         jdbc.sql(
             """
