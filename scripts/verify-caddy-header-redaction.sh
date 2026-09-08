@@ -34,6 +34,7 @@ AUTHORIZATION_SENTINEL="Bearer REDACTION-CANARY-AT-9H3JQK6X0ZMV2GN7YB"
 
 CADDY_PID=""
 STUB_PID=""
+ADMIN_PORT=""
 cleanup() {
   [ -n "$CADDY_PID" ] && kill "$CADDY_PID" 2>/dev/null || true
   [ -n "$STUB_PID" ] && kill "$STUB_PID" 2>/dev/null || true
@@ -54,17 +55,29 @@ JS
 mkdir -p "$WORK/web"
 echo '<!doctype html><title>stub</title>' > "$WORK/web/index.html"
 
-# adapt_and_run <listen-port> <strip-redaction: 0|1> -> writes $WORK/caddy.log, sets CADDY_PID
+# adapt_and_run <listen-port> <strip-redaction: 0|1> -> writes $WORK/caddy.log, sets
+# CADDY_PID and ADMIN_PORT (the port this instance's own admin API is bound to).
 adapt_and_run() {
   local listen_port="$1" strip="$2"
+  # A dedicated admin port per instance, derived from its own listen port rather than the
+  # Caddyfile's fixed 127.0.0.1:2019 - this script otherwise shares that one fixed address
+  # both with its own second invocation below AND with any other script (e.g.
+  # verify-caddy-routing.sh) that might still be tearing down its own Caddy instance on the
+  # same CI runner when this one starts. `kill`-then-continue in a `trap ... EXIT` does not
+  # guarantee the process, and the port it held, are gone by the time the next step's shell
+  # begins - proven necessary in practice, not a hypothetical.
+  ADMIN_PORT="$((listen_port + 10000))"
   caddy adapt --config "$CADDYFILE" --adapter caddyfile > "$WORK/config.json"
 
-  WEB_ROOT="$WORK/web" LISTEN_PORT="$listen_port" STRIP="$strip" node - "$WORK/config.json" <<'JS'
+  WEB_ROOT="$WORK/web" LISTEN_PORT="$listen_port" ADMIN_PORT="$ADMIN_PORT" STRIP="$strip" \
+    node - "$WORK/config.json" <<'JS'
 const fs = require('fs');
 const path = process.argv[2];
 let raw = fs.readFileSync(path, 'utf8');
 raw = raw.split('/home/opc/apps/orszem-v2/web').join(process.env.WEB_ROOT);
 const cfg = JSON.parse(raw);
+
+cfg.admin = { listen: '127.0.0.1:' + process.env.ADMIN_PORT };
 
 for (const srv of Object.values(cfg.apps.http.servers)) {
   srv.listen = [':' + process.env.LISTEN_PORT];
@@ -107,15 +120,16 @@ stop_caddy() {
   [ -n "$CADDY_PID" ] && kill "$CADDY_PID" 2>/dev/null || true
   wait "$CADDY_PID" 2>/dev/null || true
   CADDY_PID=""
-  # The Caddyfile's admin endpoint (127.0.0.1:2019) is one fixed address shared by every
-  # instance this script starts. A second instance must not attempt to bind it until the
-  # first has genuinely released it - `wait` on the shell job is not always enough of a
-  # guarantee on every platform, so this polls the actual socket instead of trusting a
-  # fixed sleep.
-  for _ in $(seq 1 50); do
-    curl -sf -o /dev/null "http://127.0.0.1:2019/config/" 2>/dev/null || break
-    sleep 0.1
-  done
+  # `wait` on the shell job is not always enough of a guarantee that the admin socket
+  # itself is free yet, so this polls it directly rather than trusting a fixed sleep. Each
+  # instance has its own admin port (see adapt_and_run), so this only ever waits on the
+  # instance this call just stopped - never blocked by, or blocking, anything else.
+  if [ -n "$ADMIN_PORT" ]; then
+    for _ in $(seq 1 50); do
+      curl -sf -o /dev/null "http://127.0.0.1:$ADMIN_PORT/config/" 2>/dev/null || break
+      sleep 0.1
+    done
+  fi
 }
 
 fail=0
