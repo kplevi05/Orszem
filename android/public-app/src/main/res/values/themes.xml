@@ -5,7 +5,7 @@
 -->
 <resources>
     <style name="Theme.Orszem.Public" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#2477B9</item>
-        <item name="android:windowBackground">#F4F8FC</item>
+        <item name="android:statusBarColor">#123E69</item>
+        <item name="android:windowBackground">#EEF3F8</item>
     </style>
 </resources>

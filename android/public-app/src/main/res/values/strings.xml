@@ -8,9 +8,16 @@
     <string name="nav_history">Előzmények</string>
 
     <!-- Home -->
-    <string name="home_headline">Őrszem</string>
-    <string name="home_body">Vasúti környezetben tapasztalt eseményeket néhány lépésben, névtelenül lehet bejelenteni.</string>
+    <string name="home_badge">Gyors műveletek</string>
+    <string name="home_headline">Mit szeretne tenni?</string>
+    <string name="home_body">Indíthat új bejelentést, vagy megtekintheti az előzményeket egy átlátható, kártyás felületen.</string>
     <string name="home_new_report_cta">Új bejelentés</string>
+    <string name="home_quick_new_report_title">Új bejelentés</string>
+    <string name="home_quick_new_report_body">Két lépésben végigvezetett űrlap.</string>
+    <string name="home_quick_new_report_cta">Indítás</string>
+    <string name="home_quick_history_title">Előzmények</string>
+    <string name="home_quick_history_body">Korábbi bejelentések állapota és adatai.</string>
+    <string name="home_quick_history_cta">Megtekintés</string>
     <string name="home_recent_history_title">Legutóbbi bejelentések</string>
     <string name="home_no_history">Még nincs bejelentés ezen a készüléken.</string>
 
@@ -61,7 +68,9 @@
     <string name="history_empty">Még nincs bejelentés ezen a készüléken.</string>
     <string name="history_unconfirmed">Beküldés nincs megerősítve</string>
     <string name="history_access_lost">A bejelentéshez való helyi hozzáférés elveszett.</string>
+    <string name="history_access_lost_short">Hozzáférés elveszett</string>
     <string name="history_conflict">A bejelentés állapota nem egyeztethető, kérjük indítson új bejelentést.</string>
+    <string name="history_conflict_short">Ütközés</string>
     <string name="history_last_checked">Utoljára ellenőrizve: %1$s</string>
     <string name="history_refresh">Frissítés</string>
     <string name="status_received">Beérkezett</string>

@@ -1,13 +1,15 @@
 package hu.orszembejelento.app.ui.newreport
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -16,10 +18,10 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,42 +34,61 @@ import hu.orszembejelento.app.R
 import hu.orszembejelento.app.report.data.SettlementOption
 import hu.orszembejelento.app.report.domain.LineAnswer
 import hu.orszembejelento.app.report.domain.RailwayLineStep
+import hu.orszembejelento.app.ui.PublicPalette
+import hu.orszembejelento.app.ui.components.HelpCard
+import hu.orszembejelento.app.ui.components.PillTone
+import hu.orszembejelento.app.ui.components.SoftCard
+import hu.orszembejelento.app.ui.components.StatusPill
 
+/**
+ * Two cards, matching the mockup's "Mikor történt?" / "Melyik vonaton? Melyik település?"
+ * grouping (§2.B) - purely a layout/visual change, the underlying fields, ordering and
+ * behaviour are unchanged. The GPS "Helyzet meghatározása" button and native date/time
+ * pickers stay exactly as they were: Android keeps its GPS-assist capability, which the
+ * Web client deliberately does not have.
+ */
 @Composable
 fun Step1Content(state: NewReportUiState, viewModel: NewReportViewModel, onLocateMe: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text(stringResource(R.string.step1_title), style = MaterialTheme.typography.titleLarge)
-
-        OccurredAtPicker(value = state.occurredAt, onValueChange = viewModel::onOccurredAtChanged)
-
-        OutlinedTextField(
-            value = state.trainIdentifierInput,
-            onValueChange = viewModel::onTrainIdentifierChanged,
-            label = { Text(stringResource(R.string.field_train_identifier)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        SettlementField(state, viewModel)
-
-        Button(onClick = onLocateMe) {
-            Icon(Icons.Filled.LocationOn, contentDescription = null)
-            Text(" " + stringResource(R.string.action_locate_me))
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        SoftCard {
+            OccurredAtPicker(value = state.occurredAt, onValueChange = viewModel::onOccurredAtChanged)
         }
-        LocateStatusMessage(state.locateStatus)
 
-        RailwayLineSection(state, viewModel)
+        SoftCard {
+            OutlinedTextField(
+                value = state.trainIdentifierInput,
+                onValueChange = viewModel::onTrainIdentifierChanged,
+                label = { Text(stringResource(R.string.field_train_identifier)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            SettlementField(state, viewModel, modifier = Modifier.padding(top = 14.dp))
+
+            OutlinedButton(
+                onClick = onLocateMe,
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = PublicPalette.Primary),
+            ) {
+                Icon(Icons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(" " + stringResource(R.string.action_locate_me))
+            }
+            LocateStatusMessage(state.locateStatus)
+
+            RailwayLineSection(state, viewModel, modifier = Modifier.padding(top = 10.dp))
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettlementField(state: NewReportUiState, viewModel: NewReportViewModel) {
+private fun SettlementField(state: NewReportUiState, viewModel: NewReportViewModel, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded && state.settlementResults.isNotEmpty(), onExpandedChange = { expanded = it }) {
+    ExposedDropdownMenuBox(
+        expanded = expanded && state.settlementResults.isNotEmpty(),
+        onExpandedChange = { expanded = it },
+        modifier = modifier,
+    ) {
         OutlinedTextField(
             value = state.settlementQuery,
             onValueChange = {
@@ -105,29 +126,31 @@ private fun LocateStatusMessage(status: LocateStatus) {
         LocateStatus.IDLE, LocateStatus.SERVICES_DISABLED -> null
     }
     if (textRes != null) {
-        Text(stringResource(textRes), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            stringResource(textRes),
+            style = MaterialTheme.typography.bodySmall,
+            color = PublicPalette.TextMuted,
+            modifier = Modifier.padding(top = 6.dp),
+        )
     }
 }
 
 @Composable
-private fun RailwayLineSection(state: NewReportUiState, viewModel: NewReportViewModel) {
+private fun RailwayLineSection(state: NewReportUiState, viewModel: NewReportViewModel, modifier: Modifier = Modifier) {
     when (val step = state.lineStep) {
-        RailwayLineStep.NotApplicable, RailwayLineStep.Loading -> {
-            if (step == RailwayLineStep.Loading) CircularProgressIndicator(modifier = Modifier.size(20.dp))
-        }
-        RailwayLineStep.LoadFailed -> Text(
-            stringResource(R.string.catalog_load_failed),
-            color = MaterialTheme.colorScheme.error,
+        RailwayLineStep.NotApplicable -> {}
+        RailwayLineStep.Loading -> CircularProgressIndicator(modifier = modifier.size(20.dp))
+        RailwayLineStep.LoadFailed -> StatusPill(
+            text = stringResource(R.string.catalog_load_failed),
+            tone = PillTone.ERROR,
+            modifier = modifier,
         )
-        is RailwayLineStep.NoVerifiedCandidate -> Text(
-            stringResource(R.string.line_none_verified),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        is RailwayLineStep.SingleInferred -> Text(
+        is RailwayLineStep.NoVerifiedCandidate -> HelpCard(stringResource(R.string.line_none_verified), modifier = modifier)
+        is RailwayLineStep.SingleInferred -> HelpCard(
             stringResource(R.string.line_auto_identified, step.option.displayName),
-            style = MaterialTheme.typography.bodyMedium,
+            modifier = modifier,
         )
-        is RailwayLineStep.RequiresChoice -> Column {
+        is RailwayLineStep.RequiresChoice -> Column(modifier = modifier) {
             Text(stringResource(R.string.line_choose_title), style = MaterialTheme.typography.titleMedium)
             step.options.forEach { option ->
                 LineChoiceRow(
@@ -152,7 +175,10 @@ private fun RailwayLineSection(state: NewReportUiState, viewModel: NewReportView
 
 @Composable
 private fun LineChoiceRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
         RadioButton(selected = selected, onClick = onClick)
         Text(label)
     }
