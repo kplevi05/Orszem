@@ -6,6 +6,17 @@ function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('hu-HU', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+function statusPillClass(status: PublicReportStatus): string {
+  switch (status) {
+    case 'RECEIVED':
+      return 'status-pill status-pill--received'
+    case 'PROCESSING':
+      return 'status-pill status-pill--processing'
+    case 'CLOSED':
+      return 'status-pill status-pill--closed'
+  }
+}
+
 export function HistoryItemCard({
   record,
   onRetry,
@@ -15,44 +26,43 @@ export function HistoryItemCard({
   readonly onRetry: () => void
   readonly onRefresh: () => void
 }) {
+  const cardClassName =
+    'card history-card' +
+    (record.submissionState === 'PENDING' ? ' pending-card' : '') +
+    (record.submissionState === 'ACCESS_LOST' || record.submissionState === 'CONFLICT' ? ' error-card' : '')
+
   return (
-    <article className="card history-card">
-      <h3>{record.eventTypeDisplaySnapshot}</h3>
-      <p>{record.settlementNameSnapshot}</p>
-      {record.trainIdentifier && <p className="muted">{record.trainIdentifier}</p>}
-      <p className="muted">{formatDateTime(record.occurredAt)}</p>
+    <article className={cardClassName}>
+      <div className="report-head">
+        <h3>{record.eventTypeDisplaySnapshot}</h3>
+        {record.submissionState === 'SUBMITTED' && record.publicStatus && (
+          <span className={statusPillClass(record.publicStatus)}>{publicStatusLabel(record.publicStatus)}</span>
+        )}
+        {record.submissionState === 'PENDING' && <span className="status-pill status-pill--pending">{strings.historyUnconfirmed}</span>}
+        {(record.submissionState === 'ACCESS_LOST' || record.submissionState === 'CONFLICT') && (
+          <span className="status-pill status-pill--error">
+            {record.submissionState === 'ACCESS_LOST' ? strings.historyAccessLost : strings.historyConflict}
+          </span>
+        )}
+      </div>
+
+      <p className="meta-line">{record.settlementNameSnapshot}</p>
+      {record.trainIdentifier && <p className="meta-line">{record.trainIdentifier}</p>}
+      <p className="meta-line">{formatDateTime(record.occurredAt)}</p>
 
       {record.submissionState === 'SUBMITTED' && (
         <>
-          {record.publicStatus && <p className="status-badge">{publicStatusLabel(record.publicStatus as PublicReportStatus)}</p>}
-          {record.lastStatusCheckedAt && <p className="muted">{strings.historyLastChecked(formatDateTime(record.lastStatusCheckedAt))}</p>}
-          <button type="button" className="button" onClick={onRefresh}>
+          {record.lastStatusCheckedAt && <p className="meta-line">{strings.historyLastChecked(formatDateTime(record.lastStatusCheckedAt))}</p>}
+          <button type="button" className="button button--soft button--inline" onClick={onRefresh}>
             {strings.historyRefresh}
           </button>
         </>
       )}
 
       {record.submissionState === 'PENDING' && (
-        <>
-          <p className="status-badge status-badge--warning" role="status">
-            {strings.historyUnconfirmed}
-          </p>
-          <button type="button" className="button button--primary" onClick={onRetry}>
-            {strings.actionRetry}
-          </button>
-        </>
-      )}
-
-      {record.submissionState === 'ACCESS_LOST' && (
-        <p className="status-badge status-badge--error" role="alert">
-          {strings.historyAccessLost}
-        </p>
-      )}
-
-      {record.submissionState === 'CONFLICT' && (
-        <p className="status-badge status-badge--error" role="alert">
-          {strings.historyConflict}
-        </p>
+        <button type="button" className="button button--primary button--inline" onClick={onRetry}>
+          {strings.actionRetry}
+        </button>
       )}
     </article>
   )

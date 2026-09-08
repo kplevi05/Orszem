@@ -7,57 +7,66 @@ function toLocalDateTimeInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+/**
+ * Two cards, matching the mockup's "Mikor történt?" / "Melyik vonaton? Melyik település?"
+ * grouping - purely a layout/visual change, the underlying fields, ordering and behaviour
+ * are unchanged. Web has no location capability (§39 of the Phase 5 brief - manual
+ * settlement search only), so the mockup's "Helyzet meghatározása" button is deliberately
+ * not carried over here even though Android does have it.
+ */
 export function Step1Form({ state, dispatch }: { readonly state: NewReportState; readonly dispatch: Dispatch<NewReportAction> }) {
   return (
-    <div className="step-form">
-      <h2>{strings.step1Title}</h2>
+    <div className="stack-cards">
+      <div className="card step-form">
+        <label className="field">
+          <span>{strings.fieldOccurredAt}</span>
+          <input
+            type="datetime-local"
+            value={toLocalDateTimeInputValue(state.occurredAt)}
+            onChange={(event) => {
+              const value = event.target.value
+              if (value) dispatch({ type: 'occurredAtChanged', value: new Date(value) })
+            }}
+          />
+        </label>
+      </div>
 
-      <label className="field">
-        <span>{strings.fieldOccurredAt}</span>
-        <input
-          type="datetime-local"
-          value={toLocalDateTimeInputValue(state.occurredAt)}
-          onChange={(event) => {
-            const value = event.target.value
-            if (value) dispatch({ type: 'occurredAtChanged', value: new Date(value) })
-          }}
-        />
-      </label>
+      <div className="card step-form">
+        <label className="field">
+          <span>{strings.fieldTrainIdentifier}</span>
+          <input
+            type="text"
+            value={state.trainIdentifierInput}
+            onChange={(event) => dispatch({ type: 'trainIdentifierChanged', value: event.target.value })}
+          />
+        </label>
 
-      <label className="field">
-        <span>{strings.fieldTrainIdentifier}</span>
-        <input
-          type="text"
-          value={state.trainIdentifierInput}
-          onChange={(event) => dispatch({ type: 'trainIdentifierChanged', value: event.target.value })}
-        />
-      </label>
+        <label className="field">
+          <span>{strings.fieldSettlement}</span>
+          <input
+            type="text"
+            placeholder={strings.fieldSettlementHint}
+            value={state.settlementQuery}
+            onChange={(event) => dispatch({ type: 'settlementQueryChanged', value: event.target.value })}
+            aria-describedby="settlement-results"
+          />
+        </label>
+        {state.settlementSearching && <p className="muted">…</p>}
+        {state.settlementResults.length > 0 && (
+          <ul id="settlement-results" className="suggestion-list">
+            {state.settlementResults.map((settlement) => (
+              <li key={settlement.id}>
+                <button type="button" className="suggestion" onClick={() => dispatch({ type: 'settlementSelected', settlement })}>
+                  {settlement.name}
+                  {settlement.countyName ? ` (${settlement.countyName})` : ''}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
 
-      <label className="field">
-        <span>{strings.fieldSettlement}</span>
-        <input
-          type="text"
-          placeholder={strings.fieldSettlementHint}
-          value={state.settlementQuery}
-          onChange={(event) => dispatch({ type: 'settlementQueryChanged', value: event.target.value })}
-          aria-describedby="settlement-results"
-        />
-      </label>
-      {state.settlementSearching && <p className="muted">…</p>}
-      {state.settlementResults.length > 0 && (
-        <ul id="settlement-results" className="suggestion-list">
-          {state.settlementResults.map((settlement) => (
-            <li key={settlement.id}>
-              <button type="button" className="suggestion" onClick={() => dispatch({ type: 'settlementSelected', settlement })}>
-                {settlement.name}
-                {settlement.countyName ? ` (${settlement.countyName})` : ''}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <RailwayLineSection state={state} dispatch={dispatch} />
+        <RailwayLineSection state={state} dispatch={dispatch} />
+      </div>
     </div>
   )
 }
@@ -71,14 +80,14 @@ function RailwayLineSection({ state, dispatch }: { readonly state: NewReportStat
       return <p className="muted">…</p>
     case 'load-failed':
       return (
-        <p className="status-badge status-badge--error" role="alert">
+        <p className="status-pill status-pill--error" role="alert" style={{ display: 'block' }}>
           {strings.catalogLoadFailed}
         </p>
       )
     case 'no-verified-candidate':
-      return <p className="muted">{strings.lineNoneVerified}</p>
+      return <div className="help-card">{strings.lineNoneVerified}</div>
     case 'single-inferred':
-      return <p className="muted">{strings.lineAutoIdentified(step.option.displayName)}</p>
+      return <div className="help-card">{strings.lineAutoIdentified(step.option.displayName)}</div>
     case 'requires-choice': {
       const unsureLabel = step.coverage === 'PARTIAL' ? strings.lineChooseUnsurePartial : strings.lineChooseUnsure
       return (

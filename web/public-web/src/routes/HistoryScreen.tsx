@@ -26,8 +26,15 @@ export function HistoryScreen() {
 
   return (
     <section className="screen history-screen">
-      <h1>{strings.historyTitle}</h1>
-      <p className="muted">{strings.historyStorageNotice}</p>
+      <div className="screen-topbar">
+        <h1>{strings.historyTitle}</h1>
+      </div>
+
+      <div className="card">
+        <p className="muted" style={{ margin: 0 }}>
+          {strings.historyStorageNotice}
+        </p>
+      </div>
 
       {history.length === 0 ? (
         <p className="muted">{strings.historyEmpty}</p>

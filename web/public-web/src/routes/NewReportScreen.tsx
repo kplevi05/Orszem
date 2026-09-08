@@ -5,6 +5,7 @@ import { useRepositories } from '../repositoryContext'
 import { Step1Form } from '../components/Step1Form'
 import { Step2Form } from '../components/Step2Form'
 import { SuccessView } from '../components/SuccessView'
+import { BackIcon, CloseIcon } from '../components/NavIcons'
 import { railwayLineStepFor, resolvedRailwayLineId } from '../domain/lineDecision'
 import {
   initialNewReportState,
@@ -145,16 +146,29 @@ export function NewReportScreen() {
 
   return (
     <section className="screen new-report-screen">
+      <div className="screen-topbar">
+        <h1>{strings.navNewReport}</h1>
+        {state.step === 'ALAPADATOK' ? (
+          <button type="button" className="icon-button" aria-label={strings.actionHome} onClick={() => navigate('/')}>
+            <CloseIcon />
+          </button>
+        ) : (
+          <button type="button" className="icon-button" aria-label={strings.actionBack} onClick={() => dispatch({ type: 'backToStep1' })}>
+            <BackIcon />
+          </button>
+        )}
+      </div>
+
+      <div className="stepper">
+        <span className={`stepper__item${state.step === 'ALAPADATOK' ? ' stepper__item--active' : ''}`}>{strings.step1Title}</span>
+        <span className={`stepper__item${state.step === 'ESEMENY' ? ' stepper__item--active' : ''}`}>{strings.step2Title}</span>
+      </div>
+
       {state.step === 'ALAPADATOK' ? <Step1Form state={state} dispatch={dispatch} /> : <Step2Form state={state} dispatch={dispatch} />}
 
       {state.error && <ErrorBanner reason={state.error} />}
 
       <div className="step-actions">
-        {state.step === 'ESEMENY' && (
-          <button type="button" className="button" onClick={() => dispatch({ type: 'backToStep1' })}>
-            {strings.actionBack}
-          </button>
-        )}
         {state.step === 'ALAPADATOK' ? (
           <button
             type="button"
@@ -174,6 +188,11 @@ export function NewReportScreen() {
             {strings.actionSubmit}
           </button>
         )}
+        {state.step === 'ESEMENY' && (
+          <button type="button" className="button button--secondary" onClick={() => dispatch({ type: 'backToStep1' })}>
+            {strings.actionBack}
+          </button>
+        )}
       </div>
     </section>
   )
@@ -190,7 +209,7 @@ function ErrorBanner({ reason }: { readonly reason: UiErrorReason }) {
     GENERIC: strings.errorGeneric,
   }[reason]
   return (
-    <p className="status-badge status-badge--error" role="alert">
+    <p className="status-pill status-pill--error" role="alert" style={{ display: 'block', marginTop: '0.85rem' }}>
       {text}
     </p>
   )

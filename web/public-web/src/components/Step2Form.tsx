@@ -5,8 +5,7 @@ import type { NewReportAction, NewReportState } from '../routes/newReportState'
 export function Step2Form({ state, dispatch }: { readonly state: NewReportState; readonly dispatch: Dispatch<NewReportAction> }) {
   if (state.catalogLoading) {
     return (
-      <div className="step-form">
-        <h2>{strings.step2Title}</h2>
+      <div className="card step-form">
         <p className="muted">…</p>
       </div>
     )
@@ -14,12 +13,11 @@ export function Step2Form({ state, dispatch }: { readonly state: NewReportState;
 
   if (state.catalogFailed) {
     return (
-      <div className="step-form">
-        <h2>{strings.step2Title}</h2>
-        <p className="status-badge status-badge--error" role="alert">
+      <div className="card step-form">
+        <p className="status-pill status-pill--error" role="alert" style={{ display: 'block', marginBottom: '0.75rem' }}>
           {strings.catalogLoadFailed}
         </p>
-        <button type="button" className="button" onClick={() => dispatch({ type: 'catalogLoadStarted' })}>
+        <button type="button" className="button button--soft button--inline" onClick={() => dispatch({ type: 'catalogLoadStarted' })}>
           {strings.actionRetry}
         </button>
       </div>
@@ -29,9 +27,7 @@ export function Step2Form({ state, dispatch }: { readonly state: NewReportState;
   const selectedCategory = state.catalog.find((category) => category.code === state.selectedCategoryCode)
 
   return (
-    <div className="step-form">
-      <h2>{strings.step2Title}</h2>
-
+    <div className="card step-form">
       <fieldset className="category-choice">
         <legend>{strings.categoryChooseTitle}</legend>
         <div className="chip-row">
