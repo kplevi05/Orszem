@@ -100,6 +100,11 @@ data class ReferenceDatasetImport(
     val settlementCount: Int,
     val railwayLineCount: Int,
     val mappingCount: Int,
+    val settlementsCoverage: CoverageComponentStatus,
+    val railwayLinesCoverage: CoverageComponentStatus,
+    val settlementRailwayLinesCoverage: CoverageComponentStatus,
+    /** Whether this row is the one active reference state - see [CurrentReferenceState]. */
+    val isCurrent: Boolean,
     val sourceMetadataJson: String,
 ) {
     override fun equals(other: Any?): Boolean {

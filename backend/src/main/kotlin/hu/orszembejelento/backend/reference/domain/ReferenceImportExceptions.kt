@@ -3,6 +3,18 @@ package hu.orszembejelento.backend.reference.domain
 /** Base type for every way a reference dataset import can be refused. Each carries a stable [code]. */
 sealed class ReferenceImportException(val code: String, message: String) : RuntimeException(message)
 
+/**
+ * No reference dataset has ever been successfully imported - there is no current state to
+ * consult at all. Thrown by the Public reference API's use cases; mapped to HTTP 503 by
+ * `ApiExceptionHandler`, never to an empty 200 (which would misleadingly look like a
+ * verified "no data" answer rather than "the backend has nothing loaded yet"). See ADR
+ * 0007. [RoutingService][hu.orszembejelento.backend.routing.application.RoutingService]
+ * expresses the identical condition as a return value instead, since it has no HTTP
+ * response to produce.
+ */
+class ReferenceDatasetUnavailableException :
+    RuntimeException("no reference dataset has ever been successfully imported")
+
 /** The dataset directory is missing, malformed, or fails a structural/content check. */
 class ReferenceDatasetInvalidException(val issues: List<String>) : ReferenceImportException(
     "REFERENCE_DATASET_INVALID",

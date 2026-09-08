@@ -38,6 +38,14 @@ enum class ErrorCode {
     RATE_LIMITED,
     VALIDATION_ERROR,
     INTERNAL_ERROR,
+
+    /**
+     * No reference dataset has ever been successfully imported. Returned with HTTP 503 by
+     * the Public reference endpoints instead of an empty 200, which would look like a
+     * verified "nothing found" answer rather than "the backend has nothing loaded yet" -
+     * see ADR 0007.
+     */
+    REFERENCE_DATASET_UNAVAILABLE,
 }
 
 /**

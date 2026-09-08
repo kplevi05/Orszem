@@ -5,6 +5,8 @@ import hu.orszembejelento.backend.auth.application.PasswordChangeRequiredExcepti
 import hu.orszembejelento.backend.auth.application.RateLimitedException
 import hu.orszembejelento.backend.auth.application.SessionInvalidException
 import hu.orszembejelento.backend.identity.domain.PasswordPolicyException
+import hu.orszembejelento.backend.reference.domain.ReferenceDatasetUnavailableException
+import hu.orszembejelento.backend.reference.domain.SettlementQueryTooShortException
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
@@ -14,6 +16,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 /**
  * Translates exceptions into the stable API error shape.
@@ -73,14 +76,38 @@ class ApiExceptionHandler {
             extraHeaders = mapOf(HttpHeaders.RETRY_AFTER to exception.retryAfterSeconds.toString()),
         )
 
-    @ExceptionHandler(MethodArgumentNotValidException::class, HttpMessageNotReadableException::class)
+    @ExceptionHandler(
+        MethodArgumentNotValidException::class,
+        HttpMessageNotReadableException::class,
+        MethodArgumentTypeMismatchException::class,
+    )
     fun handleValidation(request: HttpServletRequest) = error(
         request,
         HttpStatus.BAD_REQUEST,
         ErrorCode.VALIDATION_ERROR,
         // No field details: on auth endpoints, naming the offending field could confirm
         // which part of a guess was well-formed. Malformed JSON is reported the same way.
+        // MethodArgumentTypeMismatchException covers a path/query value that fails to
+        // convert to its declared type - a malformed {settlementId} UUID, for instance -
+        // which would otherwise fall through to the generic 500 handler below.
         "The request is invalid.",
+    )
+
+    @ExceptionHandler(SettlementQueryTooShortException::class)
+    fun handleSettlementQueryTooShort(exception: SettlementQueryTooShortException, request: HttpServletRequest) =
+        error(
+            request,
+            HttpStatus.BAD_REQUEST,
+            ErrorCode.VALIDATION_ERROR,
+            "query must be at least ${exception.minimumCodePoints} character(s).",
+        )
+
+    @ExceptionHandler(ReferenceDatasetUnavailableException::class)
+    fun handleReferenceDatasetUnavailable(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.SERVICE_UNAVAILABLE,
+        ErrorCode.REFERENCE_DATASET_UNAVAILABLE,
+        "No reference dataset is currently available.",
     )
 
     @ExceptionHandler(Exception::class)

@@ -130,17 +130,43 @@ CREATE TABLE reference_dataset_imports (
     railway_line_count  INTEGER      NOT NULL,
     mapping_count       INTEGER      NOT NULL,
 
+    -- Per-component coverage as recorded by the manifest that was imported (ADR 0006).
+    -- Routing reads settlement_railway_lines_coverage on the CURRENT row to decide
+    -- whether a settlement's absence of another relation may be trusted: COMPLETE means
+    -- it may, PARTIAL means it must not be - see ADR 0007.
+    settlements_coverage               VARCHAR(16) NOT NULL,
+    railway_lines_coverage             VARCHAR(16) NOT NULL,
+    settlement_railway_lines_coverage  VARCHAR(16) NOT NULL,
+
+    -- Exactly one row may be the currently active reference state (enforced below by a
+    -- partial unique index, not application code or MAX(imported_at)). Routing and the
+    -- public reference API read this row and only this row. A failed or no-op import
+    -- never changes which row this is - see ADR 0007.
+    is_current          BOOLEAN      NOT NULL DEFAULT FALSE,
+
     -- A summary of sources and their licences, not the imported data itself.
     source_metadata     JSONB        NOT NULL DEFAULT '{}'::jsonb,
 
     CONSTRAINT ck_reference_imports_counts
-        CHECK (settlement_count >= 0 AND railway_line_count >= 0 AND mapping_count >= 0)
+        CHECK (settlement_count >= 0 AND railway_line_count >= 0 AND mapping_count >= 0),
+    CONSTRAINT ck_reference_imports_coverage CHECK (
+        settlements_coverage IN ('COMPLETE', 'PARTIAL') AND
+        railway_lines_coverage IN ('COMPLETE', 'PARTIAL') AND
+        settlement_railway_lines_coverage IN ('COMPLETE', 'PARTIAL')
+    )
 );
 
 -- One row per dataset version. A second import claiming the same version with different
 -- content is refused rather than silently overwriting provenance.
 CREATE UNIQUE INDEX ux_reference_dataset_imports_version
     ON reference_dataset_imports (dataset_version);
+
+-- At most one row may be the current reference state. A partial unique index, the same
+-- technique as the one-line-one-area invariant below: two concurrent imports racing to
+-- become current cannot both succeed, and the database - not application discipline - is
+-- what makes that true.
+CREATE UNIQUE INDEX ux_reference_dataset_imports_current
+    ON reference_dataset_imports (is_current) WHERE is_current;
 
 -- ---------------------------------------------------------------------------
 -- service_areas  (customer configuration)

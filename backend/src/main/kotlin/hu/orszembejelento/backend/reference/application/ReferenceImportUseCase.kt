@@ -222,8 +222,14 @@ class ReferenceImportUseCase(
             settlementCount = dataset.manifest.settlementCount,
             railwayLineCount = dataset.manifest.railwayLineCount,
             mappingCount = dataset.manifest.mappingCount,
+            coverage = dataset.manifest.coverage,
             sourceMetadataJson = sourcesJson,
         )
+        // A successful import is the only thing that ever changes which row is current -
+        // a failed import throws before this line, so the previous current state (if any)
+        // is untouched, and a no-op re-import returns before this line too (see the
+        // AlreadyImported branch above).
+        repository.promoteToCurrentImport(provenanceId)
 
         audit.record(
             operationId = UUID.randomUUID(),

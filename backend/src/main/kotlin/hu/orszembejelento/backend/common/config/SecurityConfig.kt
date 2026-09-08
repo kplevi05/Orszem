@@ -57,6 +57,10 @@ class SecurityConfig {
                     .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                     // API identity, deliberately public.
                     .requestMatchers("${ApiPaths.V1}/meta").permitAll()
+                    // The Public reference API: read-only settlement/railway-line lookups
+                    // for the anonymous Public client. No service-area or authorisation
+                    // information is ever returned from these - see PublicReferenceController.
+                    .requestMatchers("${ApiPaths.V1}/public/**").permitAll()
                     // The three flows that by definition cannot present a valid access
                     // token yet. Each performs its own credential verification.
                     .requestMatchers(

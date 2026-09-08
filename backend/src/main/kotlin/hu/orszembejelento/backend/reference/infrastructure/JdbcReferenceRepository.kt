@@ -1,5 +1,8 @@
 package hu.orszembejelento.backend.reference.infrastructure
 
+import hu.orszembejelento.backend.reference.domain.CoverageComponentStatus
+import hu.orszembejelento.backend.reference.domain.CurrentReferenceState
+import hu.orszembejelento.backend.reference.domain.DatasetCoverage
 import hu.orszembejelento.backend.reference.domain.ExistingReferenceRow
 import hu.orszembejelento.backend.reference.domain.KshCode
 import hu.orszembejelento.backend.reference.domain.RailwayLine
@@ -184,6 +187,30 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .query(::mapRailwayLine)
             .list()
 
+    /**
+     * Every line with a verified relation to a settlement, active or not.
+     *
+     * Used by `RoutingService`'s inference step (ADR 0007), deliberately unfiltered: a
+     * relation to a currently-inactive line is still a verified fact, and routing needs to
+     * see it in order to resolve it and correctly report `RAILWAY_LINE_INACTIVE` rather
+     * than silently acting as if the relation never existed. Contrast
+     * [findActiveLinesOfSettlement], which the public API uses instead - a citizen should
+     * not be offered an inactive line as a selectable option.
+     */
+    fun findVerifiedLinesOfSettlement(settlementId: UUID): List<RailwayLine> =
+        jdbc.sql(
+            """
+            SELECT l.id, l.line_code, l.display_name, l.active, l.created_at, l.updated_at
+              FROM railway_lines l
+              JOIN settlement_railway_lines m ON m.railway_line_id = l.id
+             WHERE m.settlement_id = :settlementId
+             ORDER BY l.line_code
+            """.trimIndent(),
+        )
+            .param("settlementId", settlementId)
+            .query(::mapRailwayLine)
+            .list()
+
     /** Whether a validated reference relation exists, regardless of activity. */
     fun relationExists(settlementId: UUID, railwayLineId: UUID): Boolean =
         jdbc.sql(
@@ -330,27 +357,9 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
     }
 
     fun findImportByVersion(datasetVersion: String): ReferenceDatasetImport? =
-        jdbc.sql(
-            """
-            SELECT id, dataset_version, manifest_sha256, imported_at,
-                   settlement_count, railway_line_count, mapping_count, source_metadata
-              FROM reference_dataset_imports
-             WHERE dataset_version = :version
-            """.trimIndent(),
-        )
+        jdbc.sql("$SELECT_IMPORT WHERE dataset_version = :version")
             .param("version", datasetVersion)
-            .query { rs, _ ->
-                ReferenceDatasetImport(
-                    id = rs.getObject("id", UUID::class.java),
-                    datasetVersion = rs.getString("dataset_version"),
-                    manifestSha256 = rs.getBytes("manifest_sha256"),
-                    importedAt = rs.getTimestamp("imported_at").toInstant(),
-                    settlementCount = rs.getInt("settlement_count"),
-                    railwayLineCount = rs.getInt("railway_line_count"),
-                    mappingCount = rs.getInt("mapping_count"),
-                    sourceMetadataJson = rs.getString("source_metadata"),
-                )
-            }
+            .query(::mapImport)
             .optional()
             .orElse(null)
 
@@ -362,16 +371,21 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
         settlementCount: Int,
         railwayLineCount: Int,
         mappingCount: Int,
+        coverage: DatasetCoverage,
         sourceMetadataJson: String,
     ) {
         jdbc.sql(
             """
             INSERT INTO reference_dataset_imports (
                 id, dataset_version, manifest_sha256, imported_at,
-                settlement_count, railway_line_count, mapping_count, source_metadata
+                settlement_count, railway_line_count, mapping_count,
+                settlements_coverage, railway_lines_coverage, settlement_railway_lines_coverage,
+                source_metadata
             ) VALUES (
                 :id, :version, :sha256, :importedAt,
-                :settlements, :lines, :mappings, CAST(:sourceMetadata AS jsonb)
+                :settlements, :lines, :mappings,
+                :settlementsCoverage, :railwayLinesCoverage, :relationsCoverage,
+                CAST(:sourceMetadata AS jsonb)
             )
             """.trimIndent(),
         )
@@ -382,9 +396,48 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .param("settlements", settlementCount)
             .param("lines", railwayLineCount)
             .param("mappings", mappingCount)
+            .param("settlementsCoverage", coverage.settlements.name)
+            .param("railwayLinesCoverage", coverage.railwayLines.name)
+            .param("relationsCoverage", coverage.settlementRailwayLines.name)
             .param("sourceMetadata", sourceMetadataJson)
             .update()
     }
+
+    /**
+     * Makes [newImportId] the one current reference state, demoting whatever was current
+     * before it. Two statements, not one UPSERT: the unset must fully complete before the
+     * set, or the partial unique index on `is_current` would reject the second row.
+     *
+     * Must be called from inside the same transaction as the import it promotes - see
+     * [ReferenceImportUseCase][hu.orszembejelento.backend.reference.application.ReferenceImportUseCase].
+     * Never called at all on a failed or no-op import, which is what keeps a failed import
+     * from changing the current state.
+     */
+    fun promoteToCurrentImport(newImportId: UUID) {
+        jdbc.sql("UPDATE reference_dataset_imports SET is_current = FALSE WHERE is_current").update()
+        jdbc.sql("UPDATE reference_dataset_imports SET is_current = TRUE WHERE id = :id")
+            .param("id", newImportId)
+            .update()
+    }
+
+    /**
+     * The one active reference state, or null if no dataset has ever been successfully
+     * imported. Routing and the public reference API treat null as an infrastructure
+     * condition (`REFERENCE_DATASET_UNAVAILABLE`), never as an empty business result.
+     */
+    fun findCurrentReferenceState(): CurrentReferenceState? =
+        jdbc.sql(
+            "SELECT dataset_version, settlement_railway_lines_coverage FROM reference_dataset_imports WHERE is_current",
+        )
+            .query { rs, _ ->
+                CurrentReferenceState(
+                    datasetVersion = rs.getString("dataset_version"),
+                    settlementRailwayLinesCoverage =
+                        CoverageComponentStatus.valueOf(rs.getString("settlement_railway_lines_coverage")),
+                )
+            }
+            .optional()
+            .orElse(null)
 
     // ----------------------------------------------------------------- mapping
 
@@ -408,6 +461,22 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
         updatedAt = rs.getTimestamp("updated_at").toInstant(),
     )
 
+    private fun mapImport(rs: ResultSet, @Suppress("UNUSED_PARAMETER") rowNum: Int) = ReferenceDatasetImport(
+        id = rs.getObject("id", UUID::class.java),
+        datasetVersion = rs.getString("dataset_version"),
+        manifestSha256 = rs.getBytes("manifest_sha256"),
+        importedAt = rs.getTimestamp("imported_at").toInstant(),
+        settlementCount = rs.getInt("settlement_count"),
+        railwayLineCount = rs.getInt("railway_line_count"),
+        mappingCount = rs.getInt("mapping_count"),
+        settlementsCoverage = CoverageComponentStatus.valueOf(rs.getString("settlements_coverage")),
+        railwayLinesCoverage = CoverageComponentStatus.valueOf(rs.getString("railway_lines_coverage")),
+        settlementRailwayLinesCoverage =
+            CoverageComponentStatus.valueOf(rs.getString("settlement_railway_lines_coverage")),
+        isCurrent = rs.getBoolean("is_current"),
+        sourceMetadataJson = rs.getString("source_metadata"),
+    )
+
     private companion object {
         const val SELECT_SETTLEMENT = """
             SELECT id, ksh_code, name, county_code, county_name, active, created_at, updated_at
@@ -417,6 +486,14 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
         const val SELECT_LINE = """
             SELECT id, line_code, display_name, active, created_at, updated_at
               FROM railway_lines
+        """
+
+        const val SELECT_IMPORT = """
+            SELECT id, dataset_version, manifest_sha256, imported_at,
+                   settlement_count, railway_line_count, mapping_count,
+                   settlements_coverage, railway_lines_coverage, settlement_railway_lines_coverage,
+                   is_current, source_metadata
+              FROM reference_dataset_imports
         """
 
         // An arbitrary, never-reused constant identifying the reference-dataset-import
