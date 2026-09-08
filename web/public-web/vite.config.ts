@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 // The browser always calls the API same-origin at /api/v1, so production needs no CORS
@@ -18,5 +18,11 @@ export default defineConfig({
     // Plain static output for Caddy to serve. No SSR, no Node server in production.
     outDir: 'dist',
     sourcemap: true,
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    globals: false,
+    css: false,
   },
 })

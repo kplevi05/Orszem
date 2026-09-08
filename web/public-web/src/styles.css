@@ -12,9 +12,15 @@
   --text: #12212f;
   --text-muted: #5a6b7a;
   --border: #dbe6f0;
+  --success: #2e7d5a;
+  --warning: #8a5a00;
+  --warning-bg: #fff4e0;
+  --error: #b3261e;
+  --error-bg: #fdecea;
 
-  --max-width: 68rem;
+  --max-width: 40rem;
   --radius: 12px;
+  --bottom-nav-height: 4.25rem;
 
   color-scheme: light;
 }
@@ -37,107 +43,293 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.page {
+button {
+  font: inherit;
+}
+
+.app {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
 }
 
-.container {
-  width: 100%;
-  max-width: var(--max-width);
-  margin-inline: auto;
-  padding-inline: 1.25rem;
-}
+/* --- navigation: a bottom bar on narrow (mobile) viewports, a top bar on wide (desktop)
+   ones - same three links, same labels and order, only the placement differs (§2). --- */
 
-.header {
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
   background: var(--primary-dark);
   color: var(--on-primary);
 }
 
-.header__inner {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  padding-block: 1rem;
-}
-
 .brand {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
 }
 
-.brand__tag {
+.top-nav {
+  display: none;
+  gap: 1.25rem;
+}
+
+.bottom-nav {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: var(--bottom-nav-height);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
   font-size: 0.9rem;
-  opacity: 0.8;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius);
 }
 
-.main {
+.nav-link--active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.top-nav .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+}
+.top-nav .nav-link--active {
+  color: var(--on-primary);
+}
+
+@media (min-width: 56rem) {
+  .top-nav {
+    display: flex;
+  }
+  .bottom-nav {
+    display: none;
+  }
+}
+
+.app__main {
   flex: 1;
-  padding-block: 2.5rem 3rem;
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding: 1.5rem 1.25rem 2.5rem;
 }
 
-.hero__title {
+.screen h1 {
   margin: 0 0 0.75rem;
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
-  line-height: 1.2;
+  font-size: clamp(1.5rem, 4vw, 2rem);
   color: var(--primary-dark);
 }
 
-.hero__lead {
-  margin: 0;
-  max-width: 46rem;
-  font-size: 1.05rem;
+.screen h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  color: var(--primary-dark);
+}
+
+.muted {
   color: var(--text-muted);
+  font-size: 0.92rem;
 }
 
-.notice {
-  margin: 1.5rem 0 0;
-  padding: 0.85rem 1rem;
-  background: var(--surface);
+/* --- buttons --- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1.1rem;
+  margin: 0.35rem 0.35rem 0.35rem 0;
   border: 1px solid var(--border);
-  border-left: 4px solid var(--primary);
   border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
   font-size: 0.95rem;
+  cursor: pointer;
 }
 
-.cards {
-  display: grid;
-  gap: 1rem;
-  margin-top: 2.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
+
+.button--primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+.button:focus-visible,
+.nav-link:focus-visible,
+input:focus-visible,
+.suggestion:focus-visible,
+.chip:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* --- cards / history --- */
 
 .card {
-  padding: 1.25rem;
+  padding: 1.1rem;
+  margin-bottom: 0.75rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 
-.card__title {
-  margin: 0 0 0.4rem;
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-card h3 {
+  margin: 0 0 0.25rem;
   font-size: 1.05rem;
   color: var(--primary-dark);
 }
 
-.card__body {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--text-muted);
+.history-card p {
+  margin: 0.15rem 0;
 }
 
-.footer {
-  border-top: 1px solid var(--border);
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #e8f4ee;
+  color: var(--success);
+}
+
+.status-badge--warning {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.status-badge--error {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+/* --- forms --- */
+
+.step-form {
   background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
 }
 
-.footer__text {
-  margin: 0;
-  padding-block: 1.25rem;
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.field span {
   font-size: 0.9rem;
+  font-weight: 600;
   color: var(--text-muted);
+}
+
+.field input,
+input[type='text'],
+input[type='datetime-local'] {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  width: 100%;
+}
+
+.suggestion-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.suggestion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.suggestion:hover {
+  background: var(--background);
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+legend {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  padding: 0;
+  margin-bottom: 0.4rem;
+}
+
+.radio-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.98rem;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.chip--selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.success-view {
+  text-align: left;
 }
 
 @media (prefers-reduced-motion: reduce) {
