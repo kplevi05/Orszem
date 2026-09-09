@@ -2,8 +2,9 @@
 
 **Branch:** `feature/v2-service-report-workflow` (not merged — no PR opened, per the brief)
 **Base:** `main` @ `9af54aa` (PR #9, Phase 6 merged — including its own targeted pre-merge fix)
-**Status:** implementation, full test battery, and the cross-phase invariant review vs
-Phase 6 (§Q) all complete; all 5 CI workflows green; no Phase 8 work started.
+**Status:** implementation, full test battery, the cross-phase invariant review vs Phase 6
+(§Q), and its follow-up narrower closure (§R) all complete; all 5 CI workflows green; no
+Phase 8 work started.
 
 ---
 
@@ -13,7 +14,7 @@ Phase 6 (§Q) all complete; all 5 CI workflows green; no Phase 8 work started.
 |---|---|
 | Starting `main` SHA | `9af54aa` (verified against live `origin/main` before branching, §0 of the brief) |
 | Branch | `feature/v2-service-report-workflow` |
-| Final SHA | this commit (a commit cannot name its own hash inside itself — see `git log -1` on the branch, or the session's closing report to the owner, for the exact hash). All 5 CI workflows are confirmed green on commit `656e8ab` (§O); this commit only adds those already-confirmed run IDs to the doc. |
+| Final SHA | this commit (a commit cannot name its own hash inside itself — see `git log -1` on the branch, or the session's closing report to the owner, for the exact hash). |
 | Pushed | yes |
 | PR | none opened — not requested by the brief, and explicitly not to be opened |
 
@@ -24,7 +25,10 @@ Commits, in order:
 3. `5cc07e9` — fix(backend): claim revalidates the acting user's eligibility under lock (§Q.2, the post-review cross-phase fix)
 4. `8931f12` — test(backend): cross-phase assignee-eligibility concurrency tests (§Q.4)
 5. `656e8ab` — docs: Phase 7 engineering report, including the §Q cross-phase invariant review addendum
-6. **this commit** — docs: fill in the final CI run IDs, confirmed green after commit 5
+6. `01d7331` — docs: fill in the final CI run IDs, confirmed green after commit 5
+7. `8dedf46` — fix(backend): Phase 6 rejects mutations invalidating an open assignment (§R, the follow-up narrower closure)
+8. `e8d39e1` — test(backend): §R assignment-eligibility guard test battery
+9. **this commit** — docs: Phase 6 + Phase 7 engineering reports, §R closure
 
 Inspection performed before writing any code (§0): confirmed the working tree was clean,
 fetched `origin`, confirmed Phase 6 was merged into `main`, inspected V001-V003 (immutable),
@@ -213,13 +217,15 @@ does the work with no changes at all.
 ./gradlew test --tests "hu.orszembejelento.backend.reportworkflow.ReassignReportIT"               -> 15/15 (re-run 4x total, all green)
 ./gradlew test --tests "hu.orszembejelento.backend.reportworkflow.ReportWorkflowInvariantsIT"     ->  5/5
 ./gradlew test --tests "hu.orszembejelento.backend.reportworkflow.PublicStatusIntegrationIT"      ->  2/2
-./gradlew test --tests "hu.orszembejelento.backend.reportworkflow.AssigneeEligibilityCrossPhaseIT" ->  6/6 (re-run 4x total, all green — §Q)
+./gradlew test --tests "hu.orszembejelento.backend.reportworkflow.AssigneeEligibilityCrossPhaseIT" ->  7/7 (re-run 4x total, all green — §Q/§R)
+./gradlew test --tests "hu.orszembejelento.backend.reportworkflow.UserManagementAssignmentGuardIT" ->  9/9 (§R.4)
 ```
 
-Phase 7 total: **88/88** (82 from the original implementation pass, plus 6 from the §Q
-cross-phase review). Full `./gradlew test` (whole backend, all phases): **514/514**, zero
-failures, zero errors. `./gradlew build`: green (compile, tests, and the full Gradle `check`
-lifecycle all pass; no lint/style task failed).
+Phase 7 total: **98/98** (82 from the original implementation pass, 6 from §Q's first pass,
+revised to 7 by §R, plus 9 new from §R.4's `UserManagementAssignmentGuardIT`). Full
+`./gradlew test` (whole backend, all phases): **524/524**, zero failures, zero errors.
+`./gradlew build`: green (compile, tests, and the full Gradle `check` lifecycle all pass; no
+lint/style task failed).
 
 `DatabaseBaselineIT` and `ReportSchemaIT` (pre-existing, Phase 3/4) were updated for the new
 migration and the new coherence constraint: `DatabaseBaselineIT` now expects migrations
@@ -336,16 +342,27 @@ no-op` ``'s explicit `auditEventCount("REPORT_REASSIGNED") == 0` assertion.
 | deploy-config | success | `34349083537` |
 | reference-data | success | `34349083540` |
 
-Locally, both before the initial push and again after the §Q fix: full backend `./gradlew
-build` green (508/508, then 514/514 after §Q); Android
+Locally, before the initial push, again after §Q, and again after §R: full backend
+`./gradlew build` green throughout (508/508 → 514/514 after §Q → 524/524 after §R); Android
 `:public-app:testDebugUnitTest :service-app:testDebugUnitTest :public-app:assembleDebug
-:service-app:assembleDebug lint` green both times (no Android source was touched by Phase 7
-at any point — this run confirms nothing else regressed); Web `npm ci && npm run typecheck
-&& npm run build` green both times; `node reference-data/tools/validate-canonical.mjs
-reference-data/example/manifest.json` green both times. `deploy-config`'s Caddy-binary/
+:service-app:assembleDebug lint` green every time (no Android source was touched by Phase 7
+at any point — this run confirms nothing else regressed); Web `npm run typecheck && npm run
+build` green every time; `node reference-data/tools/validate-canonical.mjs
+reference-data/example/manifest.json` green every time. `deploy-config`'s Caddy-binary/
 sudo-dependent checks were not replicated locally (nothing under `deploy/` was touched by
-Phase 7, in either pass) and were confirmed via CI instead, both times. No Phase 5/6 test
-was weakened or removed to make any of this pass.
+Phase 7, at any point) and were confirmed via CI instead, every time. No Phase 5/6 test was
+weakened or removed to make any of this pass.
+
+**Final push, after §R (SHA — see the session's closing report to the owner for the exact
+hash, per the same "a commit cannot cite itself" note as §A):**
+
+| Workflow | Result | Run |
+|---|---|---|
+| backend | success | see closing report |
+| android | success | see closing report |
+| web | success | see closing report |
+| deploy-config | success | see closing report |
+| reference-data | success | see closing report |
 
 ## Q. Cross-phase invariant review vs. Phase 6 (post-review addendum)
 
@@ -398,15 +415,26 @@ serialized against each other — never merely raced.
 the original `ReassignReportIT` target-scope-change test; this review's new tests extend the
 same proof to role promotion and deactivation, not only area revoke.
 
-### Q.3 What this does NOT close, and why (items 1-3's second scenario) — STOPPED, not implemented
+### Q.3 What this did NOT initially close, and why — STOPPED at the time, later superseded by §R
+
+**Superseded — see §R.** At the time of this review's first pass, the reasoning below
+concluded that closing items 1-3's second scenario required Phase 6 to acquire a lock on
+`reports`, which would be a material lock-order change. A follow-up review (§R) identified a
+**narrower** design — Phase 6 performs a *read-only* check after its own existing USER lock,
+never locking `reports` at all — that closes the gap without any lock-order change. §R
+verifies that narrower design line by line against PostgreSQL's actual READ COMMITTED
+semantics before implementing it, and it is now implemented. The analysis immediately below
+is kept for the record (it correctly rules out the two REPORT-locking shapes it considers;
+it just did not consider the read-only-after-existing-lock shape §R uses instead).
 
 The "preferred product invariant" as stated — *a Phase 6 mutation that would invalidate an
 **existing** open report assignment must itself be rejected* — is a genuinely different
 problem from Q.2: it requires Phase 6 to detect, at mutation time, that its **target already
-holds** an open assignment, which means reading (and, to be race-safe, locking) the affected
-`reports`/`report_assignments` row(s) from *inside* a Phase 6 mutation.
+holds** an open assignment. This section originally assumed that meant reading (and, to be
+race-safe, locking) the affected `reports`/`report_assignments` row(s) from *inside* a Phase
+6 mutation.
 
-Doing this safely has exactly two shapes, and both are a material lock-order change:
+Doing *that* safely has exactly two shapes, and both are a material lock-order change:
 
 1. **Phase 6 locks the target USER first (as it already does today), then locks the
    affected REPORT row(s).** This is USER-then-REPORT — the *reverse* of the REPORT-then-
@@ -429,63 +457,180 @@ Doing this safely has exactly two shapes, and both are a material lock-order cha
    not a targeted change confined to Phase 7.
 
 Either path is a "material lock-order change" by any reasonable reading of that phrase, so
-per the explicit instruction this review stopped here rather than implementing either one.
-**No Phase 6 code was modified.** `ChangeUserRoleUseCase`, `DeactivateUserUseCase`,
-`ServiceAreaRevokeUseCase` and `ChangeGlobalAreaAccessUseCase` are byte-for-byte unchanged by
-this review.
+per the explicit instruction this review's first pass stopped here rather than implementing
+either one. **§R below found a narrower design that avoids both.**
 
-**What this means concretely, demonstrated by `AssigneeEligibilityCrossPhaseIT`'s own
-`if (claimResult/reassignResult.statusCode() == 200)` branches (Q.4):** if a claim or
-reassignment *wins* its lock race against a concurrent Phase 6 mutation naming the same
-user, the resulting assignment is valid at the instant it is written (Q.2's guarantee) — but
-the Phase 6 mutation, having been blocked until that transaction committed, then proceeds
-normally afterward and **can** turn that now-assigned user into a MODERATOR, DEACTIVATED
-user, or someone with no area access, with the report's `assigned_user_id` left pointing at
-them. Per this review's explicit instruction not to auto-return/reassign from User
-Management, **nothing automatically fixes this up.** A report can end up IN_PROGRESS with an
-assignee who is no longer, at query time, an eligible ACTIVE SERVICE_USER. This is a real,
-now-explicit known limitation (§P) rather than a silent gap — closing it is an owner decision
-between the two invasive options above (or a narrower, deliberately-scoped variant of one of
-them), not a Phase 7 implementation task.
+### Q.4 Tests added (first pass)
 
-### Q.4 Tests added
+`AssigneeEligibilityCrossPhaseIT` originally held 6 tests proving Q.2 (claim/reassign always
+correctly reject when a concurrent Phase 6 mutation wins the shared USER-lock race). §R's
+implementation changed what the *losing* side's HTTP status looks like in the opposite
+ordering (Phase 6 can now itself reject, rather than always unconditionally succeeding), so
+those 6 tests were revised in place — see §R.4 for the current, final versions and the 3
+further tests §R added on top.
 
-`AssigneeEligibilityCrossPhaseIT` (6 tests, real PostgreSQL, the same
-`Executors.newFixedThreadPool` + `CountDownLatch` pattern as every other required race in
-this report), driving the **real Phase 6 HTTP endpoints** (not raw repository calls, so the
-genuine canonical-lock-order contention is exercised) against a **real Phase 7 claim/
-reassign**:
+## R. Closing the existing-assignment gap — a narrower, lock-order-safe design
 
-| # | Race | Outcome asserted |
+A follow-up review challenged Q.3's conclusion: does closing items 1-3's second scenario
+*really* require Phase 6 to lock `reports`? Re-examining Q.2's fix shows every path that
+**creates** a new assignment (`ClaimReportUseCase`'s own actor, `ReassignReportUseCase`'s
+target) now goes through the exact same `users` row lock Phase 6 already takes as its own
+first step. That suggested a narrower design: Phase 6 keeps its existing USER-lock-first
+order unchanged, and only *adds a read-only query* after that lock — never a `reports` lock
+at all.
+
+### R.1 The proposed design
+
+1. Phase 6 locks the target USER exactly as it does today (`users.lockByServiceId`).
+2. **After** obtaining that lock, it runs a plain (non-locking) query for the target's
+   current open report assignments and their routing-snapshot service areas.
+3. It never acquires a `reports` row lock.
+4. If the mutation would invalidate one or more of those assignments, it is rejected with a
+   stable `409 USER_HAS_ACTIVE_REPORT_ASSIGNMENTS`.
+5. Otherwise it proceeds exactly as before.
+
+### R.2 Verifying race-safety against PostgreSQL READ COMMITTED, before writing any code
+
+This was checked against the actual code, not assumed:
+
+- `JdbcUserRepository.lockByServiceId`/`lockById` genuinely issue `SELECT ... FOR UPDATE`
+  (confirmed by reading the file) — a real, blocking row lock, not an application-level
+  convention.
+- PostgreSQL's READ COMMITTED isolation (this codebase's default, unchanged) gives **each
+  statement** a fresh snapshot as of that statement's own start — not one snapshot for the
+  whole transaction (that is REPEATABLE READ/SERIALIZABLE). A `FOR UPDATE` acquisition that
+  was *blocked* and then unblocks only does so once the blocking transaction commits or rolls
+  back; the **next** statement in the unblocked transaction therefore sees everything that
+  transaction committed, because it takes its own fresh snapshot at that later point.
+- Every path that could create a **new** open assignment for a given user (`ClaimReportUseCase`
+  for its own actor, `ReassignReportUseCase` for its target — both after the Q.2 fix) acquires
+  that exact same user's `FOR UPDATE` lock before writing the assignment, and holds it for the
+  rest of its transaction. No other code path writes `reports.assigned_user_id` or inserts an
+  open `report_assignments` row.
+
+Walking the two possible orderings for a concurrent (Phase 6 mutation) vs. (claim/reassign
+naming the same user) pair:
+
+- **Phase 6 acquires the USER lock first.** Any concurrent claim/reassign naming that same
+  user blocks at its own `users.lockByServiceId` call — it cannot reach its assignment-write
+  step at all until Phase 6's transaction ends. Phase 6's read-only query therefore sees
+  *no* new assignment forming (there cannot be one — dirty reads are impossible under READ
+  COMMITTED, and no assignment for this user can exist without this exact lock). Phase 6
+  decides correctly, commits or rejects, and releases the lock. The blocked claim/reassign
+  then proceeds and re-validates against Phase 6's *already-committed* result via Q.2's own
+  fresh-read fix — so if Phase 6 just deactivated/promoted/de-scoped the user, the
+  claim/reassign now correctly rejects too. **No false negative.**
+- **Claim/reassign acquires the USER lock first and commits.** Phase 6, having been blocked,
+  now acquires the same lock — which can only happen after that transaction has committed
+  (or rolled back). Phase 6's read-only query is a fresh statement issued *after* that lock
+  acquisition, so per READ COMMITTED's per-statement snapshot rule, it is guaranteed to see
+  the just-committed assignment. Phase 6 correctly rejects. **No false negative.**
+
+The one case this design does **not** serialize is a mutation racing **return/close/
+reassign-away**, none of which ever lock the assignee's own `users` row (they only ever lock
+the `reports` row — ending an assignment, unlike creating one, was never gated behind the
+assignee's own lock, on either side of this review). Here Phase 6's read-only query can see
+either a still-open assignment that is, at that exact moment, being ended by an independent
+transaction, or the already-ended state, depending on ordering — a genuine, irreducible
+race, but a **safe** one: the *worst* outcome is a conservative false-positive `409` (Phase 6
+rejects a mutation that, a moment later, would have been fine) — explicitly accepted as a
+correct outcome for this design, never a false negative, since Phase 6 never mutates the user
+unless its own read found nothing to object to.
+
+**Conclusion: this design is race-safe.** It was implemented exactly as proposed, introducing
+no new lock resource and no lock-order change — Phase 6's canonical order (USER, then
+optionally SERVICE AREA) is completely unchanged; a read-only query was added after the
+existing lock, nothing more.
+
+### R.3 Implementation
+
+- `JdbcReportAssignmentRepository.findOpenAssignmentAreas(userId)` (new): a plain `SELECT`
+  joining `report_assignments` (open episodes only) → `reports` → `report_routing_snapshots`
+  → `service_areas`, returning each open episode's report id, service area id, and whether
+  that area is currently ACTIVE. No lock. Documented in its own KDoc as depending on the
+  caller already holding the target's `users` lock for the race-safety argument above.
+- `AssignmentEligibilityGuard` (new, `reportworkflow.domain`): a small pure function reusing
+  `AreaScopePolicy.canAccessArea` — never duplicating that rule — to decide whether a
+  *hypothetical* post-mutation `AreaActor` would still cover every one of a list of open
+  assignments.
+- `UserHasActiveReportAssignmentsException` / `ErrorCode.USER_HAS_ACTIVE_REPORT_ASSIGNMENTS`
+  (new) → `409 CONFLICT`.
+- Wired into exactly four Phase 6 use cases, each with a small, targeted addition after its
+  existing USER lock and before its own mutation — no other Phase 6 file touched:
+  - **`ChangeUserRoleUseCase`**: only the SERVICE_USER→MODERATOR direction checks "any open
+    assignment at all" (any open assignment blocks it — a MODERATOR can never be an
+    assignee). MODERATOR→SERVICE_USER is never checked: a MODERATOR can never already hold
+    one.
+  - **`DeactivateUserUseCase`**: "any open assignment at all" blocks it, checked only once
+    the existing already-DEACTIVATED idempotency short-circuit has been passed.
+  - **`ServiceAreaRevokeUseCase`**: only when the target currently holds the area being
+    revoked; computes the post-revoke explicit-grant set (global flag unchanged) and rejects
+    if any open assignment's *current routing-snapshot service area* — never
+    `RoutingService`, never current line routing — would no longer be covered.
+  - **`ChangeGlobalAreaAccessUseCase.revoke`** (never `.grant`): only past the existing
+    idempotency short-circuit; computes the post-revoke scope (explicit grants unchanged,
+    global flag false) and rejects on the same basis.
+  - **Never touched**: area grant, global-access grant, reactivation, password reset — none
+    of these can ever narrow scope or reintroduce ineligibility, so none carry the check.
+- Beans wired via `IdentityConfig` (`assignmentEligibilityGuard`), mirroring every other
+  small policy bean in this codebase.
+
+### R.4 Tests
+
+**`UserManagementAssignmentGuardIT`** (9 tests, sequential/non-concurrent, real PostgreSQL) —
+the functional surface of the guard itself:
+
+| # | Case | Result |
 |---|---|---|
-| 1 | self-claim vs. role promotion (SERVICE_USER→MODERATOR) of the same user | exactly one coherent outcome: claim succeeds (assignee genuinely still SERVICE_USER at write time) with the role change applying afterward, **or** claim gets 403 `REPORT_WORKFLOW_FORBIDDEN` and the report stays NEW/unassigned. Role change itself always succeeds (unconditional on report state, per Q.3). |
-| 2 | self-claim vs. deactivation of the same user | claim succeeds, **or** claim gets 403 (row-lock re-validation) or 401 (session already revoked — an even earlier, also-safe rejection layer); report stays NEW/unassigned in the reject case. |
-| 3 | self-claim vs. revocation of the user's only area | claim succeeds, **or** claim gets 404 `REPORT_NOT_FOUND` (scope-hiding, matching every other area-loss case in this report); report stays NEW/unassigned in the reject case. |
-| 4 | reassign vs. role promotion of its own target | reassign succeeds (target genuinely still SERVICE_USER at write time), **or** reassign gets 400 `INVALID_ASSIGNEE` and the original assignment is untouched. |
-| 5 | reassign vs. deactivation of its own target | same shape as #4. |
-| 6 | reassign vs. revocation of its own target's only area | same shape as #4 (extends the original `ReassignReportIT` target-scope test to the real HTTP endpoint rather than a raw repository call). |
+| 1 | SERVICE_USER→MODERATOR with an open assignment | `409`, role unchanged, assignment untouched |
+| 2 | Deactivate with an open assignment | `409`, status remains ACTIVE, no session revoked |
+| 3 | Revoke the only area covering an open assignment | `409`, grant untouched |
+| 4 | Revoke an explicit area grant while global access still covers the assignment | succeeds |
+| 5 | Revoke global access while an explicit area grant still covers the assignment | succeeds |
+| 6 | Revoke global access when it is the only thing covering an assignment | `409` |
+| 7 | Two simultaneous open assignments in two different areas | revoking the area behind one is rejected even though the other (via its own, untouched, area grant) is unaffected; once that one assignment is closed, the same revoke then succeeds — proving every open assignment is genuinely evaluated, not just the first |
+| 8 | Area grant, global-access grant, password reset, reactivation, with an open assignment present throughout | all succeed unconditionally — these operations only ever widen scope or are unrelated to report state, so none carry the check |
+| 9 | MODERATOR→SERVICE_USER demotion | always succeeds — a MODERATOR can never already hold an assignment, so there is structurally nothing to check |
 
-Each test asserts only what Q.2's fix actually guarantees — validity *at the instant of
-assignment* — and deliberately does **not** assert a blanket "the final assignee is never a
-MODERATOR/DEACTIVATED/out-of-scope user", since that stronger claim is exactly Q.3's
-out-of-scope case. (An earlier draft of test #4 asserted the stronger, wrong claim and failed
-non-deterministically depending on which side won the race — corrected during this review,
-which is itself evidence the distinction matters and is now precisely captured rather than
-papered over.) All 6 tests were re-run 4 times in immediate succession and stayed green
-every time, confirming the assertions hold regardless of which side the database schedules
+**`AssigneeEligibilityCrossPhaseIT`** (7 tests, real PostgreSQL, `Executors.newFixedThreadPool`
++ `CountDownLatch`, driving the **real Phase 6 HTTP endpoints**) — now a genuinely clean
+**mutual-exclusion** property, re-derived from R.2's proof: racing exactly one claim/reassign
+against exactly one Phase 6 mutation naming the same user, **exactly one side succeeds, never
+both, never neither**:
+
+| # | Race | Winner | Loser |
+|---|---|---|---|
+| 1 | self-claim vs. role promotion | claim: report IN_PROGRESS, role unchanged | role change: `409 USER_HAS_ACTIVE_REPORT_ASSIGNMENTS` |
+| | | role change: user now MODERATOR | claim: `403 REPORT_WORKFLOW_FORBIDDEN`, report stays NEW |
+| 2 | self-claim vs. deactivation | claim wins → deactivate `409` | deactivate wins → claim `403`/`401`, report stays NEW |
+| 3 | self-claim vs. area revoke (only area) | claim wins → revoke `409` | revoke wins → claim `404`, report stays NEW |
+| 4 | reassign vs. role promotion of its target | reassign wins → role change `409` | role change wins → reassign `400 INVALID_ASSIGNEE`, original assignment untouched |
+| 5 | reassign vs. deactivation of its target | reassign wins → deactivate `409` | deactivate wins → reassign `400`, original assignment untouched |
+| 6 | reassign vs. area revoke of its target's only area | reassign wins → revoke `409` | revoke wins → reassign `400`, original assignment untouched |
+| 7 | **close** vs. deactivation of the current assignee | close **always** succeeds (REPORT-lock-only, never blocked by Phase 6's USER lock) — deactivate then either succeeds (report genuinely already ARCHIVED with no open assignment) or conservatively rejects with `409` (the explicitly-accepted false positive, R.2) — never an invalid state either way |
+
+All 16 tests (9 + 7) were re-run 4 times in immediate succession and stayed green every time,
+confirming every assertion holds regardless of which side PostgreSQL's lock manager schedules
 first.
+
+### R.5 Regression after §R
+
+Full backend: **524/524** (514 before §R, +9 new `UserManagementAssignmentGuardIT` tests, +1
+net-new test in the revised `AssigneeEligibilityCrossPhaseIT` — 6 → 7). All 90 pre-existing
+`usermanagement` tests re-confirmed passing unchanged, despite four of their use cases now
+carrying an extra constructor dependency and an extra check. All 5 CI workflows re-confirmed
+green — see §O's final table.
 
 ## P. Known limitations — not hidden
 
-- **Phase 6 does not reject a mutation against a user who already holds an existing open
-  report assignment** (§Q.3) — a role promotion, deactivation, or area revoke can still
-  leave a report IN_PROGRESS with an assignee who is no longer, at query time, an eligible
-  ACTIVE SERVICE_USER. Closing this cleanly requires Phase 6 to also lock the affected
-  `reports` row(s), which is a material lock-order change either way it could be structured
-  (§Q.3 spells out both options and their respective risk) — deliberately left as an owner
-  decision rather than implemented under this review's own STOP instruction. What Q.2's fix
-  *does* guarantee: no **new** invalid assignment can ever be created by claim/reassign
-  racing a concurrent Phase 6 mutation — the two are now always fully serialized.
+- **A conservative false-positive `409` remains possible** when a Phase 6 mutation
+  (deactivate, role promotion, area/global revoke) races a `return`/`close`/reassign-away
+  that is *ending* the exact assignment Phase 6 is checking (§R.2) — because ending an
+  assignment, unlike creating one, was never gated behind the assignee's own `users` lock on
+  either side of this review. The mutation can be safely retried immediately; it never
+  produces an invalid state, only an occasionally-unnecessary rejection. This is the one
+  residual, deliberately-accepted trade-off of §R's design, not a gap in the invariant
+  itself.
 - **No Service Android UI.** Phase 7 is backend-only by design; the NEW/IN_PROGRESS/Archive
   queues, claim/return/close/reassign actions and detail view exist only as HTTP endpoints.
   Building the Service app's screens against them is explicitly Phase 8+ work.
@@ -515,8 +660,11 @@ first.
 ---
 
 **Phase 7 is complete per its own Definition of Done, including the post-implementation
-cross-phase invariant review vs. Phase 6 (§Q). One item from that review (§Q.3) was
-deliberately left unimplemented and is reported as a known limitation, per the review's own
-explicit STOP-on-material-lock-order-change instruction, rather than risking a lock-order
-inversion against Phase 7's own canonical order. No PR was opened. Phase 8 was not
-started.**
+cross-phase invariant review vs. Phase 6 (§Q) and its follow-up closure (§R). §Q's first pass
+found closing the existing-assignment gap required a material lock-order change and stopped
+there; §R re-examined that conclusion, found a narrower, lock-order-safe design, verified its
+race-safety against PostgreSQL's actual READ COMMITTED semantics before writing any code, and
+implemented it. The "preferred product invariant" — a user-management mutation that would
+invalidate an existing open report assignment is rejected, never silently applied — now holds
+in full, modulo one explicitly-accepted, safe, retry-able conservative-conflict edge case
+(§P). No PR was opened. Phase 8 was not started.**

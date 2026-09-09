@@ -431,3 +431,30 @@ immediate effect), roles (SUPER_ADMIN-only, no SUPER_ADMIN HTTP path) and concur
 (all three named races plus the deactivation/login race) are all implemented and verified —
 against real PostgreSQL, and once against a real running instance driven by hand. **Phase 7
 has not been started and is not addressed by this report.**
+
+---
+
+## Addendum (post-Phase-7): a cross-phase invariant check on four mutations
+
+After Phase 7 introduced report assignments (`reports.assigned_user_id`), a cross-phase
+review found that four of this module's use cases — `ChangeUserRoleUseCase` (only the
+SERVICE_USER→MODERATOR direction), `DeactivateUserUseCase`, `ServiceAreaRevokeUseCase`, and
+`ChangeGlobalAreaAccessUseCase.revoke` (never `.grant`) — could leave a Phase 7 report
+assignment invalid: a promoted-to-MODERATOR, deactivated, or scope-narrowed user could remain
+a report's current assignee.
+
+Each of those four now performs one additional **read-only** check, immediately after the
+same target-USER row lock (`users.lockByServiceId`) this module has always acquired first —
+no lock order changed, and no other Phase 6 use case (area/global-access grant, reactivation,
+password reset, MODERATOR→SERVICE_USER demotion, creation, listing) was touched. If the
+mutation would invalidate one or more of the target's current open report assignments, it is
+now rejected with `409 USER_HAS_ACTIVE_REPORT_ASSIGNMENTS` instead of silently applying.
+
+This module's own canonical lock order (target USER, then optionally SERVICE AREA) is
+**unchanged**. The new check depends on `report_assignments`/`reports` state that only Phase
+7 owns; the query and the small policy class it uses live under
+`hu.orszembejelento.backend.reportworkflow` and are called from here, not duplicated. Full
+design, the race-safety proof against PostgreSQL READ COMMITTED semantics, and the exact
+tests are in `docs/PHASE_7_ENGINEERING_REPORT.md` §R — this module's own 90 pre-existing
+tests were re-run and confirmed unchanged and green after the four use cases gained an extra
+constructor dependency and this extra check.
