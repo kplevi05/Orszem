@@ -2,7 +2,8 @@
 
 **Branch:** `feature/v2-user-management` (not merged — no PR opened, per the brief)
 **Base:** `main` @ `c7509f6` (PR #8, Phase 5 merged)
-**Status:** implementation and full test battery complete; no Phase 7.
+**Status:** implementation and full test battery complete, including the targeted
+pre-merge fix described in §B.1; no Phase 7.
 
 ---
 
@@ -21,7 +22,9 @@ Commits, in order:
 1. `a09c1f6` — feat(backend): Phase 6 - user management backend
 2. `b0d264c` — test(backend): Phase 6 user management test battery
 3. `004acec` — docs: mark A7/A8 resolved (Phase 5 visual approval + Android verification — noticed while doing the required §0 inspection pass, unrelated to Phase 6's own scope)
-4. **this commit** — docs: Phase 6 engineering report
+4. `e107118` — docs: Phase 6 engineering report
+5. `2c2468b` — fix(backend): service-ID collision no longer aborts the transaction — the targeted pre-merge fix (§B.1), closing the `insertIfServiceIdFree` issue this report's first version had flagged as a known limitation
+6. **this commit** — docs: Phase 6 engineering report update (§B.1, §K, §N)
 
 ## B. Schema
 
@@ -38,6 +41,81 @@ Phase 6 needed:
 - `users.global_area_access` already existed, added by V002 for exactly this purpose.
 
 V001/V002/V003 are untouched. No migration file was added, edited or renumbered.
+
+## B.1 Pre-merge correctness fix — service-ID collision no longer aborts the transaction
+
+The first version of this report flagged, as a known limitation, that
+`JdbcUserRepository.insertIfServiceIdFree` still caught `DuplicateKeyException` as its
+collision-handling mechanism — the same unsafe pattern the Phase 6 concurrency work had
+just found and fixed in `JdbcServiceAreaRepository.grantAreaIfAbsent` (§K). Because
+service-ID collision-and-retry is part of the Phase 6 creation contract (`CreateUserUseCase`
+calls this same repository method from inside its own bounded retry loop, exactly as the
+maintenance CLI's `CreateSuperAdminUseCase` already did), this was reclassified from
+"pre-existing, low-probability, out of scope" to "directly relevant to Phase 6" and fixed
+before merge, per explicit instruction.
+
+**The fix**, entirely mechanical and confined to one method: `insertIfServiceIdFree` now
+uses `INSERT INTO users (...) VALUES (...) ON CONFLICT (service_id) DO NOTHING`, deriving
+success from `.update() == 1` instead of catching the constraint-violation exception.
+PostgreSQL aborts the *entire enclosing transaction* the instant any statement raises an
+error; catching the resulting `DuplicateKeyException` in Kotlin does not undo that abort —
+every later statement in the same `@Transactional` method (here, the very next retry
+attempt with a fresh candidate, still inside the same transaction) would then fail with
+"current transaction is aborted", exactly as reproduced below. A conflict clause never
+raises an error in the first place, so a normal collision — an expected, routine event
+given a random 6-digit ID space, not a rare edge case — never touches PostgreSQL's abort
+state at all.
+
+**Everything the fix was required to preserve, preserved exactly:**
+- `SZ-XXXXXX` format — unchanged; the generated candidate string is identical to before.
+- `SecureRandom` generation — unchanged; `ServiceIdGenerator` itself was not touched.
+- Retry behaviour — unchanged; `CreateSuperAdminUseCase`/`CreateUserUseCase` still call
+  `insertIfServiceIdFree` in their own `repeat(10) { ... }` loop and still interpret a
+  `false` return as "try the next candidate" — the method's public contract (boolean
+  success/failure, no exception for an ordinary collision) is bit-for-bit the same; only
+  the SQL statement inside it changed.
+- The database's unique index (`ux_users_service_id`) remains the sole authority on
+  collisions — `ON CONFLICT (service_id)` targets that exact index; nothing pre-checks
+  existence in application code.
+- Transaction/audit semantics — unchanged; the audit row for a successful creation is still
+  written in the same transaction, still names only the winning candidate, and (proven
+  below) never names a discarded, collided-with candidate.
+- SUPER_ADMIN maintenance behaviour — `CreateSuperAdminUseCase` shares this exact repository
+  method unmodified, so it inherits the fix automatically; verified directly (§B.1 tests
+  below), not merely assumed from code inspection.
+
+**Proof the fix is real, not cosmetic**: before restoring the fix, the working tree was
+reverted to the prior catch-`DuplicateKeyException` version and the new tests below were
+run against it — all four failed, three with the exact `UncategorizedSQLException: current
+transaction is aborted` this fix exists to prevent, the fourth (the exhausted-retry-budget
+test) with a different, unrelated failure shape confirming it genuinely exercises the same
+code path. The fix was then restored and all four passed, confirmed with a forced
+(non-cached) re-run.
+
+**New tests** (`hu.orszembejelento.backend.identity.ServiceIdCollisionIT`, real PostgreSQL,
+one shared `ServiceIdGenerator` bean override so both real production call sites are
+exercised rather than a reimplementation of either):
+1. `SUPER_ADMIN maintenance creation survives a forced first-candidate collision` — a
+   scripted `SecureRandom` forces `CreateSuperAdminUseCase.create()`'s first candidate to
+   collide with a real pre-existing user, then supplies a fresh one. The real,
+   unmodified, `@Transactional` production method (not a reimplementation) completes
+   successfully, produces exactly one new user under the second candidate's service ID,
+   and the audit row for `SUPER_ADMIN_CREATED` names only that second candidate — never the
+   discarded, collided-with first one.
+2. `Phase 6 user creation survives a forced first-candidate collision` — the identical
+   scenario through `CreateUserUseCase.create()`, proving the shared repository fix helps
+   the Phase 6 caller too, not only the maintenance CLI's.
+3. `creation eventually succeeds after several consecutive forced collisions` — three
+   consecutive forced collisions with the same taken ID, then a fresh one, still inside the
+   production retry budget.
+4. `exhausting the bounded retry budget fails cleanly with no partial state` — ten
+   consecutive forced collisions (matching, not exceeding, the production
+   `SERVICE_ID_ATTEMPTS` budget) end in the same bounded-failure `IllegalStateException`
+   the production code already raised before this fix, and — because the whole call is
+   `@Transactional` — the failure rolls back cleanly: zero new user rows, zero new audit
+   rows, the pre-existing fixture account completely untouched.
+
+All four pass against real PostgreSQL via Testcontainers.
 
 ## C. API
 
@@ -221,8 +299,9 @@ SERVICE_USER case from brief §48.
 ```
 cd backend && ./gradlew build
 ```
-**422/422 tests, 0 failures, 0 skipped** (332 pre-existing Phase 0-5 tests, unchanged and
-still green, + 90 new Phase 6 tests). Lint/`check`/`build` all succeed.
+**426/426 tests, 0 failures, 0 skipped** (332 pre-existing Phase 0-5 tests, unchanged and
+still green + 90 Phase 6 user-management tests + 4 new `ServiceIdCollisionIT` tests from
+the §B.1 pre-merge fix). Lint/`check`/`build` all succeed.
 
 **Live, real-instance smoke test** (beyond the automated suite): a real PostgreSQL 16
 container, the real backend via `bootRun`, a real SUPER_ADMIN provisioned through the
@@ -260,9 +339,14 @@ being issued in a loop:
   contains both, neither is lost.
 - **C. Six concurrent duplicate grants of the same area**: all six calls return `200`
   (idempotent, not an error), and exactly one `user_service_areas` row results. This is the
-  race that surfaced the `ON CONFLICT DO NOTHING` fix described in §H/§L — the original
-  catch-`DuplicateKeyException` version left PostgreSQL's transaction aborted after the
-  losing caller's constraint violation, so its own follow-up read then failed too.
+  race that first surfaced the `ON CONFLICT DO NOTHING` fix described in §H/§L for
+  `JdbcServiceAreaRepository.grantAreaIfAbsent` — the original catch-`DuplicateKeyException`
+  version left PostgreSQL's transaction aborted after the losing caller's constraint
+  violation, so its own follow-up read then failed too. The same fix was subsequently
+  applied to the sibling `JdbcUserRepository.insertIfServiceIdFree` method, once §N's
+  original "known limitation" note made clear it shared the identical pattern and was
+  directly relevant to the Phase 6 creation contract — see §B.1 for that fix and its own
+  dedicated, deterministic (not merely probabilistic-concurrency-based) test coverage.
 - **D. Deactivation vs. login**: a deactivation raced against three concurrent login
   attempts on the same account. Once every operation has committed, `status = DEACTIVATED`
   and `activeSessionCount = 0` unconditionally, regardless of which operations happened to
@@ -299,14 +383,18 @@ being issued in a loop:
 - ✅ Public clients unaffected — Android and Web trees are byte-identical to Phase 5's
   merged state; both full regressions re-run and green (§M).
 - ✅ Service auth unaffected — all 332 pre-existing backend tests, Phase 2's auth flows
-  included, still pass unmodified; `JdbcUserRepository`/`JdbcServiceAreaRepository` gained
-  new methods but no existing method's behaviour changed.
+  included, still pass unmodified. `JdbcUserRepository`/`JdbcServiceAreaRepository` gained
+  new methods, and one existing method's *implementation* changed
+  (`insertIfServiceIdFree`, §B.1) — its public contract (boolean success/failure, no
+  exception for an ordinary collision, same generated ID format, same retry interaction)
+  is unchanged, and `CreateSuperAdminUseCase`'s own existing tests
+  (`SuperAdminMaintenanceIT`) still pass unmodified against the new implementation.
 
 ## M. Regression / CI
 
 | Area | Command | Result |
 |---|---|---|
-| Backend | `cd backend && ./gradlew build` | **422/422 tests, 0 failures** |
+| Backend | `cd backend && ./gradlew build` | **426/426 tests, 0 failures** |
 | Android | `cd android && ./gradlew build` | build+lint+36 JVM tests green, unchanged (all tasks `UP-TO-DATE`) |
 | Web | `cd web/public-web && npm ci && npm run typecheck && npm test -- --run && npm run build` | 55/55 tests, typecheck clean, build clean, unchanged |
 | Deploy-config / Caddy | validate/fmt/routing/redaction/CSP + secret scan, reproduced in a container mirroring the CI job (Caddy 2.11.4) | all green, unchanged |
@@ -318,18 +406,12 @@ closing report to the owner for the exact SHA and workflow run links.
 
 ## N. Known limitations
 
-- **Service ID collision-retry-within-one-transaction is untested and shares the same class
-  of bug this phase found and fixed elsewhere.** `CreateUserUseCase` reuses Phase 2's
-  `JdbcUserRepository.insertIfServiceIdFree`, which still catches `DuplicateKeyException`
-  rather than using `ON CONFLICT DO NOTHING`. A genuine service-ID collision *within a
-  single creation call's own retry loop* (not across separate concurrent requests, which
-  are separate transactions and unaffected) would abort that call's transaction the same
-  way the area-grant bug did, and the retry would then fail with "current transaction
-  aborted" instead of trying a fresh candidate. This is pre-existing Phase 2 code, left
-  unmodified deliberately (§46-adjacent conservatism about touching the maintenance/
-  SUPER_ADMIN-adjacent identity internals without being asked to), and the collision
-  probability is vanishingly small (one in ~10^6 per pair, needed twice in one call), but
-  it is a real, now-understood latent risk worth the owner's awareness.
+- ~~Service ID collision-retry-within-one-transaction shares the same class of bug this
+  phase found and fixed elsewhere.~~ **Resolved — see §B.1.** `insertIfServiceIdFree` now
+  uses `ON CONFLICT (service_id) DO NOTHING`, deterministically tested via
+  `ServiceIdCollisionIT` against both real call sites (the maintenance CLI's
+  `CreateSuperAdminUseCase` and Phase 6's `CreateUserUseCase`), including the
+  exhausted-bounded-retry failure path leaving no partial state.
 - **No full-text or fuzzy service-ID search** — `query` is a plain `ILIKE '%...%'`
   substring match, per §26's explicit "no full-text infrastructure" instruction.
 - **`GET /areas` and the moderator-scope list filter both re-derive the actor's own active
