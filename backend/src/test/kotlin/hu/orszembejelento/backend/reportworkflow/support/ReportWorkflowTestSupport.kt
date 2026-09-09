@@ -199,6 +199,34 @@ abstract class ReportWorkflowTestSupport : PublicReportTestSupport() {
 
     protected fun bearerFor(user: User): String = loginSuccessfully(user.serviceId).accessToken
 
+    // --------------------------------------------------------- Phase 6 HTTP (cross-phase review)
+
+    /** A logged-in SUPER_ADMIN bearer token, for driving the real Phase 6 user-management endpoints. */
+    protected fun adminBearer(): String {
+        val admin = createSuperAdmin.create()
+        completeInitialChange(admin.serviceId, admin.temporaryCredential)
+        return loginSuccessfully(admin.serviceId).accessToken
+    }
+
+    /** Completes the forced initial password change so a fixture user/admin can log in normally - mirrors [hu.orszembejelento.backend.support.AbstractUserManagementIntegrationTest]. */
+    protected fun completeInitialChange(serviceId: hu.orszembejelento.backend.identity.domain.ServiceId, temporaryCredential: String, newPassword: String = STRONG_PASSWORD): java.net.http.HttpResponse<String> =
+        post(
+            "/api/v1/service/auth/complete-password-change",
+            """{"serviceId":"${serviceId.value}","temporaryPassword":${objectMapper.writeValueAsString(temporaryCredential)},"newPassword":${objectMapper.writeValueAsString(newPassword)}}""",
+        )
+
+    /** Drives the real `POST .../role` endpoint - takes the canonical Phase 6 lock (target USER), unlike a raw repository call. */
+    protected fun httpChangeRole(adminBearer: String, target: User, role: String): java.net.http.HttpResponse<String> =
+        post("/api/v1/service/user-management/users/${target.serviceId.value}/role", """{"role":"$role"}""", adminBearer)
+
+    /** Drives the real `POST .../deactivate` endpoint. */
+    protected fun httpDeactivate(adminBearer: String, target: User): java.net.http.HttpResponse<String> =
+        post("/api/v1/service/user-management/users/${target.serviceId.value}/deactivate", "", adminBearer)
+
+    /** Drives the real `POST .../areas/{areaId}/revoke` endpoint. */
+    protected fun httpRevokeArea(adminBearer: String, target: User, areaId: UUID): java.net.http.HttpResponse<String> =
+        post("/api/v1/service/user-management/users/${target.serviceId.value}/areas/$areaId/revoke", "", adminBearer)
+
     // ------------------------------------------------------------------------- concurrency
 
     /**
