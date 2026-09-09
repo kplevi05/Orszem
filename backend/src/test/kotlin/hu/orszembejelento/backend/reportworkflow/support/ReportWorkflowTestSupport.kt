@@ -227,6 +227,26 @@ abstract class ReportWorkflowTestSupport : PublicReportTestSupport() {
     protected fun httpRevokeArea(adminBearer: String, target: User, areaId: UUID): java.net.http.HttpResponse<String> =
         post("/api/v1/service/user-management/users/${target.serviceId.value}/areas/$areaId/revoke", "", adminBearer)
 
+    /** Drives the real `POST .../areas/{areaId}/grant` endpoint. */
+    protected fun httpGrantArea(adminBearer: String, target: User, areaId: UUID): java.net.http.HttpResponse<String> =
+        post("/api/v1/service/user-management/users/${target.serviceId.value}/areas/$areaId/grant", "", adminBearer)
+
+    /** Drives the real `POST .../global-access/revoke` endpoint. */
+    protected fun httpRevokeGlobalAccess(adminBearer: String, target: User): java.net.http.HttpResponse<String> =
+        post("/api/v1/service/user-management/users/${target.serviceId.value}/global-access/revoke", "", adminBearer)
+
+    /** Drives the real `POST .../global-access/grant` endpoint. */
+    protected fun httpGrantGlobalAccess(adminBearer: String, target: User): java.net.http.HttpResponse<String> =
+        post("/api/v1/service/user-management/users/${target.serviceId.value}/global-access/grant", "", adminBearer)
+
+    /** Drives the real `POST .../reactivate` endpoint. */
+    protected fun httpReactivate(adminBearer: String, target: User): java.net.http.HttpResponse<String> =
+        post("/api/v1/service/user-management/users/${target.serviceId.value}/reactivate", "", adminBearer)
+
+    /** Drives the real `POST .../password-reset` endpoint. */
+    protected fun httpResetPassword(adminBearer: String, target: User): java.net.http.HttpResponse<String> =
+        post("/api/v1/service/user-management/users/${target.serviceId.value}/password-reset", "", adminBearer)
+
     // ------------------------------------------------------------------------- concurrency
 
     /**

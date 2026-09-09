@@ -8,21 +8,27 @@ import org.springframework.context.annotation.Import
 /**
  * Cross-phase invariant review: Phase 7 defines the current report assignee as "an eligible
  * ACTIVE SERVICE_USER". This file proves that a *concurrent* Phase 6 user-management
- * mutation (role change, deactivation, area revoke) racing a Phase 7 mutation that would
- * make that same user the assignee (claim, reassign) can never result in an invalid
- * assignment — because both sides now genuinely contend for the same `users` row lock
- * (`ClaimReportUseCase`'s and `ReassignReportUseCase`'s canonical lock order step 2), so the
- * two are always fully serialized against each other rather than merely raced.
+ * mutation (role change, deactivation, area/global-access revoke) racing a Phase 7 mutation
+ * that would make that same user the assignee (claim, reassign) can never result in an
+ * invalid assignment — because both sides now genuinely contend for the same `users` row
+ * lock (`ClaimReportUseCase`'s and `ReassignReportUseCase`'s canonical lock order step 2,
+ * and the Phase 6 mutations' own existing step 1), so the two are always fully serialized
+ * against each other rather than merely raced.
  *
- * **Scope note, deliberate:** this file covers only the "creating a NEW open assignment"
- * side of the cross-phase review (items covered by [ClaimReportUseCase]/
- * [hu.orszembejelento.backend.reportworkflow.application.ReassignReportUseCase]'s own fresh
- * re-validation). It does **not** attempt "Phase 6 rejects a mutation against a user who
- * already holds an EXISTING open assignment" — that would require Phase 6 to also lock the
- * affected `reports` row(s), which is the reverse of the REPORT-then-USER order Phase 7
- * already established and was intentionally left un-implemented; see
- * `docs/PHASE_7_ENGINEERING_REPORT.md` §Q for the full lock-graph analysis and the reasoning
- * for stopping there rather than risking a lock-order inversion.
+ * **Mutual exclusion, not just "no invalid state":** since the post-review Phase 6 addendum
+ * (`docs/PHASE_7_ENGINEERING_REPORT.md` §R) makes role-promotion/deactivation/scope-revoke
+ * *themselves* reject when the target already holds an open assignment, racing exactly one
+ * of these against exactly one claim/reassign on the same user now has a genuinely clean
+ * invariant: **exactly one side succeeds, never both, never neither.** Whichever wins the
+ * `users` row lock first commits normally; the loser, re-reading fresh state after being
+ * unblocked, always finds a reason to reject. This file's tests assert that mutual exclusion
+ * directly rather than only "no invalid state survives".
+ *
+ * The last test (§11 of the review) covers the complementary, deliberately-asymmetric case:
+ * return/close/reassign-away end an assignment through the REPORT lock alone, never the
+ * assignee's own `users` row lock, so they can race a Phase 6 mutation without either side
+ * blocking the other. The review explicitly accepts a conservative false-positive 409 from
+ * Phase 6 in that case; what must never happen is an unsafe false negative.
  */
 @Import(AbstractAuthIntegrationTest.Containers::class)
 class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
@@ -30,7 +36,7 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
     // ---------------------------------------------------------- 1. claim vs role promotion
 
     @Test
-    fun `a self-claim racing a role promotion of the same user never leaves a MODERATOR as the current assignee`() {
+    fun `a self-claim racing a role promotion of the same user - exactly one side succeeds`() {
         val area = givenRoutedArea()
         val user = givenServiceUser()
         grantArea(user.id, area.areaId)
@@ -45,35 +51,34 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
 
         val claimResult = results[0]
         val roleChangeResult = results[1]
-        check(roleChangeResult.statusCode() == 200) { "the role change itself is unconditional on report state and must always succeed: ${roleChangeResult.body()}" }
+        val succeeded = listOf(claimResult, roleChangeResult).count { it.statusCode() == 200 }
+        check(succeeded == 1) { "expected exactly one winner, got claim=${claimResult.statusCode()} roleChange=${roleChangeResult.statusCode()}" }
 
         val row = reportRow(report.publicId)
+        val finalRole = jdbc.sql("SELECT role FROM users WHERE id = :id").param("id", user.id).query(String::class.java).single()
+
         if (claimResult.statusCode() == 200) {
-            // Claim's own lock-acquisition ran (and committed) before the role change's -
-            // the actor was genuinely still SERVICE_USER at the exact moment of assignment.
+            // Claim won the user-lock race: the actor was genuinely still SERVICE_USER at
+            // the exact moment of assignment. The role change, unblocked afterward, now
+            // finds the fresh open assignment and correctly rejects it instead of silently
+            // orphaning it (§R).
             check(row.status == "IN_PROGRESS" && row.assignedUserId == user.id)
+            check(roleChangeResult.statusCode() == 409) { "expected USER_HAS_ACTIVE_REPORT_ASSIGNMENTS once the assignment was created first, got ${roleChangeResult.statusCode()}: ${roleChangeResult.body()}" }
+            check(errorCode(roleChangeResult) == "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS")
+            check(finalRole == "SERVICE_USER") { "the rejected role change must not have partially applied" }
         } else {
-            // The role change committed first: claim's fresh re-validation (locked, post
-            // report-lock) correctly saw the new MODERATOR role and rejected - never creating
-            // an assignment for a non-SERVICE_USER.
+            check(roleChangeResult.statusCode() == 200) { roleChangeResult.body() }
+            check(finalRole == "MODERATOR")
             check(claimResult.statusCode() == 403) { "expected REPORT_WORKFLOW_FORBIDDEN once promoted before the claim's own lock, got ${claimResult.statusCode()}: ${claimResult.body()}" }
             check(errorCode(claimResult) == "REPORT_WORKFLOW_FORBIDDEN")
             check(row.status == "NEW" && row.assignedUserId == null)
         }
-        // No blanket "the final assignee is never a MODERATOR" check here, deliberately: if
-        // claim won the lock race, the assignment was genuinely valid at the instant it was
-        // written (fresh-checked inside the transaction), and the role change then applies
-        // to that user afterward exactly as it would to any other SERVICE_USER - Phase 6
-        // mutating an *already*-assigned user is the explicitly out-of-scope "items 1-3"
-        // case (see this file's class KDoc and the engineering report's lock-graph note),
-        // not a violation of what this test actually proves: no assignment is ever *created*
-        // for an ineligible user.
     }
 
     // -------------------------------------------------------------- 2. claim vs deactivation
 
     @Test
-    fun `a self-claim racing a deactivation of the same user never leaves a DEACTIVATED assignee`() {
+    fun `a self-claim racing a deactivation of the same user - exactly one side succeeds`() {
         val area = givenRoutedArea()
         val user = givenServiceUser()
         grantArea(user.id, area.areaId)
@@ -88,12 +93,18 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
 
         val claimResult = results[0]
         val deactivateResult = results[1]
-        check(deactivateResult.statusCode() == 200) { "deactivation must always succeed regardless of ordering: ${deactivateResult.body()}" }
 
         val row = reportRow(report.publicId)
+        val finalStatus = jdbc.sql("SELECT status FROM users WHERE id = :id").param("id", user.id).query(String::class.java).single()
+
         if (claimResult.statusCode() == 200) {
             check(row.status == "IN_PROGRESS" && row.assignedUserId == user.id)
+            check(deactivateResult.statusCode() == 409) { "expected USER_HAS_ACTIVE_REPORT_ASSIGNMENTS once the assignment was created first, got ${deactivateResult.statusCode()}: ${deactivateResult.body()}" }
+            check(errorCode(deactivateResult) == "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS")
+            check(finalStatus == "ACTIVE")
         } else {
+            check(deactivateResult.statusCode() == 200) { deactivateResult.body() }
+            check(finalStatus == "DEACTIVATED")
             // Either the row-lock re-validation rejected it (403 - status no longer ACTIVE),
             // or deactivation's session revocation won an even earlier race and the request
             // never reached the transaction at all (401) - both are safe, correct outcomes.
@@ -102,15 +113,12 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
             }
             check(row.status == "NEW" && row.assignedUserId == null)
         }
-        // As above: no blanket post-hoc status check - if claim won, the assignment was
-        // valid when written, and the (out-of-scope) case of Phase 6 deactivating an
-        // already-assigned user afterward is not what this test proves.
     }
 
     // ----------------------------------------------------------------- 3. claim vs area revoke
 
     @Test
-    fun `a self-claim racing the revocation of the user's only area never leaves an assignee without area authority`() {
+    fun `a self-claim racing the revocation of the user's only area - exactly one side succeeds`() {
         val area = givenRoutedArea()
         val user = givenServiceUser()
         grantArea(user.id, area.areaId)
@@ -125,12 +133,18 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
 
         val claimResult = results[0]
         val revokeResult = results[1]
-        check(revokeResult.statusCode() == 200) { "SUPER_ADMIN revoking the user's only area must always succeed (no last-area rule applies to SUPER_ADMIN): ${revokeResult.body()}" }
 
         val row = reportRow(report.publicId)
+        val stillGranted = serviceAreas.assignedAreaIds(user.id).contains(area.areaId)
+
         if (claimResult.statusCode() == 200) {
             check(row.status == "IN_PROGRESS" && row.assignedUserId == user.id)
+            check(revokeResult.statusCode() == 409) { "expected USER_HAS_ACTIVE_REPORT_ASSIGNMENTS once the assignment was created first, got ${revokeResult.statusCode()}: ${revokeResult.body()}" }
+            check(errorCode(revokeResult) == "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS")
+            check(stillGranted) { "the rejected revoke must not have partially applied" }
         } else {
+            check(revokeResult.statusCode() == 200) { revokeResult.body() }
+            check(!stillGranted)
             check(claimResult.statusCode() == 404) { "area loss is scope-hiding, like everywhere else - expected REPORT_NOT_FOUND, got ${claimResult.statusCode()}: ${claimResult.body()}" }
             check(errorCode(claimResult) == "REPORT_NOT_FOUND")
             check(row.status == "NEW" && row.assignedUserId == null)
@@ -140,7 +154,7 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
     // -------------------------------------------------------- 4. reassign vs role promotion
 
     @Test
-    fun `a reassignment racing a role promotion of its own target never leaves a MODERATOR as the current assignee`() {
+    fun `a reassignment racing a role promotion of its own target - exactly one side succeeds`() {
         val area = givenRoutedArea()
         val mod = givenTerritorialModerator()
         grantArea(mod.id, area.areaId)
@@ -160,26 +174,28 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
 
         val reassignResult = results[0]
         val roleChangeResult = results[1]
-        check(roleChangeResult.statusCode() == 200) { roleChangeResult.body() }
 
         val row = reportRow(report.publicId)
+        val finalRole = jdbc.sql("SELECT role FROM users WHERE id = :id").param("id", target.id).query(String::class.java).single()
+
         if (reassignResult.statusCode() == 200) {
             check(row.assignedUserId == target.id)
+            check(roleChangeResult.statusCode() == 409) { "expected USER_HAS_ACTIVE_REPORT_ASSIGNMENTS once reassignment committed first, got ${roleChangeResult.statusCode()}: ${roleChangeResult.body()}" }
+            check(errorCode(roleChangeResult) == "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS")
+            check(finalRole == "SERVICE_USER")
         } else {
+            check(roleChangeResult.statusCode() == 200) { roleChangeResult.body() }
+            check(finalRole == "MODERATOR")
             check(reassignResult.statusCode() == 400) { "expected INVALID_ASSIGNEE once promoted before reassignment's own target lock, got ${reassignResult.statusCode()}: ${reassignResult.body()}" }
             check(errorCode(reassignResult) == "INVALID_ASSIGNEE")
             check(row.assignedUserId == original.id) { "the original assignment must be untouched when reassignment correctly rejects" }
         }
-        // No blanket post-hoc role check: if reassignment won the target-lock race, `target`
-        // was genuinely SERVICE_USER at the exact moment it became the assignee - the role
-        // change then applying to them afterward (now the current assignee) is the
-        // explicitly out-of-scope "items 1-3" case, not something this test claims to cover.
     }
 
     // -------------------------------------------------------------- 5. reassign vs deactivation
 
     @Test
-    fun `a reassignment racing a deactivation of its own target never leaves a DEACTIVATED assignee`() {
+    fun `a reassignment racing a deactivation of its own target - exactly one side succeeds`() {
         val area = givenRoutedArea()
         val mod = givenTerritorialModerator()
         grantArea(mod.id, area.areaId)
@@ -199,23 +215,28 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
 
         val reassignResult = results[0]
         val deactivateResult = results[1]
-        check(deactivateResult.statusCode() == 200) { deactivateResult.body() }
 
         val row = reportRow(report.publicId)
+        val finalStatus = jdbc.sql("SELECT status FROM users WHERE id = :id").param("id", target.id).query(String::class.java).single()
+
         if (reassignResult.statusCode() == 200) {
             check(row.assignedUserId == target.id)
+            check(deactivateResult.statusCode() == 409) { "expected USER_HAS_ACTIVE_REPORT_ASSIGNMENTS once reassignment committed first, got ${deactivateResult.statusCode()}: ${deactivateResult.body()}" }
+            check(errorCode(deactivateResult) == "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS")
+            check(finalStatus == "ACTIVE")
         } else {
+            check(deactivateResult.statusCode() == 200) { deactivateResult.body() }
+            check(finalStatus == "DEACTIVATED")
             check(reassignResult.statusCode() == 400) { "expected INVALID_ASSIGNEE once deactivated before reassignment's own target lock, got ${reassignResult.statusCode()}: ${reassignResult.body()}" }
             check(errorCode(reassignResult) == "INVALID_ASSIGNEE")
             check(row.assignedUserId == original.id)
         }
-        // No blanket post-hoc status check, for the same reason as above.
     }
 
-    // ------------------------------------------------------------------ 6. reassign vs area revoke (real HTTP)
+    // ------------------------------------------------------------------ 6. reassign vs area revoke
 
     @Test
-    fun `a reassignment racing the revocation of its own target's only area never leaves an assignee without area authority`() {
+    fun `a reassignment racing the revocation of its own target's only area - exactly one side succeeds`() {
         val area = givenRoutedArea()
         val mod = givenTerritorialModerator()
         grantArea(mod.id, area.areaId)
@@ -235,15 +256,62 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
 
         val reassignResult = results[0]
         val revokeResult = results[1]
-        check(revokeResult.statusCode() == 200) { revokeResult.body() }
 
         val row = reportRow(report.publicId)
+        val stillGranted = serviceAreas.assignedAreaIds(target.id).contains(area.areaId)
+
         if (reassignResult.statusCode() == 200) {
             check(row.assignedUserId == target.id)
+            check(revokeResult.statusCode() == 409) { "expected USER_HAS_ACTIVE_REPORT_ASSIGNMENTS once reassignment committed first, got ${revokeResult.statusCode()}: ${revokeResult.body()}" }
+            check(errorCode(revokeResult) == "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS")
+            check(stillGranted)
         } else {
+            check(revokeResult.statusCode() == 200) { revokeResult.body() }
+            check(!stillGranted)
             check(reassignResult.statusCode() == 400) { "expected INVALID_ASSIGNEE once the target's area was revoked before reassignment's own target lock, got ${reassignResult.statusCode()}: ${reassignResult.body()}" }
             check(errorCode(reassignResult) == "INVALID_ASSIGNEE")
             check(row.assignedUserId == original.id)
+        }
+    }
+
+    // ------------------------------------------------------- 7. return/close vs blocked Phase 6
+
+    @Test
+    fun `closing a report races a deactivation of its assignee - close always succeeds, deactivate is conservatively safe either way`() {
+        val area = givenRoutedArea()
+        val user = givenServiceUser()
+        grantArea(user.id, area.areaId)
+        val report = givenRoutedReport(area)
+        check(claim(bearerFor(user), report.publicId, 0).statusCode() == 200)
+
+        val userBearer = bearerFor(user)
+        val admin = adminBearer()
+
+        val results = runConcurrently(2) { index ->
+            if (index == 0) close(userBearer, report.publicId, 1) else httpDeactivate(admin, user)
+        }.map { it.getOrThrow() }
+
+        val closeResult = results[0]
+        val deactivateResult = results[1]
+
+        // Close only ever locks the REPORT - never the assignee's own `users` row - so it is
+        // never blocked by a concurrent Phase 6 mutation holding that lock, and must always
+        // succeed regardless of ordering.
+        check(closeResult.statusCode() == 200) { "close never depends on the assignee's own user lock and must always succeed: ${closeResult.body()}" }
+        val row = reportRow(report.publicId)
+        check(row.status == "ARCHIVED" && row.assignedUserId == null)
+
+        val finalStatus = jdbc.sql("SELECT status FROM users WHERE id = :id").param("id", user.id).query(String::class.java).single()
+        if (deactivateResult.statusCode() == 200) {
+            check(finalStatus == "DEACTIVATED")
+            check(openAssignmentCount(report.publicId) == 0)
+        } else {
+            // The explicitly-accepted conservative false positive: Phase 6 read the
+            // about-to-end assignment before close's commit and rejected. Still always safe
+            // - the user is simply left untouched (ACTIVE), never a bug.
+            check(deactivateResult.statusCode() == 409) { "a conservative false-positive conflict is acceptable, nothing else is: ${deactivateResult.body()}" }
+            check(errorCode(deactivateResult) == "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS")
+            check(finalStatus == "ACTIVE")
         }
     }
 }
