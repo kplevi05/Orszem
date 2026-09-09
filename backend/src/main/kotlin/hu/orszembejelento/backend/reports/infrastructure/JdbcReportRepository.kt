@@ -30,6 +30,18 @@ class JdbcReportRepository(private val jdbc: JdbcClient) {
             .orElse(null)
 
     /**
+     * Phase 7: locks a report by its Public-facing id - canonical lock order step 1 (brief
+     * §9) for every workflow mutation (claim/return/close/reassign). Must be called inside
+     * a transaction.
+     */
+    fun lockByPublicId(publicId: UUID): Report? =
+        jdbc.sql("$SELECT_REPORT WHERE public_id = :id FOR UPDATE")
+            .param("id", publicId)
+            .query(::mapReport)
+            .optional()
+            .orElse(null)
+
+    /**
      * Attempts to create the report. Returns `true` if this call created it, `false` if a
      * report with the same `client_submission_id` already existed (`ON CONFLICT DO
      * NOTHING`) - the caller then re-reads the existing row via [findByClientSubmissionId]
@@ -69,6 +81,36 @@ class JdbcReportRepository(private val jdbc: JdbcClient) {
             .param("status", report.status.name)
             .update()
         return inserted > 0
+    }
+
+    /**
+     * Phase 7: applies one workflow-state transition. The caller has already validated the
+     * transition against a freshly-locked row (via [lockByPublicId]) and computed the new
+     * `workflow_version` (current + 1) - this method performs no validation of its own,
+     * exactly as [hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository.updateRole]/`updateStatus`
+     * do for their own tables.
+     */
+    fun updateWorkflowState(
+        reportId: UUID,
+        status: ReportStatus,
+        assignedUserId: UUID?,
+        archivedAt: Instant?,
+        newWorkflowVersion: Long,
+    ) {
+        jdbc.sql(
+            """
+            UPDATE reports
+               SET status = :status, assigned_user_id = :assignedUserId,
+                   archived_at = :archivedAt, workflow_version = :version
+             WHERE id = :id
+            """.trimIndent(),
+        )
+            .param("status", status.name)
+            .param("assignedUserId", assignedUserId)
+            .param("archivedAt", archivedAt?.let(::timestamp))
+            .param("version", newWorkflowVersion)
+            .param("id", reportId)
+            .update()
     }
 
     fun insertRoutingSnapshot(snapshot: ReportRoutingSnapshot) {
@@ -118,6 +160,9 @@ class JdbcReportRepository(private val jdbc: JdbcClient) {
         submittedRailwayLineId = rs.getObject("submitted_railway_line_id", UUID::class.java),
         eventTypeCode = rs.getString("event_type_code"),
         status = ReportStatus.valueOf(rs.getString("status")),
+        assignedUserId = rs.getObject("assigned_user_id", UUID::class.java),
+        workflowVersion = rs.getLong("workflow_version"),
+        archivedAt = rs.getTimestamp("archived_at")?.toInstant(),
     )
 
     private fun mapSnapshot(rs: ResultSet, @Suppress("UNUSED_PARAMETER") rowNum: Int) = ReportRoutingSnapshot(
@@ -136,7 +181,8 @@ class JdbcReportRepository(private val jdbc: JdbcClient) {
         const val SELECT_REPORT = """
             SELECT id, public_id, client_submission_id, public_access_credential_hash,
                    occurred_at, submitted_at, train_identifier, settlement_id,
-                   submitted_railway_line_id, event_type_code, status
+                   submitted_railway_line_id, event_type_code, status,
+                   assigned_user_id, workflow_version, archived_at
               FROM reports
         """
     }

@@ -49,4 +49,10 @@ class IdentityConfig {
         areaScopePolicy: hu.orszembejelento.backend.scope.domain.AreaScopePolicy,
     ): hu.orszembejelento.backend.usermanagement.domain.UserManagementPolicy =
         hu.orszembejelento.backend.usermanagement.domain.UserManagementPolicy(areaScopePolicy)
+
+    @Bean
+    fun reportWorkflowPolicy(
+        areaScopePolicy: hu.orszembejelento.backend.scope.domain.AreaScopePolicy,
+    ): hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy =
+        hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy(areaScopePolicy)
 }

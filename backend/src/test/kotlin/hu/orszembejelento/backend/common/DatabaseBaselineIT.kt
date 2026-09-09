@@ -56,7 +56,7 @@ class DatabaseBaselineIT : AbstractPostgresIntegrationTest() {
         // Pinned explicitly rather than counted loosely: an unexpected extra migration, or
         // one applied out of order, should fail here rather than surface as a schema
         // mystery later.
-        check(applied.map { it["version"] } == listOf("001", "002", "003")) {
+        check(applied.map { it["version"] } == listOf("001", "002", "003", "004")) {
             "unexpected migration history: $applied"
         }
         check(applied.all { it["success"] == true }) { "a migration did not apply successfully: $applied" }
@@ -94,6 +94,8 @@ class DatabaseBaselineIT : AbstractPostgresIntegrationTest() {
                 "report_event_types",
                 "reports",
                 "report_routing_snapshots",
+                // Phase 7 - service report workflow
+                "report_assignments",
             ),
         ) {
             "unexpected schema. Stations and sections belong to a later phase and must " +

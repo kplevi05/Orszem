@@ -51,6 +51,12 @@ data class Report(
     val submittedRailwayLineId: UUID?,
     val eventTypeCode: String,
     val status: ReportStatus,
+    // Phase 7 workflow state (V004). Defaulted so every existing Phase 4 call site that
+    // constructs a freshly-submitted Report - always NEW, unassigned, version 0, never
+    // archived - needs no change at all; these are exactly the database column defaults.
+    val assignedUserId: UUID? = null,
+    val workflowVersion: Long = 0,
+    val archivedAt: Instant? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -60,7 +66,8 @@ data class Report(
             occurredAt == other.occurredAt && submittedAt == other.submittedAt &&
             trainIdentifier == other.trainIdentifier && settlementId == other.settlementId &&
             submittedRailwayLineId == other.submittedRailwayLineId && eventTypeCode == other.eventTypeCode &&
-            status == other.status
+            status == other.status && assignedUserId == other.assignedUserId &&
+            workflowVersion == other.workflowVersion && archivedAt == other.archivedAt
     }
 
     override fun hashCode(): Int {
