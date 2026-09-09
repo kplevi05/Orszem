@@ -31,6 +31,22 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
     fun findAll(): List<ServiceArea> =
         jdbc.sql("$SELECT_AREA ORDER BY name").query(::mapArea).list()
 
+    /** Every currently ACTIVE area, name-ordered — the assignable-area list (Phase 6 brief §29). */
+    fun findAllActive(): List<ServiceArea> =
+        jdbc.sql("$SELECT_AREA WHERE status = 'ACTIVE' ORDER BY name").query(::mapArea).list()
+
+    /**
+     * Step 2 of the canonical lock order (`USER -> SERVICE AREA -> user_service_areas`,
+     * Phase 6 brief §32) when a mutation also touches an area. Must be called inside a
+     * transaction, after the target user row is already locked.
+     */
+    fun lockById(id: UUID): ServiceArea? =
+        jdbc.sql("$SELECT_AREA WHERE id = :id FOR UPDATE")
+            .param("id", id)
+            .query(::mapArea)
+            .optional()
+            .orElse(null)
+
     fun insert(area: ServiceArea) {
         jdbc.sql(
             """
@@ -101,6 +117,67 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
             .list()
             .filterNotNull()
             .toSet()
+
+    /**
+     * Only the areas [userId] may currently *act* in: assigned AND active. An assignment to
+     * an area that has since gone INACTIVE is deliberately excluded — it confers no scope to
+     * anyone (Phase 6 brief §7/§30), unlike [assignedAreaIds], which is the raw, unfiltered
+     * assignment set used where the inactive rows themselves must be visible.
+     */
+    fun activeAssignedAreaIds(userId: UUID): Set<UUID> =
+        jdbc.sql(
+            """
+            SELECT usa.service_area_id
+              FROM user_service_areas usa
+              JOIN service_areas sa ON sa.id = usa.service_area_id
+             WHERE usa.user_id = :userId AND sa.status = 'ACTIVE'
+            """.trimIndent(),
+        )
+            .param("userId", userId)
+            .query(UUID::class.java)
+            .list()
+            .filterNotNull()
+            .toSet()
+
+    /**
+     * Grants [serviceAreaId] to [userId], or does nothing if the grant already exists.
+     *
+     * Idempotent by construction: the `user_service_areas` primary key is the authority on
+     * "already granted", not a prior existence check, which would still race (Phase 6 brief
+     * §8/§35). Uses `ON CONFLICT DO NOTHING` rather than catching the constraint violation -
+     * PostgreSQL aborts the *entire enclosing transaction* the instant any statement raises
+     * an error, and catching the resulting `DuplicateKeyException` in application code does
+     * not undo that: every later statement in the same transaction (including, here, the
+     * caller's own follow-up read of the refreshed user) would then fail with "current
+     * transaction is aborted" even though the Kotlin exception was already handled. A
+     * conflict clause never raises an error in the first place, so no savepoint is needed.
+     * Returns whether a new row was actually inserted, purely so a caller can decide whether
+     * the state genuinely changed and an audit row is warranted.
+     */
+    fun grantAreaIfAbsent(userId: UUID, serviceAreaId: UUID): Boolean =
+        jdbc.sql(
+            """
+            INSERT INTO user_service_areas (user_id, service_area_id)
+            VALUES (:userId, :areaId)
+            ON CONFLICT (user_id, service_area_id) DO NOTHING
+            """.trimIndent(),
+        )
+            .param("userId", userId)
+            .param("areaId", serviceAreaId)
+            .update() == 1
+
+    /** Revokes a grant. Returns the number of rows removed (0 or 1) — a no-op revoke is not an error. */
+    fun revokeArea(userId: UUID, serviceAreaId: UUID): Int =
+        jdbc.sql("DELETE FROM user_service_areas WHERE user_id = :userId AND service_area_id = :areaId")
+            .param("userId", userId)
+            .param("areaId", serviceAreaId)
+            .update()
+
+    fun countAssignedAreas(userId: UUID): Int =
+        jdbc.sql("SELECT COUNT(*) FROM user_service_areas WHERE user_id = :userId")
+            .param("userId", userId)
+            .query(Int::class.java)
+            .single()
 
     /**
      * Builds the authorisation view of a user from current database state.

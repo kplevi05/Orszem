@@ -117,6 +117,24 @@ class JdbcUserRepository(private val jdbc: JdbcClient) {
             .update()
     }
 
+    /** Phase 6 user management: SUPER_ADMIN <-> MODERATOR only; never touches password or scope. */
+    fun updateRole(userId: UUID, role: UserRole, now: Instant) {
+        jdbc.sql("UPDATE users SET role = :role, updated_at = :now WHERE id = :id")
+            .param("role", role.name)
+            .param("now", toTimestamp(now))
+            .param("id", userId)
+            .update()
+    }
+
+    /** Phase 6 user management: deactivate/reactivate. Never touches password or scope. */
+    fun updateStatus(userId: UUID, status: UserStatus, now: Instant) {
+        jdbc.sql("UPDATE users SET status = :status, updated_at = :now WHERE id = :id")
+            .param("status", status.name)
+            .param("now", toTimestamp(now))
+            .param("id", userId)
+            .update()
+    }
+
     private fun mapUser(rs: ResultSet, @Suppress("UNUSED_PARAMETER") rowNum: Int): User = User(
         id = rs.getObject("id", UUID::class.java),
         serviceId = ServiceId.ofTrusted(rs.getString("service_id")),

@@ -15,6 +15,14 @@ import hu.orszembejelento.backend.reports.domain.InvalidSettlementException
 import hu.orszembejelento.backend.reports.domain.OccurredAtTooFarInFutureException
 import hu.orszembejelento.backend.reports.domain.ReportNotFoundException
 import hu.orszembejelento.backend.reports.domain.TrainIdentifierTooLongException
+import hu.orszembejelento.backend.usermanagement.domain.AreaNotAssignableException
+import hu.orszembejelento.backend.usermanagement.domain.AreaNotFoundException
+import hu.orszembejelento.backend.usermanagement.domain.GlobalAccessNotAllowedException
+import hu.orszembejelento.backend.usermanagement.domain.InvalidRoleTransitionException
+import hu.orszembejelento.backend.usermanagement.domain.UserManagementForbiddenException
+import hu.orszembejelento.backend.usermanagement.domain.UserNotFoundException
+import hu.orszembejelento.backend.usermanagement.domain.UserNotManageableException
+import hu.orszembejelento.backend.usermanagement.domain.UserRequiresServiceAreaException
 import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
@@ -153,6 +161,44 @@ class ApiExceptionHandler {
     @ExceptionHandler(ReportNotFoundException::class)
     fun handleReportNotFound(request: HttpServletRequest) =
         error(request, HttpStatus.NOT_FOUND, ErrorCode.REPORT_NOT_FOUND, "No report matches the given id and access credential.")
+
+    // ------------------------------------------------------------ Phase 6 - user management
+
+    @ExceptionHandler(UserNotFoundException::class)
+    fun handleUserNotFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.USER_NOT_FOUND, "No such user.")
+
+    @ExceptionHandler(UserManagementForbiddenException::class)
+    fun handleUserManagementForbidden(request: HttpServletRequest) =
+        error(request, HttpStatus.FORBIDDEN, ErrorCode.USER_MANAGEMENT_FORBIDDEN, "Not permitted to perform this operation.")
+
+    @ExceptionHandler(UserNotManageableException::class)
+    fun handleUserNotManageable(request: HttpServletRequest) =
+        error(request, HttpStatus.FORBIDDEN, ErrorCode.USER_NOT_MANAGEABLE, "This user is not manageable by the current actor.")
+
+    @ExceptionHandler(InvalidRoleTransitionException::class)
+    fun handleInvalidRoleTransition(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ROLE_TRANSITION, "The requested role transition is not allowed.")
+
+    @ExceptionHandler(AreaNotFoundException::class)
+    fun handleAreaNotFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.AREA_NOT_FOUND, "No such service area.")
+
+    @ExceptionHandler(AreaNotAssignableException::class)
+    fun handleAreaNotAssignable(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.AREA_NOT_ASSIGNABLE, "This service area cannot be assigned by the current actor.")
+
+    @ExceptionHandler(UserRequiresServiceAreaException::class)
+    fun handleUserRequiresServiceArea(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.USER_REQUIRES_SERVICE_AREA,
+        "A moderator may not remove a user's last service area.",
+    )
+
+    @ExceptionHandler(GlobalAccessNotAllowedException::class)
+    fun handleGlobalAccessNotAllowed(request: HttpServletRequest) =
+        error(request, HttpStatus.FORBIDDEN, ErrorCode.GLOBAL_ACCESS_NOT_ALLOWED, "Only SUPER_ADMIN may change global area access.")
 
     @ExceptionHandler(Exception::class)
     fun handleUnexpected(exception: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
