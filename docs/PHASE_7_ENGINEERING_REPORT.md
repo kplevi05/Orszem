@@ -13,7 +13,7 @@ Phase 6 (§Q) all complete; all 5 CI workflows green; no Phase 8 work started.
 |---|---|
 | Starting `main` SHA | `9af54aa` (verified against live `origin/main` before branching, §0 of the brief) |
 | Branch | `feature/v2-service-report-workflow` |
-| Final SHA | this commit (a commit cannot name its own hash inside itself — see `git log -1` on the branch, or the session's closing report to the owner, for the exact hash) |
+| Final SHA | this commit (a commit cannot name its own hash inside itself — see `git log -1` on the branch, or the session's closing report to the owner, for the exact hash). All 5 CI workflows are confirmed green on commit `656e8ab` (§O); this commit only adds those already-confirmed run IDs to the doc. |
 | Pushed | yes |
 | PR | none opened — not requested by the brief, and explicitly not to be opened |
 
@@ -23,7 +23,8 @@ Commits, in order:
 2. `02f0552` — test(backend): Phase 7 service report workflow test battery
 3. `5cc07e9` — fix(backend): claim revalidates the acting user's eligibility under lock (§Q.2, the post-review cross-phase fix)
 4. `8931f12` — test(backend): cross-phase assignee-eligibility concurrency tests (§Q.4)
-5. **this commit** — docs: Phase 7 engineering report, including the §Q cross-phase invariant review addendum
+5. `656e8ab` — docs: Phase 7 engineering report, including the §Q cross-phase invariant review addendum
+6. **this commit** — docs: fill in the final CI run IDs, confirmed green after commit 5
 
 Inspection performed before writing any code (§0): confirmed the working tree was clean,
 fetched `origin`, confirmed Phase 6 was merged into `main`, inspected V001-V003 (immutable),
@@ -325,9 +326,15 @@ no-op` ``'s explicit `auditEventCount("REPORT_REASSIGNED") == 0` assertion.
 | deploy-config | success | `34339257558` |
 | reference-data | success | `34339257790` |
 
-**Final push, after the §Q cross-phase review:** all 5 workflows re-confirmed green on the
-final SHA — see the session's closing report to the owner for the exact run IDs (this
-document cannot cite them without first being committed and pushed itself).
+**Final push, after the §Q cross-phase review (SHA `656e8ab`):**
+
+| Workflow | Result | Run |
+|---|---|---|
+| backend | success | `34349083502` |
+| android | success | `34349083476` |
+| web | success | `34349083520` |
+| deploy-config | success | `34349083537` |
+| reference-data | success | `34349083540` |
 
 Locally, both before the initial push and again after the §Q fix: full backend `./gradlew
 build` green (508/508, then 514/514 after §Q); Android
