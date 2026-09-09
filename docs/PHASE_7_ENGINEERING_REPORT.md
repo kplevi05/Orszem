@@ -14,7 +14,7 @@ Phase 8 work started.
 |---|---|
 | Starting `main` SHA | `9af54aa` (verified against live `origin/main` before branching, §0 of the brief) |
 | Branch | `feature/v2-service-report-workflow` |
-| Final SHA | this commit (a commit cannot name its own hash inside itself — see `git log -1` on the branch, or the session's closing report to the owner, for the exact hash). |
+| Final SHA | this commit (a commit cannot name its own hash inside itself — see `git log -1` on the branch, or the session's closing report to the owner, for the exact hash). All 5 CI workflows confirmed green on `d3f52a4` (§O); this commit only records those already-confirmed run IDs. |
 | Pushed | yes |
 | PR | none opened — not requested by the brief, and explicitly not to be opened |
 
@@ -28,7 +28,8 @@ Commits, in order:
 6. `01d7331` — docs: fill in the final CI run IDs, confirmed green after commit 5
 7. `8dedf46` — fix(backend): Phase 6 rejects mutations invalidating an open assignment (§R, the follow-up narrower closure)
 8. `e8d39e1` — test(backend): §R assignment-eligibility guard test battery
-9. **this commit** — docs: Phase 6 + Phase 7 engineering reports, §R closure
+9. `d3f52a4` — docs: Phase 6 + Phase 7 engineering reports, §R closure
+10. **this commit** — docs: fill in the final CI run IDs, confirmed green after commit 9
 
 Inspection performed before writing any code (§0): confirmed the working tree was clean,
 fetched `origin`, confirmed Phase 6 was merged into `main`, inspected V001-V003 (immutable),
@@ -353,16 +354,15 @@ sudo-dependent checks were not replicated locally (nothing under `deploy/` was t
 Phase 7, at any point) and were confirmed via CI instead, every time. No Phase 5/6 test was
 weakened or removed to make any of this pass.
 
-**Final push, after §R (SHA — see the session's closing report to the owner for the exact
-hash, per the same "a commit cannot cite itself" note as §A):**
+**Final push, after §R (SHA `d3f52a4`):**
 
 | Workflow | Result | Run |
 |---|---|---|
-| backend | success | see closing report |
-| android | success | see closing report |
-| web | success | see closing report |
-| deploy-config | success | see closing report |
-| reference-data | success | see closing report |
+| backend | success | `34362645288` |
+| android | success | `34362645318` |
+| web | success | `34362645300` |
+| deploy-config | success | `34362645301` |
+| reference-data | success | `34362645284` |
 
 ## Q. Cross-phase invariant review vs. Phase 6 (post-review addendum)
 
