@@ -76,3 +76,15 @@ data class ReportAssignment(
     val endedByUserId: UUID?,
     val endReason: AssignmentEndReason?,
 )
+
+/**
+ * The area-authority-relevant facts about one of a user's current open assignment episodes
+ * — a narrow read model purpose-built for [AssignmentEligibilityGuard], not the full
+ * [ReportAssignment]. UNCLASSIFIED reports can never be assigned (brief §40/§68), so
+ * [serviceAreaId] is always a real area for a genuinely open episode.
+ */
+data class OpenAssignmentAreaSnapshot(
+    val reportId: UUID,
+    val serviceAreaId: UUID,
+    val serviceAreaActive: Boolean,
+)

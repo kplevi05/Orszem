@@ -55,4 +55,11 @@ class IdentityConfig {
         areaScopePolicy: hu.orszembejelento.backend.scope.domain.AreaScopePolicy,
     ): hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy =
         hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy(areaScopePolicy)
+
+    /** Cross-phase invariant review addendum — see `docs/PHASE_7_ENGINEERING_REPORT.md` §R. */
+    @Bean
+    fun assignmentEligibilityGuard(
+        areaScopePolicy: hu.orszembejelento.backend.scope.domain.AreaScopePolicy,
+    ): hu.orszembejelento.backend.reportworkflow.domain.AssignmentEligibilityGuard =
+        hu.orszembejelento.backend.reportworkflow.domain.AssignmentEligibilityGuard(areaScopePolicy)
 }

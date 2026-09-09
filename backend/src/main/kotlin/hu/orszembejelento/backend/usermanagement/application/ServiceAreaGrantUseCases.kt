@@ -5,12 +5,16 @@ import hu.orszembejelento.backend.audit.domain.AuditEventType
 import hu.orszembejelento.backend.audit.domain.AuditTargetType
 import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
+import hu.orszembejelento.backend.reportworkflow.domain.AssignmentEligibilityGuard
+import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportAssignmentRepository
+import hu.orszembejelento.backend.scope.domain.AreaActor
 import hu.orszembejelento.backend.scope.infrastructure.JdbcServiceAreaRepository
 import hu.orszembejelento.backend.usermanagement.domain.AreaNotAssignableException
 import hu.orszembejelento.backend.usermanagement.domain.AreaNotFoundException
 import hu.orszembejelento.backend.usermanagement.domain.AssignedArea
 import hu.orszembejelento.backend.usermanagement.domain.ManagedUser
 import hu.orszembejelento.backend.usermanagement.domain.ManagementActor
+import hu.orszembejelento.backend.usermanagement.domain.UserHasActiveReportAssignmentsException
 import hu.orszembejelento.backend.usermanagement.domain.UserManagementPolicy
 import hu.orszembejelento.backend.usermanagement.domain.UserNotFoundException
 import hu.orszembejelento.backend.usermanagement.domain.UserRequiresServiceAreaException
@@ -70,12 +74,19 @@ class ServiceAreaGrantUseCase(
  * authorised actor clean up (§30). What is enforced instead is the last-area rule: a
  * MODERATOR may never remove a non-global SERVICE_USER's only remaining area, because that
  * would create an account instantly outside every territorial moderator's reach.
+ *
+ * **Cross-phase invariant review addendum** (`docs/PHASE_7_ENGINEERING_REPORT.md` §R):
+ * rejected if the resulting (post-revoke) scope would no longer authorise one or more of the
+ * target's current open report assignments — checked against each assignment's *current
+ * routing-snapshot service area*, never by re-running routing.
  */
 @Service
 class ServiceAreaRevokeUseCase(
     private val users: JdbcUserRepository,
     private val managedUsers: JdbcUserManagementRepository,
     private val serviceAreas: JdbcServiceAreaRepository,
+    private val reportAssignments: JdbcReportAssignmentRepository,
+    private val assignmentEligibility: AssignmentEligibilityGuard,
     private val policy: UserManagementPolicy,
     private val audit: JdbcAuditRepository,
 ) {
@@ -92,6 +103,19 @@ class ServiceAreaRevokeUseCase(
             val remainingAfter = target.assignedAreas.size - 1
             if (policy.wouldViolateLastAreaRule(actor, target, remainingAfter)) {
                 throw UserRequiresServiceAreaException()
+            }
+
+            // Cross-phase invariant review addendum (§R) — fresh read, run only now that the
+            // target's own row lock is already held.
+            val postMutationScope = AreaActor(
+                userId = locked.id,
+                role = target.role,
+                globalAreaAccess = target.globalAreaAccess,
+                assignedAreaIds = target.assignedAreas.map { it.id }.toSet() - areaId,
+            )
+            val openAssignments = reportAssignments.findOpenAssignmentAreas(locked.id)
+            if (assignmentEligibility.anyAssignmentOutsideScope(openAssignments, postMutationScope)) {
+                throw UserHasActiveReportAssignmentsException()
             }
         }
 

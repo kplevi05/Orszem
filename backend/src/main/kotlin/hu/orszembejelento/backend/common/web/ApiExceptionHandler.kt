@@ -26,6 +26,7 @@ import hu.orszembejelento.backend.usermanagement.domain.AreaNotAssignableExcepti
 import hu.orszembejelento.backend.usermanagement.domain.AreaNotFoundException
 import hu.orszembejelento.backend.usermanagement.domain.GlobalAccessNotAllowedException
 import hu.orszembejelento.backend.usermanagement.domain.InvalidRoleTransitionException
+import hu.orszembejelento.backend.usermanagement.domain.UserHasActiveReportAssignmentsException
 import hu.orszembejelento.backend.usermanagement.domain.UserManagementForbiddenException
 import hu.orszembejelento.backend.usermanagement.domain.UserNotFoundException
 import hu.orszembejelento.backend.usermanagement.domain.UserNotManageableException
@@ -206,6 +207,14 @@ class ApiExceptionHandler {
     @ExceptionHandler(GlobalAccessNotAllowedException::class)
     fun handleGlobalAccessNotAllowed(request: HttpServletRequest) =
         error(request, HttpStatus.FORBIDDEN, ErrorCode.GLOBAL_ACCESS_NOT_ALLOWED, "Only SUPER_ADMIN may change global area access.")
+
+    @ExceptionHandler(UserHasActiveReportAssignmentsException::class)
+    fun handleUserHasActiveReportAssignments(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.USER_HAS_ACTIVE_REPORT_ASSIGNMENTS,
+        "This mutation would invalidate an existing open report assignment.",
+    )
 
     // ------------------------------------------------------ Phase 7 - service report workflow
 

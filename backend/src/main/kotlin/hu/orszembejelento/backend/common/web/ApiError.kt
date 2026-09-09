@@ -133,6 +133,15 @@ enum class ErrorCode {
 
     /** The reassignment target fails eligibility: not found, not ACTIVE, not SERVICE_USER, or lacks current area access (§39). */
     INVALID_ASSIGNEE,
+
+    // ---------------------------------------- Phase 7 cross-phase invariant review addendum
+
+    /**
+     * A Phase 6 user-management mutation (role promotion, deactivation, area/global-access
+     * revoke) would invalidate one or more of the target's current open report assignments.
+     * See `docs/PHASE_7_ENGINEERING_REPORT.md` §R.
+     */
+    USER_HAS_ACTIVE_REPORT_ASSIGNMENTS,
 }
 
 /**

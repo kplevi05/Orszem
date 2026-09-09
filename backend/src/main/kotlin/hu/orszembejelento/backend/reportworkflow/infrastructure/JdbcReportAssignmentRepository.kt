@@ -1,6 +1,7 @@
 package hu.orszembejelento.backend.reportworkflow.infrastructure
 
 import hu.orszembejelento.backend.reportworkflow.domain.AssignmentEndReason
+import hu.orszembejelento.backend.reportworkflow.domain.OpenAssignmentAreaSnapshot
 import hu.orszembejelento.backend.reportworkflow.domain.ReportAssignment
 import java.sql.ResultSet
 import java.time.Instant
@@ -80,6 +81,36 @@ class JdbcReportAssignmentRepository(private val jdbc: JdbcClient) {
         jdbc.sql("$SELECT_ASSIGNMENT WHERE report_id = :reportId ORDER BY assigned_at ASC")
             .param("reportId", reportId)
             .query(::mapAssignment)
+            .list()
+
+    /**
+     * Every currently-open episode's area authority facts for [assigneeUserId] — the
+     * cross-phase invariant review's read-only query (post-implementation addendum, see
+     * `docs/PHASE_7_ENGINEERING_REPORT.md` §R): callers in `usermanagement.application` run
+     * this *after* already holding a `FOR UPDATE` lock on the target's own `users` row, so
+     * PostgreSQL's per-statement READ COMMITTED snapshot guarantees this always reflects
+     * every assignment already committed by the time that lock was acquired — never a
+     * partial or uncommitted one, and never one created afterward while the lock is held
+     * (creating a new assignment for this user requires the same lock, brief §Q.2).
+     */
+    fun findOpenAssignmentAreas(assigneeUserId: UUID): List<OpenAssignmentAreaSnapshot> =
+        jdbc.sql(
+            """
+            SELECT ra.report_id, rs.service_area_id, sa.status AS service_area_status
+              FROM report_assignments ra
+              JOIN report_routing_snapshots rs ON rs.report_id = ra.report_id
+              LEFT JOIN service_areas sa ON sa.id = rs.service_area_id
+             WHERE ra.assignee_user_id = :assigneeUserId AND ra.ended_at IS NULL
+            """.trimIndent(),
+        )
+            .param("assigneeUserId", assigneeUserId)
+            .query { rs, _ ->
+                OpenAssignmentAreaSnapshot(
+                    reportId = rs.getObject("report_id", UUID::class.java),
+                    serviceAreaId = rs.getObject("service_area_id", UUID::class.java),
+                    serviceAreaActive = rs.getString("service_area_status") == "ACTIVE",
+                )
+            }
             .list()
 
     private fun mapAssignment(rs: ResultSet, @Suppress("UNUSED_PARAMETER") rowNum: Int) = ReportAssignment(
