@@ -7,9 +7,11 @@ import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
 import hu.orszembejelento.backend.identity.domain.ServiceId
 import hu.orszembejelento.backend.identity.domain.UserRole
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
+import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportAssignmentRepository
 import hu.orszembejelento.backend.usermanagement.domain.InvalidRoleTransitionException
 import hu.orszembejelento.backend.usermanagement.domain.ManagedUser
 import hu.orszembejelento.backend.usermanagement.domain.ManagementActor
+import hu.orszembejelento.backend.usermanagement.domain.UserHasActiveReportAssignmentsException
 import hu.orszembejelento.backend.usermanagement.domain.UserManagementForbiddenException
 import hu.orszembejelento.backend.usermanagement.domain.UserManagementPolicy
 import hu.orszembejelento.backend.usermanagement.domain.UserNotFoundException
@@ -32,11 +34,18 @@ import org.springframework.transaction.annotation.Transactional
  * No session is revoked. Every protected request re-derives the actor's role and scope from
  * the database (§23), so the new role is authoritative on the very next request without
  * needing to invalidate whatever session the target already holds.
+ *
+ * **Cross-phase invariant review addendum** (`docs/PHASE_7_ENGINEERING_REPORT.md` §R): a
+ * SERVICE_USER -> MODERATOR promotion is rejected if the target currently holds any open
+ * report assignment — a MODERATOR can never be a report's current assignee (Phase 7 brief
+ * §3). The reverse direction, MODERATOR -> SERVICE_USER, is never blocked: a MODERATOR can
+ * never already be an assignee, so demoting one can never invalidate one.
  */
 @Service
 class ChangeUserRoleUseCase(
     private val users: JdbcUserRepository,
     private val managedUsers: JdbcUserManagementRepository,
+    private val reportAssignments: JdbcReportAssignmentRepository,
     private val policy: UserManagementPolicy,
     private val audit: JdbcAuditRepository,
     private val clock: Clock,
@@ -55,6 +64,14 @@ class ChangeUserRoleUseCase(
         val allowed = (target.role == UserRole.SERVICE_USER && requestedRole == UserRole.MODERATOR) ||
             (target.role == UserRole.MODERATOR && requestedRole == UserRole.SERVICE_USER)
         if (!allowed) throw InvalidRoleTransitionException()
+
+        // Cross-phase invariant review addendum (§R): a fresh read, run only now that the
+        // target's own row lock is already held - see JdbcReportAssignmentRepository's
+        // findOpenAssignmentAreas KDoc for why this is race-safe without ever locking
+        // `reports`.
+        if (requestedRole == UserRole.MODERATOR && reportAssignments.findOpenAssignmentAreas(locked.id).isNotEmpty()) {
+            throw UserHasActiveReportAssignmentsException()
+        }
 
         val now = clock.instant()
         users.updateRole(locked.id, requestedRole, now)

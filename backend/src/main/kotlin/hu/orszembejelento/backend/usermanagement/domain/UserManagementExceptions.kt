@@ -30,3 +30,13 @@ class UserRequiresServiceAreaException : RuntimeException("a moderator may not r
 
 /** A MODERATOR attempted to grant/revoke global area access, which is SUPER_ADMIN-only (§10). */
 class GlobalAccessNotAllowedException : RuntimeException("only SUPER_ADMIN may change global area access")
+
+/**
+ * Cross-phase invariant review (post-implementation addendum, `docs/PHASE_7_ENGINEERING_REPORT.md`
+ * §R): the requested mutation would invalidate one or more of the target's current open
+ * report assignments — promoting them away from SERVICE_USER, deactivating them, or
+ * narrowing their scope below what an existing assignment's area requires. Rejected rather
+ * than silently orphaning the assignment or auto-returning/reassigning it (§R.1: User
+ * Management never mutates report workflow).
+ */
+class UserHasActiveReportAssignmentsException : RuntimeException("this mutation would invalidate an existing open report assignment")

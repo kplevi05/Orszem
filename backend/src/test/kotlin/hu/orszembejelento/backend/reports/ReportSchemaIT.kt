@@ -26,17 +26,24 @@ class ReportSchemaIT : PublicReportTestSupport() {
         railwayLineId: UUID? = null,
         eventTypeCode: String = "FIGHT",
         status: String = "NEW",
+        // Phase 7 (V004) workflow-coherence columns - defaulted so every pre-existing Phase
+        // 4 fixture call naming only NEW still satisfies ck_reports_workflow_coherence
+        // without change; a caller that wants IN_PROGRESS/ARCHIVED must supply these itself.
+        assignedUserId: UUID? = null,
+        archivedAt: java.time.Instant? = null,
     ) {
         jdbc.sql(
             """
             INSERT INTO reports (
                 id, public_id, client_submission_id, public_access_credential_hash,
                 occurred_at, submitted_at, train_identifier, settlement_id,
-                submitted_railway_line_id, event_type_code, status
+                submitted_railway_line_id, event_type_code, status,
+                assigned_user_id, archived_at
             ) VALUES (
                 :id, :publicId, :clientSubmissionId, :hash,
                 now(), now(), :trainIdentifier, :settlementId,
-                :railwayLineId, :eventTypeCode, :status
+                :railwayLineId, :eventTypeCode, :status,
+                :assignedUserId, :archivedAt
             )
             """.trimIndent(),
         )
@@ -44,6 +51,8 @@ class ReportSchemaIT : PublicReportTestSupport() {
             .param("hash", credentialHash).param("trainIdentifier", trainIdentifier)
             .param("settlementId", settlementId).param("railwayLineId", railwayLineId)
             .param("eventTypeCode", eventTypeCode).param("status", status)
+            .param("assignedUserId", assignedUserId)
+            .param("archivedAt", archivedAt?.let(java.sql.Timestamp::from))
             .update()
     }
 
@@ -138,9 +147,13 @@ class ReportSchemaIT : PublicReportTestSupport() {
     @Test
     fun `the status vocabulary is enforced`() {
         val settlement = insertSettlement("00001")
+        // IN_PROGRESS/ARCHIVED must also satisfy ck_reports_workflow_coherence (V004) - an
+        // assignee for the former, an archival timestamp for the latter - which is exactly
+        // what this test proves alongside the status vocabulary itself.
+        val assignee = givenUser().id
         insertReport(status = "NEW", settlementId = settlement)
-        insertReport(status = "IN_PROGRESS", settlementId = settlement)
-        insertReport(status = "ARCHIVED", settlementId = settlement)
+        insertReport(status = "IN_PROGRESS", settlementId = settlement, assignedUserId = assignee)
+        insertReport(status = "ARCHIVED", settlementId = settlement, archivedAt = clock.instant())
         check(runCatching { insertReport(status = "DELETED", settlementId = settlement) }.isFailure) {
             "an unknown status must be rejected"
         }

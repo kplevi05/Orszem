@@ -9,8 +9,10 @@ import hu.orszembejelento.backend.auth.infrastructure.JdbcSessionRepository
 import hu.orszembejelento.backend.identity.domain.ServiceId
 import hu.orszembejelento.backend.identity.domain.UserStatus
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
+import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportAssignmentRepository
 import hu.orszembejelento.backend.usermanagement.domain.ManagedUser
 import hu.orszembejelento.backend.usermanagement.domain.ManagementActor
+import hu.orszembejelento.backend.usermanagement.domain.UserHasActiveReportAssignmentsException
 import hu.orszembejelento.backend.usermanagement.domain.UserManagementPolicy
 import hu.orszembejelento.backend.usermanagement.domain.UserNotFoundException
 import hu.orszembejelento.backend.usermanagement.domain.UserNotManageableException
@@ -27,12 +29,17 @@ import org.springframework.transaction.annotation.Transactional
  *
  * Repeated deactivation is idempotent: a target already DEACTIVATED is left untouched and
  * audited with nothing further, so the trail cannot be padded by retrying the same call.
+ *
+ * **Cross-phase invariant review addendum** (`docs/PHASE_7_ENGINEERING_REPORT.md` §R):
+ * rejected if the target currently holds any open report assignment — a DEACTIVATED user
+ * can never be a report's current assignee.
  */
 @Service
 class DeactivateUserUseCase(
     private val users: JdbcUserRepository,
     private val managedUsers: JdbcUserManagementRepository,
     private val sessions: JdbcSessionRepository,
+    private val reportAssignments: JdbcReportAssignmentRepository,
     private val policy: UserManagementPolicy,
     private val audit: JdbcAuditRepository,
     private val clock: Clock,
@@ -43,6 +50,11 @@ class DeactivateUserUseCase(
         val (locked, target) = lockAndAuthorize(users, managedUsers, policy, actor, rawServiceId)
 
         if (target.status == UserStatus.DEACTIVATED) return target
+
+        // Cross-phase invariant review addendum (§R) — see ChangeUserRoleUseCase's identical note.
+        if (reportAssignments.findOpenAssignmentAreas(locked.id).isNotEmpty()) {
+            throw UserHasActiveReportAssignmentsException()
+        }
 
         val now = clock.instant()
         users.updateStatus(locked.id, UserStatus.DEACTIVATED, now)

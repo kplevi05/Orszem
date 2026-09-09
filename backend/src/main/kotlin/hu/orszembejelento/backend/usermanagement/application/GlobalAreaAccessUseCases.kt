@@ -7,10 +7,14 @@ import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
 import hu.orszembejelento.backend.identity.domain.ServiceId
 import hu.orszembejelento.backend.identity.domain.UserRole
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
+import hu.orszembejelento.backend.reportworkflow.domain.AssignmentEligibilityGuard
+import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportAssignmentRepository
+import hu.orszembejelento.backend.scope.domain.AreaActor
 import hu.orszembejelento.backend.scope.infrastructure.JdbcServiceAreaRepository
 import hu.orszembejelento.backend.usermanagement.domain.GlobalAccessNotAllowedException
 import hu.orszembejelento.backend.usermanagement.domain.ManagedUser
 import hu.orszembejelento.backend.usermanagement.domain.ManagementActor
+import hu.orszembejelento.backend.usermanagement.domain.UserHasActiveReportAssignmentsException
 import hu.orszembejelento.backend.usermanagement.domain.UserManagementPolicy
 import hu.orszembejelento.backend.usermanagement.domain.UserNotFoundException
 import hu.orszembejelento.backend.usermanagement.infrastructure.JdbcUserManagementRepository
@@ -30,12 +34,19 @@ import org.springframework.transaction.annotation.Transactional
  * Both operations are idempotent: repeating the same grant or revoke changes nothing and
  * writes no further audit row, so retrying a call — or two admins acting at once — cannot
  * pad the trail with no-op events (§24).
+ *
+ * **Cross-phase invariant review addendum** (`docs/PHASE_7_ENGINEERING_REPORT.md` §R): a
+ * revoke is rejected if the resulting (explicit-grants-only) scope would no longer authorise
+ * one or more of the target's current open report assignments. Grant is never blocked — it
+ * only ever widens scope.
  */
 @Service
 class ChangeGlobalAreaAccessUseCase(
     private val users: JdbcUserRepository,
     private val managedUsers: JdbcUserManagementRepository,
     private val serviceAreas: JdbcServiceAreaRepository,
+    private val reportAssignments: JdbcReportAssignmentRepository,
+    private val assignmentEligibility: AssignmentEligibilityGuard,
     private val policy: UserManagementPolicy,
     private val audit: JdbcAuditRepository,
 ) {
@@ -56,6 +67,21 @@ class ChangeGlobalAreaAccessUseCase(
 
         if (target.role == UserRole.SUPER_ADMIN) throw GlobalAccessNotAllowedException()
         if (target.globalAreaAccess == value) return target
+
+        // Cross-phase invariant review addendum (§R) — only the revoke direction can ever
+        // narrow scope, so only it is checked; grant only ever widens it.
+        if (!value) {
+            val postMutationScope = AreaActor(
+                userId = locked.id,
+                role = target.role,
+                globalAreaAccess = false,
+                assignedAreaIds = target.assignedAreas.map { it.id }.toSet(),
+            )
+            val openAssignments = reportAssignments.findOpenAssignmentAreas(locked.id)
+            if (assignmentEligibility.anyAssignmentOutsideScope(openAssignments, postMutationScope)) {
+                throw UserHasActiveReportAssignmentsException()
+            }
+        }
 
         serviceAreas.setGlobalAreaAccess(locked.id, value)
 

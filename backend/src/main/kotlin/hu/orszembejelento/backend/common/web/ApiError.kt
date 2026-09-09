@@ -72,6 +72,10 @@ enum class ErrorCode {
     /**
      * Returned identically for an unknown public report id, a missing credential, a
      * malformed credential, and a wrong credential - see `ReportNotFoundException`.
+     *
+     * Phase 7 reuses this same code for the Service report-workflow surface's own
+     * `ReportNotVisibleException` - a nonexistent report and one outside the acting Service
+     * user's scope are, by the same existence-safe reasoning, indistinguishable there too.
      */
     REPORT_NOT_FOUND,
 
@@ -104,6 +108,40 @@ enum class ErrorCode {
 
     /** Only SUPER_ADMIN may grant or revoke global area access (§10/§24). */
     GLOBAL_ACCESS_NOT_ALLOWED,
+
+    // ------------------------------------------------------ Phase 7 - service report workflow
+    //
+    // Reuses the existing REPORT_NOT_FOUND above for `ReportNotVisibleException` too: a
+    // nonexistent report and one outside the actor's Service-workflow visibility are, by
+    // design, indistinguishable to the caller (brief §29/§34/§46) - exactly the same
+    // "existence-safe" shape Phase 4 already gave the Public credential-mismatch case.
+
+    /** The actor's role has no authority to call this workflow operation at all. */
+    REPORT_WORKFLOW_FORBIDDEN,
+
+    /** The report is no longer NEW because another actor already claimed it (§31/§32). */
+    REPORT_ALREADY_ASSIGNED,
+
+    /** The report's status or workflow version no longer matches what the caller expected. */
+    REPORT_STATE_CHANGED,
+
+    /** Any mutation attempted against a report that is already ARCHIVED - terminal in Phase 7 (§2/§45). */
+    REPORT_ALREADY_ARCHIVED,
+
+    /** An UNCLASSIFIED report cannot be assigned to a SERVICE_USER (§40/§70). */
+    REPORT_UNCLASSIFIED_CANNOT_ASSIGN,
+
+    /** The reassignment target fails eligibility: not found, not ACTIVE, not SERVICE_USER, or lacks current area access (§39). */
+    INVALID_ASSIGNEE,
+
+    // ---------------------------------------- Phase 7 cross-phase invariant review addendum
+
+    /**
+     * A Phase 6 user-management mutation (role promotion, deactivation, area/global-access
+     * revoke) would invalidate one or more of the target's current open report assignments.
+     * See `docs/PHASE_7_ENGINEERING_REPORT.md` §R.
+     */
+    USER_HAS_ACTIVE_REPORT_ASSIGNMENTS,
 }
 
 /**

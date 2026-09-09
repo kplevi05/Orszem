@@ -15,10 +15,18 @@ import hu.orszembejelento.backend.reports.domain.InvalidSettlementException
 import hu.orszembejelento.backend.reports.domain.OccurredAtTooFarInFutureException
 import hu.orszembejelento.backend.reports.domain.ReportNotFoundException
 import hu.orszembejelento.backend.reports.domain.TrainIdentifierTooLongException
+import hu.orszembejelento.backend.reportworkflow.domain.InvalidAssigneeException
+import hu.orszembejelento.backend.reportworkflow.domain.ReportAlreadyArchivedException
+import hu.orszembejelento.backend.reportworkflow.domain.ReportAlreadyAssignedException
+import hu.orszembejelento.backend.reportworkflow.domain.ReportNotVisibleException
+import hu.orszembejelento.backend.reportworkflow.domain.ReportStateChangedException
+import hu.orszembejelento.backend.reportworkflow.domain.ReportUnclassifiedCannotAssignException
+import hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowForbiddenException
 import hu.orszembejelento.backend.usermanagement.domain.AreaNotAssignableException
 import hu.orszembejelento.backend.usermanagement.domain.AreaNotFoundException
 import hu.orszembejelento.backend.usermanagement.domain.GlobalAccessNotAllowedException
 import hu.orszembejelento.backend.usermanagement.domain.InvalidRoleTransitionException
+import hu.orszembejelento.backend.usermanagement.domain.UserHasActiveReportAssignmentsException
 import hu.orszembejelento.backend.usermanagement.domain.UserManagementForbiddenException
 import hu.orszembejelento.backend.usermanagement.domain.UserNotFoundException
 import hu.orszembejelento.backend.usermanagement.domain.UserNotManageableException
@@ -199,6 +207,48 @@ class ApiExceptionHandler {
     @ExceptionHandler(GlobalAccessNotAllowedException::class)
     fun handleGlobalAccessNotAllowed(request: HttpServletRequest) =
         error(request, HttpStatus.FORBIDDEN, ErrorCode.GLOBAL_ACCESS_NOT_ALLOWED, "Only SUPER_ADMIN may change global area access.")
+
+    @ExceptionHandler(UserHasActiveReportAssignmentsException::class)
+    fun handleUserHasActiveReportAssignments(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.USER_HAS_ACTIVE_REPORT_ASSIGNMENTS,
+        "This mutation would invalidate an existing open report assignment.",
+    )
+
+    // ------------------------------------------------------ Phase 7 - service report workflow
+
+    @ExceptionHandler(ReportNotVisibleException::class)
+    fun handleReportNotVisible(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.REPORT_NOT_FOUND, "No such report.")
+
+    @ExceptionHandler(ReportWorkflowForbiddenException::class)
+    fun handleReportWorkflowForbidden(request: HttpServletRequest) =
+        error(request, HttpStatus.FORBIDDEN, ErrorCode.REPORT_WORKFLOW_FORBIDDEN, "Not permitted to perform this workflow operation.")
+
+    @ExceptionHandler(ReportAlreadyAssignedException::class)
+    fun handleReportAlreadyAssigned(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.REPORT_ALREADY_ASSIGNED, "This report has already been claimed.")
+
+    @ExceptionHandler(ReportStateChangedException::class)
+    fun handleReportStateChanged(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.REPORT_STATE_CHANGED, "The report's workflow state has changed.")
+
+    @ExceptionHandler(ReportAlreadyArchivedException::class)
+    fun handleReportAlreadyArchived(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.REPORT_ALREADY_ARCHIVED, "This report is already archived.")
+
+    @ExceptionHandler(ReportUnclassifiedCannotAssignException::class)
+    fun handleReportUnclassifiedCannotAssign(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.REPORT_UNCLASSIFIED_CANNOT_ASSIGN,
+        "An unclassified report cannot be assigned to a service user.",
+    )
+
+    @ExceptionHandler(InvalidAssigneeException::class)
+    fun handleInvalidAssignee(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ASSIGNEE, "The reassignment target is not a valid assignee.")
 
     @ExceptionHandler(Exception::class)
     fun handleUnexpected(exception: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
