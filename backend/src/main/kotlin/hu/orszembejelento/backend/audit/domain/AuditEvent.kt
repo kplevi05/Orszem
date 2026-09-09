@@ -24,6 +24,18 @@ enum class AuditEventType {
     LOGOUT_ALL,
     REFRESH_TOKEN_REUSE_DETECTED,
     REFERENCE_DATASET_IMPORTED,
+
+    // Phase 6 — user management. The target is always the managed USER; the actor is
+    // always the SUPER_ADMIN/MODERATOR who performed the operation.
+    USER_CREATED,
+    USER_PASSWORD_RESET,
+    USER_DEACTIVATED,
+    USER_REACTIVATED,
+    USER_ROLE_CHANGED,
+    USER_AREA_GRANTED,
+    USER_AREA_REVOKED,
+    USER_GLOBAL_ACCESS_GRANTED,
+    USER_GLOBAL_ACCESS_REVOKED,
 }
 
 enum class AuditActorType { USER, SYSTEM }

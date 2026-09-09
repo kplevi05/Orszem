@@ -74,6 +74,36 @@ enum class ErrorCode {
      * malformed credential, and a wrong credential - see `ReportNotFoundException`.
      */
     REPORT_NOT_FOUND,
+
+    // ------------------------------------------------------------ Phase 6 - user management
+
+    /**
+     * Returned identically for a nonexistent target service ID and one that exists but is
+     * outside the actor's visibility (a MODERATOR's scope, or any target for a
+     * SERVICE_USER actor) - see `UserNotFoundException` and Phase 6 brief §28/§41.
+     */
+    USER_NOT_FOUND,
+
+    /** The actor has no authority to call this endpoint at all - e.g. a SERVICE_USER, or a non-SUPER_ADMIN role/global-access request. */
+    USER_MANAGEMENT_FORBIDDEN,
+
+    /** The target is visible to the actor but not manageable by them right now - see `UserNotManageableException`. */
+    USER_NOT_MANAGEABLE,
+
+    /** The requested role transition is not one of the two allowed, or names SUPER_ADMIN either way. */
+    INVALID_ROLE_TRANSITION,
+
+    /** The referenced service area does not exist. */
+    AREA_NOT_FOUND,
+
+    /** The area exists but cannot be assigned by this actor right now - inactive, or outside their own scope. */
+    AREA_NOT_ASSIGNABLE,
+
+    /** A MODERATOR attempted to remove a non-global SERVICE_USER's last remaining service area (§9). */
+    USER_REQUIRES_SERVICE_AREA,
+
+    /** Only SUPER_ADMIN may grant or revoke global area access (§10/§24). */
+    GLOBAL_ACCESS_NOT_ALLOWED,
 }
 
 /**

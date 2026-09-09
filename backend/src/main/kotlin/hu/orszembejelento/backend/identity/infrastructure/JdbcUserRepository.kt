@@ -7,7 +7,6 @@ import hu.orszembejelento.backend.identity.domain.UserStatus
 import java.sql.ResultSet
 import java.time.Instant
 import java.util.UUID
-import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
 
@@ -64,35 +63,42 @@ class JdbcUserRepository(private val jdbc: JdbcClient) {
     /**
      * Inserts a user, returning false when the service ID is already taken.
      *
-     * The unique index is the authority on collisions, not a prior existence check: a
-     * check-then-insert would still race between the two statements.
+     * The unique index (`ux_users_service_id`) is the authority on collisions, not a prior
+     * existence check: a check-then-insert would still race between the two statements.
+     * Uses `ON CONFLICT (service_id) DO NOTHING` rather than catching the resulting
+     * constraint-violation exception: PostgreSQL aborts the *entire enclosing transaction*
+     * the instant any statement raises an error, and catching a `DuplicateKeyException` in
+     * application code does not undo that - every later statement in the same transaction
+     * (including a caller's own retry with a fresh candidate ID, still inside the same
+     * `@Transactional` boundary) would then fail with "current transaction is aborted" even
+     * though the Kotlin exception was already handled. A conflict clause never raises an
+     * error in the first place, so a normal collision-and-retry sequence - the expected,
+     * routine case a random 6-digit ID space guarantees will happen - never touches
+     * PostgreSQL's abort state at all.
      */
     fun insertIfServiceIdFree(user: User): Boolean =
-        try {
-            jdbc.sql(
-                """
-                INSERT INTO users (
-                    id, service_id, role, status, password_hash,
-                    must_change_password, password_changed_at, created_at, updated_at
-                ) VALUES (
-                    :id, :serviceId, :role, :status, :passwordHash,
-                    :mustChangePassword, :passwordChangedAt, :createdAt, :updatedAt
-                )
-                """.trimIndent(),
+        jdbc.sql(
+            """
+            INSERT INTO users (
+                id, service_id, role, status, password_hash,
+                must_change_password, password_changed_at, created_at, updated_at
+            ) VALUES (
+                :id, :serviceId, :role, :status, :passwordHash,
+                :mustChangePassword, :passwordChangedAt, :createdAt, :updatedAt
             )
-                .param("id", user.id)
-                .param("serviceId", user.serviceId.value)
-                .param("role", user.role.name)
-                .param("status", user.status.name)
-                .param("passwordHash", user.passwordHash)
-                .param("mustChangePassword", user.mustChangePassword)
-                .param("passwordChangedAt", user.passwordChangedAt?.let(::toTimestamp))
-                .param("createdAt", toTimestamp(user.createdAt))
-                .param("updatedAt", toTimestamp(user.updatedAt))
-                .update() == 1
-        } catch (_: DuplicateKeyException) {
-            false
-        }
+            ON CONFLICT (service_id) DO NOTHING
+            """.trimIndent(),
+        )
+            .param("id", user.id)
+            .param("serviceId", user.serviceId.value)
+            .param("role", user.role.name)
+            .param("status", user.status.name)
+            .param("passwordHash", user.passwordHash)
+            .param("mustChangePassword", user.mustChangePassword)
+            .param("passwordChangedAt", user.passwordChangedAt?.let(::toTimestamp))
+            .param("createdAt", toTimestamp(user.createdAt))
+            .param("updatedAt", toTimestamp(user.updatedAt))
+            .update() == 1
 
     fun updatePassword(
         userId: UUID,
@@ -112,6 +118,24 @@ class JdbcUserRepository(private val jdbc: JdbcClient) {
         )
             .param("passwordHash", passwordHash)
             .param("mustChangePassword", mustChangePassword)
+            .param("now", toTimestamp(now))
+            .param("id", userId)
+            .update()
+    }
+
+    /** Phase 6 user management: SUPER_ADMIN <-> MODERATOR only; never touches password or scope. */
+    fun updateRole(userId: UUID, role: UserRole, now: Instant) {
+        jdbc.sql("UPDATE users SET role = :role, updated_at = :now WHERE id = :id")
+            .param("role", role.name)
+            .param("now", toTimestamp(now))
+            .param("id", userId)
+            .update()
+    }
+
+    /** Phase 6 user management: deactivate/reactivate. Never touches password or scope. */
+    fun updateStatus(userId: UUID, status: UserStatus, now: Instant) {
+        jdbc.sql("UPDATE users SET status = :status, updated_at = :now WHERE id = :id")
+            .param("status", status.name)
             .param("now", toTimestamp(now))
             .param("id", userId)
             .update()

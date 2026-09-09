@@ -43,4 +43,10 @@ class IdentityConfig {
 
     @Bean
     fun temporaryCredentialGenerator(): TemporaryCredentialGenerator = TemporaryCredentialGenerator()
+
+    @Bean
+    fun userManagementPolicy(
+        areaScopePolicy: hu.orszembejelento.backend.scope.domain.AreaScopePolicy,
+    ): hu.orszembejelento.backend.usermanagement.domain.UserManagementPolicy =
+        hu.orszembejelento.backend.usermanagement.domain.UserManagementPolicy(areaScopePolicy)
 }
