@@ -77,7 +77,10 @@ abstract class AbstractAuthIntegrationTest {
     @BeforeEach
     fun resetDatabaseAndClock() {
         // Order matters: audit references users, refresh tokens reference sessions.
-        jdbc.sql("TRUNCATE audit_events, refresh_tokens, auth_sessions, users CASCADE").update()
+        // service_areas is included here (not just by Phase 2's own tables) so Phase 6's
+        // user-management tests - the only ones that create service areas - always start
+        // from a clean scope; CASCADE also clears user_service_areas, which references both.
+        jdbc.sql("TRUNCATE audit_events, refresh_tokens, auth_sessions, users, service_areas CASCADE").update()
         // Every test calls from 127.0.0.1, so they share one IP bucket; without this a
         // throttling test would poison every test that runs after it.
         rateLimiter.resetAll()
@@ -164,6 +167,16 @@ abstract class AbstractAuthIntegrationTest {
     protected fun json(response: HttpResponse<String>): JsonNode = objectMapper.readTree(response.body())
 
     protected fun errorCode(response: HttpResponse<String>): String = json(response).get("code").asText()
+
+    /**
+     * A JSON array node as a real Kotlin `List<JsonNode>`.
+     *
+     * `JsonNode` declares its own member `map` (array-transform semantics, not the Kotlin
+     * stdlib's `Iterable.map`), which - being a member - wins over the stdlib extension in
+     * overload resolution and silently changes what a plain `.map { ... }` call on a
+     * `JsonNode` even means. Converting to a real `List` first sidesteps that entirely.
+     */
+    protected fun JsonNode.asList(): List<JsonNode> = iterator().asSequence().toList()
 
     // ------------------------------------------------------------- flow helpers
 
