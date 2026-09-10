@@ -2,13 +2,25 @@
 
 Phase 8 builds the actual Service Android application on top of the existing Phase 2
 authentication, Phase 6 user-management backend and Phase 7 report-workflow backend. It is
-an **Android client phase**: no new product features, no new backend endpoints. The one
-backend change that touched this phase (`jackson-module-kotlin`, PR #11) was a correctness
-fix shipped on its own branch and merged to `main` before Phase 8 resumed — see §A and §N.
+an **Android client phase**. The `jackson-module-kotlin` correctness fix (PR #11) was
+shipped on its own branch and merged to `main` before Phase 8 resumed — see §A and §N.
 
-> **Owner visual approval: NOT YET GIVEN.** The representative screenshots in §M are
+A **post-implementation correction pass** followed the first review round (see §P for the
+full list). It made three functional additions on top of the pure-client scope:
+
+- **one small additive backend change** — `GET /account/me` now also returns the caller's
+  **own** service-area scope (`globalAreaAccess` + assigned areas), nothing else (§Q);
+- the **"Aktív munkanézet"** local area lens for `SERVICE_USER` (§E), now that the client
+  can discover its own areas without a management endpoint;
+- the **catalogue-backed report filter sheet** (§E) — category / event type / settlement /
+  area, every value from the Public reference/catalogue APIs, nothing hard-coded.
+
+Plus presentation-only changes: role/status enums are now localised through one central
+mapping (§J), and a second sweep of production copy (§J).
+
+> **Owner visual approval: PENDING — NOT GIVEN.** The representative screenshots in §M are
 > prepared for review. This phase stops here for the owner to approve the final appearance.
-> No Phase 8 PR has been opened.
+> No Phase 8 PR has been opened. No merge. No Phase 9 work.
 
 ---
 
@@ -21,6 +33,9 @@ fix shipped on its own branch and merged to `main` before Phase 8 resumed — se
 | Backend hotfix merged in | `f3cc60b` — *Merge pull request #11 from …/fix/backend-kotlin-json-defaults* (contains `fff5539`) |
 | `main` the branch is built on | `f3cc60b` (fast-forward merge of `origin/main` into the branch; the Phase 8 working tree was untouched) |
 | Phase 8 commit | `39ee6d3` — *feat(service-android): Phase 8 — full operational Service UI* |
+| CI bookkeeping commits | `8602b18`, `d501f74` — docs only (engineering-report SHA / CI-run references) |
+| Correction-pass commit | `__CORRECTION_SHA__` — *see §P* |
+| **Final branch HEAD** | **`__CORRECTION_SHA__`** — the one SHA the CI results in §N are measured against |
 
 The backend hotfix (`jackson-module-kotlin`) was developed in a **separate git worktree** on
 branch `fix/backend-kotlin-json-defaults`, reviewed, merged as PR #11, and only then merged
@@ -32,8 +47,10 @@ No PR opened. Nothing merged. No Phase 9 work.
 
 ## B. Android architecture
 
-One Gradle build under `android/`, two apps. Phase 8 changes are confined to `service-app`
-plus two shared version-catalog entries.
+One Gradle build under `android/`, two apps. Phase 8 client changes are confined to
+`service-app` plus two shared version-catalog entries. The correction pass additionally made
+one additive backend change (§Q) — a single field-group on `GET /account/me`, no new
+endpoint, no contract removed or renamed.
 
 ### Layering
 
@@ -129,8 +146,10 @@ Phase 2 is used exactly as-is; Phase 8 added no auth endpoint and did not weaken
   használható." Backend rejections are mapped into Hungarian.
 - **App start** — `AuthState.RestoringSession` → restores the encrypted refresh state via the
   existing `EncryptedTokenStore` / `KeystoreCryptoBox`; on a valid session it loads
-  `{serviceId, role}` from `/account/me` and lands on the correct role UI; otherwise the
-  login screen. An authorized screen is never shown from stale local role data.
+  `{serviceId, role, globalAreaAccess, areas}` from `/account/me` (§Q) and lands on the
+  correct role UI; otherwise the login screen. `role` still drives navigation exactly as
+  before; `globalAreaAccess` / `areas` only feed the local area lens and filter chips (§E).
+  An authorized screen is never shown from stale local role data.
 - **Session security — unchanged**: access token in memory only; refresh token in
   AndroidKeyStore AES-GCM; no plaintext refresh token; refresh excluded from backup; single-
   flight refresh; ambiguous refresh failure not blindly retried. The Phase 2
@@ -224,6 +243,48 @@ Rendered from whatever the backend returns — no fake "Besorolatlan" ServiceAre
 may view and directly close it. It is never claimable, assignable to a `SERVICE_USER`, or
 re-routable — there is no routing UI in Phase 8.
 
+### Report filter sheet (brief §41-42) — added in the correction pass
+
+A compact `ModalBottomSheet` opened from a funnel icon in the queue's search row (a
+`BadgedBox` badge shows the active facet count). It offers four server-side facets on top of
+the retained free-text `query`:
+
+| facet | source of truth | wire param |
+|---|---|---|
+| service area | the caller's **own** areas from `GET /account/me` (§Q); shown only when that list is non-empty | `areaId` |
+| category | `GET /api/v1/public/report-catalog` | `categoryCode` |
+| event type | the selected category's `eventTypes` from the same catalogue response | `eventTypeCode` |
+| settlement | debounced `GET /api/v1/public/reference/settlements?query=` (min 2 chars) | `settlementId` |
+
+Nothing is hard-coded — category / event-type / settlement values are always the Public
+reference/catalogue truth, so the Service app can never disagree with what a Public reporter
+saw. Selecting a category clears any stale event-type selection (event types belong to a
+category). "Alkalmaz" calls back one `ReportFilter`; the queue `ViewModel.updateFilter`
+re-requests from page 0 with every facet, so paging state always resets on a filter change.
+"Szűrők törlése" clears the sheet's facets and leaves the free-text `query` and the
+`assigneeServiceId` CTA filter untouched. All three queues (Új / Folyamatban / Archívum)
+carry the same sheet.
+
+This is not an advanced query builder — no boolean logic, no saved queries, no unbounded
+local data dump (the settlement list is a bounded server search, the area list is the
+caller's own small set). It is `ReportFilterSheet` + `CatalogRepository` + wiring only; the
+Phase 7 queue endpoints already accepted every one of these params.
+
+### "Aktív munkanézet" — local UI preference only (brief §13-14)
+
+A per-`serviceId` `SharedPreferences` value (`SharedPrefsActiveWorkAreaStore`, keyed
+`"area::$serviceId"`) holding one `areaId?` (or nothing = "all my areas"). It is **not
+authorization**: it is applied *only* as the `areaId` query param on the three queues, so it
+can only ever narrow what the actor already legitimately sees; the backend scope stays
+authoritative. Shown as a FilterChip row on the `SERVICE_USER` **Profil** screen (Minden
+terület + the caller's own areas from §Q); `MODERATOR`/`SUPER_ADMIN` do not get this
+selector (their own-account route leaves the params at their defaults, hiding the section).
+
+Recovery: on session start a stored area that is no longer in the caller's `ownAreas` (and
+who is not global) is dropped back to "all areas" while seeding; the backend independently
+self-heals (an out-of-scope `areaId` simply returns nothing). A different user signing in on
+the same device never inherits the previous user's lens — verified live (§K, §M).
+
 ---
 
 ## F. User-management UI
@@ -231,8 +292,10 @@ re-routable — there is no routing UI in Phase 8.
 Phase 6's backend becomes usable; entry lives inside the Moderáció / Adminisztráció hubs.
 
 - **User list** — `GET …/users`. Service-ID search, real backend rows: service ID, role,
-  ACTIVE/DEACTIVATED, area summaries / global access, and the `canManage` hint. No names,
-  emails or phones (they do not exist in this product model). Load-more pagination
+  status, area summaries / global access, and the `canManage` hint. Role and status are
+  shown through the localised presentation mapping (§J): a row reads
+  "Szolgálati munkatárs · Aktív · Északi terület", never "SERVICE_USER · ACTIVE · …". No
+  names, emails or phones (they do not exist in this product model). Load-more pagination
   (backend page 0 / size 50); no unbounded list; no duplicates across pages; clean reset on
   refresh.
 - **`canManage` presentation** — a UI hint only, never authorization truth. A peer
@@ -242,23 +305,25 @@ Phase 6's backend becomes usable; entry lives inside the Moderáció / Adminiszt
 - **Managed-user detail** — service ID, role, status, a "Kötelező jelszóváltás" indicator
   where set, global access, assigned ServiceAreas, and the actions the actor may take.
   Never the internal UUID, password hash, tokens, sessions or audit rows.
-- **Create user** — SUPER_ADMIN may create `SERVICE_USER` or `MODERATOR` (segmented button);
-  a MODERATOR sees `SERVICE_USER` only. Area checkboxes; a distinct "Minden terület" global-
-  access checkbox with the hint "Külön globális jogosultság, nem szolgálati terület."
-  Service ID, the temporary credential, status and `mustChangePassword` are all
-  server-generated; the client sends only `role` / `areaIds` / `globalAreaAccess`.
+- **Create user** — SUPER_ADMIN may create a `SERVICE_USER` or a `MODERATOR`; the segmented
+  button shows the localised labels ("Szolgálati munkatárs" / "Moderátor") but the client
+  still sends the **unchanged backend enum value** (`SERVICE_USER` / `MODERATOR`). A
+  MODERATOR sees "Szolgálati munkatárs" only. Area checkboxes; a distinct "Minden terület"
+  global-access checkbox with the hint "Hozzáférés minden szolgálati területhez." Service
+  ID, the temporary credential, status and `mustChangePassword` are all server-generated;
+  the client sends only `role` / `areaIds` / `globalAreaAccess`.
 - **Capability matrix (matches the backend response, not re-implemented as client security)**
 
   | action | `MODERATOR` (manageable target) | `SUPER_ADMIN` |
   |---|---|---|
   | grant / revoke ServiceArea | ✔ | ✔ |
-  | password reset | ✔ | ✔ |
+  | temporary-credential issue ("Ideiglenes jelszó kiadása") | ✔ | ✔ |
   | deactivate / reactivate | ✔ | ✔ |
-  | change role (`SERVICE_USER ↔ MODERATOR`) | ✘ (not shown) | ✔ (confirmation required) |
-  | grant / revoke global access | ✘ (not shown) | ✔ |
+  | change role ("Szerepkör: Moderátor" / "Szerepkör: Szolgálati munkatárs") | ✘ (not shown) | ✔ (confirmation required) |
+  | grant / revoke global access ("Minden terület jogosultság megadása") | ✘ (not shown) | ✔ |
 
   Verified live: the MODERATOR view of a manageable `SERVICE_USER` shows exactly the first
-  three; the SUPER_ADMIN view of the same user shows all five (§M, SHOT 12 vs SHOT 16).
+  three; the SUPER_ADMIN view of the same user shows all five (§M, SHOT 14 vs SHOT 18).
 - **Deactivate** — confirmation "Felhasználó deaktiválása" / "A felhasználó nem tud majd
   bejelentkezni, és a jelenlegi munkamenetei megszűnnek." No claim that reports auto-move
   (they do not).
@@ -278,8 +343,9 @@ returns `409 USER_HAS_ACTIVE_REPORT_ASSIGNMENTS`. The client:
    Bejelentések → Folyamatban pre-filtered by that user's `assigneeServiceId`;
 4. never auto-retries the admin mutation and never describes a database race.
 
-Verified live: SHOT 14 (guard + CTA), SHOT 14b (the pre-filtered IN_PROGRESS list showing
-exactly that user's two reports).
+Verified live in the correction pass: SHOT 16a (deactivate confirm), SHOT 16 (guard + human
+copy + CTA, user still "Aktív"), SHOT 16b (the CTA lands on Folyamatban pre-filtered by that
+user's `assigneeServiceId`).
 
 ---
 
@@ -338,34 +404,51 @@ create-user form.
 
 ---
 
-## J. Production-copy review (brief §105)
+## J. Production-copy review (brief §105) & role/status localisation
 
 Searched every user-visible string (`res/values/strings.xml`) and every hard-coded
 user-facing literal in `service-app/src/main` for: `PHASE`, `backend`, `workflowVersion`,
 `archivedAt`, `server-side scope`, dev notes, stable error-code names, demo/role switchers,
 fake/demo credentials, architecture explanations.
 
-**Fixed:**
+### Centralised role/status presentation mapping (correction pass)
+
+`common/ui/RoleStatusLabels.kt` — one place that turns a backend enum value into a localised
+label resource:
+
+| backend value | label | backend value | label |
+|---|---|---|---|
+| `SERVICE_USER` | Szolgálati munkatárs | `ACTIVE` | Aktív |
+| `MODERATOR` | Moderátor | `DEACTIVATED` | Deaktiválva |
+| `SUPER_ADMIN` | Főadminisztrátor | *(unknown)* | safe non-leaking fallback |
+
+`roleLabelRes(role)` / `userStatusLabelRes(status)` are pure and unit-tested, including that
+an unrecognised future enum value still renders a real localised label, never the raw
+string. **Presentation only** — no backend or API enum name changed; the Create-User role
+selector shows the localised label but sends the unchanged `SERVICE_USER` / `MODERATOR`
+value. Applied at every site the raw enum used to surface: user list rows, managed-user
+detail header, create-user segmented button, the account/profile "Szerepkör:" line.
+
+### Copy fixes
 
 | Before | After | Why |
 |---|---|---|
 | `Assignment történet` / `Külön a biztonsági eseménynaplótól.` | `Ügyintézési előzmények` / `A bejelentés eddigi menete.` | copied from the mockup's own `class="muted"` dev annotation; mixed-language, references an internal audit system |
 | `AssignmentHistoryCopy` end-reason fallback `"$endedBy · ${endReason}"` | `"$endedBy lezárta az ügyintézést"` | a latent path that would render a raw `report_assignments.end_reason` code if the backend ever adds a fourth reason (today all three — RETURNED/REASSIGNED/ARCHIVED — are handled explicitly) |
+| `Jelszó reset` | `Ideiglenes jelszó kiadása` | "reset" is an English dev term; the action issues a one-time credential |
+| global-access hint `Külön globális jogosultság, nem szolgálati terület.` | `Hozzáférés minden szolgálati területhez.` | states what the checkbox does, plainly |
+| reassign subtitle `Csak ACTIVE SERVICE_USER választható, aki jelenleg jogosult a bejelentés szolgálati területére.` | `Csak aktív szolgálati munkatárs választható, aki jogosult a bejelentés szolgálati területére.` | raw enum names in an otherwise Hungarian sentence |
+| list rows `SERVICE_USER · ACTIVE · <area>` etc. | `Szolgálati munkatárs · Aktív · <area>` | via the central mapping above |
 
-**Deliberately retained** (approved-mockup vocabulary, consistent across the whole app, not
-dev notes — flagged for the owner in §M):
+**Deliberately unchanged** (existing Phase 2 copy, already approved by the owner):
 
-- Role identifiers shown as fixed tags/labels: `SERVICE_USER` / `MODERATOR` / `SUPER_ADMIN`,
-  the `SERVICE_USER · ACTIVE · <area>` list rows, `Szerepkör: MODERATOR` buttons, and the
-  create-user role segmented-button. The mockup uses these verbatim throughout its real
-  (non-dev-note) screens.
-- The reassign dialog's instruction "Csak ACTIVE SERVICE_USER választható, aki jelenleg
-  jogosult a bejelentés szolgálati területére." — verbatim from the mockup's functional
-  reassign modal (a plain `<p>`, not a muted annotation).
+- **Login**: "Bejelentkezés" / "Szolgálati azonosítóval és jelszóval." — not rewritten to
+  match any earlier suggested wording.
 
 No `PHASE X`, no `workflowVersion`, no `archivedAt`, no `server-side scope`, no stable
-error-code names, no demo credentials, no role switcher appears in any user-visible string.
-KDoc comments and test code that contain technical terms are out of scope for this check.
+error-code names, no raw role/status enum, no demo credentials, no role switcher appears in
+any user-visible string. KDoc comments and test code that contain technical terms are out of
+scope for this check.
 
 ---
 
@@ -381,7 +464,14 @@ in NEW logged out; the next `SERVICE_USER`, Északi-only, briefly saw that Déli
 clears it in `DisposableEffect { onDispose { … } }` — that composable exists only while
 `AuthState.Authenticated`, so its disposal *is* the logout boundary. The queue ViewModels
 are created against that owner; on the next login a fresh `ServiceNavHost` gets a fresh
-store, so `init { refresh() }` loads the correct data.
+store, so `init { refresh() }` loads the correct data. **This fix is preserved unchanged**
+through the correction pass, and the queue ViewModels still seed from a session-fresh
+`ReportFilter` (the "Aktív munkanézet" area, §E) so the lens is per-session too.
+
+**Re-tested in the correction pass**: User A (`SZ-596961`, Északi+Déli, reports in every
+state) → queue visible → in-app logout → User B (`SZ-841277`, Déli only) login. B's Új queue
+shows *only* the one Déli report immediately, with no flash of A's Északi reports and no
+inherited filter badge (§M). The area lens, keyed by `serviceId`, is likewise not inherited.
 
 **Trade-off**: the three queues now reload from the backend on a configuration change
 (rotation) instead of surviving it. Everything nav-scoped (report/user detail, create-user)
@@ -395,13 +485,26 @@ correct (empty) NEW queue immediately, with no stale card.
 
 ## L. Tests — every command, count, result
 
-### Backend (unchanged on this branch beyond the merged PR #11)
+All figures below are **after** the correction pass, on the final branch HEAD.
+
+### Backend — `./gradlew clean build`
 
 ```
 cd backend && ./gradlew clean build
 ```
-**BUILD SUCCESSFUL** — **529 tests, 0 failures, 0 errors** (524 baseline + 5 from PR #11's
-`KotlinJsonDefaultsRegressionIT`).
+**BUILD SUCCESSFUL** — **533 tests, 0 failures, 0 errors, 0 skipped**
+(529 previous total + 4 new `OwnAccountScopeIT` cases; the existing
+`AuthenticationFlowIT` `/me` test was rewritten in place, not added).
+
+Focused tests for the `GET /account/me` extension (§Q):
+
+| test | asserts |
+|---|---|
+| `AuthenticationFlowIT` › *"me returns the service id, role and the caller's own area scope - nothing more"* | body key set is exactly `{serviceId, role, globalAreaAccess, areas}`; `!globalAreaAccess`, empty `areas` for a bare account |
+| `OwnAccountScopeIT` › SERVICE_USER own areas + flag, exact field set | a `SERVICE_USER` sees its own assigned areas and nothing about any other user |
+| `OwnAccountScopeIT` › inactive assigned area still listed with `INACTIVE` status | an area's activation state is surfaced, not filtered |
+| `OwnAccountScopeIT` › globally-scoped `MODERATOR` → `globalAreaAccess = true` | the global flag is read from real scope |
+| `OwnAccountScopeIT` › scope read from current state (just-granted area appears same token) | no stale cache |
 
 ### Android — unit (`testDebugUnitTest`)
 
@@ -411,17 +514,23 @@ cd android && ./gradlew :service-app:testDebugUnitTest :public-app:testDebugUnit
 
 | module | tests | failures |
 |---|---|---|
-| `service-app` | **81** | 0 |
+| `service-app` | **90** | 0 |
 | `public-app` | 36 | 0 |
 
-`service-app` unit coverage (Phase 8 additions in **bold**):
-`BottomNavigationTest` (5), **`WorkflowActionAvailabilityTest`** (6), **`ErrorCopyTest`** (4),
-**`ReportModelsTest`** (4), **`AssignmentHistoryCopyTest`** (4 — includes the raw-code
-fallback guard), **`ReportQueueViewModelTest`** (4), **`UsersListViewModelTest`** (4),
-**`ReportDetailViewModelTest`** (4), **`UserDetailViewModelTest`** (4 — §98/§99),
-**`CreateUserViewModelTest`** (4 — §99), **`CreateUserRequestWireFormatTest`** (3 — pins
-that `globalAreaAccess = false` is *omitted* from the wire, the client half of the PR #11
-contract), plus the retained Phase 2 `auth`/`common` JVM tests.
+`service-app` unit coverage — correction-pass additions in **bold**:
+`BottomNavigationTest` (5), `WorkflowActionAvailabilityTest` (6), `ErrorCopyTest` (4),
+`ReportModelsTest` (4), `AssignmentHistoryCopyTest` (4 — raw-code fallback guard),
+`ReportQueueViewModelTest` (4), `UsersListViewModelTest` (4), `ReportDetailViewModelTest`
+(4), `UserDetailViewModelTest` (4), `CreateUserViewModelTest` (4),
+`CreateUserRequestWireFormatTest` (3),
+**`RoleStatusLabelsTest`** (3 — every role/status maps to its own label; an unknown value
+never falls through to a raw string),
+**`ActiveWorkAreaStoreTest`** (3 — per-`serviceId` store, a different user starts with no
+lens, clearing to null removes it),
+**`ReportFilterTest`** (3 — `activeFacetCount` counts only the explicit server-side facets,
+`updateFilter` always re-requests from page 0 with every facet, a seeded `initialFilter` is
+used for the first load),
+plus the retained Phase 2 `auth`/`common` JVM tests.
 
 ### Android — instrumented + Compose (`connectedDebugAndroidTest`)
 
@@ -438,7 +547,9 @@ Device: **`orszem-test` AVD — Android 15, API 35, x86_64**.
 | `ReportWorkflowConflictComposeTest` | 1 | 0 | §96 CRITICAL — a stale `REPORT_STATE_CHANGED` close is sent **once**, current state re-fetched, human message shown, raw code never shown |
 | `CredentialDialogComposeTest` | 1 | 0 | §99 — credential visible while open, gone from the UI after "Elmentettem" |
 
-**21 instrumented tests, 0 failures.** CI compiles both instrumented suites
+**21 instrumented tests, 0 failures** (re-run on the emulator after the correction pass; no
+instrumented test was modified — the new screen params all have defaults, so the existing
+call sites compile and behave unchanged). CI compiles both instrumented suites
 (`assembleDebugAndroidTest`); they are run on an emulator (here) per the existing
 `.github/workflows/android.yml` policy.
 
@@ -449,8 +560,11 @@ Device: **`orszem-test` AVD — Android 15, API 35, x86_64**.
           :public-app:assembleRelease \
           :service-app:assembleDebugAndroidTest :public-app:assembleDebugAndroidTest lint
 ```
-**BUILD SUCCESSFUL** — **lint: 0 issues** (both modules). No existing test was weakened or
-removed.
+**BUILD SUCCESSFUL** — `:public-app:assembleRelease` builds the unsigned release APK
+(minification, resource shrinking, strict release network-security config) end to end.
+**lint: `service-app` "No issues found"**; `public-app` reports only the pre-existing
+`GradleDependency` version-nag warnings (unchanged by this phase), `abortOnError = true` and
+the build is green. No existing test was weakened or removed.
 
 ### Web
 
@@ -476,66 +590,79 @@ pass; no secret-shaped file under `deploy/`.
 
 ## M. Emulator verification & screenshots (brief §100-103)
 
-Verified against a **throwaway local backend** built from the merged branch state
-(`f3cc60b` code) — Docker Postgres `orszem-p8-pg` (port 5436), `bootRun` on 8080, reference
-data + a `SUPER_ADMIN` / `MODERATOR` / `SERVICE_USER` hierarchy + reports in NEW / IN_PROGRESS
-/ ARCHIVED states, all seeded through the real HTTP API, the maintenance CLI and `psql`.
-No fake runtime data ships in the app; every screen below shows real backend responses.
+Verified against a **throwaway local backend** running the **final branch HEAD** code
+(includes the `GET /account/me` extension) — Docker Postgres `orszem-p8-pg` (port 5436),
+the built `backend.jar` on 8080. Seeded entirely through the real HTTP API + `psql` for
+config-only rows (`service_areas` / `service_area_railway_lines`, which Phase 10 would own):
+two areas (Északi ← line 900, Déli ← line 901), one `SUPER_ADMIN`, one territorial and one
+global `MODERATOR`, three `SERVICE_USER`s with area grants, and **Public reports submitted
+through `POST /api/v1/public/reports`** routed by settlement → railway line → area, then
+claimed/closed through the real workflow API to populate NEW / IN_PROGRESS / ARCHIVED.
+Two reports had their `submitted_at` back-dated in the throwaway DB so the NEW queue shows a
+real `OLDER` bucket and the "Régebbi bejelentések" divider. No fake runtime data ships in
+the app; every screen below is a real backend response.
 
 Device: **`orszem-test` AVD — Android 15 / API 35 / x86_64**.
 
-Flows exercised on device: login (no demo picker); forced initial password change (new
-`SERVICE_USER`); session restore after process restart; SERVICE_USER NEW → claim →
-IN_PROGRESS → detail with Visszaadás/Lezárás; Archívum; Statisztika placeholder; Profil;
-MODERATOR hub → Felhasználók → peer-MODERATOR read-only detail; MODERATOR IN_PROGRESS detail
-→ Átrendelés/Visszaadás/Lezárás; reassign dialog with search; SUPER_ADMIN Admin hub →
-Felhasználók → managed-user detail with role/global controls → Create User → one-time
-credential dialog; active-assignment guard (deactivate a user with open assignments) → CTA →
-pre-filtered IN_PROGRESS; logout with no privileged screen left in the back stack.
+Flows re-exercised on device in the correction pass: login; forced initial password change
+(a freshly-created `SERVICE_USER`); SERVICE_USER NEW (with the OLDER divider) → detail →
+claim → IN_PROGRESS detail with Visszaadás/Lezárás; **report filter sheet** (area / category
+→ event types / settlement search) → apply → badge + narrowed queue; **"Aktív munkanézet"**
+selector → narrowed queue; Archívum; Statisztika placeholder; Profil; MODERATOR hub →
+Felhasználók (localised role/status rows) → manageable-user detail / peer-MODERATOR
+read-only; MODERATOR IN_PROGRESS detail → Átrendelés/Visszaadás/Lezárás; reassign dialog
+(new localised subtitle); SUPER_ADMIN Admin hub → managed-user detail with role/global
+controls → Create User (localised segmented button) → one-time credential dialog;
+active-assignment guard → CTA → pre-filtered IN_PROGRESS; **session isolation**
+(A login → logout → B login, no data leak); **`REPORT_ALREADY_ASSIGNED`** conflict (human
+copy, no auto-retry).
 
-Screenshot set prepared for owner review (delivered with the review, not committed as
-binary blobs — matching the Phase 5 precedent):
+Screenshot set for owner review — recaptured wherever the visible UI changed; delivered with
+the review, not committed as binary blobs (Phase 5 precedent). New this pass: **#5** and
+**#6**.
 
-| # | Screen | file |
-|---|---|---|
-| 1 | Login | `SHOT_01_login.png` |
-| 2 | Forced initial password change | `SHOT_02_forced_pw_change.png` |
-| 3 | SERVICE_USER — Új queue | `SHOT_03_su_new_queue.png` |
-| 4 | SERVICE_USER — report detail, NEW / IN_PROGRESS | `SHOT_04a_su_report_detail_new.png`, `SHOT_04_su_in_progress_detail.png` |
-| 5 | Archívum | `SHOT_05_archive.png` |
-| 6 | Statisztika placeholder | `SHOT_06_stats.png` |
-| 7 | SERVICE_USER Profil | `SHOT_07_profile.png` |
-| 8 | MODERATOR hub | `SHOT_08_mod_hub.png` |
-| 9 | MODERATOR IN_PROGRESS supervisor actions | `SHOT_09_mod_supervisor_actions.png` |
-| 10 | Reassign dialog | `SHOT_10_reassign_dialog.png` |
-| 11 | User list | `SHOT_11_userlist.png` |
-| 12 | Manageable SERVICE_USER detail (MODERATOR view) | `SHOT_12_mod_manageable_user.png` |
-| 13 | Peer MODERATOR read-only detail | `SHOT_13_peer_mod_readonly.png` |
-| 14 | Active-assignment guard + CTA + pre-filtered nav | `SHOT_14a_deactivate_confirm.png`, `SHOT_14_guard.png`, `SHOT_14b_guard_cta_nav.png` |
-| 15 | SUPER_ADMIN Admin hub | `SHOT_15_su_adminhub.png` |
-| 16 | SUPER_ADMIN user detail with role/global controls | `SHOT_16_su_userdetail.png` |
-| 17 | Create User | `SHOT_17_createuser.png` |
-| 18 | One-time temporary credential display | `SHOT_18_credential.png` |
-| + | SUPER_ADMIN own-account (hub → Saját fiók) | `SHOT_19_su_own_account.png` |
+| # | Screen | file(s) | changed this pass? |
+|---|---|---|---|
+| 1 | Login | `SHOT_01_login.png` | no (Phase 2 copy) |
+| 2 | Forced initial password change | `SHOT_02_forced_pw_change.png` | no |
+| 3 | SERVICE_USER — Új queue (OLDER divider + filter icon) | `SHOT_03_su_new_queue.png` | **yes** — funnel/badge added |
+| 4 | SERVICE_USER — report detail, NEW / IN_PROGRESS | `SHOT_04a_su_report_detail_new.png`, `SHOT_04_su_in_progress_detail.png` | no |
+| **5** | **Report filter sheet** (area / category / event type / settlement search) + applied badge | `SHOT_05_report_filters.png`, `SHOT_05b_report_filters_settlement_search.png`, `SHOT_05c_filters_applied.png` | **new** |
+| **6** | **"Aktív munkanézet"** area selector on Profil | `SHOT_06_active_work_view.png` | **new** |
+| 7 | Archívum | `SHOT_07_archive.png` | no |
+| 8 | Statisztika placeholder | `SHOT_08_stats.png` | no |
+| 9 | SERVICE_USER Profil (localised "Szerepkör: Szolgálati munkatárs" + §6 section) | `SHOT_09_profile_full.png` | **yes** |
+| 10 | MODERATOR hub | `SHOT_10_mod_hub.png` | no |
+| 11 | MODERATOR IN_PROGRESS supervisor actions | `SHOT_11_mod_supervisor_actions.png` | no |
+| 12 | Reassign dialog (localised subtitle, no raw enums) | `SHOT_12_reassign_dialog.png` | **yes** |
+| 13 | User list (localised role · status · area rows) | `SHOT_13_userlist.png` | **yes** |
+| 14 | Manageable SERVICE_USER detail — MODERATOR view (localised, "Ideiglenes jelszó kiadása") | `SHOT_14_mod_manageable_user.png` | **yes** |
+| 15 | Peer MODERATOR read-only detail (localised) | `SHOT_15_peer_mod_readonly.png` | **yes** |
+| 16 | Active-assignment guard + CTA + pre-filtered nav | `SHOT_16a_deactivate_confirm.png`, `SHOT_16_guard.png`, `SHOT_16b_guard_cta_nav.png` | no |
+| 17 | SUPER_ADMIN Admin hub | `SHOT_17_su_adminhub.png` | no |
+| 18 | SUPER_ADMIN user detail — role/global controls (localised) | `SHOT_18_su_userdetail.png` | **yes** |
+| 19 | Create User (localised segmented button + "Hozzáférés minden szolgálati területhez.") | `SHOT_19_createuser.png` | **yes** |
+| 20 | One-time temporary credential display | `SHOT_20_credential.png` | no |
+| 21 | SUPER_ADMIN own-account ("Szerepkör: Főadminisztrátor") | `SHOT_21_su_own_account.png` | **yes** |
 
 ### Visual deviations from the approved HTML mockup — for the owner to accept or reject
 
-1. **Login copy** — shipped "Bejelentkezés" / "Szolgálati azonosítóval és jelszóval." vs the
-   brief's suggested "Belépés" / "Szolgálati belépés". This is existing Phase 2 copy;
-   changing it means touching the Phase 2 auth screen.
-2. **Role/status identifiers as literal tags** — `SERVICE_USER`, `MODERATOR`, `SUPER_ADMIN`,
-   `ACTIVE` appear as fixed labels in list rows, badges, the role select and the
-   `Szerepkör: X` buttons, and inside the reassign dialog's instruction sentence. This
-   matches the approved mockup verbatim and is consistent everywhere, but it does read as
-   raw enum text in an otherwise fully-Hungarian UI. If the owner prefers fully localized
-   role/status wording ("Szolgálati munkatárs", "Aktív", …), that is a single deliberate
-   vocabulary change to make across the app.
-3. **`ageBucket` divider / statuses** — the mockup's "168h" and raw status words are
-   replaced by "Régebbi bejelentések" and ÚJ / FOLYAMATBAN / LEZÁRVA / BESOROLATLAN, per
-   brief §17/§83 (intended, not a regression).
-4. **Filters** — the mockup implies category/event-type/settlement filters; Phase 8 ships
-   server-side free-text search + (for privileged roles) an area filter. The full catalog-
-   backed filter builder is deferred — see §N.
+1. **Login copy** — shipped "Bejelentkezés" / "Szolgálati azonosítóval és jelszóval." This
+   is existing Phase 2 copy, approved by the owner, and was **not** rewritten.
+2. **`ageBucket` divider / statuses** — the mockup's "168h" and raw status words are shown as
+   "Régebbi bejelentések" and ÚJ / FOLYAMATBAN / LEZÁRVA / BESOROLATLAN, per brief §17/§83
+   (intended, not a regression).
+3. **User-list row wrap** — on a narrow phone, a `SERVICE_USER` row whose area summary is
+   long ("Déli terület, Északi terület") can wrap the trailing "KEZELHETŐ" hint onto its own
+   lines. Pre-existing layout behaviour (the hint was there before), only more visible now
+   that area names are longer than the old raw codes. Cosmetic; not a redesign item.
+
+**Previously flagged, now resolved by the correction pass:**
+
+- *Role/status raw enum tags* → all localised through one central mapping (§J). `SERVICE_USER`
+  / `MODERATOR` / `SUPER_ADMIN` / `ACTIVE` no longer appear anywhere in the UI.
+- *Catalog-backed filters deferred* → the full category / event-type / settlement / area
+  filter sheet now ships (§E), every value from the Public reference/catalogue APIs.
 
 **OWNER VISUAL APPROVAL: PENDING.** Not recorded as given. This phase stops here.
 
@@ -546,55 +673,126 @@ binary blobs — matching the Phase 5 precedent):
 Local results are in §L. On push, the branch runs all five existing workflows unchanged
 (`.github/workflows/{backend,android,web,deploy-config,reference-data}.yml`). The
 `android.yml` workflow already compiles the instrumented suites and does not run them on a
-device — the new Compose tests follow that same policy and were run here on the emulator
-instead.
+device — the Compose tests follow that same policy and were run here on the emulator instead.
 
-| workflow | run (SHA `8602b18`) | result |
+**All five must be green on the exact final HEAD `__CORRECTION_SHA__`** — a green run on any
+earlier SHA does not count.
+
+| workflow | run (SHA `__CORRECTION_SHA__`) | result |
 |---|---|---|
-| backend | [34505090807](https://github.com/kplevi05/Orszem/actions/runs/34505090807) | green |
-| android | [34505090815](https://github.com/kplevi05/Orszem/actions/runs/34505090815) | green |
-| web | [34505090803](https://github.com/kplevi05/Orszem/actions/runs/34505090803) | green |
-| deploy-config | [34505090846](https://github.com/kplevi05/Orszem/actions/runs/34505090846) | green |
-| reference-data | [34505090786](https://github.com/kplevi05/Orszem/actions/runs/34505090786) | green |
+| backend | `__RUN_BACKEND__` | `__RESULT_BACKEND__` |
+| android | `__RUN_ANDROID__` | `__RESULT_ANDROID__` |
+| web | `__RUN_WEB__` | `__RESULT_WEB__` |
+| deploy-config | `__RUN_DEPLOY__` | `__RESULT_DEPLOY__` |
+| reference-data | `__RUN_REFDATA__` | `__RESULT_REFDATA__` |
+
+Superseded green runs (earlier docs-only commit `8602b18`, retained for the record):
+backend [34505090807], android [34505090815], web [34505090803],
+deploy-config [34505090846], reference-data [34505090786]
+(all `https://github.com/kplevi05/Orszem/actions/runs/<id>`).
 
 No CI step was removed or weakened. `android.yml` gained no new required step — the Compose
-tests compile inside the existing `assembleDebugAndroidTest` step.
+tests compile inside the existing `assembleDebugAndroidTest` step. The backend workflow's
+`./gradlew build` now runs the 4 new `OwnAccountScopeIT` cases and the rewritten
+`AuthenticationFlowIT` `/me` test with no config change.
 
 ---
 
 ## O. Known limitations — not hidden
 
-1. **"Aktív munkanézet" (active work-view) for `SERVICE_USER` — not built (brief §13-14 STOP
-   condition).** No existing API lets an authenticated `SERVICE_USER` discover their own
-   assigned ServiceAreas or global-access flag: `GET /account/me` returns only
-   `{serviceId, role}`, and `GET /service/user-management/users/{id}` (the only endpoint
-   that lists a user's areas) rejects a `SERVICE_USER` caller before any use case runs.
-   Rather than fake the area list or misuse a privileged endpoint, the local area
-   preference was **not implemented** for `SERVICE_USER`. `MODERATOR`/`SUPER_ADMIN` legitimately
-   reuse `GET /service/user-management/areas` elsewhere (reassign picker, create-user).
-   **Smallest backend fix**: extend `GET /account/me` to optionally include
-   `globalAreaAccess` + `areas` for a `SERVICE_USER` caller. Deferred to a future phase; not
-   a Phase 8 blocker because the feature is a local convenience, not authorization.
-2. **Catalog-backed filters deferred (brief §41-42).** Server-side free-text `query` and an
-   area filter (privileged roles) ship now. The category / event-type / settlement / line
-   filter UI would require wiring the Public reference/catalog APIs as a second large
-   sub-feature; recorded here rather than silently omitted.
-3. **`FLAG_SECURE` on the credential screen not implemented (brief §92).** See §G — scoped
-   window-flag management around the one dialog was judged out of proportion; the credential
-   is already non-persistent, non-logged and backup-excluded.
-4. **`§98` active-assignment guard is covered by a ViewModel unit test + live emulator
+1. **`FLAG_SECURE` on the credential screen not implemented (brief §92, optional).** See §G —
+   scoped window-flag management around the one dialog was judged out of proportion; the
+   credential is already non-persistent, non-logged and backup-excluded. Not a blocker.
+2. **Active-assignment guard is covered by a ViewModel unit test + live emulator
    verification, not a full-navigation Compose test.** The guard's assertions (state
    unchanged, natural error, CTA present, no retry) are ViewModel-level; the CTA's
-   pre-filtered navigation was verified live (SHOT 14b). A Compose test of the whole
+   pre-filtered navigation was verified live (SHOT 16b). A Compose test of the whole
    `ServiceNavHost` nav graph would need a real `AuthViewModel` (concrete `AuthRepository`,
    Retrofit, Keystore) and was judged low marginal value over the two existing checks.
-5. **Queue state does not survive rotation** — see §K. Deliberate trade-off for correct
+3. **Queue state does not survive rotation** — see §K. Deliberate trade-off for correct
    cross-session isolation.
-6. **Login copy deviates from the brief's suggested wording** — see §D / §M.1. Phase 2 copy,
-   not rewritten.
-7. **Compose UI tests use the v1 `createComposeRule`** (deprecation warning, not an error).
+4. **Compose UI tests use the v1 `createComposeRule`** (deprecation warning, not an error).
    Migration to `…junit4.v2` changes the test dispatcher semantics and was left for a
    focused follow-up; the v1 API is fully functional and the tests pass.
+5. **Test-environment only: an idle OkHttp connection pool can surface a transient
+   "A kiszolgáló nem érhető el." on the next request.** Seen on the throwaway emulator after
+   the local backend was restarted mid-session or after a long idle: the first
+   filter/queue request fails on a stale pooled connection, and the app correctly shows its
+   standard *retryable* network error (never a crash, never a blind retry, never stale data).
+   A fresh app start or the in-app "Újrapróbálkozás" recovers it. This is an artifact of the
+   restart-heavy local test loop, not a code defect — the app's contract on a transport
+   failure ("keep state, explicit retry") is exactly what it should be.
+
+**Resolved by the correction pass** (previously listed here):
+
+- *"Aktív munkanézet" not built (brief §13-14 STOP condition)* — the smallest additive
+  backend change (`GET /account/me` self-scope, §Q) was approved and made; the local area
+  lens now ships for `SERVICE_USER` (§E), strictly as a local preference.
+- *Catalog-backed filters deferred (brief §41-42)* — the full filter sheet now ships (§E).
 
 Nothing above is a security regression, a fake data path or a user-facing implementation
 leak.
+
+---
+
+## P. Correction pass — what changed after the first review round
+
+The owner withheld visual approval and asked for a completion/correction pass before
+re-review. The overall dark-navy/gold direction stayed approved; no redesign. Items:
+
+1. **Localise raw role/status enums** through one central presentation mapping (§J). Backend
+   / API enum names unchanged; Create-User selector shows localised labels, sends raw values.
+2. **Second production-copy sweep** (§J): "Jelszó reset" → "Ideiglenes jelszó kiadása";
+   global-access hint → "Hozzáférés minden szolgálati területhez."; reassign subtitle
+   de-enumed. Login left unchanged (approved).
+3. **"Aktív munkanézet"** (§E) — resolved the brief §13-14 STOP condition with the smallest
+   additive backend change (§Q). Local UI preference only.
+4. **Report filter sheet** (§E) — catalogue/reference-backed category / event type /
+   settlement / area filters; nothing hard-coded.
+5. **Final SHA / CI reconciliation** (§A, §N) — one unambiguous HEAD, all 5 workflows green
+   on it.
+6. **FLAG_SECURE** — remains an accepted known limitation (§O.1); not forced in.
+7. **Session-isolation fix preserved** and re-tested (§K).
+8. **Conflict UX reconfirmed** — `REPORT_ALREADY_ASSIGNED` re-verified live (§M); the other
+   two remain covered by the unchanged ViewModel + Compose tests (§L).
+9. **No later-phase work** — Statisztika / Moderáció / Adminisztráció placeholders unchanged;
+   no fake statistics / moderation / ServiceArea / audit data; no "PHASE X" strings.
+10. **Full regression re-run** (§L) — backend clean build, Android unit + instrumented +
+    lint + all builds, web, reference-data, deploy-config. No existing test weakened.
+11. **Screenshots recaptured** for every changed screen; owner set renumbered, +#5 +#6 (§M).
+12. **This report updated**; owner visual approval kept **PENDING**.
+
+Not done (out of scope, per the brief): opening the Phase 8 PR, merging, Phase 9.
+
+---
+
+## Q. The one backend change — `GET /api/v1/service/account/me`
+
+Investigated first: the Phase 2 DTO was `MeResponse(serviceId, role)`, built in
+`ServiceAccountController.me()` from the `AuthenticatedActor` alone, asserted by
+`AuthenticationFlowIT`. Extending it is clean and additive — it does not touch auth,
+sessions, or any other endpoint.
+
+**Change:**
+
+- `MeResponse` gains `globalAreaAccess: Boolean` and `areas: List<MeServiceAreaResponse>`
+  where `MeServiceAreaResponse(id, name, status)`. Existing fields unmoved.
+- New `GetOwnAccountUseCase` (auth/application) → `scopeOf(userId)` returns the caller's
+  `UserRole`, `globalAreaAccess`, and assigned `ServiceArea`s, reading
+  `JdbcServiceAreaRepository.loadAreaActor()` + a new `assignedAreas(userId)` query
+  (`user_service_areas` ⋈ `service_areas`, ordered by name). A user with no area actor row
+  degrades to `SERVICE_USER / false / []`.
+- `ServiceAccountController.me()` maps that into the response; `Cache-Control: no-store`
+  unchanged.
+
+**Deliberately not exposed:** any other user, `canManage`, any management permission, audit
+data, internal UUIDs beyond the caller's own area ids, or anything unrelated to the caller's
+own scope. It is self-account information — the same trust level as already returning the
+caller's own `role`.
+
+**Compatibility:** additive only. Older clients ignore the new fields; the Android client
+declares them with defaults (`globalAreaAccess = false`, `areas = emptyList()`), so a
+response without them still deserialises. No migration. Tests: §L.
+
+The Active Work View and the filter sheet's area chips are the only consumers; both use the
+data strictly as a local narrowing hint, never as an authorisation claim (§E).

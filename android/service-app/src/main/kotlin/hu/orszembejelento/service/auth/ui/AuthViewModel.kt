@@ -123,7 +123,12 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         keepStateOnFailure: AuthState? = null,
     ) {
         _state.value = when (outcome) {
-            is AuthOutcome.Success -> AuthState.Authenticated(outcome.serviceId, outcome.role)
+            is AuthOutcome.Success -> AuthState.Authenticated(
+                serviceId = outcome.serviceId,
+                role = outcome.role,
+                globalAreaAccess = outcome.globalAreaAccess,
+                areas = outcome.areas.map { AuthState.AuthArea(it.id, it.name, it.status == "ACTIVE") },
+            )
             is AuthOutcome.PasswordChangeRequired -> AuthState.PasswordChangeRequired(outcome.serviceId)
             AuthOutcome.SessionEnded -> onEnded
             is AuthOutcome.Failure ->

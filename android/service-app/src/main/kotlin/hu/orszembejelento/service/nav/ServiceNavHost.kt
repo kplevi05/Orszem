@@ -37,13 +37,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import hu.orszembejelento.service.R
+import hu.orszembejelento.service.auth.domain.AuthState
 import hu.orszembejelento.service.auth.ui.AccountScreen
 import hu.orszembejelento.service.auth.ui.AuthViewModel
 import hu.orszembejelento.service.hub.ui.AdminHubScreen
 import hu.orszembejelento.service.hub.ui.ModerationHubScreen
 import hu.orszembejelento.service.hub.ui.StatsPlaceholderScreen
+import hu.orszembejelento.service.reports.data.ActiveWorkAreaStore
+import hu.orszembejelento.service.reports.data.CatalogRepository
 import hu.orszembejelento.service.reports.data.ReportFilter
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
+import hu.orszembejelento.service.reports.ui.AreaChoice
 import hu.orszembejelento.service.reports.ui.ArchiveScreen
 import hu.orszembejelento.service.reports.ui.ReportDetailScreen
 import hu.orszembejelento.service.reports.ui.ReportDetailViewModel
@@ -116,12 +120,25 @@ private fun bottomDestinationsFor(role: String): List<BottomDestination> = botto
 fun ServiceNavHost(
     serviceId: String,
     role: String,
+    globalAreaAccess: Boolean,
+    ownAreas: List<AuthState.AuthArea>,
     authViewModel: AuthViewModel,
     reportRepository: ReportWorkflowRepository,
     userManagementRepository: UserManagementRepository,
+    catalogRepository: CatalogRepository,
+    activeWorkAreaStore: ActiveWorkAreaStore,
 ) {
     val navController = rememberNavController()
     val onSessionEnded: () -> Unit = { authViewModel.forceSignedOut() }
+
+    // The "active work view" — a persisted, per-user local area lens (brief §13-14). It is
+    // only ever applied as the `areaId` query param, so it can never widen scope. A stored
+    // area the user no longer covers is dropped (recover to "all areas").
+    val areaChoices = remember(ownAreas) { ownAreas.map { AreaChoice(it.id, it.name) } }
+    var activeWorkAreaId by remember(serviceId) {
+        val stored = activeWorkAreaStore.get(serviceId)
+        mutableStateOf(stored?.takeIf { s -> globalAreaAccess || ownAreas.any { it.id == s } })
+    }
 
     // A ViewModel store scoped to this signed-in session, not to the Activity. The queue
     // ViewModels below hold the current user's reports; without a session-bound owner they
@@ -138,22 +155,40 @@ fun ServiceNavHost(
     // CTA (brief §61) can pre-apply an assigneeServiceId filter and switch to the Folyamatban
     // tab from a completely different screen (User detail) without inventing a second way to
     // reach the same queue.
+    val seedFilter = ReportFilter(areaId = activeWorkAreaId)
     val newQueueViewModel: ReportQueueViewModel = viewModel(
         viewModelStoreOwner = sessionOwner,
         key = "new-queue",
-        factory = viewModelFactory { ReportQueueViewModel(reportRepository::newQueue, onSessionEnded) },
+        factory = viewModelFactory { ReportQueueViewModel(reportRepository::newQueue, onSessionEnded, seedFilter) },
     )
     val inProgressQueueViewModel: ReportQueueViewModel = viewModel(
         viewModelStoreOwner = sessionOwner,
         key = "in-progress-queue",
-        factory = viewModelFactory { ReportQueueViewModel(reportRepository::inProgressQueue, onSessionEnded) },
+        factory = viewModelFactory { ReportQueueViewModel(reportRepository::inProgressQueue, onSessionEnded, seedFilter) },
     )
     val archiveQueueViewModel: ReportQueueViewModel = viewModel(
         viewModelStoreOwner = sessionOwner,
         key = "archive-queue",
-        factory = viewModelFactory { ReportQueueViewModel(reportRepository::archiveQueue, onSessionEnded) },
+        factory = viewModelFactory { ReportQueueViewModel(reportRepository::archiveQueue, onSessionEnded, seedFilter) },
     )
     var reportsTabIndex by remember { mutableIntStateOf(0) }
+
+    val queues = listOf(newQueueViewModel, inProgressQueueViewModel, archiveQueueViewModel)
+
+    // Apply the active-work-view area to every queue whenever it changes (including the first
+    // composition of this session, seeding from the persisted preference).
+    androidx.compose.runtime.LaunchedEffect(activeWorkAreaId) {
+        queues.forEach { vm ->
+            if (vm.state.value.filter.areaId != activeWorkAreaId) {
+                vm.updateFilter(vm.state.value.filter.copy(areaId = activeWorkAreaId))
+            }
+        }
+    }
+
+    val onAreaFilterChanged: (String?) -> Unit = { areaId ->
+        activeWorkAreaStore.set(serviceId, areaId)
+        activeWorkAreaId = areaId
+    }
 
     Scaffold(
         bottomBar = {
@@ -191,6 +226,9 @@ fun ServiceNavHost(
                     onOpenReport = { navController.navigate(Routes.reportDetail(it)) },
                     tabIndex = reportsTabIndex,
                     onTabChange = { reportsTabIndex = it },
+                    catalogRepository = catalogRepository,
+                    areaChoices = areaChoices,
+                    onAreaFilterChanged = onAreaFilterChanged,
                 )
             }
             composable(
@@ -211,7 +249,13 @@ fun ServiceNavHost(
                 )
             }
             composable(Routes.ARCHIVE) {
-                ArchiveScreen(viewModel = archiveQueueViewModel, onOpenReport = { navController.navigate(Routes.reportDetail(it)) })
+                ArchiveScreen(
+                    viewModel = archiveQueueViewModel,
+                    onOpenReport = { navController.navigate(Routes.reportDetail(it)) },
+                    catalogRepository = catalogRepository,
+                    areaChoices = areaChoices,
+                    onAreaFilterChanged = onAreaFilterChanged,
+                )
             }
             composable(Routes.STATS) { StatsPlaceholderScreen() }
             composable(Routes.PROFILE) {
@@ -224,6 +268,9 @@ fun ServiceNavHost(
                     onLogout = authViewModel::logout,
                     onLogoutAll = authViewModel::logoutAll,
                     onBack = { navController.popBackStack() },
+                    activeWorkAreaChoices = areaChoices,
+                    activeWorkAreaId = activeWorkAreaId,
+                    onActiveWorkAreaChanged = onAreaFilterChanged,
                 )
             }
             composable(Routes.MODERATION) {

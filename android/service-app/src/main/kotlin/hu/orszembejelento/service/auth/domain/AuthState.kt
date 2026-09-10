@@ -24,8 +24,21 @@ sealed interface AuthState {
      */
     data class PasswordChangeRequired(val serviceId: String) : AuthState
 
-    /** A live session. [role] comes from the server, never from anything stored locally. */
-    data class Authenticated(val serviceId: String, val role: String) : AuthState
+    /**
+     * A live session. [role], [globalAreaAccess] and [areas] all come from the server's
+     * `/account/me` (current state), never from anything stored locally. [areas] is the
+     * caller's own service-area scope, used only to populate the local "active work view"
+     * selector — it is never an authorization claim.
+     */
+    data class Authenticated(
+        val serviceId: String,
+        val role: String,
+        val globalAreaAccess: Boolean = false,
+        val areas: List<AuthArea> = emptyList(),
+    ) : AuthState
+
+    /** One of the signed-in user's own service areas (id + display name + activation status). */
+    data class AuthArea(val id: String, val name: String, val active: Boolean)
 
     /** A failure the user must see, such as an unreachable server. */
     data class AuthError(val kind: AuthErrorKind) : AuthState

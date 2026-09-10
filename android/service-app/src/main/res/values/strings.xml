@@ -64,6 +64,14 @@
     <string name="status_archived">LEZÁRVA</string>
     <string name="status_unclassified">BESOROLATLAN</string>
 
+    <!-- Role and user-status labels — the single presentation mapping for backend enums.
+         The enum values themselves are never sent to the user and never changed on the wire. -->
+    <string name="role_service_user">Szolgálati munkatárs</string>
+    <string name="role_moderator">Moderátor</string>
+    <string name="role_super_admin">Főadminisztrátor</string>
+    <string name="user_status_active">Aktív</string>
+    <string name="user_status_deactivated">Deaktiválva</string>
+
     <!-- Reports screen -->
     <string name="reports_title">Bejelentések</string>
     <string name="reports_subtitle">Az Ön jogosultsági körébe tartozó bejelentések.</string>
@@ -78,6 +86,23 @@
     <string name="search_hint_reports">Vonat, település, azonosító…</string>
     <string name="action_load_more">További betöltése</string>
     <string name="action_refresh">Frissítés</string>
+
+    <!-- Report filters -->
+    <string name="action_filters">Szűrők</string>
+    <string name="filters_title">Szűrők</string>
+    <string name="filter_area">Szolgálati terület</string>
+    <string name="filter_category">Kategória</string>
+    <string name="filter_event_type">Eseménytípus</string>
+    <string name="filter_settlement">Település</string>
+    <string name="filter_settlement_search_hint">Település keresése…</string>
+    <string name="filter_all_areas">Minden terület</string>
+    <string name="filter_catalog_unavailable">A kategóriák most nem tölthetők be.</string>
+    <string name="action_clear_filters">Szűrők törlése</string>
+    <string name="action_apply">Alkalmaz</string>
+
+    <!-- Active work view -->
+    <string name="active_work_view_title">Aktív munkanézet</string>
+    <string name="active_work_view_hint">Csak a kiválasztott szolgálati terület bejelentéseit mutatja. Ez helyi nézetbeállítás, nem jogosultság.</string>
 
     <!-- Report card / detail -->
     <string name="report_detail_title">Bejelentés részletei</string>
@@ -107,7 +132,7 @@
     <string name="confirm_close_title">Bejelentés lezárása</string>
     <string name="confirm_close_text">Biztosan lezárja ezt a bejelentést? A lezárt bejelentés az Archívumba kerül.</string>
     <string name="reassign_title">Bejelentés átrendelése</string>
-    <string name="reassign_subtitle">Csak ACTIVE SERVICE_USER választható, aki jelenleg jogosult a bejelentés szolgálati területére.</string>
+    <string name="reassign_subtitle">Csak aktív szolgálati munkatárs választható, aki jogosult a bejelentés szolgálati területére.</string>
     <string name="search_hint_users">Szolgálati azonosító keresése…</string>
     <string name="view_in_progress_for_user">Folyamatban lévő ügyek megtekintése</string>
 
@@ -162,11 +187,11 @@
     <string name="section_account">Fiók</string>
     <string name="action_add_area">Terület hozzáadása</string>
     <string name="action_revoke">VISSZAVONÁS</string>
-    <string name="action_password_reset">Jelszó reset</string>
+    <string name="action_password_reset">Ideiglenes jelszó kiadása</string>
     <string name="action_deactivate">Deaktiválás</string>
     <string name="action_reactivate">Aktiválás</string>
-    <string name="action_change_role_to_moderator">Szerepkör: MODERATOR</string>
-    <string name="action_change_role_to_service_user">Szerepkör: SERVICE_USER</string>
+    <string name="action_change_role_to_moderator">Szerepkör: Moderátor</string>
+    <string name="action_change_role_to_service_user">Szerepkör: Szolgálati munkatárs</string>
     <string name="action_grant_global_access">Minden terület jogosultság megadása</string>
     <string name="action_revoke_global_access">Minden terület jogosultság visszavonása</string>
     <string name="confirm_deactivate_title">Felhasználó deaktiválása</string>
@@ -179,7 +204,7 @@
     <string name="create_user_subtitle">Szolgálati azonosító és ideiglenes jelszó automatikusan generálva.</string>
     <string name="field_initial_areas">Kezdő szolgálati területek</string>
     <string name="check_global_access">Minden terület</string>
-    <string name="check_global_access_hint">Külön globális jogosultság, nem szolgálati terület.</string>
+    <string name="check_global_access_hint">Hozzáférés minden szolgálati területhez.</string>
     <string name="create_user_rules_hint">Egy moderátor csak saját jogosultsági körében hozhat létre szolgálati felhasználót, legalább egy területtel. Rendszergazda szolgálati felhasználót vagy moderátort hozhat létre.</string>
     <string name="action_create">Létrehozás</string>
 

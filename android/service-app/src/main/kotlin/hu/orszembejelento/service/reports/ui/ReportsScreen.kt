@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,6 +33,7 @@ import hu.orszembejelento.service.common.ui.ErrorState
 import hu.orszembejelento.service.common.ui.EmptyState
 import hu.orszembejelento.service.common.ui.FullScreenLoading
 import hu.orszembejelento.service.common.ui.apiErrorMessage
+import hu.orszembejelento.service.reports.data.CatalogRepository
 import hu.orszembejelento.service.reports.data.ReportFilter
 import kotlinx.coroutines.delay
 
@@ -46,6 +50,9 @@ fun ReportsScreen(
     onOpenReport: (String) -> Unit,
     tabIndex: Int,
     onTabChange: (Int) -> Unit,
+    catalogRepository: CatalogRepository,
+    areaChoices: List<AreaChoice>,
+    onAreaFilterChanged: (String?) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
@@ -68,6 +75,9 @@ fun ReportsScreen(
                 onOpenReport = onOpenReport,
                 emptyMessage = stringResource(R.string.empty_new_queue),
                 bucketed = true,
+                catalogRepository = catalogRepository,
+                areaChoices = areaChoices,
+                onAreaFilterChanged = onAreaFilterChanged,
             )
         } else {
             ReportQueueBody(
@@ -78,11 +88,15 @@ fun ReportsScreen(
                 hint = stringResource(
                     if (role == "SERVICE_USER") R.string.in_progress_hint_service else R.string.in_progress_hint_supervisor,
                 ),
+                catalogRepository = catalogRepository,
+                areaChoices = areaChoices,
+                onAreaFilterChanged = onAreaFilterChanged,
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ReportQueueBody(
     viewModel: ReportQueueViewModel,
@@ -90,9 +104,13 @@ internal fun ReportQueueBody(
     emptyMessage: String,
     bucketed: Boolean,
     hint: String? = null,
+    catalogRepository: CatalogRepository? = null,
+    areaChoices: List<AreaChoice> = emptyList(),
+    onAreaFilterChanged: (String?) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     var searchText by remember { mutableStateOf(state.filter.query.orEmpty()) }
+    var showFilters by remember { mutableStateOf(false) }
 
     // Debounced server-side search (brief §41) - fires the network request only after the
     // user has paused typing, never once per keystroke.
@@ -114,12 +132,37 @@ internal fun ReportQueueBody(
                 placeholder = { Text(stringResource(R.string.search_hint_reports)) },
                 leadingIcon = { Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.content_description_search)) },
                 trailingIcon = {
-                    IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_refresh))
+                    androidx.compose.foundation.layout.Row {
+                        if (catalogRepository != null) {
+                            IconButton(onClick = { showFilters = true }) {
+                                BadgedBox(badge = {
+                                    if (state.filter.activeFacetCount > 0) Badge { Text(state.filter.activeFacetCount.toString()) }
+                                }) {
+                                    Icon(Icons.Filled.FilterList, contentDescription = stringResource(R.string.action_filters))
+                                }
+                            }
+                        }
+                        IconButton(onClick = { viewModel.refresh() }) {
+                            Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_refresh))
+                        }
                     }
                 },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            )
+        }
+
+        if (showFilters && catalogRepository != null) {
+            ReportFilterSheet(
+                current = state.filter,
+                areaChoices = areaChoices,
+                catalogRepository = catalogRepository,
+                onApply = { newFilter ->
+                    showFilters = false
+                    if (newFilter.areaId != state.filter.areaId) onAreaFilterChanged(newFilter.areaId)
+                    viewModel.updateFilter(newFilter)
+                },
+                onDismiss = { showFilters = false },
             )
         }
 

@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.orszembejelento.service.auth.data.NetworkModule
 import hu.orszembejelento.service.auth.ui.AuthViewModel
 import hu.orszembejelento.service.auth.ui.ServiceAuthHost
+import hu.orszembejelento.service.reports.data.SharedPrefsActiveWorkAreaStore
 import hu.orszembejelento.service.ui.OrszemServiceTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,6 +22,8 @@ class MainActivity : ComponentActivity() {
         val repository = NetworkModule.authRepository(applicationContext)
         val reportRepository = NetworkModule.reportWorkflowRepository(repository)
         val userManagementRepository = NetworkModule.userManagementRepository(repository)
+        val catalogRepository = NetworkModule.catalogRepository()
+        val activeWorkAreaStore = SharedPrefsActiveWorkAreaStore(applicationContext)
 
         setContent {
             OrszemServiceTheme {
@@ -33,7 +36,13 @@ class MainActivity : ComponentActivity() {
                             AuthViewModel(repository) as T
                     },
                 )
-                ServiceAuthHost(authViewModel, reportRepository, userManagementRepository)
+                ServiceAuthHost(
+                    authViewModel,
+                    reportRepository,
+                    userManagementRepository,
+                    catalogRepository,
+                    activeWorkAreaStore,
+                )
             }
         }
     }

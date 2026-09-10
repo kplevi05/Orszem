@@ -106,9 +106,9 @@ private fun ManagedUserRow(user: ManagedUserResponse, onClick: () -> Unit) {
                 Text(user.serviceId, style = MaterialTheme.typography.titleSmall)
                 Text(
                     text = buildString {
-                        append(user.role)
+                        append(stringResource(hu.orszembejelento.service.common.ui.roleLabelRes(user.role)))
                         append(" · ")
-                        append(user.status)
+                        append(stringResource(hu.orszembejelento.service.common.ui.userStatusLabelRes(user.status)))
                         if (user.globalAreaAccess) {
                             append(" · ").append(stringResource(R.string.active_work_view_all))
                         } else if (user.areas.isNotEmpty()) {

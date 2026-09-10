@@ -23,6 +23,7 @@ private const val PAGE_SIZE = 50
 class ReportQueueViewModel(
     private val fetchPage: suspend (page: Int, size: Int, filter: ReportFilter) -> ApiResult<hu.orszembejelento.service.reports.data.ReportQueuePageResponse>,
     private val onSessionEnded: () -> Unit,
+    initialFilter: ReportFilter = ReportFilter(),
 ) : ViewModel() {
 
     data class UiState(
@@ -37,7 +38,7 @@ class ReportQueueViewModel(
         val canLoadMore: Boolean get() = page + 1 < totalPages
     }
 
-    private val _state = MutableStateFlow(UiState())
+    private val _state = MutableStateFlow(UiState(filter = initialFilter))
     val state: StateFlow<UiState> = _state.asStateFlow()
 
     init {

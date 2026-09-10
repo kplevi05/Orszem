@@ -7,8 +7,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -24,7 +28,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.auth.domain.AuthErrorKind
+import hu.orszembejelento.service.reports.ui.AreaChoice
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AccountScreen(
     serviceId: String,
@@ -35,6 +41,11 @@ fun AccountScreen(
     onLogout: () -> Unit,
     onLogoutAll: () -> Unit,
     onBack: () -> Unit,
+    // Active work view — only the SERVICE_USER Profil passes these; the MOD/SUPER own-account
+    // route leaves them at their defaults so the section is hidden there.
+    activeWorkAreaChoices: List<AreaChoice> = emptyList(),
+    activeWorkAreaId: String? = null,
+    onActiveWorkAreaChanged: (String?) -> Unit = {},
 ) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -51,10 +62,34 @@ fun AccountScreen(
 
         Text(stringResource(R.string.account_service_id, serviceId), style = MaterialTheme.typography.bodyLarge)
         Text(
-            stringResource(R.string.account_role, role),
+            stringResource(R.string.account_role, stringResource(hu.orszembejelento.service.common.ui.roleLabelRes(role))),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+
+        if (activeWorkAreaChoices.isNotEmpty()) {
+            HorizontalDivider()
+            Text(stringResource(R.string.active_work_view_title), style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.active_work_view_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = activeWorkAreaId == null,
+                    onClick = { onActiveWorkAreaChanged(null) },
+                    label = { Text(stringResource(R.string.filter_all_areas)) },
+                )
+                activeWorkAreaChoices.forEach { choice ->
+                    FilterChip(
+                        selected = activeWorkAreaId == choice.id,
+                        onClick = { onActiveWorkAreaChanged(if (activeWorkAreaId == choice.id) null else choice.id) },
+                        label = { Text(choice.name) },
+                    )
+                }
+            }
+        }
 
         HorizontalDivider()
 

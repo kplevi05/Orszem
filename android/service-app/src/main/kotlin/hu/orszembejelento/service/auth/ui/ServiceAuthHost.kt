@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.auth.domain.AuthState
 import hu.orszembejelento.service.nav.ServiceNavHost
+import hu.orszembejelento.service.reports.data.ActiveWorkAreaStore
+import hu.orszembejelento.service.reports.data.CatalogRepository
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
 
@@ -38,6 +40,8 @@ fun ServiceAuthHost(
     viewModel: AuthViewModel,
     reportRepository: ReportWorkflowRepository,
     userManagementRepository: UserManagementRepository,
+    catalogRepository: CatalogRepository,
+    activeWorkAreaStore: ActiveWorkAreaStore,
 ) {
     val state by viewModel.state.collectAsState()
     val busy by viewModel.busy.collectAsState()
@@ -48,9 +52,13 @@ fun ServiceAuthHost(
         is AuthState.Authenticated -> ServiceNavHost(
             serviceId = current.serviceId,
             role = current.role,
+            globalAreaAccess = current.globalAreaAccess,
+            ownAreas = current.areas,
             authViewModel = viewModel,
             reportRepository = reportRepository,
             userManagementRepository = userManagementRepository,
+            catalogRepository = catalogRepository,
+            activeWorkAreaStore = activeWorkAreaStore,
         )
 
         else -> Scaffold(

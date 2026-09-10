@@ -2,6 +2,9 @@ package hu.orszembejelento.service.auth.data
 
 import android.content.Context
 import hu.orszembejelento.service.BuildConfig
+import hu.orszembejelento.service.reports.data.CatalogApi
+import hu.orszembejelento.service.reports.data.CatalogRepository
+import hu.orszembejelento.service.reports.data.DefaultCatalogRepository
 import hu.orszembejelento.service.reports.data.DefaultReportWorkflowRepository
 import hu.orszembejelento.service.reports.data.ReportWorkflowApi
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
@@ -77,4 +80,7 @@ object NetworkModule {
 
     fun userManagementRepository(auth: AuthRepository): UserManagementRepository =
         DefaultUserManagementRepository(api = retrofit.create(UserManagementApi::class.java), auth = auth)
+
+    fun catalogRepository(): CatalogRepository =
+        DefaultCatalogRepository(api = retrofit.create(CatalogApi::class.java))
 }

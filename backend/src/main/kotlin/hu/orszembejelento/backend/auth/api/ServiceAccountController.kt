@@ -2,6 +2,7 @@ package hu.orszembejelento.backend.auth.api
 
 import hu.orszembejelento.backend.auth.application.AuthenticatedActor
 import hu.orszembejelento.backend.auth.application.ChangeOwnPasswordUseCase
+import hu.orszembejelento.backend.auth.application.GetOwnAccountUseCase
 import hu.orszembejelento.backend.common.web.ApiPaths
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -23,18 +24,30 @@ import org.springframework.web.bind.annotation.RestController
 @SecurityRequirement(name = "bearerAuth")
 class ServiceAccountController(
     private val changeOwnPassword: ChangeOwnPasswordUseCase,
+    private val getOwnAccount: GetOwnAccountUseCase,
 ) {
 
     @GetMapping("/me")
     @Operation(
-        summary = "The current user's identity",
-        description = "Service ID and role, read from current server-side state.",
+        summary = "The current user's identity and own service-area scope",
+        description = "Service ID, role, the global-area-access flag and the caller's own " +
+            "assigned service areas — all read from current server-side state. Self-account " +
+            "only: nothing about any other user.",
     )
-    fun me(@AuthenticationPrincipal actor: AuthenticatedActor): ResponseEntity<MeResponse> =
-        ResponseEntity.ok()
+    fun me(@AuthenticationPrincipal actor: AuthenticatedActor): ResponseEntity<MeResponse> {
+        val scope = getOwnAccount.scopeOf(actor.userId)
+        return ResponseEntity.ok()
             // Identity is per-session state; caching it would be wrong on a shared device.
             .header(HttpHeaders.CACHE_CONTROL, "no-store")
-            .body(MeResponse(serviceId = actor.serviceId.value, role = actor.role.name))
+            .body(
+                MeResponse(
+                    serviceId = actor.serviceId.value,
+                    role = actor.role.name,
+                    globalAreaAccess = scope.globalAreaAccess,
+                    areas = scope.areas.map { MeServiceAreaResponse(it.id.toString(), it.name, it.status.name) },
+                ),
+            )
+    }
 
     @PostMapping("/change-password")
     @Operation(

@@ -79,7 +79,8 @@ fun UserDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     Text(
-                        text = "${user.role} · ${user.status}",
+                        text = stringResource(hu.orszembejelento.service.common.ui.roleLabelRes(user.role)) +
+                            " · " + stringResource(hu.orszembejelento.service.common.ui.userStatusLabelRes(user.status)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

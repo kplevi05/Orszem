@@ -4,15 +4,25 @@ import hu.orszembejelento.service.auth.data.AuthRepository
 import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.common.data.apiCall
 
-/** One page of report-workflow filters (brief §26/§42), shared by all three queues. */
+/**
+ * One page of report-workflow filters (brief §26/§42), shared by all three queues.
+ *
+ * `settlementName` is display-only — it lets the filter sheet render the chosen settlement's
+ * name without a second lookup; only [settlementId] is ever put on the wire.
+ */
 data class ReportFilter(
     val query: String? = null,
     val categoryCode: String? = null,
     val eventTypeCode: String? = null,
     val settlementId: String? = null,
+    val settlementName: String? = null,
     val areaId: String? = null,
     val assigneeServiceId: String? = null,
-)
+) {
+    /** Server-side filters the user set explicitly (search text and the assignee CTA aside). */
+    val activeFacetCount: Int
+        get() = listOf(categoryCode, eventTypeCode, settlementId, areaId).count { it != null }
+}
 
 /**
  * The report-workflow surface every screen/ViewModel depends on.

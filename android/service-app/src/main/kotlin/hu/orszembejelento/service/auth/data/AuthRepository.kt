@@ -7,7 +7,12 @@ import retrofit2.Response
 
 /** Outcome of an authentication attempt, in terms the state holder can act on. */
 sealed interface AuthOutcome {
-    data class Success(val serviceId: String, val role: String) : AuthOutcome
+    data class Success(
+        val serviceId: String,
+        val role: String,
+        val globalAreaAccess: Boolean,
+        val areas: List<MeAreaResponse>,
+    ) : AuthOutcome
     data class PasswordChangeRequired(val serviceId: String) : AuthOutcome
     data class Failure(val kind: AuthErrorKind) : AuthOutcome
     /** The stored refresh token is gone or rejected: local state must be cleared. */
@@ -192,7 +197,7 @@ class AuthRepository(
 
         return if (identity != null) {
             cachedIdentity = identity
-            AuthOutcome.Success(identity.serviceId, identity.role)
+            AuthOutcome.Success(identity.serviceId, identity.role, identity.globalAreaAccess, identity.areas)
         } else {
             AuthOutcome.Failure(AuthErrorKind.NETWORK)
         }

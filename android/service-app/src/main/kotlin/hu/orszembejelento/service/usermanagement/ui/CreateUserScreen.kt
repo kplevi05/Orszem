@@ -61,16 +61,17 @@ fun CreateUserScreen(
             Text(stringResource(R.string.field_role), style = MaterialTheme.typography.labelLarge)
             if (state.canAssignModerator) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    // Localised labels; the unchanged enum value is what setRole/create send.
                     listOf("SERVICE_USER", "MODERATOR").forEachIndexed { index, role ->
                         SegmentedButton(
                             selected = state.role == role,
                             onClick = { viewModel.setRole(role) },
                             shape = SegmentedButtonDefaults.itemShape(index = index, count = 2),
-                        ) { Text(role) }
+                        ) { Text(stringResource(hu.orszembejelento.service.common.ui.roleLabelRes(role))) }
                     }
                 }
             } else {
-                Text("SERVICE_USER", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.role_service_user), style = MaterialTheme.typography.bodyMedium)
             }
 
             Text(stringResource(R.string.field_initial_areas), style = MaterialTheme.typography.labelLarge)
