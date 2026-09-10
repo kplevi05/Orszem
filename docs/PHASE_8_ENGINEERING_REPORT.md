@@ -20,7 +20,7 @@ fix shipped on its own branch and merged to `main` before Phase 8 resumed — se
 | `main` at phase start | `eaa741e` — *Merge pull request #10 from …/feature/v2-service-report-workflow* |
 | Backend hotfix merged in | `f3cc60b` — *Merge pull request #11 from …/fix/backend-kotlin-json-defaults* (contains `fff5539`) |
 | `main` the branch is built on | `f3cc60b` (fast-forward merge of `origin/main` into the branch; the Phase 8 working tree was untouched) |
-| Phase 8 commit | `c262245` — *feat(service-android): Phase 8 — full operational Service UI* |
+| Phase 8 commit | `39ee6d3` — *feat(service-android): Phase 8 — full operational Service UI* |
 
 The backend hotfix (`jackson-module-kotlin`) was developed in a **separate git worktree** on
 branch `fix/backend-kotlin-json-defaults`, reviewed, merged as PR #11, and only then merged
@@ -549,7 +549,7 @@ Local results are in §L. On push, the branch runs all five existing workflows u
 device — the new Compose tests follow that same policy and were run here on the emulator
 instead.
 
-| workflow | result on `c262245` |
+| workflow | result on `39ee6d3` |
 |---|---|
 | backend | *(filled in after push)* |
 | android | |
