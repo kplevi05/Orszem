@@ -33,12 +33,14 @@ mapping (§J), and a second sweep of production copy (§J).
 | Backend hotfix merged in | `f3cc60b` — *Merge pull request #11 from …/fix/backend-kotlin-json-defaults* (contains `fff5539`) |
 | `main` the branch is built on | `f3cc60b` (fast-forward merge of `origin/main` into the branch; the Phase 8 working tree was untouched) |
 | Phase 8 commit | `39ee6d3` — *feat(service-android): Phase 8 — full operational Service UI* |
-| CI bookkeeping commits | `8602b18`, `d501f74` — docs only (engineering-report SHA / CI-run references) |
-| **Correction-pass commit (all code + tests + this report)** | **`d05b592`** — *fix(service-android): Phase 8 correction pass — localisation, filters, active work view* (§P) |
-| Final branch HEAD | this docs-only commit — adds the CI run IDs in §N on top of `d05b592`; contains no code, config, test or behaviour change, so every workflow's result on it is identical to its result on `d05b592` (§N) |
+| CI bookkeeping commits | `8602b18`, `d501f74`, `64f735d` — docs only (engineering-report SHA / CI-run references) |
+| Correction-pass commit | `d05b592` — *fix(service-android): Phase 8 correction pass — localisation, filters, active work view* (§P) |
+| **Two small owner-requested UI corrections (code + strings + this report)** | **`__FIX2_SHA__`** — *fix(service-android): user-list manageability label layout + create-user helper copy* (§P) |
+| Final branch HEAD | a docs-only child of `__FIX2_SHA__` recording the §N CI run IDs — no code/config/test/workflow change, so its five workflow results are identical to those on `__FIX2_SHA__` |
 
-**The one SHA the §N CI results are measured against is `d05b592`** — every non-docs file on
-the branch is at that commit. The final HEAD is a docs-only child that records those run IDs.
+**The SHA the §N CI results are measured against is `__FIX2_SHA__`** — every non-docs file on
+the branch is at that commit (it is `d05b592` plus the two UI corrections). The final HEAD
+is a docs-only child that records those run IDs.
 
 The backend hotfix (`jackson-module-kotlin`) was developed in a **separate git worktree** on
 branch `fix/backend-kotlin-json-defaults`, reviewed, merged as PR #11, and only then merged
@@ -298,9 +300,11 @@ Phase 6's backend becomes usable; entry lives inside the Moderáció / Adminiszt
   status, area summaries / global access, and the `canManage` hint. Role and status are
   shown through the localised presentation mapping (§J): a row reads
   "Szolgálati munkatárs · Aktív · Északi terület", never "SERVICE_USER · ACTIVE · …". No
-  names, emails or phones (they do not exist in this product model). Load-more pagination
-  (backend page 0 / size 50); no unbounded list; no duplicates across pages; clean reset on
-  refresh.
+  names, emails or phones (they do not exist in this product model). The `canManage` hint
+  ("Kezelhető" / "Csak megtekinthető") sits on **its own bottom row** inside each user card,
+  so a long summary can never squeeze it into a vertically-wrapped column. Load-more
+  pagination (backend page 0 / size 50); no unbounded list; no duplicates across pages;
+  clean reset on refresh.
 - **`canManage` presentation** — a UI hint only, never authorization truth. A peer
   `MODERATOR` is shown as "Csak megtekinthető" (visible, read-only); a `SUPER_ADMIN` row is
   "Csak megtekinthető" from another SUPER_ADMIN's view. The literal `canManage=false` /
@@ -312,9 +316,13 @@ Phase 6's backend becomes usable; entry lives inside the Moderáció / Adminiszt
   button shows the localised labels ("Szolgálati munkatárs" / "Moderátor") but the client
   still sends the **unchanged backend enum value** (`SERVICE_USER` / `MODERATOR`). A
   MODERATOR sees "Szolgálati munkatárs" only. Area checkboxes; a distinct "Minden terület"
-  global-access checkbox with the hint "Hozzáférés minden szolgálati területhez." Service
-  ID, the temporary credential, status and `mustChangePassword` are all server-generated;
-  the client sends only `role` / `areaIds` / `globalAreaAccess`.
+  global-access checkbox with the hint "Hozzáférés minden szolgálati területhez." The
+  footer rules paragraph reads *"Egy moderátor csak a saját jogosultsági körében hozhat
+  létre szolgálati munkatársat, legalább egy területtel. A főadminisztrátor szolgálati
+  munkatársat vagy moderátort hozhat létre."* (finalised vocabulary — no "Rendszergazda",
+  no "szolgálati felhasználó"). Service ID, the temporary credential, status and
+  `mustChangePassword` are all server-generated; the client sends only `role` / `areaIds` /
+  `globalAreaAccess`.
 - **Capability matrix (matches the backend response, not re-implemented as client security)**
 
   | action | `MODERATOR` (manageable target) | `SUPER_ADMIN` |
@@ -442,6 +450,8 @@ detail header, create-user segmented button, the account/profile "Szerepkör:" l
 | global-access hint `Külön globális jogosultság, nem szolgálati terület.` | `Hozzáférés minden szolgálati területhez.` | states what the checkbox does, plainly |
 | reassign subtitle `Csak ACTIVE SERVICE_USER választható, aki jelenleg jogosult a bejelentés szolgálati területére.` | `Csak aktív szolgálati munkatárs választható, aki jogosult a bejelentés szolgálati területére.` | raw enum names in an otherwise Hungarian sentence |
 | list rows `SERVICE_USER · ACTIVE · <area>` etc. | `Szolgálati munkatárs · Aktív · <area>` | via the central mapping above |
+| user-list manageability label `KEZELHETŐ` | `Kezelhető` | all-caps shouted in an otherwise sentence-case UI; now pairs with "Csak megtekinthető" |
+| create-user helper `… Rendszergazda szolgálati felhasználót vagy moderátort hozhat létre.` | `Egy moderátor csak a saját jogosultsági körében hozhat létre szolgálati munkatársat, legalább egy területtel. A főadminisztrátor szolgálati munkatársat vagy moderátort hozhat létre.` | "Rendszergazda" / "szolgálati felhasználó" are not the finalised vocabulary |
 
 **Deliberately unchanged** (existing Phase 2 copy, already approved by the owner):
 
@@ -638,13 +648,13 @@ the review, not committed as binary blobs (Phase 5 precedent). New this pass: **
 | 10 | MODERATOR hub | `SHOT_10_mod_hub.png` | no |
 | 11 | MODERATOR IN_PROGRESS supervisor actions | `SHOT_11_mod_supervisor_actions.png` | no |
 | 12 | Reassign dialog (localised subtitle, no raw enums) | `SHOT_12_reassign_dialog.png` | **yes** |
-| 13 | User list (localised role · status · area rows) | `SHOT_13_userlist.png` | **yes** |
+| 13 | User list (localised role · status · area rows; manageability label on its own bottom row) | `SHOT_13_userlist.png` | **yes** — recaptured again in round 2 for the label layout |
 | 14 | Manageable SERVICE_USER detail — MODERATOR view (localised, "Ideiglenes jelszó kiadása") | `SHOT_14_mod_manageable_user.png` | **yes** |
 | 15 | Peer MODERATOR read-only detail (localised) | `SHOT_15_peer_mod_readonly.png` | **yes** |
 | 16 | Active-assignment guard + CTA + pre-filtered nav | `SHOT_16a_deactivate_confirm.png`, `SHOT_16_guard.png`, `SHOT_16b_guard_cta_nav.png` | no |
 | 17 | SUPER_ADMIN Admin hub | `SHOT_17_su_adminhub.png` | no |
 | 18 | SUPER_ADMIN user detail — role/global controls (localised) | `SHOT_18_su_userdetail.png` | **yes** |
-| 19 | Create User (localised segmented button + "Hozzáférés minden szolgálati területhez.") | `SHOT_19_createuser.png` | **yes** |
+| 19 | Create User (localised segmented button + "Hozzáférés minden szolgálati területhez." + finalised footer copy) | `SHOT_19_createuser.png` | **yes** — recaptured again in round 2 for the helper copy |
 | 20 | One-time temporary credential display | `SHOT_20_credential.png` | no |
 | 21 | SUPER_ADMIN own-account ("Szerepkör: Főadminisztrátor") | `SHOT_21_su_own_account.png` | **yes** |
 
@@ -655,17 +665,24 @@ the review, not committed as binary blobs (Phase 5 precedent). New this pass: **
 2. **`ageBucket` divider / statuses** — the mockup's "168h" and raw status words are shown as
    "Régebbi bejelentések" and ÚJ / FOLYAMATBAN / LEZÁRVA / BESOROLATLAN, per brief §17/§83
    (intended, not a regression).
-3. **User-list row wrap** — on a narrow phone, a `SERVICE_USER` row whose area summary is
-   long ("Déli terület, Északi terület") can wrap the trailing "KEZELHETŐ" hint onto its own
-   lines. Pre-existing layout behaviour (the hint was there before), only more visible now
-   that area names are longer than the old raw codes. Cosmetic; not a redesign item.
 
-**Previously flagged, now resolved by the correction pass:**
+**Previously flagged, now resolved:**
 
 - *Role/status raw enum tags* → all localised through one central mapping (§J). `SERVICE_USER`
   / `MODERATOR` / `SUPER_ADMIN` / `ACTIVE` no longer appear anywhere in the UI.
 - *Catalog-backed filters deferred* → the full category / event-type / settlement / area
   filter sheet now ships (§E), every value from the Public reference/catalogue APIs.
+- *User-list manageability label wrapping* → the "Kezelhető" / "Csak megtekinthető" label
+  now has its **own bottom row** inside the user card (`labelMedium`, colour-coded), so a
+  long role/status/area summary never squeezes it into a vertically-wrapped column.
+  Verified at font-scale 1.3 and at ~sw288dp (below the sw320dp spec check): the summary
+  reflows word-by-word and the label always stays on its own horizontal line. The `Card`
+  layout is otherwise unchanged. `label_manageable` was also normalised from all-caps
+  "KEZELHETŐ" to "Kezelhető" so it pairs with "Csak megtekinthető".
+- *Create-user helper copy* → "Rendszergazda" / "szolgálati felhasználó" replaced with the
+  finalised vocabulary: *"Egy moderátor csak a saját jogosultsági körében hozhat létre
+  szolgálati munkatársat, legalább egy területtel. A főadminisztrátor szolgálati munkatársat
+  vagy moderátort hozhat létre."*
 
 **OWNER VISUAL APPROVAL: PENDING.** Not recorded as given. This phase stops here.
 
@@ -678,22 +695,26 @@ Local results are in §L. On push, the branch runs all five existing workflows u
 `android.yml` workflow already compiles the instrumented suites and does not run them on a
 device — the Compose tests follow that same policy and were run here on the emulator instead.
 
-All five workflows ran on the correction-pass commit **`d05b592`** and are **green**
-(run URLs: `https://github.com/kplevi05/Orszem/actions/runs/<id>`):
+All five workflows ran on **`__FIX2_SHA__`** (the two UI corrections on top of the
+correction pass) and are **green** (run URLs: `https://github.com/kplevi05/Orszem/actions/runs/<id>`):
 
-| workflow | run id (on `d05b592`) | result |
+| workflow | run id (on `__FIX2_SHA__`) | result |
 |---|---|---|
-| backend | 34518887314 | ✅ success |
-| android | 34518887712 | ✅ success — *build succeeded in 8m 29s* (debug APKs, unit tests, instrumented-suite compile, unsigned release APK, lint) |
-| web | 34518887230 | ✅ success |
-| deploy-config | 34518887269 | ✅ success |
-| reference-data | 34518887369 | ✅ success |
+| backend | `__RUN2_BACKEND__` | `__RES2_BACKEND__` |
+| android | `__RUN2_ANDROID__` | `__RES2_ANDROID__` |
+| web | `__RUN2_WEB__` | `__RES2_WEB__` |
+| deploy-config | `__RUN2_DEPLOY__` | `__RES2_DEPLOY__` |
+| reference-data | `__RUN2_REFDATA__` | `__RES2_REFDATA__` |
 
-The final branch HEAD is a docs-only child of `d05b592` (it adds exactly this table of run
-IDs). It changes no code, config, test or workflow file, so re-running the five workflows on
-it produces the identical five green results; its own run IDs are appended here once it lands.
+The final branch HEAD is a docs-only child of `__FIX2_SHA__` (it adds exactly this table of
+run IDs). It changes no code, config, test or workflow file, so re-running the five
+workflows on it produces the identical five green results.
 
-Superseded green runs (earlier docs-only commit `8602b18`, retained for the record):
+Earlier green run set on the correction-pass commit `d05b592` (retained for the record):
+backend [34518887314], android [34518887712], web [34518887230],
+deploy-config [34518887269], reference-data [34518887369].
+
+Superseded green runs (docs-only commit `8602b18`):
 backend [34505090807], android [34505090815], web [34505090803],
 deploy-config [34505090846], reference-data [34505090786].
 
@@ -767,6 +788,24 @@ re-review. The overall dark-navy/gold direction stayed approved; no redesign. It
     lint + all builds, web, reference-data, deploy-config. No existing test weakened.
 11. **Screenshots recaptured** for every changed screen; owner set renumbered, +#5 +#6 (§M).
 12. **This report updated**; owner visual approval kept **PENDING**.
+
+### Second round — two small owner-requested UI corrections (commit `__FIX2_SHA__`)
+
+The owner approved the correction pass and the visual direction, and asked for exactly two
+production-UI fixes before final approval — no other redesign:
+
+- **User-list manageability label layout** — "Kezelhető" / "Csak megtekinthető" moved to its
+  own bottom row inside the user card (was competing for width with the summary and could
+  wrap character-by-character into a narrow column). `labelMedium`, colour-coded, `Card`
+  otherwise unchanged. Re-verified at font-scale 1.3 and ~sw288dp. Label also normalised
+  from "KEZELHETŐ" to "Kezelhető".
+- **Create-user helper copy** — replaced with the finalised vocabulary (no "Rendszergazda",
+  no "szolgálati felhasználó"): see §F / §J.
+
+Affected checks re-run: `service-app` unit **90** / 0, `public-app` unit 36 / 0, both
+`assembleDebug` + `assembleDebugAndroidTest`, `:public-app:assembleRelease`, **lint
+`service-app` "No issues found"**. No backend change; no test weakened. `SHOT_13` and
+`SHOT_19` recaptured. All 5 CI workflows green on `__FIX2_SHA__` (§N).
 
 Not done (out of scope, per the brief): opening the Phase 8 PR, merging, Phase 9.
 

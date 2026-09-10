@@ -97,32 +97,33 @@ fun UsersScreen(
 @Composable
 private fun ManagedUserRow(user: ManagedUserResponse, onClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Row(
+        // The manageability label gets its own bottom row rather than competing for width
+        // with the role/status/area summary - a long summary would otherwise squeeze it
+        // into a vertically-wrapped column.
+        Column(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            Column {
-                Text(user.serviceId, style = MaterialTheme.typography.titleSmall)
-                Text(
-                    text = buildString {
-                        append(stringResource(hu.orszembejelento.service.common.ui.roleLabelRes(user.role)))
-                        append(" · ")
-                        append(stringResource(hu.orszembejelento.service.common.ui.userStatusLabelRes(user.status)))
-                        if (user.globalAreaAccess) {
-                            append(" · ").append(stringResource(R.string.active_work_view_all))
-                        } else if (user.areas.isNotEmpty()) {
-                            append(" · ").append(user.areas.joinToString { it.name })
-                        }
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(user.serviceId, style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = buildString {
+                    append(stringResource(hu.orszembejelento.service.common.ui.roleLabelRes(user.role)))
+                    append(" · ")
+                    append(stringResource(hu.orszembejelento.service.common.ui.userStatusLabelRes(user.status)))
+                    if (user.globalAreaAccess) {
+                        append(" · ").append(stringResource(R.string.active_work_view_all))
+                    } else if (user.areas.isNotEmpty()) {
+                        append(" · ").append(user.areas.joinToString { it.name })
+                    }
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Text(
                 text = stringResource(if (user.canManage) R.string.label_manageable else R.string.label_read_only),
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = if (user.canManage) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
             )
         }
     }

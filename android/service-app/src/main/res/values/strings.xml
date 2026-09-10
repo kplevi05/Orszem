@@ -179,7 +179,7 @@
     <!-- User management -->
     <string name="users_title">Felhasználók</string>
     <string name="action_create_user">Új felhasználó</string>
-    <string name="label_manageable">KEZELHETŐ</string>
+    <string name="label_manageable">Kezelhető</string>
     <string name="label_read_only">Csak megtekinthető</string>
     <string name="field_role">Szerepkör</string>
     <string name="field_must_change_password">Kötelező jelszóváltás</string>
@@ -205,7 +205,7 @@
     <string name="field_initial_areas">Kezdő szolgálati területek</string>
     <string name="check_global_access">Minden terület</string>
     <string name="check_global_access_hint">Hozzáférés minden szolgálati területhez.</string>
-    <string name="create_user_rules_hint">Egy moderátor csak saját jogosultsági körében hozhat létre szolgálati felhasználót, legalább egy területtel. Rendszergazda szolgálati felhasználót vagy moderátort hozhat létre.</string>
+    <string name="create_user_rules_hint">Egy moderátor csak a saját jogosultsági körében hozhat létre szolgálati munkatársat, legalább egy területtel. A főadminisztrátor szolgálati munkatársat vagy moderátort hozhat létre.</string>
     <string name="action_create">Létrehozás</string>
 
     <!-- One-time credential display -->
