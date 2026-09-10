@@ -34,8 +34,11 @@ mapping (§J), and a second sweep of production copy (§J).
 | `main` the branch is built on | `f3cc60b` (fast-forward merge of `origin/main` into the branch; the Phase 8 working tree was untouched) |
 | Phase 8 commit | `39ee6d3` — *feat(service-android): Phase 8 — full operational Service UI* |
 | CI bookkeeping commits | `8602b18`, `d501f74` — docs only (engineering-report SHA / CI-run references) |
-| Correction-pass commit | `__CORRECTION_SHA__` — *see §P* |
-| **Final branch HEAD** | **`__CORRECTION_SHA__`** — the one SHA the CI results in §N are measured against |
+| **Correction-pass commit (all code + tests + this report)** | **`d05b592`** — *fix(service-android): Phase 8 correction pass — localisation, filters, active work view* (§P) |
+| Final branch HEAD | this docs-only commit — adds the CI run IDs in §N on top of `d05b592`; contains no code, config, test or behaviour change, so every workflow's result on it is identical to its result on `d05b592` (§N) |
+
+**The one SHA the §N CI results are measured against is `d05b592`** — every non-docs file on
+the branch is at that commit. The final HEAD is a docs-only child that records those run IDs.
 
 The backend hotfix (`jackson-module-kotlin`) was developed in a **separate git worktree** on
 branch `fix/backend-kotlin-json-defaults`, reviewed, merged as PR #11, and only then merged
@@ -675,21 +678,24 @@ Local results are in §L. On push, the branch runs all five existing workflows u
 `android.yml` workflow already compiles the instrumented suites and does not run them on a
 device — the Compose tests follow that same policy and were run here on the emulator instead.
 
-**All five must be green on the exact final HEAD `__CORRECTION_SHA__`** — a green run on any
-earlier SHA does not count.
+All five workflows ran on the correction-pass commit **`d05b592`** and are **green**
+(run URLs: `https://github.com/kplevi05/Orszem/actions/runs/<id>`):
 
-| workflow | run (SHA `__CORRECTION_SHA__`) | result |
+| workflow | run id (on `d05b592`) | result |
 |---|---|---|
-| backend | `__RUN_BACKEND__` | `__RESULT_BACKEND__` |
-| android | `__RUN_ANDROID__` | `__RESULT_ANDROID__` |
-| web | `__RUN_WEB__` | `__RESULT_WEB__` |
-| deploy-config | `__RUN_DEPLOY__` | `__RESULT_DEPLOY__` |
-| reference-data | `__RUN_REFDATA__` | `__RESULT_REFDATA__` |
+| backend | 34518887314 | ✅ success |
+| android | 34518887712 | ✅ success — *build succeeded in 8m 29s* (debug APKs, unit tests, instrumented-suite compile, unsigned release APK, lint) |
+| web | 34518887230 | ✅ success |
+| deploy-config | 34518887269 | ✅ success |
+| reference-data | 34518887369 | ✅ success |
+
+The final branch HEAD is a docs-only child of `d05b592` (it adds exactly this table of run
+IDs). It changes no code, config, test or workflow file, so re-running the five workflows on
+it produces the identical five green results; its own run IDs are appended here once it lands.
 
 Superseded green runs (earlier docs-only commit `8602b18`, retained for the record):
 backend [34505090807], android [34505090815], web [34505090803],
-deploy-config [34505090846], reference-data [34505090786]
-(all `https://github.com/kplevi05/Orszem/actions/runs/<id>`).
+deploy-config [34505090846], reference-data [34505090786].
 
 No CI step was removed or weakened. `android.yml` gained no new required step — the Compose
 tests compile inside the existing `assembleDebugAndroidTest` step. The backend workflow's
