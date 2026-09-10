@@ -25,44 +25,6 @@ import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.auth.domain.AuthErrorKind
 
-/**
- * Authenticated landing screen.
- *
- * Deliberately a placeholder. Reports, archive, statistics, moderation and administration
- * are later phases; adding empty shells for them now would imply features that do not exist.
- */
-@Composable
-fun ServiceHomeScreen(
-    serviceId: String,
-    role: String,
-    onOpenAccount: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineSmall)
-        Text(
-            stringResource(R.string.home_signed_in_as, serviceId, role),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = stringResource(R.string.home_placeholder),
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-        Button(onClick = onOpenAccount, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.action_account))
-        }
-    }
-}
-
 @Composable
 fun AccountScreen(
     serviceId: String,

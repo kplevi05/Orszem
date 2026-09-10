@@ -14,15 +14,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.auth.domain.AuthState
+import hu.orszembejelento.service.nav.ServiceNavHost
+import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
+import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
 
 /**
  * Routes on the single [AuthState] rather than on a navigation graph.
@@ -34,69 +34,66 @@ import hu.orszembejelento.service.auth.domain.AuthState
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ServiceAuthHost(viewModel: AuthViewModel) {
+fun ServiceAuthHost(
+    viewModel: AuthViewModel,
+    reportRepository: ReportWorkflowRepository,
+    userManagementRepository: UserManagementRepository,
+) {
     val state by viewModel.state.collectAsState()
     val busy by viewModel.busy.collectAsState()
-    var showAccount by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when (val current = state) {
-                AuthState.RestoringSession -> Restoring()
+    when (val current = state) {
+        // The authenticated area owns its own Scaffold (bottom navigation, per-screen top
+        // bars) - only the pre-authentication states below share this simple top-bar shell.
+        is AuthState.Authenticated -> ServiceNavHost(
+            serviceId = current.serviceId,
+            role = current.role,
+            authViewModel = viewModel,
+            reportRepository = reportRepository,
+            userManagementRepository = userManagementRepository,
+        )
 
-                AuthState.Unauthenticated -> LoginScreen(
-                    busy = busy,
-                    error = viewModel.lastError,
-                    onLogin = viewModel::login,
+        else -> Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.app_name)) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
                 )
+            },
+            containerColor = MaterialTheme.colorScheme.background,
+        ) { padding ->
+            Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+                when (current) {
+                    AuthState.RestoringSession -> Restoring()
 
-                is AuthState.PasswordChangeRequired -> PasswordChangeScreen(
-                    serviceId = current.serviceId,
-                    busy = busy,
-                    error = viewModel.lastError,
-                    onSubmit = viewModel::completePasswordChange,
-                    onCancel = viewModel::cancelPasswordChange,
-                )
+                    AuthState.Unauthenticated -> LoginScreen(
+                        busy = busy,
+                        error = viewModel.lastError,
+                        onLogin = viewModel::login,
+                    )
 
-                is AuthState.Authenticated ->
-                    if (showAccount) {
-                        AccountScreen(
-                            serviceId = current.serviceId,
-                            role = current.role,
-                            busy = busy,
-                            error = viewModel.lastError,
-                            onChangePassword = viewModel::changeOwnPassword,
-                            onLogout = viewModel::logout,
-                            onLogoutAll = viewModel::logoutAll,
-                            onBack = { showAccount = false },
-                        )
-                    } else {
-                        ServiceHomeScreen(
-                            serviceId = current.serviceId,
-                            role = current.role,
-                            onOpenAccount = { showAccount = true },
-                        )
-                    }
+                    is AuthState.PasswordChangeRequired -> PasswordChangeScreen(
+                        serviceId = current.serviceId,
+                        busy = busy,
+                        error = viewModel.lastError,
+                        onSubmit = viewModel::completePasswordChange,
+                        onCancel = viewModel::cancelPasswordChange,
+                    )
 
-                is AuthState.AuthError -> LoginScreen(
-                    busy = busy,
-                    error = current.kind,
-                    onLogin = { serviceId, password ->
-                        viewModel.clearError()
-                        viewModel.login(serviceId, password)
-                    },
-                )
+                    is AuthState.AuthError -> LoginScreen(
+                        busy = busy,
+                        error = current.kind,
+                        onLogin = { serviceId, password ->
+                            viewModel.clearError()
+                            viewModel.login(serviceId, password)
+                        },
+                    )
+
+                    is AuthState.Authenticated -> Unit // handled above
+                }
             }
         }
     }

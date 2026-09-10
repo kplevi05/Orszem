@@ -21,4 +21,11 @@ internal object ServicePalette {
     val Success = Color(0xFF91D5B0)
     val Error = Color(0xFFFFB4AB)
     val OnError = Color(0xFF3B0906)
+
+    // Status-chip semantics (brief §83) - distinct from the primary accent so gold stays
+    // reserved for primary actions/highlight, not full-screen or all-status decoration.
+    val StatusNew = Color(0xFFF0CF4B)
+    val StatusInProgress = Color(0xFF8DC5EF)
+    val StatusArchived = Color(0xFFAEBDCA)
+    val StatusUnclassified = Color(0xFFF0CF4B)
 }

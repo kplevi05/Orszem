@@ -117,6 +117,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     // Conventional, small networking stack. No custom framework.
     implementation(libs.retrofit)
@@ -131,8 +133,14 @@ dependencies {
     testImplementation(libs.okhttp.mockwebserver)
 
     // Instrumented tests: the real Android Keystore only exists on a device or emulator,
-    // so the crypto that protects the refresh token cannot be covered by a JVM test.
+    // so the crypto that protects the refresh token cannot be covered by a JVM test; the
+    // Compose UI tests (brief §95-99) likewise need a real Compose runtime. CI compiles
+    // both suites; they run on an emulator (owner-run / local), matching the existing
+    // instrumented-test policy in .github/workflows/android.yml.
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.okhttp.mockwebserver)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

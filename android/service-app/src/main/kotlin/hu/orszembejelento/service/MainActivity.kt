@@ -19,6 +19,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val repository = NetworkModule.authRepository(applicationContext)
+        val reportRepository = NetworkModule.reportWorkflowRepository(repository)
+        val userManagementRepository = NetworkModule.userManagementRepository(repository)
 
         setContent {
             OrszemServiceTheme {
@@ -31,7 +33,7 @@ class MainActivity : ComponentActivity() {
                             AuthViewModel(repository) as T
                     },
                 )
-                ServiceAuthHost(authViewModel)
+                ServiceAuthHost(authViewModel, reportRepository, userManagementRepository)
             }
         }
     }
