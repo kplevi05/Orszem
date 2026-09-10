@@ -35,10 +35,10 @@ mapping (§J), and a second sweep of production copy (§J).
 | Phase 8 commit | `39ee6d3` — *feat(service-android): Phase 8 — full operational Service UI* |
 | CI bookkeeping commits | `8602b18`, `d501f74`, `64f735d` — docs only (engineering-report SHA / CI-run references) |
 | Correction-pass commit | `d05b592` — *fix(service-android): Phase 8 correction pass — localisation, filters, active work view* (§P) |
-| **Two small owner-requested UI corrections (code + strings + this report)** | **`__FIX2_SHA__`** — *fix(service-android): user-list manageability label layout + create-user helper copy* (§P) |
-| Final branch HEAD | a docs-only child of `__FIX2_SHA__` recording the §N CI run IDs — no code/config/test/workflow change, so its five workflow results are identical to those on `__FIX2_SHA__` |
+| **Two small owner-requested UI corrections (code + strings + this report)** | **`4eeb1fb`** — *fix(service-android): user-list manageability label layout + create-user helper copy* (§P) |
+| Final branch HEAD | a docs-only child of `4eeb1fb` recording the §N CI run IDs — no code/config/test/workflow change, so its five workflow results are identical to those on `4eeb1fb` |
 
-**The SHA the §N CI results are measured against is `__FIX2_SHA__`** — every non-docs file on
+**The SHA the §N CI results are measured against is `4eeb1fb`** — every non-docs file on
 the branch is at that commit (it is `d05b592` plus the two UI corrections). The final HEAD
 is a docs-only child that records those run IDs.
 
@@ -695,18 +695,18 @@ Local results are in §L. On push, the branch runs all five existing workflows u
 `android.yml` workflow already compiles the instrumented suites and does not run them on a
 device — the Compose tests follow that same policy and were run here on the emulator instead.
 
-All five workflows ran on **`__FIX2_SHA__`** (the two UI corrections on top of the
+All five workflows ran on **`4eeb1fb`** (the two UI corrections on top of the
 correction pass) and are **green** (run URLs: `https://github.com/kplevi05/Orszem/actions/runs/<id>`):
 
-| workflow | run id (on `__FIX2_SHA__`) | result |
+| workflow | run id (on `4eeb1fb`) | result |
 |---|---|---|
-| backend | `__RUN2_BACKEND__` | `__RES2_BACKEND__` |
-| android | `__RUN2_ANDROID__` | `__RES2_ANDROID__` |
-| web | `__RUN2_WEB__` | `__RES2_WEB__` |
-| deploy-config | `__RUN2_DEPLOY__` | `__RES2_DEPLOY__` |
-| reference-data | `__RUN2_REFDATA__` | `__RES2_REFDATA__` |
+| backend | 34523622659 | ✅ success |
+| android | 34523622811 | ✅ success |
+| web | 34523622644 | ✅ success |
+| deploy-config | 34523622559 | ✅ success |
+| reference-data | 34523622631 | ✅ success |
 
-The final branch HEAD is a docs-only child of `__FIX2_SHA__` (it adds exactly this table of
+The final branch HEAD is a docs-only child of `4eeb1fb` (it adds exactly this table of
 run IDs). It changes no code, config, test or workflow file, so re-running the five
 workflows on it produces the identical five green results.
 
@@ -789,7 +789,7 @@ re-review. The overall dark-navy/gold direction stayed approved; no redesign. It
 11. **Screenshots recaptured** for every changed screen; owner set renumbered, +#5 +#6 (§M).
 12. **This report updated**; owner visual approval kept **PENDING**.
 
-### Second round — two small owner-requested UI corrections (commit `__FIX2_SHA__`)
+### Second round — two small owner-requested UI corrections (commit `4eeb1fb`)
 
 The owner approved the correction pass and the visual direction, and asked for exactly two
 production-UI fixes before final approval — no other redesign:
@@ -805,7 +805,7 @@ production-UI fixes before final approval — no other redesign:
 Affected checks re-run: `service-app` unit **90** / 0, `public-app` unit 36 / 0, both
 `assembleDebug` + `assembleDebugAndroidTest`, `:public-app:assembleRelease`, **lint
 `service-app` "No issues found"**. No backend change; no test weakened. `SHOT_13` and
-`SHOT_19` recaptured. All 5 CI workflows green on `__FIX2_SHA__` (§N).
+`SHOT_19` recaptured. All 5 CI workflows green on `4eeb1fb` (§N).
 
 Not done (out of scope, per the brief): opening the Phase 8 PR, merging, Phase 9.
 
