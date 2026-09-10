@@ -549,13 +549,13 @@ Local results are in §L. On push, the branch runs all five existing workflows u
 device — the new Compose tests follow that same policy and were run here on the emulator
 instead.
 
-| workflow | result on `39ee6d3` |
-|---|---|
-| backend | *(filled in after push)* |
-| android | |
-| web | |
-| deploy-config | |
-| reference-data | |
+| workflow | run (SHA `8602b18`) | result |
+|---|---|---|
+| backend | [34505090807](https://github.com/kplevi05/Orszem/actions/runs/34505090807) | green |
+| android | [34505090815](https://github.com/kplevi05/Orszem/actions/runs/34505090815) | green |
+| web | [34505090803](https://github.com/kplevi05/Orszem/actions/runs/34505090803) | green |
+| deploy-config | [34505090846](https://github.com/kplevi05/Orszem/actions/runs/34505090846) | green |
+| reference-data | [34505090786](https://github.com/kplevi05/Orszem/actions/runs/34505090786) | green |
 
 No CI step was removed or weakened. `android.yml` gained no new required step — the Compose
 tests compile inside the existing `assembleDebugAndroidTest` step.
