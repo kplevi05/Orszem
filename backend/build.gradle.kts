@@ -33,6 +33,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
 
+    // Jackson's Kotlin module. Without it, Jackson binds Kotlin data classes as plain Java
+    // beans: it has no knowledge of primary-constructor default values, so a request body
+    // that omits a field with a Kotlin default (e.g. CreateUserRequest.globalAreaAccess)
+    // fails deserialization with "Cannot map `null` into type `boolean`" instead of applying
+    // the default. Spring Boot 4 ships Jackson 3 (tools.jackson.*); this is the matching
+    // module and its version is governed by the Jackson BOM the Spring Boot BOM imports.
+    implementation("tools.jackson.module:jackson-module-kotlin")
+
     // Spring Security's Argon2PasswordEncoder delegates to BouncyCastle's Argon2
     // implementation; without this on the classpath it cannot hash at all.
     implementation("org.bouncycastle:bcprov-jdk18on:1.85.2")
