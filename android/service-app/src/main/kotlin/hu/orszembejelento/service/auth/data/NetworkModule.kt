@@ -11,6 +11,9 @@ import hu.orszembejelento.service.reports.data.DefaultCatalogRepository
 import hu.orszembejelento.service.reports.data.DefaultReportWorkflowRepository
 import hu.orszembejelento.service.reports.data.ReportWorkflowApi
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
+import hu.orszembejelento.service.servicearea.data.AreaAdminApi
+import hu.orszembejelento.service.servicearea.data.AreaAdminRepository
+import hu.orszembejelento.service.servicearea.data.DefaultAreaAdminRepository
 import hu.orszembejelento.service.usermanagement.data.DefaultUserManagementRepository
 import hu.orszembejelento.service.usermanagement.data.UserManagementApi
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
@@ -89,4 +92,7 @@ object NetworkModule {
 
     fun moderationRepository(auth: AuthRepository): ModerationRepository =
         DefaultModerationRepository(api = retrofit.create(ModerationApi::class.java), auth = auth)
+
+    fun areaAdminRepository(auth: AuthRepository): AreaAdminRepository =
+        DefaultAreaAdminRepository(api = retrofit.create(AreaAdminApi::class.java), auth = auth)
 }

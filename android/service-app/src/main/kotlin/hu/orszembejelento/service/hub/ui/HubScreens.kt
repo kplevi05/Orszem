@@ -46,13 +46,18 @@ fun ModerationHubScreen(onOpenUsers: () -> Unit, onOpenDeletedReports: () -> Uni
 }
 
 /**
- * `Adminisztráció` (brief §37): live `Felhasználók` and `Törölt bejelentések` (SUPER_ADMIN
- * gets restore controls on the same deleted-report UI, brief §37/§48), plus Phase 10
- * (ServiceArea admin) and Phase 12 (audit) shown as visibly, honestly unavailable - never
- * built, never faked.
+ * `Adminisztráció` (brief §37, Phase 10 §45): live `Felhasználók`, `Törölt bejelentések`
+ * (SUPER_ADMIN gets restore controls on the same deleted-report UI) and now `Szolgálati
+ * területek`. Only Phase 12 (audit/`Változási előzmények`) remains a visibly, honestly
+ * unavailable placeholder - never built, never faked.
  */
 @Composable
-fun AdminHubScreen(onOpenUsers: () -> Unit, onOpenDeletedReports: () -> Unit, onOpenAccount: () -> Unit) {
+fun AdminHubScreen(
+    onOpenUsers: () -> Unit,
+    onOpenDeletedReports: () -> Unit,
+    onOpenServiceAreas: () -> Unit,
+    onOpenAccount: () -> Unit,
+) {
     Hub(
         title = stringResource(R.string.admin_title),
         subtitle = stringResource(R.string.admin_subtitle),
@@ -64,7 +69,11 @@ fun AdminHubScreen(onOpenUsers: () -> Unit, onOpenDeletedReports: () -> Unit, on
                 Text(stringResource(R.string.hub_deleted_reports_entry), style = MaterialTheme.typography.titleMedium)
             }
         }
-        UnavailableRow(stringResource(R.string.areas_admin_title))
+        Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenServiceAreas)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(stringResource(R.string.areas_admin_title), style = MaterialTheme.typography.titleMedium)
+            }
+        }
         UnavailableRow(stringResource(R.string.audit_admin_title))
     }
 }

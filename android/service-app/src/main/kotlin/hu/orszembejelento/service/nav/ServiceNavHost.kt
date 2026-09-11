@@ -63,6 +63,15 @@ import hu.orszembejelento.service.reports.ui.ReportDetailScreen
 import hu.orszembejelento.service.reports.ui.ReportDetailViewModel
 import hu.orszembejelento.service.reports.ui.ReportQueueViewModel
 import hu.orszembejelento.service.reports.ui.ReportsScreen
+import hu.orszembejelento.service.servicearea.data.AreaAdminRepository
+import hu.orszembejelento.service.servicearea.ui.CreateServiceAreaScreen
+import hu.orszembejelento.service.servicearea.ui.CreateServiceAreaViewModel
+import hu.orszembejelento.service.servicearea.ui.RailwayLinePickerScreen
+import hu.orszembejelento.service.servicearea.ui.RailwayLinePickerViewModel
+import hu.orszembejelento.service.servicearea.ui.ServiceAreaAdminListScreen
+import hu.orszembejelento.service.servicearea.ui.ServiceAreaAdminListViewModel
+import hu.orszembejelento.service.servicearea.ui.ServiceAreaDetailScreen
+import hu.orszembejelento.service.servicearea.ui.ServiceAreaDetailViewModel
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
 import hu.orszembejelento.service.usermanagement.ui.CreateUserScreen
 import hu.orszembejelento.service.usermanagement.ui.CreateUserViewModel
@@ -86,10 +95,17 @@ internal object Routes {
     const val ACCOUNT = "account"
     const val DELETED_REPORTS = "moderation/deleted"
     const val DELETED_REPORT_DETAIL = "moderation/deleted/{publicReportId}"
+    const val SERVICE_AREAS = "service-areas"
+    const val CREATE_SERVICE_AREA = "service-areas/create"
+    const val SERVICE_AREA_DETAIL = "service-areas/{areaId}"
+    const val RAILWAY_LINE_PICKER = "service-areas/{areaId}/lines/add?areaName={areaName}"
 
     fun reportDetail(publicReportId: String) = "reports/$publicReportId"
     fun userDetail(serviceId: String) = "users/$serviceId"
     fun deletedReportDetail(publicReportId: String) = "moderation/deleted/$publicReportId"
+    fun serviceAreaDetail(areaId: String) = "service-areas/$areaId"
+    fun railwayLinePicker(areaId: String, areaName: String) =
+        "service-areas/$areaId/lines/add?areaName=${android.net.Uri.encode(areaName)}"
 }
 
 private data class BottomDestination(val route: String, val labelRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector)
@@ -145,6 +161,10 @@ fun ServiceNavHost(
     // reachable by that role, not even indirectly through a wired-but-unused repository
     // (brief §2).
     moderationRepository: ModerationRepository? = null,
+    // Null for MODERATOR/SERVICE_USER (mirrors moderationRepository's shape) - ServiceArea
+    // administration is never reachable by those roles, not even indirectly through a
+    // wired-but-unused repository (Phase 10 brief §4).
+    areaAdminRepository: AreaAdminRepository? = null,
 ) {
     val navController = rememberNavController()
     val onSessionEnded: () -> Unit = { authViewModel.forceSignedOut() }
@@ -204,6 +224,16 @@ fun ServiceNavHost(
             viewModelStoreOwner = sessionOwner,
             key = "deleted-reports-list",
             factory = viewModelFactory { DeletedReportsListViewModel(moderation, onSessionEnded) },
+        )
+    }
+
+    // Session-scoped for the same reason as deletedListViewModel above: a create or a
+    // detail-screen mutation must refresh this same list instance before popping back to it.
+    val serviceAreaListViewModel: ServiceAreaAdminListViewModel? = areaAdminRepository?.let { repo ->
+        viewModel(
+            viewModelStoreOwner = sessionOwner,
+            key = "service-area-list",
+            factory = viewModelFactory { ServiceAreaAdminListViewModel(repo, onSessionEnded) },
         )
     }
 
@@ -356,6 +386,7 @@ fun ServiceNavHost(
                 AdminHubScreen(
                     onOpenUsers = { navController.navigate(Routes.USERS) },
                     onOpenDeletedReports = { navController.navigate(Routes.DELETED_REPORTS) },
+                    onOpenServiceAreas = { navController.navigate(Routes.SERVICE_AREAS) },
                     onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
                 )
             }
@@ -388,6 +419,92 @@ fun ServiceNavHost(
                         deletedListViewModel?.refresh()
                         navController.popBackStack()
                         onModerationRestored()
+                    },
+                )
+            }
+            composable(Routes.SERVICE_AREAS) {
+                val listViewModel = serviceAreaListViewModel ?: return@composable
+                ServiceAreaAdminListScreen(
+                    viewModel = listViewModel,
+                    onOpenArea = { navController.navigate(Routes.serviceAreaDetail(it)) },
+                    onCreateArea = { navController.navigate(Routes.CREATE_SERVICE_AREA) },
+                )
+            }
+            composable(Routes.CREATE_SERVICE_AREA) {
+                val repo = areaAdminRepository ?: return@composable
+                val createViewModel: CreateServiceAreaViewModel = viewModel(
+                    key = "create-service-area",
+                    factory = viewModelFactory { CreateServiceAreaViewModel(repo, onSessionEnded) },
+                )
+                CreateServiceAreaScreen(
+                    viewModel = createViewModel,
+                    onBack = { navController.popBackStack() },
+                    onCreated = { areaId ->
+                        serviceAreaListViewModel?.refresh()
+                        // Straight into the new area's own detail (brief §47: "create first,
+                        // then configure lines") - pop the create screen off first so Back
+                        // from the detail returns to the list, not back to an empty form.
+                        navController.popBackStack()
+                        navController.navigate(Routes.serviceAreaDetail(areaId))
+                    },
+                )
+            }
+            composable(
+                Routes.SERVICE_AREA_DETAIL,
+                arguments = listOf(navArgument("areaId") {}),
+            ) { entry ->
+                val repo = areaAdminRepository ?: return@composable
+                val areaId = entry.arguments?.getString("areaId") ?: return@composable
+                val detailViewModel: ServiceAreaDetailViewModel = viewModel(
+                    key = "service-area-detail-$areaId",
+                    factory = viewModelFactory { ServiceAreaDetailViewModel(areaId, repo, onSessionEnded) },
+                )
+                val detailState by detailViewModel.state.collectAsState()
+
+                // The RailwayLine picker pushed on top of this same detail signals a change
+                // back through the standard Navigation-Compose result mechanism (the picker's
+                // own ViewModel is scoped to its own back-stack entry, so it cannot reach this
+                // detailViewModel directly) - a plain `refresh()` here picks up whatever the
+                // picker actually committed, never a locally-reconstructed guess.
+                val linesChanged = entry.savedStateHandle.getStateFlow("linesChanged", false).collectAsState()
+                androidx.compose.runtime.LaunchedEffect(linesChanged.value) {
+                    if (linesChanged.value) {
+                        detailViewModel.refresh()
+                        entry.savedStateHandle["linesChanged"] = false
+                    }
+                }
+
+                ServiceAreaDetailScreen(
+                    viewModel = detailViewModel,
+                    onBack = {
+                        serviceAreaListViewModel?.refresh()
+                        navController.popBackStack()
+                    },
+                    onAddRailwayLine = {
+                        val name = detailState.detail?.name ?: return@ServiceAreaDetailScreen
+                        navController.navigate(Routes.railwayLinePicker(areaId, name))
+                    },
+                )
+            }
+            composable(
+                Routes.RAILWAY_LINE_PICKER,
+                arguments = listOf(navArgument("areaId") {}, navArgument("areaName") { defaultValue = "" }),
+            ) { entry ->
+                val repo = areaAdminRepository ?: return@composable
+                val areaId = entry.arguments?.getString("areaId") ?: return@composable
+                val areaName = entry.arguments?.getString("areaName").orEmpty()
+                val pickerViewModel: RailwayLinePickerViewModel = viewModel(
+                    key = "railway-line-picker-$areaId",
+                    factory = viewModelFactory { RailwayLinePickerViewModel(areaId, repo, onSessionEnded) },
+                )
+                RailwayLinePickerScreen(
+                    viewModel = pickerViewModel,
+                    targetAreaId = areaId,
+                    targetAreaName = areaName,
+                    onBack = { navController.popBackStack() },
+                    onAssigned = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("linesChanged", true)
+                        navController.popBackStack()
                     },
                 )
             }

@@ -261,4 +261,73 @@
     <string name="action_retry">Újrapróbálkozás</string>
     <string name="content_description_back">Vissza</string>
     <string name="content_description_search">Keresés</string>
+
+    <!-- Phase 10: service area administration -->
+    <string name="service_area_search_hint">Terület neve…</string>
+    <string name="filter_status_all">Összes</string>
+    <string name="filter_status_active">Aktív</string>
+    <string name="filter_status_inactive">Inaktív</string>
+    <string name="action_create_area">Új szolgálati terület</string>
+    <string name="field_area_name">Terület neve</string>
+    <string name="service_area_detail_title">Szolgálati terület</string>
+    <string name="service_area_status_active">Aktív</string>
+    <string name="service_area_status_inactive">Inaktív</string>
+    <string name="area_card_line_count">%1$d vasútvonal</string>
+    <string name="area_card_open_report_count">%1$d nyitott bejelentés</string>
+    <string name="service_area_empty">Nincs a szűrésnek megfelelő szolgálati terület.</string>
+
+    <string name="railway_lines_section_title">Vasútvonalak</string>
+    <string name="railway_lines_section_empty">Ehhez a területhez jelenleg nincs vasútvonal rendelve.</string>
+    <string name="action_add_railway_line">Vasútvonal hozzáadása</string>
+    <string name="railway_line_picker_title">Vasútvonal kiválasztása</string>
+    <string name="railway_line_search_hint">Vonalszám vagy név keresése…</string>
+    <string name="railway_line_unassigned">Nincs szolgálati területhez rendelve</string>
+    <string name="railway_line_currently_in_area">Jelenleg itt: %1$s</string>
+    <string name="railway_line_currently_in_this_area">Jelenleg ehhez a területhez van rendelve</string>
+    <string name="railway_line_inactive_reference">Inaktív vasútvonal</string>
+    <string name="railway_line_empty">Nincs a szűrésnek megfelelő vasútvonal.</string>
+    <string name="filter_assignment_all">Összes</string>
+    <string name="filter_assignment_assigned">Hozzárendelt</string>
+    <string name="filter_assignment_unassigned">Hozzárendelés nélküli</string>
+
+    <string name="move_line_dialog_title">Vasútvonal áthelyezése</string>
+    <string name="move_line_dialog_text">A vasútvonal jelenleg a(z) „%1$s” szolgálati terület része. Áthelyezi a(z) „%2$s” szolgálati területhez?</string>
+    <string name="assign_line_dialog_title">Vasútvonal hozzárendelése</string>
+    <string name="assign_line_dialog_text">Hozzárendeli a vasútvonalat a(z) „%1$s” szolgálati területhez?</string>
+    <string name="line_future_only_notice">A módosítás csak az ezután érkező bejelentéseket érinti. A korábbi bejelentések szolgálati területe nem változik.</string>
+    <string name="action_move">Áthelyezés</string>
+
+    <string name="action_unassign_line">Hozzárendelés megszüntetése</string>
+    <string name="unassign_line_dialog_title">Hozzárendelés megszüntetése</string>
+    <string name="unassign_line_warning">A vasútvonalhoz érkező új bejelentések a hozzárendelés megszüntetése után nem kerülnek szolgálati területhez. A korábbi bejelentések nem változnak.</string>
+
+    <string name="action_rename_area">Átnevezés</string>
+    <string name="rename_area_dialog_title">Terület átnevezése</string>
+    <string name="action_save">Mentés</string>
+
+    <string name="action_deactivate_area">Terület deaktiválása</string>
+    <string name="deactivate_area_dialog_title">Szolgálati terület deaktiválása</string>
+    <string name="deactivate_area_dialog_text">A deaktivált terület nem lesz használható új hozzárendelésekhez, és a hozzá tartozó meglévő felhasználói terület-hozzárendelések inaktívvá válnak. Az adatok és előzmények megmaradnak.</string>
+    <string name="deactivate_blocked_lines">A terület deaktiválása előtt helyezze át vagy szüntesse meg az összes vasútvonal hozzárendelését.</string>
+    <string name="deactivate_blocked_reports">A területhez még nyitott bejelentések tartoznak. Ezeket előbb rendezni kell.</string>
+
+    <string name="action_activate_area">Terület aktiválása</string>
+    <string name="activate_area_dialog_text">A korábban tárolt felhasználói terület-hozzárendelések ismét érvényesülhetnek a meglévő jogosultsági szabályok szerint.</string>
+    <string name="action_activate">Aktiválás</string>
+
+    <!-- Phase 10 error copy (brief §56-59) - never a raw backend code -->
+    <string name="error_service_area_not_found">A szolgálati terület nem található.</string>
+    <string name="error_service_area_state_changed">A szolgálati terület időközben megváltozott. Frissítettük az aktuális állapotot.</string>
+    <string name="error_service_area_already_active">A terület már aktív. Frissítettük az aktuális állapotot.</string>
+    <string name="error_service_area_already_inactive">A terület már inaktív. Frissítettük az aktuális állapotot.</string>
+    <string name="error_service_area_has_railway_lines">A területhez még vasútvonalak vannak rendelve.</string>
+    <string name="error_service_area_has_open_reports">A területhez még nyitott bejelentések tartoznak.</string>
+    <string name="error_service_area_name_invalid">A terület neve nem lehet üres.</string>
+    <string name="error_service_area_name_already_in_use">Ez a területnév már foglalt.</string>
+    <string name="error_railway_line_not_found">A vasútvonal nem található.</string>
+    <string name="error_railway_line_inactive">Ez a vasútvonal jelenleg inaktív.</string>
+    <string name="error_target_service_area_inactive">A kiválasztott szolgálati terület jelenleg inaktív.</string>
+    <string name="error_railway_line_assignment_changed">A vasútvonal hozzárendelése időközben megváltozott. Frissítettük az aktuális állapotot.</string>
+    <string name="error_railway_line_already_assigned">Ez a vasútvonal már ehhez a területhez van rendelve.</string>
+    <string name="error_service_area_admin_forbidden">Ehhez a művelethez nincs jogosultsága.</string>
 </resources>
