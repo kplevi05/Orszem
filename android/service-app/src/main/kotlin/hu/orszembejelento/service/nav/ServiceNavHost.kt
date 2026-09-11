@@ -58,6 +58,7 @@ import hu.orszembejelento.service.reports.data.ReportFilter
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
 import hu.orszembejelento.service.reports.ui.AreaChoice
 import hu.orszembejelento.service.reports.ui.ArchiveScreen
+import hu.orszembejelento.service.reports.ui.ModerationDeleteOutcome
 import hu.orszembejelento.service.reports.ui.ReportDetailScreen
 import hu.orszembejelento.service.reports.ui.ReportDetailViewModel
 import hu.orszembejelento.service.reports.ui.ReportQueueViewModel
@@ -228,9 +229,17 @@ fun ServiceNavHost(
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarScope = rememberCoroutineScope()
     val deleteSuccessMessage = stringResource(R.string.moderation_delete_success)
+    // Correction pass §3: REPORT_ALREADY_DELETED is not this request's own success - reusing
+    // the existing REPORT_ALREADY_DELETED error copy (brief §43) rather than the success
+    // message avoids misattributing a deletion this call never performed.
+    val deleteAlreadyDeletedMessage = stringResource(R.string.error_report_already_deleted)
     val restoreSuccessMessage = stringResource(R.string.moderation_restore_success)
-    val onModerationDeleted: () -> Unit = {
-        snackbarScope.launch { snackbarHostState.showSnackbar(deleteSuccessMessage) }
+    val onModerationDeleted: (ModerationDeleteOutcome) -> Unit = { outcome ->
+        val message = when (outcome) {
+            ModerationDeleteOutcome.DELETED_NOW -> deleteSuccessMessage
+            ModerationDeleteOutcome.ALREADY_DELETED -> deleteAlreadyDeletedMessage
+        }
+        snackbarScope.launch { snackbarHostState.showSnackbar(message) }
     }
     val onModerationRestored: () -> Unit = {
         snackbarScope.launch { snackbarHostState.showSnackbar(restoreSuccessMessage) }
@@ -300,13 +309,14 @@ fun ServiceNavHost(
                     viewModel = detailViewModel,
                     userManagementRepository = if (role == "SERVICE_USER") null else userManagementRepository,
                     onBack = { navController.popBackStack() },
-                    onDeleted = {
+                    onDeleted = { outcome ->
                         // Brief §42: the deleted report is gone from ordinary workflow, so
                         // navigate away and silently refresh whichever queue it was showing
-                        // in - never guess which one, just refresh all three.
+                        // in - never guess which one, just refresh all three. The snackbar
+                        // copy itself depends on `outcome` - see onModerationDeleted above.
                         queues.forEach { it.refresh() }
                         navController.popBackStack()
-                        onModerationDeleted()
+                        onModerationDeleted(outcome)
                     },
                 )
             }

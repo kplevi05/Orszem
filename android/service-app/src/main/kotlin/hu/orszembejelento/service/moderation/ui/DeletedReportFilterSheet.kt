@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -48,7 +49,12 @@ fun DeletedReportFilterSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
-            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp),
+            // `ModalBottomSheet`'s own default windowInsets do not clear the 3-button
+            // navigation bar under edge-to-edge (brief correction §1) - `navigationBarsPadding()`
+            // is the standard Compose/Material inset API for that, applied on top of (not
+            // instead of) the sheet's own visual bottom margin, so it scales with whatever the
+            // real system bar height is rather than a guessed constant.
+            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 20.dp).navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(stringResource(R.string.filters_title), style = MaterialTheme.typography.titleLarge)

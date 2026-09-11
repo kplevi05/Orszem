@@ -13,6 +13,7 @@ import hu.orszembejelento.service.reports.data.ReportFilter
 import hu.orszembejelento.service.reports.data.ReportQueuePageResponse
 import hu.orszembejelento.service.reports.data.ReportSettlementSummary
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
+import hu.orszembejelento.service.reports.ui.ModerationDeleteOutcome
 import hu.orszembejelento.service.reports.ui.ReportDetailViewModel
 import hu.orszembejelento.service.reports.ui.WorkflowMutationKind
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -175,7 +177,7 @@ class ReportDetailViewModelTest {
     }
 
     @Test
-    fun `a successful moderation delete flips moderationDeleteCompleted and sends exactly the chosen reason`() = runTest {
+    fun `a successful moderation delete reports DELETED_NOW and sends exactly the chosen reason`() = runTest {
         val fake = FakeRepository(detailResponses = mutableListOf(ApiResult.Success(detail("NEW", 0))))
         val moderation = FakeModerationRepository(deleteResult = ApiResult.Success(Unit))
         val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {}, moderationRepository = moderation)
@@ -184,20 +186,32 @@ class ReportDetailViewModelTest {
 
         assertEquals(1, moderation.deleteCalls)
         assertEquals("SPAM", moderation.lastReason)
-        assertTrue(vm.state.value.moderationDeleteCompleted)
+        // DELETED_NOW specifically - never the generic "completed" flag alone (correction
+        // pass §3) - this is what lets the caller show "A bejelentés törölve." only when
+        // this request actually performed the deletion.
+        assertEquals(ModerationDeleteOutcome.DELETED_NOW, vm.state.value.moderationDeleteOutcome)
         assertFalse(vm.state.value.moderationDeleteInFlight)
         assertEquals(null, vm.state.value.moderationDeleteError)
     }
 
     @Test
-    fun `REPORT_ALREADY_DELETED is treated the same as success - the report is gone either way`() = runTest {
+    fun `REPORT_ALREADY_DELETED navigates away like success but reports a distinct outcome - never the success copy`() = runTest {
+        // Correction pass §3: this request never performed a deletion - someone else's
+        // delete (or an earlier attempt) already committed - so the caller must be able to
+        // tell this apart from DELETED_NOW and show "A bejelentést időközben már
+        // törölték." instead of misattributing a deletion this call never did.
         val fake = FakeRepository(detailResponses = mutableListOf(ApiResult.Success(detail("NEW", 0))))
         val moderation = FakeModerationRepository(deleteResult = ApiResult.Failure(code = "REPORT_ALREADY_DELETED", httpStatus = 409))
         val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {}, moderationRepository = moderation)
 
         vm.deleteReport("SPAM")
 
-        assertTrue(vm.state.value.moderationDeleteCompleted)
+        assertEquals(ModerationDeleteOutcome.ALREADY_DELETED, vm.state.value.moderationDeleteOutcome)
+        assertNotEquals(
+            "must never be reported as if this call performed the deletion",
+            ModerationDeleteOutcome.DELETED_NOW,
+            vm.state.value.moderationDeleteOutcome,
+        )
         assertEquals(null, vm.state.value.moderationDeleteError)
     }
 
@@ -216,7 +230,7 @@ class ReportDetailViewModelTest {
 
         assertEquals(1, moderation.deleteCalls) // exactly one attempt - no automatic retry
         assertEquals(2, fake.detailCalls) // initial load + the post-failure refresh
-        assertFalse("must not navigate away on an ordinary conflict", vm.state.value.moderationDeleteCompleted)
+        assertEquals("must not navigate away on an ordinary conflict", null, vm.state.value.moderationDeleteOutcome)
         assertTrue(vm.state.value.moderationDeleteError is ApiResult.Failure)
         assertEquals("IN_PROGRESS", vm.state.value.detail?.status)
     }
@@ -232,7 +246,7 @@ class ReportDetailViewModelTest {
 
         assertEquals(1, sessionEndedCalls)
         assertEquals(null, vm.state.value.moderationDeleteError)
-        assertFalse(vm.state.value.moderationDeleteCompleted)
+        assertEquals(null, vm.state.value.moderationDeleteOutcome)
     }
 
     @Test
@@ -242,7 +256,7 @@ class ReportDetailViewModelTest {
 
         vm.deleteReport("SPAM") // must not throw
 
-        assertFalse(vm.state.value.moderationDeleteCompleted)
+        assertEquals(null, vm.state.value.moderationDeleteOutcome)
         assertFalse(vm.state.value.moderationDeleteInFlight)
     }
 }

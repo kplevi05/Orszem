@@ -59,9 +59,11 @@ fun ReportDetailScreen(
     viewModel: ReportDetailViewModel,
     userManagementRepository: UserManagementRepository?,
     onBack: () -> Unit,
-    // Called once after a successful (or already-deleted) moderation delete (brief §42): the
-    // caller navigates away, since the report is no longer reachable through ordinary detail.
-    onDeleted: () -> Unit = {},
+    // Called once after a moderation delete resolves - either this call's own success, or
+    // the REPORT_ALREADY_DELETED conflict (brief §42/§43, correction pass §3): the caller
+    // navigates away either way, since the report is no longer reachable through ordinary
+    // detail, but the two carry different snackbar copy - see [ModerationDeleteOutcome].
+    onDeleted: (ModerationDeleteOutcome) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     var confirmReturn by remember { mutableStateOf(false) }
@@ -69,8 +71,8 @@ fun ReportDetailScreen(
     var showReassign by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.moderationDeleteCompleted) {
-        if (state.moderationDeleteCompleted) onDeleted()
+    LaunchedEffect(state.moderationDeleteOutcome) {
+        state.moderationDeleteOutcome?.let(onDeleted)
     }
 
     // A successful mutation's own committed response already replaces `state.detail` (brief

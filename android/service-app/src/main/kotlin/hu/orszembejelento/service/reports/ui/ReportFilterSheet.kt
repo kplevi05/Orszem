@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -84,7 +85,10 @@ fun ReportFilterSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
-            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp),
+            // Same fix as DeletedReportFilterSheet - `navigationBarsPadding()` clears the
+            // 3-button navigation bar under edge-to-edge, on top of the sheet's own visual
+            // bottom margin, scaling with the real system bar height.
+            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 20.dp).navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(stringResource(R.string.filters_title), style = MaterialTheme.typography.titleLarge)

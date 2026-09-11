@@ -19,6 +19,7 @@ import hu.orszembejelento.service.reports.data.ReportFilter
 import hu.orszembejelento.service.reports.data.ReportQueuePageResponse
 import hu.orszembejelento.service.reports.data.ReportSettlementSummary
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
+import hu.orszembejelento.service.reports.ui.ModerationDeleteOutcome
 import hu.orszembejelento.service.reports.ui.ReportDetailScreen
 import hu.orszembejelento.service.reports.ui.ReportDetailViewModel
 import org.junit.Assert.assertEquals
@@ -156,5 +157,39 @@ class ModerationDeleteActionComposeTest {
         assertTrue("the current state must be re-fetched after the rejection", fake.detailCalls >= 2)
         // The raw stable code must never reach the screen.
         assertTrue(compose.onAllNodesWithText("REPORT_STATE_CHANGED", substring = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun a_REPORT_ALREADY_DELETED_conflict_navigates_away_but_reports_a_distinct_outcome_from_a_genuine_delete() {
+        // Correction pass §3: someone else's delete already committed. The screen still
+        // navigates away (the report is gone from ordinary workflow either way), but the
+        // caller must be told this was NOT this request's own deletion, so it never shows
+        // the "A bejelentés törölve." success copy for a deletion this call didn't perform.
+        val fake = FakeWorkflowRepo(ArrayDeque(listOf(ApiResult.Success(ownDetail("NEW", 0)))))
+        val moderation = FakeModerationRepo(ApiResult.Failure(code = "REPORT_ALREADY_DELETED", httpStatus = 409))
+        val vm = ReportDetailViewModel("rep-1", fake, onSessionEnded = {}, moderationRepository = moderation)
+        var reportedOutcome: ModerationDeleteOutcome? = null
+
+        compose.setContent {
+            ReportDetailScreen(
+                currentServiceId = "SZ-999999",
+                role = "MODERATOR",
+                viewModel = vm,
+                userManagementRepository = null,
+                onBack = {},
+                onDeleted = { outcome -> reportedOutcome = outcome },
+            )
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Bejelentés törlése").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Spam").performClick()
+        compose.onAllNodesWithText("Törlés").onLast().performClick()
+        compose.waitForIdle()
+
+        assertEquals(1, moderation.deleteCalls)
+        assertEquals(ModerationDeleteOutcome.ALREADY_DELETED, reportedOutcome)
+        assertTrue("must never be reported as this request's own success", reportedOutcome != ModerationDeleteOutcome.DELETED_NOW)
     }
 }

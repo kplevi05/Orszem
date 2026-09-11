@@ -3,6 +3,8 @@ package hu.orszembejelento.service.moderation.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,7 +29,15 @@ import hu.orszembejelento.service.reports.domain.shortReportId
  * One deleted-report card - event type first, then a `TÖRÖLVE` status badge (a moderation UI
  * label, never a new backend workflow-status enum, brief §44), then the deletion facts a
  * moderator most needs: reason, when, who, and the area/Besorolatlan indication.
+ *
+ * The metadata is deliberately two rows, not one dense row (correction pass §2): reason /
+ * deletion time / deleting service ID share a wrapping [FlowRow] - normally short enough to
+ * sit on one line, but they wrap onto a second line rather than squeezing on a narrow
+ * (~sw320dp) screen or at a large font scale. The [ReportAreaSummary][hu.orszembejelento.service.reports.data.ReportAreaSummary]
+ * name gets its own row at the card's full width, so a long area name wraps as ordinary
+ * multi-line text instead of being squeezed into whatever width the row above left over.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DeletedReportListItemCard(item: DeletedReportListItemResponse, onClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
@@ -51,19 +61,25 @@ fun DeletedReportListItemCard(item: DeletedReportListItemResponse, onClick: () -
                 }
                 StatusBadge(R.string.deleted_status_badge, MaterialTheme.colorScheme.error)
             }
-            Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 MetaChip(stringResource(moderationReasonLabelRes(item.reason)))
                 MetaChip(formatInstant(item.deletedAt))
                 MetaChip(item.deletedByServiceId)
-                MetaChip(item.serviceArea?.name ?: stringResource(R.string.value_unclassified_area))
             }
+            MetaChip(
+                text = item.serviceArea?.name ?: stringResource(R.string.value_unclassified_area),
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            )
         }
     }
 }
 
 @Composable
-private fun MetaChip(text: String) {
-    Text(text = text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun MetaChip(text: String, modifier: Modifier = Modifier) {
+    Text(text = text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = modifier)
 }
 
 /** The paginated deleted-report list body - mirrors `ReportList`'s exact shape. */
