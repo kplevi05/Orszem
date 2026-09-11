@@ -142,6 +142,21 @@ enum class ErrorCode {
      * See `docs/PHASE_7_ENGINEERING_REPORT.md` §R.
      */
     USER_HAS_ACTIVE_REPORT_ASSIGNMENTS,
+
+    // ------------------------------------------------------------------- Phase 9 - moderation
+    //
+    // Reuses REPORT_NOT_FOUND above for a moderation actor's own visibility loss - a
+    // nonexistent report and one outside the actor's moderation scope stay indistinguishable
+    // by the exact same existence-safe reasoning Phase 7 already established.
+
+    /** The actor's role has no authority to call this moderation operation at all (a SERVICE_USER, or restore by a non-SUPER_ADMIN). */
+    MODERATION_FORBIDDEN,
+
+    /** The report already has an open moderation episode - a repeat delete is a conflict, not a silent no-op. */
+    REPORT_ALREADY_DELETED,
+
+    /** Restore was called on a report with no open moderation episode. */
+    REPORT_NOT_DELETED,
 }
 
 /**

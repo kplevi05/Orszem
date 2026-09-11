@@ -154,6 +154,9 @@
     <string name="error_area_not_assignable">Ez a terület jelenleg nem rendelhető hozzá.</string>
     <string name="error_invalid_role_transition">Ez a szerepkör-váltás nem engedélyezett.</string>
     <string name="error_validation">A megadott adatok nem megfelelőek.</string>
+    <string name="error_moderation_forbidden">Ehhez a művelethez nincs jogosultsága.</string>
+    <string name="error_report_already_deleted">A bejelentést időközben már törölték.</string>
+    <string name="error_report_not_deleted">A bejelentés jelenleg nincs törölve.</string>
 
     <!-- Archive -->
     <string name="archive_title">Archívum</string>
@@ -170,11 +173,48 @@
     <string name="admin_subtitle">Globális kezelés</string>
     <string name="hub_users_entry">Felhasználók</string>
     <string name="hub_own_account">Saját fiók</string>
-    <string name="moderation_functions_unavailable">A további moderációs funkciók ebben a verzióban még nem érhetők el.</string>
+    <string name="moderation_functions_unavailable">A szolgálati területek kezelése ebben a verzióban még nem érhető el.</string>
+    <string name="hub_deleted_reports_entry">Törölt bejelentések</string>
     <string name="areas_admin_title">Szolgálati területek</string>
     <string name="audit_admin_title">Változási előzmények</string>
     <string name="not_yet_available">Még nem elérhető</string>
     <string name="active_work_view_all">Minden terület</string>
+
+    <!-- Phase 9: report moderation (soft deletion) -->
+    <string name="moderation_reason_spam">Spam</string>
+    <string name="moderation_reason_troll_or_false_report">Troll vagy hamis bejelentés</string>
+    <string name="moderation_reason_duplicate">Duplikált bejelentés</string>
+    <string name="moderation_reason_incorrect">Hibás bejelentés</string>
+    <string name="moderation_reason_irrelevant">Nem releváns</string>
+    <string name="moderation_reason_other">Egyéb</string>
+
+    <string name="action_moderation_delete">Bejelentés törlése</string>
+    <string name="moderation_delete_dialog_title">Bejelentés törlése</string>
+    <string name="moderation_delete_dialog_text_general">A törölt bejelentés kikerül a normál ügykezelésből. Csak főadminisztrátor állíthatja vissza.</string>
+    <string name="moderation_delete_dialog_text_in_progress">A bejelentés jelenlegi ügyintézése megszűnik. Ha később visszaállítják, az Új bejelentések közé kerül, ügyintéző nélkül.</string>
+    <string name="moderation_delete_dialog_reason_label">Válasszon törlési okot</string>
+    <string name="action_delete">Törlés</string>
+    <string name="moderation_delete_success">A bejelentés törölve.</string>
+
+    <string name="deleted_reports_title">Törölt bejelentések</string>
+    <string name="deleted_reports_empty">Nincs törölt bejelentés.</string>
+    <string name="deleted_status_badge">TÖRÖLVE</string>
+    <string name="deleted_reason_label">Törlés oka</string>
+    <string name="deleted_by_label">Törölte</string>
+    <string name="deleted_at_label">Törlés ideje</string>
+    <string name="deleted_status_before_label">Törlés előtti állapot</string>
+    <string name="deleted_restore_target_label">Visszaállítás után</string>
+    <string name="deleted_moderator_readonly_hint">A törölt bejelentést csak főadminisztrátor állíthatja vissza.</string>
+    <string name="moderation_section_title">Moderáció</string>
+
+    <string name="action_restore">Bejelentés visszaállítása</string>
+    <string name="restore_dialog_title">Bejelentés visszaállítása</string>
+    <string name="restore_dialog_text_new">A bejelentés visszakerül az Új bejelentések közé.</string>
+    <string name="restore_dialog_text_in_progress">A korábbi ügyintézői hozzárendelés nem áll vissza. A bejelentés az Új bejelentések közé kerül.</string>
+    <string name="restore_dialog_text_archived">A bejelentés visszakerül az Archívumba.</string>
+    <string name="moderation_restore_success">A bejelentés visszaállítva.</string>
+
+    <string name="filter_deleted_reason">Törlés oka</string>
 
     <!-- User management -->
     <string name="users_title">Felhasználók</string>

@@ -23,6 +23,10 @@ class ErrorCopyTest {
             "USER_NOT_FOUND" to R.string.error_user_not_found,
             "USER_NOT_MANAGEABLE" to R.string.error_user_not_manageable,
             "USER_MANAGEMENT_FORBIDDEN" to R.string.error_user_management_forbidden,
+            // Phase 9 moderation codes (brief §23).
+            "MODERATION_FORBIDDEN" to R.string.error_moderation_forbidden,
+            "REPORT_ALREADY_DELETED" to R.string.error_report_already_deleted,
+            "REPORT_NOT_DELETED" to R.string.error_report_not_deleted,
         )
         expected.forEach { (code, res) -> assertEquals(code, res, errorMessageRes(code)) }
     }
@@ -34,6 +38,7 @@ class ErrorCopyTest {
             "REPORT_UNCLASSIFIED_CANNOT_ASSIGN", "INVALID_ASSIGNEE", "REPORT_WORKFLOW_FORBIDDEN",
             "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS", "USER_REQUIRES_SERVICE_AREA", "USER_NOT_FOUND",
             "USER_NOT_MANAGEABLE", "USER_MANAGEMENT_FORBIDDEN",
+            "MODERATION_FORBIDDEN", "REPORT_ALREADY_DELETED", "REPORT_NOT_DELETED",
         )
         codes.forEach { code -> org.junit.Assert.assertNotEquals(code, R.string.error_unexpected, errorMessageRes(code)) }
     }

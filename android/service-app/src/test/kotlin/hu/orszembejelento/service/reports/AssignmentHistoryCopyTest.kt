@@ -86,4 +86,22 @@ class AssignmentHistoryCopyTest {
         assertEquals(2, entries.size)
         assertTrue(entries[1].label.contains("visszaadta"))
     }
+
+    @Test
+    fun `a moderation-deleted episode attributes the sentence to the assignee, never the raw code or the moderator`() {
+        // Phase 9 brief §52: the moderator (endedByServiceId) deleted the report, but the
+        // sentence is about whose HANDLING ended - the assignee's, not the moderator's.
+        val history = listOf(
+            AssignmentHistoryItemResponse(
+                assigneeServiceId = "SZ-1042", assignedByServiceId = "SZ-1042",
+                assignedAt = "2026-01-01T10:00:00Z",
+                endedAt = "2026-01-01T10:30:00Z", endedByServiceId = "SZ-9001", endReason = "MODERATION_DELETED",
+            ),
+        )
+        val entries = buildAssignmentHistoryEntries(history)
+        assertEquals(2, entries.size)
+        assertTrue("must name the assignee whose handling ended", entries[1].label.contains("SZ-1042"))
+        assertFalse("must never name the moderator who ended it", entries[1].label.contains("SZ-9001"))
+        assertFalse("must never show the raw backend code", entries[1].label.contains("MODERATION_DELETED"))
+    }
 }

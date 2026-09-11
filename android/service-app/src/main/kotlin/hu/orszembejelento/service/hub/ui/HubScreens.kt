@@ -19,18 +19,23 @@ import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 
 /**
- * `Moderáció` (brief §48): the live `Felhasználók` entry plus own-account actions. Phase 9
- * moderation-specific functions do not exist yet, so this hub says so plainly - no fake
- * deleted-report data, no `Phase 9` badge, no unimplemented button pretending to work.
+ * `Moderáció` (brief §36): the live `Felhasználók` entry, the now-live `Törölt bejelentések`
+ * moderation feature (Phase 9), plus own-account actions. Only ServiceArea administration
+ * (Phase 10) remains an honest "not yet available" placeholder here - never a fake button.
  */
 @Composable
-fun ModerationHubScreen(onOpenUsers: () -> Unit, onOpenAccount: () -> Unit) {
+fun ModerationHubScreen(onOpenUsers: () -> Unit, onOpenDeletedReports: () -> Unit, onOpenAccount: () -> Unit) {
     Hub(
         title = stringResource(R.string.moderation_title),
         subtitle = stringResource(R.string.moderation_subtitle),
         onOpenUsers = onOpenUsers,
         onOpenAccount = onOpenAccount,
     ) {
+        Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenDeletedReports)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(stringResource(R.string.hub_deleted_reports_entry), style = MaterialTheme.typography.titleMedium)
+            }
+        }
         Text(
             stringResource(R.string.moderation_functions_unavailable),
             style = MaterialTheme.typography.bodySmall,
@@ -41,17 +46,24 @@ fun ModerationHubScreen(onOpenUsers: () -> Unit, onOpenAccount: () -> Unit) {
 }
 
 /**
- * `Adminisztráció` (brief §49): live `Felhasználók`, plus Phase 10 (ServiceArea admin) and
- * Phase 12 (audit) shown as visibly, honestly unavailable - never built, never faked.
+ * `Adminisztráció` (brief §37): live `Felhasználók` and `Törölt bejelentések` (SUPER_ADMIN
+ * gets restore controls on the same deleted-report UI, brief §37/§48), plus Phase 10
+ * (ServiceArea admin) and Phase 12 (audit) shown as visibly, honestly unavailable - never
+ * built, never faked.
  */
 @Composable
-fun AdminHubScreen(onOpenUsers: () -> Unit, onOpenAccount: () -> Unit) {
+fun AdminHubScreen(onOpenUsers: () -> Unit, onOpenDeletedReports: () -> Unit, onOpenAccount: () -> Unit) {
     Hub(
         title = stringResource(R.string.admin_title),
         subtitle = stringResource(R.string.admin_subtitle),
         onOpenUsers = onOpenUsers,
         onOpenAccount = onOpenAccount,
     ) {
+        Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenDeletedReports)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(stringResource(R.string.hub_deleted_reports_entry), style = MaterialTheme.typography.titleMedium)
+            }
+        }
         UnavailableRow(stringResource(R.string.areas_admin_title))
         UnavailableRow(stringResource(R.string.audit_admin_title))
     }

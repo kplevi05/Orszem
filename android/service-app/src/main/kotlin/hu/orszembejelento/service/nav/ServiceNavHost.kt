@@ -13,6 +13,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,8 +23,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
@@ -43,6 +47,11 @@ import hu.orszembejelento.service.auth.ui.AuthViewModel
 import hu.orszembejelento.service.hub.ui.AdminHubScreen
 import hu.orszembejelento.service.hub.ui.ModerationHubScreen
 import hu.orszembejelento.service.hub.ui.StatsPlaceholderScreen
+import hu.orszembejelento.service.moderation.data.ModerationRepository
+import hu.orszembejelento.service.moderation.ui.DeletedReportDetailScreen
+import hu.orszembejelento.service.moderation.ui.DeletedReportDetailViewModel
+import hu.orszembejelento.service.moderation.ui.DeletedReportsListScreen
+import hu.orszembejelento.service.moderation.ui.DeletedReportsListViewModel
 import hu.orszembejelento.service.reports.data.ActiveWorkAreaStore
 import hu.orszembejelento.service.reports.data.CatalogRepository
 import hu.orszembejelento.service.reports.data.ReportFilter
@@ -60,6 +69,7 @@ import hu.orszembejelento.service.usermanagement.ui.UserDetailScreen
 import hu.orszembejelento.service.usermanagement.ui.UserDetailViewModel
 import hu.orszembejelento.service.usermanagement.ui.UsersListViewModel
 import hu.orszembejelento.service.usermanagement.ui.UsersScreen
+import kotlinx.coroutines.launch
 
 internal object Routes {
     const val REPORTS = "reports"
@@ -73,9 +83,12 @@ internal object Routes {
     const val USER_DETAIL = "users/{serviceId}"
     const val CREATE_USER = "users/create"
     const val ACCOUNT = "account"
+    const val DELETED_REPORTS = "moderation/deleted"
+    const val DELETED_REPORT_DETAIL = "moderation/deleted/{publicReportId}"
 
     fun reportDetail(publicReportId: String) = "reports/$publicReportId"
     fun userDetail(serviceId: String) = "users/$serviceId"
+    fun deletedReportDetail(publicReportId: String) = "moderation/deleted/$publicReportId"
 }
 
 private data class BottomDestination(val route: String, val labelRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector)
@@ -127,6 +140,10 @@ fun ServiceNavHost(
     userManagementRepository: UserManagementRepository,
     catalogRepository: CatalogRepository,
     activeWorkAreaStore: ActiveWorkAreaStore,
+    // Null for SERVICE_USER (mirrors userManagementRepository's shape) - moderation is never
+    // reachable by that role, not even indirectly through a wired-but-unused repository
+    // (brief §2).
+    moderationRepository: ModerationRepository? = null,
 ) {
     val navController = rememberNavController()
     val onSessionEnded: () -> Unit = { authViewModel.forceSignedOut() }
@@ -175,6 +192,20 @@ fun ServiceNavHost(
 
     val queues = listOf(newQueueViewModel, inProgressQueueViewModel, archiveQueueViewModel)
 
+    // Session-scoped (not NavBackStackEntry-scoped) for the same reason as the queues above,
+    // and so a restore from the detail screen (a different back-stack entry) can refresh this
+    // same list instance before popping back to it (brief §50 - "refreshes moderation list").
+    // Null when moderation is unavailable (SERVICE_USER) - moderationRepository's null-ness
+    // never changes for this composable's lifetime, so calling `viewModel()` conditionally here
+    // is safe (the same branch is always taken across recomposition).
+    val deletedListViewModel: DeletedReportsListViewModel? = moderationRepository?.let { moderation ->
+        viewModel(
+            viewModelStoreOwner = sessionOwner,
+            key = "deleted-reports-list",
+            factory = viewModelFactory { DeletedReportsListViewModel(moderation, onSessionEnded) },
+        )
+    }
+
     // Apply the active-work-view area to every queue whenever it changes (including the first
     // composition of this session, seeding from the persisted preference).
     androidx.compose.runtime.LaunchedEffect(activeWorkAreaId) {
@@ -190,7 +221,23 @@ fun ServiceNavHost(
         activeWorkAreaId = areaId
     }
 
+    // The optional confirmation snackbars for moderation delete/restore (brief §42/§50) -
+    // hoisted here, above the NavHost, so the message survives the `popBackStack()` that
+    // immediately follows a successful mutation instead of being torn down with the screen
+    // that triggered it.
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarScope = rememberCoroutineScope()
+    val deleteSuccessMessage = stringResource(R.string.moderation_delete_success)
+    val restoreSuccessMessage = stringResource(R.string.moderation_restore_success)
+    val onModerationDeleted: () -> Unit = {
+        snackbarScope.launch { snackbarHostState.showSnackbar(deleteSuccessMessage) }
+    }
+    val onModerationRestored: () -> Unit = {
+        snackbarScope.launch { snackbarHostState.showSnackbar(restoreSuccessMessage) }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination
@@ -238,7 +285,14 @@ fun ServiceNavHost(
                 val publicReportId = entry.arguments?.getString("publicReportId") ?: return@composable
                 val detailViewModel: ReportDetailViewModel = viewModel(
                     key = "report-detail-$publicReportId",
-                    factory = viewModelFactory { ReportDetailViewModel(publicReportId, reportRepository, onSessionEnded) },
+                    factory = viewModelFactory {
+                        ReportDetailViewModel(
+                            publicReportId,
+                            reportRepository,
+                            onSessionEnded,
+                            if (role == "SERVICE_USER") null else moderationRepository,
+                        )
+                    },
                 )
                 ReportDetailScreen(
                     currentServiceId = serviceId,
@@ -246,6 +300,14 @@ fun ServiceNavHost(
                     viewModel = detailViewModel,
                     userManagementRepository = if (role == "SERVICE_USER") null else userManagementRepository,
                     onBack = { navController.popBackStack() },
+                    onDeleted = {
+                        // Brief §42: the deleted report is gone from ordinary workflow, so
+                        // navigate away and silently refresh whichever queue it was showing
+                        // in - never guess which one, just refresh all three.
+                        queues.forEach { it.refresh() }
+                        navController.popBackStack()
+                        onModerationDeleted()
+                    },
                 )
             }
             composable(Routes.ARCHIVE) {
@@ -276,13 +338,47 @@ fun ServiceNavHost(
             composable(Routes.MODERATION) {
                 ModerationHubScreen(
                     onOpenUsers = { navController.navigate(Routes.USERS) },
+                    onOpenDeletedReports = { navController.navigate(Routes.DELETED_REPORTS) },
                     onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
                 )
             }
             composable(Routes.ADMIN) {
                 AdminHubScreen(
                     onOpenUsers = { navController.navigate(Routes.USERS) },
+                    onOpenDeletedReports = { navController.navigate(Routes.DELETED_REPORTS) },
                     onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
+                )
+            }
+            composable(Routes.DELETED_REPORTS) {
+                val listViewModel = deletedListViewModel ?: return@composable
+                DeletedReportsListScreen(
+                    viewModel = listViewModel,
+                    onOpenReport = { navController.navigate(Routes.deletedReportDetail(it)) },
+                    areaChoices = areaChoices,
+                )
+            }
+            composable(
+                Routes.DELETED_REPORT_DETAIL,
+                arguments = listOf(navArgument("publicReportId") {}),
+            ) { entry ->
+                val moderation = moderationRepository ?: return@composable
+                val publicReportId = entry.arguments?.getString("publicReportId") ?: return@composable
+                val deletedDetailViewModel: DeletedReportDetailViewModel = viewModel(
+                    key = "deleted-report-detail-$publicReportId",
+                    factory = viewModelFactory { DeletedReportDetailViewModel(publicReportId, moderation, onSessionEnded) },
+                )
+                DeletedReportDetailScreen(
+                    role = role,
+                    viewModel = deletedDetailViewModel,
+                    onBack = { navController.popBackStack() },
+                    onRestored = {
+                        // Brief §50: success refreshes the moderation list and returns from
+                        // detail - the list this pops back to is the same session-scoped
+                        // instance above, so refreshing it here is visible immediately.
+                        deletedListViewModel?.refresh()
+                        navController.popBackStack()
+                        onModerationRestored()
+                    },
                 )
             }
             composable(Routes.ACCOUNT) {

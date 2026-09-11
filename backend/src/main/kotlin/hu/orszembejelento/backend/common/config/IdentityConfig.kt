@@ -62,4 +62,11 @@ class IdentityConfig {
         areaScopePolicy: hu.orszembejelento.backend.scope.domain.AreaScopePolicy,
     ): hu.orszembejelento.backend.reportworkflow.domain.AssignmentEligibilityGuard =
         hu.orszembejelento.backend.reportworkflow.domain.AssignmentEligibilityGuard(areaScopePolicy)
+
+    /** Phase 9 — deliberately reuses the same [reportWorkflowPolicy] bean, not a second instance. */
+    @Bean
+    fun moderationPolicy(
+        reportWorkflowPolicy: hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy,
+    ): hu.orszembejelento.backend.moderation.domain.ModerationPolicy =
+        hu.orszembejelento.backend.moderation.domain.ModerationPolicy(reportWorkflowPolicy)
 }

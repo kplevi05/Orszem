@@ -1,6 +1,10 @@
 package hu.orszembejelento.service.reports
 
 import hu.orszembejelento.service.common.data.ApiResult
+import hu.orszembejelento.service.moderation.data.DeletedReportDetailResponse
+import hu.orszembejelento.service.moderation.data.DeletedReportFilter
+import hu.orszembejelento.service.moderation.data.DeletedReportPageResponse
+import hu.orszembejelento.service.moderation.data.ModerationRepository
 import hu.orszembejelento.service.reports.data.ReportAreaSummary
 import hu.orszembejelento.service.reports.data.ReportCategorySummary
 import hu.orszembejelento.service.reports.data.ReportDetailResponse
@@ -83,6 +87,22 @@ class ReportDetailViewModelTest {
         override suspend fun reassign(publicReportId: String, expectedVersion: Long, targetServiceId: String) = error("unused")
     }
 
+    /** Phase 9 brief §38-43 - a minimal fake for the optional moderation-delete side. */
+    private class FakeModerationRepository(var deleteResult: ApiResult<Unit> = ApiResult.SessionEnded) : ModerationRepository {
+        var deleteCalls = 0
+        var lastReason: String? = null
+
+        override suspend fun delete(publicReportId: String, expectedVersion: Long, reason: String): ApiResult<Unit> {
+            deleteCalls++
+            lastReason = reason
+            return deleteResult
+        }
+
+        override suspend fun restore(publicReportId: String, expectedVersion: Long) = error("unused")
+        override suspend fun deletedList(page: Int, size: Int, filter: DeletedReportFilter): ApiResult<DeletedReportPageResponse> = error("unused")
+        override suspend fun deletedDetail(publicReportId: String): ApiResult<DeletedReportDetailResponse> = error("unused")
+    }
+
     @Test
     fun `claim race - REPORT_ALREADY_ASSIGNED never retries the claim and refreshes to the real state`() = runTest {
         val fake = FakeRepository(
@@ -152,5 +172,77 @@ class ReportDetailViewModelTest {
 
         assertEquals(1, sessionEndedCalls)
         assertEquals(null, vm.state.value.mutationError)
+    }
+
+    @Test
+    fun `a successful moderation delete flips moderationDeleteCompleted and sends exactly the chosen reason`() = runTest {
+        val fake = FakeRepository(detailResponses = mutableListOf(ApiResult.Success(detail("NEW", 0))))
+        val moderation = FakeModerationRepository(deleteResult = ApiResult.Success(Unit))
+        val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {}, moderationRepository = moderation)
+
+        vm.deleteReport("SPAM")
+
+        assertEquals(1, moderation.deleteCalls)
+        assertEquals("SPAM", moderation.lastReason)
+        assertTrue(vm.state.value.moderationDeleteCompleted)
+        assertFalse(vm.state.value.moderationDeleteInFlight)
+        assertEquals(null, vm.state.value.moderationDeleteError)
+    }
+
+    @Test
+    fun `REPORT_ALREADY_DELETED is treated the same as success - the report is gone either way`() = runTest {
+        val fake = FakeRepository(detailResponses = mutableListOf(ApiResult.Success(detail("NEW", 0))))
+        val moderation = FakeModerationRepository(deleteResult = ApiResult.Failure(code = "REPORT_ALREADY_DELETED", httpStatus = 409))
+        val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {}, moderationRepository = moderation)
+
+        vm.deleteReport("SPAM")
+
+        assertTrue(vm.state.value.moderationDeleteCompleted)
+        assertEquals(null, vm.state.value.moderationDeleteError)
+    }
+
+    @Test
+    fun `a stale-version delete rejection never retries and silently refreshes, never navigating away`() = runTest {
+        val fake = FakeRepository(
+            detailResponses = mutableListOf(
+                ApiResult.Success(detail("NEW", 0)),
+                ApiResult.Success(detail("IN_PROGRESS", 1)), // someone claimed it before the delete landed
+            ),
+        )
+        val moderation = FakeModerationRepository(deleteResult = ApiResult.Failure(code = "REPORT_STATE_CHANGED", httpStatus = 409))
+        val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {}, moderationRepository = moderation)
+
+        vm.deleteReport("SPAM")
+
+        assertEquals(1, moderation.deleteCalls) // exactly one attempt - no automatic retry
+        assertEquals(2, fake.detailCalls) // initial load + the post-failure refresh
+        assertFalse("must not navigate away on an ordinary conflict", vm.state.value.moderationDeleteCompleted)
+        assertTrue(vm.state.value.moderationDeleteError is ApiResult.Failure)
+        assertEquals("IN_PROGRESS", vm.state.value.detail?.status)
+    }
+
+    @Test
+    fun `SessionEnded from a delete invokes the callback rather than surfacing as a delete error`() = runTest {
+        var sessionEndedCalls = 0
+        val fake = FakeRepository(detailResponses = mutableListOf(ApiResult.Success(detail("NEW", 0))))
+        val moderation = FakeModerationRepository(deleteResult = ApiResult.SessionEnded)
+        val vm = ReportDetailViewModel("r1", fake, onSessionEnded = { sessionEndedCalls++ }, moderationRepository = moderation)
+
+        vm.deleteReport("SPAM")
+
+        assertEquals(1, sessionEndedCalls)
+        assertEquals(null, vm.state.value.moderationDeleteError)
+        assertFalse(vm.state.value.moderationDeleteCompleted)
+    }
+
+    @Test
+    fun `deleteReport is a no-op when no moderation repository is wired - SERVICE_USER never has one`() = runTest {
+        val fake = FakeRepository(detailResponses = mutableListOf(ApiResult.Success(detail("NEW", 0))))
+        val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {}, moderationRepository = null)
+
+        vm.deleteReport("SPAM") // must not throw
+
+        assertFalse(vm.state.value.moderationDeleteCompleted)
+        assertFalse(vm.state.value.moderationDeleteInFlight)
     }
 }

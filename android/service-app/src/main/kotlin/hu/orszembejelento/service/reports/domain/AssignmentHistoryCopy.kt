@@ -43,6 +43,11 @@ fun buildAssignmentHistoryEntries(history: List<AssignmentHistoryItemResponse>):
                 val label = when (episode.endReason) {
                     "RETURNED" -> "$endedBy visszaadta"
                     "ARCHIVED" -> "$endedBy lezárta"
+                    // Phase 9 brief §52: a moderation deletion terminated this episode - never
+                    // shown as the raw "MODERATION_DELETED" code. Deliberately the ASSIGNEE's
+                    // own service ID here, not `endedBy` (the moderator who deleted it) - the
+                    // sentence is about whose handling ended, not who ended it.
+                    "MODERATION_DELETED" -> "${episode.assigneeServiceId} ügyintézése moderációs törlés miatt megszűnt"
                     // Every current end reason is handled above; any other value degrades to
                     // a neutral phrase rather than showing a raw code (brief §29/§85).
                     else -> "$endedBy lezárta az ügyintézést"

@@ -1,6 +1,7 @@
 package hu.orszembejelento.service.reports
 
 import hu.orszembejelento.service.reports.domain.availableWorkflowActions
+import hu.orszembejelento.service.reports.domain.canModerationDelete
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -60,5 +61,17 @@ class WorkflowActionAvailabilityTest {
             assertTrue(role, availability.close)
             assertFalse(role, availability.claim)
         }
+    }
+
+    @Test
+    fun `moderation delete is offered only to MODERATOR and SUPER_ADMIN, never SERVICE_USER`() {
+        assertFalse(canModerationDelete("SERVICE_USER"))
+        assertTrue(canModerationDelete("MODERATOR"))
+        assertTrue(canModerationDelete("SUPER_ADMIN"))
+    }
+
+    @Test
+    fun `an unrecognized role never gets moderation delete`() {
+        assertFalse(canModerationDelete("SOMETHING_NEW"))
     }
 }

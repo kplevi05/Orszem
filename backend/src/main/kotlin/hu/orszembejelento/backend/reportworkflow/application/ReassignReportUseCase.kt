@@ -7,6 +7,7 @@ import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
 import hu.orszembejelento.backend.identity.domain.ServiceId
 import hu.orszembejelento.backend.identity.domain.UserRole
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
+import hu.orszembejelento.backend.moderation.infrastructure.JdbcModerationRepository
 import hu.orszembejelento.backend.reports.domain.Report
 import hu.orszembejelento.backend.reports.domain.ReportStatus
 import hu.orszembejelento.backend.reports.infrastructure.JdbcReportRepository
@@ -45,6 +46,7 @@ class ReassignReportUseCase(
     private val scopeResolver: ReportScopeResolver,
     private val policy: ReportWorkflowPolicy,
     private val audit: JdbcAuditRepository,
+    private val moderation: JdbcModerationRepository,
     private val clock: Clock,
 ) {
 
@@ -52,7 +54,7 @@ class ReassignReportUseCase(
     fun reassign(actor: ReportWorkflowActor, publicReportId: UUID, expectedVersion: Long, rawTargetServiceId: String?): Report {
         if (actor.role == UserRole.SERVICE_USER) throw ReportWorkflowForbiddenException()
 
-        val (locked, scope) = lockAndResolve(reports, scopeResolver, publicReportId)
+        val (locked, scope) = lockAndResolve(reports, scopeResolver, moderation::hasOpenEpisode, publicReportId)
         if (!policy.canReassign(actor, scope)) throw ReportNotVisibleException()
 
         // Checked before status, deliberately (brief §40): a global MODERATOR/SUPER_ADMIN

@@ -7,6 +7,7 @@ import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
 import hu.orszembejelento.backend.identity.domain.UserRole
 import hu.orszembejelento.backend.identity.domain.UserStatus
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
+import hu.orszembejelento.backend.moderation.infrastructure.JdbcModerationRepository
 import hu.orszembejelento.backend.reports.domain.Report
 import hu.orszembejelento.backend.reports.domain.ReportStatus
 import hu.orszembejelento.backend.reports.infrastructure.JdbcReportRepository
@@ -55,6 +56,7 @@ class ClaimReportUseCase(
     private val scopeResolver: ReportScopeResolver,
     private val policy: ReportWorkflowPolicy,
     private val audit: JdbcAuditRepository,
+    private val moderation: JdbcModerationRepository,
     private val clock: Clock,
 ) {
 
@@ -62,7 +64,7 @@ class ClaimReportUseCase(
     fun claim(actor: ReportWorkflowActor, publicReportId: UUID, expectedVersion: Long): Report {
         if (actor.role != UserRole.SERVICE_USER) throw ReportWorkflowForbiddenException()
 
-        val (locked, scope) = lockAndResolve(reports, scopeResolver, publicReportId)
+        val (locked, scope) = lockAndResolve(reports, scopeResolver, moderation::hasOpenEpisode, publicReportId)
         if (!policy.canClaim(actor, scope)) throw ReportNotVisibleException()
 
         when (locked.status) {
