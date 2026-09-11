@@ -18,9 +18,12 @@ full list). It made three functional additions on top of the pure-client scope:
 Plus presentation-only changes: role/status enums are now localised through one central
 mapping (§J), and a second sweep of production copy (§J).
 
-> **Owner visual approval: PENDING — NOT GIVEN.** The representative screenshots in §M are
-> prepared for review. This phase stops here for the owner to approve the final appearance.
-> No Phase 8 PR has been opened. No merge. No Phase 9 work.
+> **Owner visual approval: GIVEN — 2026-09-11.** The owner reviewed the final `v3`
+> screenshot set (§M), including both round-2 corrections (§P), and approved the final
+> dark-navy/gold Service Android visual direction, navigation, report-workflow UI, filters,
+> Active Work View, user-management UI, temporary-credential dialog and production copy.
+> No further Phase 8 UI changes were requested. The Phase 8 PR is open for review (§R); it
+> has not been merged. No Phase 9 work.
 
 ---
 
@@ -684,7 +687,7 @@ the review, not committed as binary blobs (Phase 5 precedent). New this pass: **
   szolgálati munkatársat, legalább egy területtel. A főadminisztrátor szolgálati munkatársat
   vagy moderátort hozhat létre."*
 
-**OWNER VISUAL APPROVAL: PENDING.** Not recorded as given. This phase stops here.
+**OWNER VISUAL APPROVAL: GIVEN — 2026-09-11.** See §R for the record and the PR.
 
 ---
 
@@ -841,3 +844,27 @@ response without them still deserialises. No migration. Tests: §L.
 
 The Active Work View and the filter sheet's area chips are the only consumers; both use the
 data strictly as a local narrowing hint, never as an authorisation claim (§E).
+
+---
+
+## R. Owner visual approval — record
+
+**GIVEN — 2026-09-11.** The owner reviewed the final `orszem-phase8-screenshots-v3.zip`
+set (§M, 21 items), including both round-2 UI corrections (§P: the user-list manageability
+label layout and the Create-user helper-copy vocabulary), and approved:
+
+- the final dark-navy/gold Service Android visual direction;
+- navigation (§C);
+- the report-workflow UI, including the filter sheet and "Aktív munkanézet" (§E);
+- the user-management UI (§F);
+- the one-time temporary-credential dialog (§G);
+- the production copy throughout, including the localised role/status vocabulary (§J).
+
+No further Phase 8 UI changes were requested. This is a **documentation-only** commit —
+recording the approval already given is not a design decision and changes no product code.
+
+Per the owner's explicit instructions: no further product/UI/code changes are made in this
+commit beyond recording the approval; the Phase 8 PR (`feature/v2-service-android-ui` →
+`main`, title *"feat: add V2 Service Android operational UI"*) is opened for review
+immediately after this commit is confirmed green on CI, and is **not** merged automatically.
+Phase 9 has **not** started.
