@@ -554,9 +554,9 @@ pushed SHA, following the same bookkeeping pattern Phase 6-8 established.
 - [x] Correction pass: nav-bar insets (both filter sheets), card metadata layout,
       `REPORT_ALREADY_DELETED` outcome fix — all verified live, full regression re-run green (§T)
 - [x] This engineering report, including the correction-pass record (§T)
-- [x] Push + all 5 GitHub Actions workflows green on the pushed HEAD `7776603` (§T.6)
-- [ ] **Owner visual approval** — PENDING (§S)
-- [ ] PR — NOT opened, pending owner approval
+- [x] Push + all 5 GitHub Actions workflows green on the exact final pushed HEAD `611aee1` (§T.6/§T.7)
+- [x] **Owner visual approval** — GIVEN 2026-09-11 (§S)
+- [ ] PR — to be opened against `611aee1` (§U); not merged
 - [ ] Merge — NOT done
 - [ ] Phase 10 — NOT started
 
@@ -675,20 +675,77 @@ work):
 
 All 5 started at `2026-09-11T17:02:02Z`; `android` (the longest, as expected — it builds
 both apps twice, runs unit + instrumented-compile + lint) finished last at
-`2026-09-11T17:09:33Z`. **5/5 green on the exact final pushed HEAD.** This satisfies item 6
-of the correction-pass request in full.
+`2026-09-11T17:09:33Z`. **5/5 green on `7776603`.**
+
+### T.7 Repository-state re-check before opening the PR (owner-requested)
+
+`7776603` above was the code-bearing commit at the moment those 5 runs were checked, but it
+was **not** the branch's actual final HEAD by the time this report finished recording the
+results: the act of writing those results into this report and committing that (a
+documentation-only commit, *"docs(phase-9): record the green CI runs for the correction
+pass"*) and pushing it moved HEAD one further commit forward, to **`611aee1`**. The owner
+caught this discrepancy exactly — §T.6's original wording confirmed CI only on the
+preceding code-bearing SHA, not on the exact final pushed HEAD.
+
+Re-verified directly before opening the PR:
+
+```
+git status                 → working tree clean, nothing to commit
+git rev-parse HEAD         → 611aee1181010a2a883a4a868cafc922dd7726c7
+git fetch origin feature/v2-moderation
+git rev-parse origin/feature/v2-moderation → 611aee1181010a2a883a4a868cafc922dd7726c7
+```
+
+Local HEAD and `origin/feature/v2-moderation` are identical — `611aee1` was already pushed;
+there was no further documentation-only commit to push. Because the branch's `push` trigger
+fires on every push regardless of a PR, `611aee1` itself already had its own independent CI
+run (distinct run IDs from the `7776603` table above), confirmed via the same GitHub Actions
+REST API call against `head_sha=611aee1181010a2a883a4a868cafc922dd7726c7`:
+
+| Workflow | Run # | Run ID | Conclusion |
+|---|---|---|---|
+| `backend.yml` | 63 | 34626262409 | ✅ success |
+| `android.yml` | 74 | 34626262380 | ✅ success |
+| `web.yml` | 63 | 34626262236 | ✅ success |
+| `deploy-config.yml` | 60 | 34626262235 | ✅ success |
+| `reference-data.yml` | 49 | 34626262202 | ✅ success |
+
+Started `2026-09-11T17:11:18Z`, `android` finished last at `2026-09-11T17:20:29Z`.
+**5/5 green on `611aee1` — the exact final pushed HEAD**, confirmed independently of the
+`7776603` result rather than assumed to carry over. This is the SHA the Phase 9 PR is
+opened against.
 
 ---
 
 ## S. Owner visual approval — record
 
-**PENDING.** All 24 screenshots (the original 20 from §N plus §T.5's 4 corrected/additional
-ones) are being sent to the owner alongside this updated report. Per the exact process
-established in Phase 8: no PR will be opened, nothing will be merged, and Phase 10 will not
-start until the owner explicitly reviews the screenshots and gives visual approval. This
-section will be updated with the date and scope of that approval once given — not before.
+**GIVEN — 2026-09-11.** The owner reviewed the 24 screenshots (the original 20 from §N plus
+§T.5's 4 corrected/additional ones) and approved Phase 9's final visual appearance,
+explicitly confirming: the moderation delete action and reason picker; the deleted-report
+list and detail; the corrected ServiceArea card layout; the corrected filter-sheet
+navigation-bar insets (both the deleted-list sheet and the Phase 8 report-filter sheet);
+the MODERATOR read-only deleted detail; the SUPER_ADMIN restore flow; the IN_PROGRESS
+delete/restore copy; the SERVICE_USER exclusion; and the overall existing dark-navy/gold
+visual language. No further Phase 9 UI changes were requested. This approval, together with
+the CI confirmation in §T.7, is what the Phase 9 PR (§U) is opened against.
 
-### CI run record (§T.6)
+### CI run record (§T.6/§T.7)
 
-5/5 GitHub Actions workflows green on pushed HEAD `7776603` — see the table in §T.6 for
-exact run IDs and URLs. No workflow was skipped, retried, or re-run to reach green.
+5/5 GitHub Actions workflows green on `7776603`, and independently 5/5 green again on
+`611aee1` — the exact final pushed HEAD — see §T.7 for that table with exact run IDs. No
+workflow was skipped, retried, or re-run to reach green.
+
+---
+
+## U. Phase 9 pull request
+
+Opened after §S's approval and after this approval record itself was committed, pushed, and
+independently confirmed 5/5 green (the owner's explicit instruction: commit/push the
+approval-record update, then wait for CI on *that* resulting exact final HEAD before
+opening the PR — not reuse `611aee1`'s result for a commit made after it):
+
+- `feature/v2-moderation` → `main`, title *"feat: add V2 report moderation"*
+- PR head SHA: `<filled in immediately below, from this commit's own hash>`
+- **Not merged, and not auto-merge-enabled** — the owner reviews and merges it themselves.
+  Phase 10 has not started.
+- PR: `<filled in immediately after opening — see the chat message for the number/link>`
