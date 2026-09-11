@@ -166,6 +166,20 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             .optional()
             .orElse(null)
 
+    /**
+     * Locks one RailwayLine row for the lifetime of the current transaction (Phase 10 brief
+     * §27 canonical lock order, step 2). Used only by ServiceArea-administration assign/move/
+     * unassign mutations, never by reference import (which serialises against everything via
+     * [acquireImportLock] instead, at a coarser grain). Reference *identity* is still never
+     * written here - Phase 10 only ever reads this row to confirm it exists and is active.
+     */
+    fun lockRailwayLineById(id: UUID): RailwayLine? =
+        jdbc.sql("$SELECT_LINE WHERE id = :id FOR UPDATE")
+            .param("id", id)
+            .query(::mapRailwayLine)
+            .optional()
+            .orElse(null)
+
     fun findRailwayLineByCode(lineCode: String): RailwayLine? =
         jdbc.sql("$SELECT_LINE WHERE line_code = :code")
             .param("code", lineCode)

@@ -56,7 +56,7 @@ class DatabaseBaselineIT : AbstractPostgresIntegrationTest() {
         // Pinned explicitly rather than counted loosely: an unexpected extra migration, or
         // one applied out of order, should fail here rather than surface as a schema
         // mystery later.
-        check(applied.map { it["version"] } == listOf("001", "002", "003", "004", "005")) {
+        check(applied.map { it["version"] } == listOf("001", "002", "003", "004", "005", "006")) {
             "unexpected migration history: $applied"
         }
         check(applied.all { it["success"] == true }) { "a migration did not apply successfully: $applied" }

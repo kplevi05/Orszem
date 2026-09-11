@@ -48,11 +48,22 @@ enum class AuditEventType {
     // MODERATOR/SUPER_ADMIN who performed the moderation mutation.
     REPORT_MODERATION_DELETED,
     REPORT_MODERATION_RESTORED,
+
+    // Phase 10 — service area administration. The actor is always the SUPER_ADMIN who
+    // performed the mutation. SERVICE_AREA_* target a SERVICE_AREA; RAILWAY_LINE_SERVICE_AREA_*
+    // target the RAILWAY_LINE that was (re)assigned - see AuditTargetType.RAILWAY_LINE.
+    SERVICE_AREA_CREATED,
+    SERVICE_AREA_RENAMED,
+    SERVICE_AREA_ACTIVATED,
+    SERVICE_AREA_DEACTIVATED,
+    RAILWAY_LINE_SERVICE_AREA_ASSIGNED,
+    RAILWAY_LINE_SERVICE_AREA_MOVED,
+    RAILWAY_LINE_SERVICE_AREA_UNASSIGNED,
 }
 
 enum class AuditActorType { USER, SYSTEM }
 
-enum class AuditTargetType { USER, SESSION, REFERENCE_DATASET, REPORT }
+enum class AuditTargetType { USER, SESSION, REFERENCE_DATASET, REPORT, SERVICE_AREA, RAILWAY_LINE }
 
 /**
  * One append-only audit row.
