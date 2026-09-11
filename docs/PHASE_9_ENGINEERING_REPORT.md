@@ -20,7 +20,10 @@ report-detail screen and hub navigation). It is **not** a UI-only phase.
 | `main` at branch creation | `986d53e` — *Merge pull request #12 from …/feature/v2-service-android-ui* (confirmed Phase 8 merged before any Phase 9 work started, per §0's instruction) |
 | Phase 9 core commit | `8a92d9d` — *feat(moderation): Phase 9 backend + Service Android moderation core* |
 | Phase 9 test commit | `d1339c8` — *test(moderation): Service Android Compose/instrumented coverage (§67)* |
-| Current branch HEAD | `d1339c8` |
+| First engineering report | `90aa8da` — *docs(phase-9): engineering report — backend, Android, verification* |
+| Correction-pass commit | `b0a2cc0` — *fix(moderation): correction pass — insets, card layout, delete UX* (§T) |
+| This report's commit | recorded in §T/§S once committed |
+| Current branch HEAD | verified live in §T immediately before push — see that section for the exact SHA, since this document is itself part of the next commit |
 
 No PR opened. Nothing merged. No destructive git operations (no reset --hard, no
 force-push, no rebase of shared history). No Phase 10 work.
@@ -355,43 +358,63 @@ cd android && ./gradlew :service-app:testDebugUnitTest
 **Green** — new/extended: `ModerationReasonLabelsTest` (6), `DeletedReportsListViewModelTest`
 (4), `DeletedReportDetailViewModelTest` (5), plus extensions to `ErrorCopyTest`,
 `AssignmentHistoryCopyTest`, `WorkflowActionAvailabilityTest`, and `ReportDetailViewModelTest`
-(5 new delete-flow cases: success, `REPORT_ALREADY_DELETED`-as-success, stale-version
-no-blind-retry, `SessionEnded`, no-op-without-repository). All pre-existing Phase 2-8 unit
-tests unchanged and still green.
+(6 delete-flow cases after §T's correction: `DELETED_NOW` success, `ALREADY_DELETED` as its
+own distinct outcome — never the success copy, see §T.3 — stale-version no-blind-retry,
+`SessionEnded`, no-op-without-repository). All pre-existing Phase 2-8 unit tests unchanged
+and still green.
 
 **Service Android, instrumented (real `orszem-test` AVD, API 35):**
 ```
 cd android && ./gradlew :service-app:connectedDebugAndroidTest
 ```
-**28/28 tests, 0 failures, 0 skipped** — the 5 pre-existing Phase 2/8 suites unchanged and
-green, plus 7 new: `ModerationDeleteActionComposeTest` (3 — SERVICE_USER sees no delete
+**29/29 tests, 0 failures, 0 skipped** (28 before §T's correction pass, +1 new
+`ModerationDeleteActionComposeTest` case proving `REPORT_ALREADY_DELETED` reports a distinct
+outcome — see §T.3) — the 5 pre-existing Phase 2/8 suites unchanged and
+green, plus 8: `ModerationDeleteActionComposeTest` (4 — SERVICE_USER sees no delete
 action; MODERATOR's reason dialog blocks confirm until a reason is chosen and shows no
 free-text field; a stale delete conflict shows the human message, refetches once, never
-retries), `DeletedReportDetailComposeTest` (3 — MODERATOR gets the read-only hint with no
-restore button; SUPER_ADMIN restoring a formerly-IN_PROGRESS report sees the exact matching
-copy; the moderation section shows the localised reason, never the raw code),
-`DeletedReportsListComposeTest` (1 — a card shows the localised reason and the `TÖRÖLVE`
-UI label, never a raw code).
+retries; §T.3's `REPORT_ALREADY_DELETED` distinct-outcome case), `DeletedReportDetailComposeTest`
+(3 — MODERATOR gets the read-only hint with no restore button; SUPER_ADMIN restoring a
+formerly-IN_PROGRESS report sees the exact matching copy; the moderation section shows the
+localised reason, never the raw code), `DeletedReportsListComposeTest` (1 — a card shows the
+localised reason and the `TÖRÖLVE` UI label, never a raw code).
 
-**Service Android, builds & lint:**
+**Service Android, builds, lint & release validation (exact CI steps, `android.yml`):**
 ```
-cd android && ./gradlew :public-app:assembleDebug :service-app:assembleDebug lint
+cd android && ./gradlew :public-app:assembleDebug :service-app:assembleDebug \
+  testDebugUnitTest :service-app:assembleDebugAndroidTest :public-app:assembleDebugAndroidTest \
+  :public-app:assembleRelease lint
 ```
-Both debug APKs build. `service-app` lint: **0 errors, 0 warnings** (the two
+Both debug APKs build. Both apps' instrumented tests compile. The unsigned Public release
+APK builds (minification, resource shrinking, manifest merging, the release-only strict
+network-security config — CI never has signing material, so this proves the build itself,
+not a signed artifact). `service-app` lint: **0 errors, 0 warnings** (the two
 `UnusedResources` warnings for the snackbar strings, present before the snackbar wiring was
-finished, are gone). `public-app` lint: 9 pre-existing warnings, unrelated — no `public-app`
-file was touched this phase.
+finished, are gone). `public-app` lint/tests: unaffected, unchanged — 9 pre-existing
+warnings, no `public-app` file touched this phase.
 
-**Web:**
+**Web (exact CI steps, `web.yml`):**
 ```
 cd web/public-web && npm run typecheck && npm test && npm run build
 ```
 Typecheck clean. **55/55 tests pass.** Production build succeeds. Unaffected by this
-phase — no web file was changed.
+phase — no web file was changed. Re-run explicitly after §T's correction pass per that
+section's own instruction not to skip a check merely because its files are unchanged.
 
-**Reference-data validator / deploy-config checks:** no file under `reference-data/` or
-`deploy/` (or `docs/deployment/`) changed on this branch — confirmed by `git diff --stat`
-against the merge base. Nothing to validate; nothing to regress.
+**Reference-data validator (exact CI step, `reference-data.yml`):**
+```
+node reference-data/tools/validate-canonical.mjs reference-data/example/manifest.json
+```
+**Valid** — `EXAMPLE-1 VERIFIED / COMPLETE / reuse:CLEARED`, 3 settlements / 2 railway lines
+/ 4 relations, 100% settlement coverage. No file under `reference-data/` changed on this
+branch (confirmed by `git diff --stat` against the merge base) — this run proves the
+validator itself is unaffected, not merely that nothing changed.
+
+**Deploy-config (`deploy-config.yml`):** no file under `deploy/` (or `docs/deployment/`)
+changed on this branch. The workflow's Caddy-specific checks (`caddy validate`, `caddy fmt`,
+the routing/header-redaction/CSP scripts) require a Caddy binary this Windows development
+machine does not have installed; they were not reproduced locally. This is the one CI
+workflow verified only by the actual GitHub Actions run in §T.6, not locally in this report.
 
 ---
 
@@ -509,9 +532,10 @@ build`, 605 tests), the full Service Android suite (unit + instrumented + both d
 weakened, skipped, or removed to reach green — §K.4's `DatabaseBaselineIT` change is an
 addition to what the test asserts, not a relaxation.
 
-The 5 GitHub Actions CI workflows have not yet been run on this branch (no PR is open — see
-§S); once opened, `docs/CI_RUN_<sha>.md`-style bookkeeping will follow the exact pattern
-Phase 6-8 established.
+All 5 GitHub Actions workflows (`backend.yml`, `android.yml`, `web.yml`, `deploy-config.yml`,
+`reference-data.yml`) trigger on `push` as well as `pull_request` — no PR needs to be open
+for them to run. §T.6 records the push and the resulting run results on the exact final
+pushed SHA, following the same bookkeeping pattern Phase 6-8 established.
 
 ---
 
@@ -526,8 +550,11 @@ Phase 6-8 established.
 - [x] Web: unaffected, full regression green
 - [x] Reference-data / deploy-config: unaffected (no files changed)
 - [x] Live emulator verification, real throwaway data, all three roles + Public
-- [x] 20 screenshots captured (exceeds the 12 required)
-- [x] This engineering report
+- [x] 25 screenshots captured (20 original + 5 from the §T correction pass; exceeds the 12 required)
+- [x] Correction pass: nav-bar insets (both filter sheets), card metadata layout,
+      `REPORT_ALREADY_DELETED` outcome fix — all verified live, full regression re-run green (§T)
+- [x] This engineering report, including the correction-pass record (§T)
+- [ ] **Push + all 5 GitHub Actions workflows green on the pushed HEAD** — see §T.6/§S
 - [ ] **Owner visual approval** — PENDING (§S)
 - [ ] PR — NOT opened, pending owner approval
 - [ ] Merge — NOT done
@@ -535,10 +562,117 @@ Phase 6-8 established.
 
 ---
 
+## T. Correction pass — owner-requested fixes (post-review)
+
+The owner's first review of §N's screenshots found Phase 9 "technically strong" but withheld
+visual approval pending three narrow corrections. No redesign was requested or performed —
+every fix below reuses the existing visual system unchanged.
+
+### T.1 Filter bottom sheets clipped by the 3-button navigation bar
+
+`S06_deleted_list_filter_sheet.png` showed the "Alkalmaz" button rendering behind the
+system navigation bar. Root cause: `MainActivity.onCreate` calls `enableEdgeToEdge()`, so
+content draws edge-to-edge and must claim its own system-bar insets — `ModalBottomSheet`'s
+own default `windowInsets` do not clear the navigation bar for content added inside it.
+Fixed in both `DeletedReportFilterSheet.kt` and (found affected by the identical pattern,
+per the owner's own instruction to check) the Phase 8 `ReportFilterSheet.kt`, by adding
+`Modifier.navigationBarsPadding()` — the standard Compose/Material inset API, not a
+hardcoded pixel value — on top of (not instead of) each sheet's existing visual bottom
+padding.
+
+Verified live on the real `orszem-test` AVD (API 35, 3-button navigation):
+
+| Condition | Result |
+|---|---|
+| Deleted-list filter sheet, normal font scale | Both buttons fully visible, no scroll needed |
+| Deleted-list filter sheet, font scale 1.3 | More filter-chip rows at this scale mean the sheet's initial position does not yet show the buttons - this is ordinary bottom-sheet behaviour for content taller than the peek height, not a regression. Scrolled to the end, both buttons are fully visible with genuine clearance from the navigation bar - never clipped or unreachable, which is what the correction required |
+| Phase 8 report filter sheet, normal font scale | Both buttons fully visible, no scroll needed |
+
+### T.2 Deleted-report card: long ServiceArea names
+
+The single dense metadata row (reason + deletion time + deleting service ID + area) squeezed
+a long area name into whatever width the earlier chips left over, wrapping it awkwardly.
+Fixed in `DeletedReportListItemCard.kt`: the card is now two rows — reason/time/service ID
+share a wrapping `FlowRow` (so they themselves wrap gracefully on a narrow screen or at a
+large font scale instead of overflowing), and the ServiceArea name gets its own row at the
+card's full width. Verified live with a genuinely long, realistic throwaway name,
+**"Nyugat-dunantuli Teruleti Szolgalati Kozpont"** (~44 characters) — renders as a single
+clean line at normal width, and still reads cleanly (no awkward multi-line squeeze) at font
+scale 1.3.
+
+### T.3 `REPORT_ALREADY_DELETED` no longer shows the success copy
+
+The first report described this Android behaviour as "`REPORT_ALREADY_DELETED`-as-success" —
+accurately describing what the code did, which on reflection was itself the defect: a
+delete request that lands after someone else's delete already committed was flipping the
+same `moderationDeleteCompleted` flag a genuine delete does, so the screen showed "A
+bejelentés törölve." as if *this* request had performed the deletion.
+
+Fixed by replacing that boolean with `ReportDetailViewModel.UiState.moderationDeleteOutcome:
+ModerationDeleteOutcome?` (`DELETED_NOW` / `ALREADY_DELETED`). Both outcomes still navigate
+away — the report is genuinely gone from ordinary workflow either way, and there is still no
+blind retry — but the caller (`ServiceNavHost`) now shows a different message per outcome:
+`DELETED_NOW` → "A bejelentés törölve."; `ALREADY_DELETED` → "A bejelentést időközben már
+törölték." (reusing the existing `REPORT_ALREADY_DELETED` error copy already defined for the
+brief §43 conflict banner, rather than inventing new text). `ReportDetailScreen.onDeleted`'s
+signature changed from `() -> Unit` to `(ModerationDeleteOutcome) -> Unit` accordingly.
+
+New coverage proving the final behaviour: a `ReportDetailViewModelTest` case asserting
+`ALREADY_DELETED` is reported and is never `DELETED_NOW`, and a new
+`ModerationDeleteActionComposeTest` instrumented case asserting the same at the screen
+level (§L).
+
+### T.4 Regression after the correction pass
+
+Re-run in full, with no check skipped because its files were unchanged (only the Android
+files above actually changed):
+
+| Suite | Result |
+|---|---|
+| Backend (`./gradlew build`) | 605 tests, 0 failures — unaffected, no backend file changed |
+| Service Android unit (`testDebugUnitTest`) | Green, including the updated §T.3 assertions |
+| Service Android instrumented (`connectedDebugAndroidTest`, real AVD) | **29/29**, 0 failures (28 → 29: the new §T.3 case) |
+| Both debug APKs + both apps' instrumented-test compilation + unsigned Public release APK + lint (exact `android.yml` steps) | Green — `service-app` lint 0 errors/0 warnings |
+| `public-app` unit tests + lint | Green — unaffected, unchanged |
+| Web (typecheck + 55 tests + build) | Green — unaffected, unchanged |
+| Reference-data validator | Valid — unaffected, unchanged (§L) |
+
+### T.5 Recaptured screenshots
+
+Five additional screenshots, using realistic throwaway names rather than
+"Phase 9 Verifikacios Terulet" (screenshot/test-data hygiene only, per the owner's own
+framing — not a production-data or code change):
+
+- Deleted-list filter sheet with both buttons clear of the navigation bar (replaces the
+  original `S06`).
+- The same filter sheet at font scale 1.3, scrolled to show both buttons clear.
+- Deleted list with two reports and the long ServiceArea name
+  ("Nyugat-dunantuli Teruleti Szolgalati Kozpont") on its own clean row (replaces `S07`).
+- The Phase 8 report filter sheet, confirming the identical fix there.
+
+### T.6 Push and CI
+
+```
+git push origin feature/v2-moderation
+```
+
+Pushed HEAD: `<filled in immediately below, from the actual git output — never guessed>`.
+All 5 GitHub Actions workflows (`backend`, `android`, `web`, `deploy-config`,
+`reference-data`) trigger on `push` as well as `pull_request` (see each workflow's own
+comment), so they run on this push without a PR being open. Results, exact run IDs and
+counts are recorded in §S.
+
+---
+
 ## S. Owner visual approval — record
 
-**PENDING.** The 20 screenshots referenced in §N are being sent to the owner alongside this
-report. Per the exact process established in Phase 8: no PR will be opened, nothing will be
-merged, and Phase 10 will not start until the owner explicitly reviews the screenshots and
-gives visual approval. This section will be updated with the date and scope of that
-approval once given — not before.
+**PENDING.** All 25 screenshots (the original 20 from §N plus §T.5's 5 corrected/additional
+ones) are being sent to the owner alongside this updated report. Per the exact process
+established in Phase 8: no PR will be opened, nothing will be merged, and Phase 10 will not
+start until the owner explicitly reviews the screenshots and gives visual approval. This
+section will be updated with the date and scope of that approval once given — not before.
+
+### CI run record (§T.6)
+
+To be filled in once the push and the 5 workflow runs complete — see the message
+accompanying this report for the live status if this section still says PENDING.
