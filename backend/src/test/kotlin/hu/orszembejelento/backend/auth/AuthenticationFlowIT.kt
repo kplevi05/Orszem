@@ -174,7 +174,7 @@ class AuthenticationFlowIT : AbstractAuthIntegrationTest() {
     // ------------------------------------------------------------------- /me
 
     @Test
-    fun `me returns only the service id and role`() {
+    fun `me returns the service id, role and the caller's own area scope - nothing more`() {
         val user = givenUser()
         val credentials = loginSuccessfully(user.serviceId)
 
@@ -184,11 +184,13 @@ class AuthenticationFlowIT : AbstractAuthIntegrationTest() {
         val body = json(response)
         check(body.get("serviceId").asText() == user.serviceId.value)
         check(body.get("role").asText() == "SERVICE_USER")
+        check(!body.get("globalAreaAccess").asBoolean())
+        check(body.get("areas").isArray && body.get("areas").isEmpty)
 
         @Suppress("UNCHECKED_CAST")
         val fields = (objectMapper.readValue(response.body(), Map::class.java) as Map<String, Any>).keys
-        check(fields == setOf("serviceId", "role")) {
-            "/me must expose nothing beyond service id and role, got $fields"
+        check(fields == setOf("serviceId", "role", "globalAreaAccess", "areas")) {
+            "/me must expose nothing beyond the self-account contract, got $fields"
         }
     }
 

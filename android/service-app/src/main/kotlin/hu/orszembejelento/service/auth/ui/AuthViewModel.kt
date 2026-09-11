@@ -107,13 +107,28 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         _state.value = AuthState.Unauthenticated
     }
 
+    /**
+     * A report-workflow/user-management screen learned, from its own 401/refresh rejection,
+     * that the session is gone. No network call - the server has already rejected it.
+     */
+    fun forceSignedOut() {
+        repository.clearSessionLocally()
+        pendingTemporaryPassword = null
+        _state.value = AuthState.Unauthenticated
+    }
+
     private fun apply(
         outcome: AuthOutcome,
         onEnded: AuthState,
         keepStateOnFailure: AuthState? = null,
     ) {
         _state.value = when (outcome) {
-            is AuthOutcome.Success -> AuthState.Authenticated(outcome.serviceId, outcome.role)
+            is AuthOutcome.Success -> AuthState.Authenticated(
+                serviceId = outcome.serviceId,
+                role = outcome.role,
+                globalAreaAccess = outcome.globalAreaAccess,
+                areas = outcome.areas.map { AuthState.AuthArea(it.id, it.name, it.status == "ACTIVE") },
+            )
             is AuthOutcome.PasswordChangeRequired -> AuthState.PasswordChangeRequired(outcome.serviceId)
             AuthOutcome.SessionEnded -> onEnded
             is AuthOutcome.Failure ->

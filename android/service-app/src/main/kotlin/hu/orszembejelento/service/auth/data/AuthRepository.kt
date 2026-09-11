@@ -7,7 +7,12 @@ import retrofit2.Response
 
 /** Outcome of an authentication attempt, in terms the state holder can act on. */
 sealed interface AuthOutcome {
-    data class Success(val serviceId: String, val role: String) : AuthOutcome
+    data class Success(
+        val serviceId: String,
+        val role: String,
+        val globalAreaAccess: Boolean,
+        val areas: List<MeAreaResponse>,
+    ) : AuthOutcome
     data class PasswordChangeRequired(val serviceId: String) : AuthOutcome
     data class Failure(val kind: AuthErrorKind) : AuthOutcome
     /** The stored refresh token is gone or rejected: local state must be cleared. */
@@ -112,6 +117,19 @@ class AuthRepository(
     }
 
     /**
+     * The single entry point every other feature repository (report workflow, user
+     * management) uses to call a Service-authenticated endpoint.
+     *
+     * Reuses exactly the same bearer-attach / 401-refresh-once-retry-once / single-flight
+     * machinery [changePassword] already relies on, so no other repository re-implements
+     * token handling. Returns `null` only when there is no session to authenticate with at
+     * all (no access token, and refresh could not produce one) - the caller should treat
+     * that identically to [AuthOutcome.SessionEnded].
+     */
+    suspend fun <T> authorizedCall(call: suspend (bearer: String) -> Response<T>): Response<T>? =
+        withFreshToken(call)
+
+    /**
      * Runs a protected call, and on a 401 refreshes **once** and retries **once**.
      *
      * Bounded deliberately: a retry loop against an expired session would hammer the server
@@ -150,6 +168,17 @@ class AuthRepository(
         return AuthOutcome.SessionEnded
     }
 
+    /**
+     * Clears local session state only - no network call.
+     *
+     * For the case where a *different* repository ([authorizedCall] returning null to a
+     * report-workflow or user-management screen) has already learned, from the server's own
+     * 401/refresh rejection, that the session is gone. Calling [logout] there would attempt
+     * a pointless network request with a credential the server has already rejected;
+     * clearing local state is all that is left to do.
+     */
+    fun clearSessionLocally() = clearLocalSession()
+
     // ------------------------------------------------------------------ internals
 
     /** Adopts fresh credentials: access token in memory, rotated refresh token encrypted. */
@@ -168,7 +197,7 @@ class AuthRepository(
 
         return if (identity != null) {
             cachedIdentity = identity
-            AuthOutcome.Success(identity.serviceId, identity.role)
+            AuthOutcome.Success(identity.serviceId, identity.role, identity.globalAreaAccess, identity.areas)
         } else {
             AuthOutcome.Failure(AuthErrorKind.NETWORK)
         }

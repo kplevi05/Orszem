@@ -22,12 +22,6 @@
     <string name="action_set_password">Jelszó beállítása</string>
     <string name="action_cancel">Mégse</string>
 
-    <!-- Home -->
-    <string name="home_title">Őrszem Szolgálat</string>
-    <string name="home_signed_in_as">Bejelentkezve: %1$s · %2$s</string>
-    <string name="home_placeholder">A bejelentéskezelés még nem érhető el. Ez a fázis csak a bejelentkezést és a fiókkezelést tartalmazza.</string>
-    <string name="action_account">Fiók</string>
-
     <!-- Account -->
     <string name="account_title">Fiók</string>
     <string name="account_service_id">Szolgálati azonosító: %1$s</string>
@@ -54,4 +48,177 @@
     <string name="error_rate_limited">Túl sok próbálkozás. Kérjük, várjon egy kicsit.</string>
     <string name="error_network">A kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot.</string>
     <string name="error_unexpected">Váratlan hiba történt.</string>
+    <string name="error_session_expired">A munkamenet lejárt. Kérjük, jelentkezzen be újra.</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_reports">Bejelentések</string>
+    <string name="nav_archive">Archívum</string>
+    <string name="nav_stats">Statisztika</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_moderation">Moderáció</string>
+    <string name="nav_admin">Adminisztráció</string>
+
+    <!-- Report status labels -->
+    <string name="status_new">ÚJ</string>
+    <string name="status_in_progress">FOLYAMATBAN</string>
+    <string name="status_archived">LEZÁRVA</string>
+    <string name="status_unclassified">BESOROLATLAN</string>
+
+    <!-- Role and user-status labels — the single presentation mapping for backend enums.
+         The enum values themselves are never sent to the user and never changed on the wire. -->
+    <string name="role_service_user">Szolgálati munkatárs</string>
+    <string name="role_moderator">Moderátor</string>
+    <string name="role_super_admin">Főadminisztrátor</string>
+    <string name="user_status_active">Aktív</string>
+    <string name="user_status_deactivated">Deaktiválva</string>
+
+    <!-- Reports screen -->
+    <string name="reports_title">Bejelentések</string>
+    <string name="reports_subtitle">Az Ön jogosultsági körébe tartozó bejelentések.</string>
+    <string name="tab_new">Új</string>
+    <string name="tab_in_progress">Folyamatban</string>
+    <string name="older_reports_divider">Régebbi bejelentések</string>
+    <string name="in_progress_hint_service">Az Ön számára elérhető folyamatban lévő bejelentések.</string>
+    <string name="in_progress_hint_supervisor">A jelenlegi jogosultsági körébe tartozó folyamatban lévő bejelentések.</string>
+    <string name="empty_new_queue">Nincs új bejelentés.</string>
+    <string name="empty_in_progress_queue">Nincs folyamatban lévő bejelentés.</string>
+    <string name="empty_archive">Nincs lezárt bejelentés.</string>
+    <string name="search_hint_reports">Vonat, település, azonosító…</string>
+    <string name="action_load_more">További betöltése</string>
+    <string name="action_refresh">Frissítés</string>
+
+    <!-- Report filters -->
+    <string name="action_filters">Szűrők</string>
+    <string name="filters_title">Szűrők</string>
+    <string name="filter_area">Szolgálati terület</string>
+    <string name="filter_category">Kategória</string>
+    <string name="filter_event_type">Eseménytípus</string>
+    <string name="filter_settlement">Település</string>
+    <string name="filter_settlement_search_hint">Település keresése…</string>
+    <string name="filter_all_areas">Minden terület</string>
+    <string name="filter_catalog_unavailable">A kategóriák most nem tölthetők be.</string>
+    <string name="action_clear_filters">Szűrők törlése</string>
+    <string name="action_apply">Alkalmaz</string>
+
+    <!-- Active work view -->
+    <string name="active_work_view_title">Aktív munkanézet</string>
+    <string name="active_work_view_hint">Csak a kiválasztott szolgálati terület bejelentéseit mutatja. Ez helyi nézetbeállítás, nem jogosultság.</string>
+
+    <!-- Report card / detail -->
+    <string name="report_detail_title">Bejelentés részletei</string>
+    <string name="field_occurred_at">Esemény időpontja</string>
+    <string name="field_submitted_at">Beküldve</string>
+    <string name="field_train_identifier">Vonatszám</string>
+    <string name="field_settlement">Település</string>
+    <string name="field_railway_line">Vasútvonal</string>
+    <string name="field_service_area">Szolgálati terület</string>
+    <string name="field_category">Kategória</string>
+    <string name="field_event_type">Eseménytípus</string>
+    <string name="field_report_id">Bejelentés azonosítója</string>
+    <string name="field_current_assignee">Jelenlegi ügyintéző</string>
+    <string name="field_closed_at">Lezárva</string>
+    <string name="value_unclassified_area">Nincs terület</string>
+    <string name="assignment_history_title">Ügyintézési előzmények</string>
+    <string name="assignment_history_subtitle">A bejelentés eddigi menete.</string>
+    <string name="assignment_currently_active">jelenleg aktív</string>
+
+    <!-- Workflow actions -->
+    <string name="action_claim">Átvétel</string>
+    <string name="action_return">Visszaadás</string>
+    <string name="action_close">Lezárás</string>
+    <string name="action_reassign">Átrendelés</string>
+    <string name="confirm_return_title">Bejelentés visszaadása</string>
+    <string name="confirm_return_text">Visszaadja a bejelentést az új ügyek közé?</string>
+    <string name="confirm_close_title">Bejelentés lezárása</string>
+    <string name="confirm_close_text">Biztosan lezárja ezt a bejelentést? A lezárt bejelentés az Archívumba kerül.</string>
+    <string name="reassign_title">Bejelentés átrendelése</string>
+    <string name="reassign_subtitle">Csak aktív szolgálati munkatárs választható, aki jogosult a bejelentés szolgálati területére.</string>
+    <string name="search_hint_users">Szolgálati azonosító keresése…</string>
+    <string name="view_in_progress_for_user">Folyamatban lévő ügyek megtekintése</string>
+
+    <!-- Workflow / user-management error copy (stable codes never shown, brief §78) -->
+    <string name="error_report_already_assigned">Ezt a bejelentést időközben már átvette egy másik ügyintéző.</string>
+    <string name="error_report_state_changed">A bejelentés időközben megváltozott. Frissítettük az aktuális állapotot.</string>
+    <string name="error_report_already_archived">A bejelentést időközben lezárták.</string>
+    <string name="error_report_not_found">A bejelentés már nem érhető el az Ön számára.</string>
+    <string name="error_report_unclassified_cannot_assign">Besorolatlan bejelentés nem rendelhető szolgálati ügyintézőhöz.</string>
+    <string name="error_invalid_assignee">A kiválasztott felhasználó jelenleg nem rendelhető ehhez a bejelentéshez.</string>
+    <string name="error_report_workflow_forbidden">Ehhez a művelethez nincs jogosultsága.</string>
+    <string name="error_user_has_active_assignments">A művelet nem végezhető el, mert a felhasználónak folyamatban lévő bejelentése van. Előbb rendezze ezeket az ügyeket.</string>
+    <string name="error_user_requires_service_area">A felhasználónak legalább egy szolgálati területtel kell rendelkeznie.</string>
+    <string name="error_user_not_found">A felhasználó nem található.</string>
+    <string name="error_user_not_manageable">Ez a felhasználó jelenleg nem kezelhető az Ön jogosultsági körében.</string>
+    <string name="error_user_management_forbidden">Ehhez a művelethez nincs jogosultsága.</string>
+    <string name="error_global_access_not_allowed">Csak rendszergazda módosíthatja a globális hozzáférést.</string>
+    <string name="error_area_not_found">A szolgálati terület nem található.</string>
+    <string name="error_area_not_assignable">Ez a terület jelenleg nem rendelhető hozzá.</string>
+    <string name="error_invalid_role_transition">Ez a szerepkör-váltás nem engedélyezett.</string>
+    <string name="error_validation">A megadott adatok nem megfelelőek.</string>
+
+    <!-- Archive -->
+    <string name="archive_title">Archívum</string>
+    <string name="archive_subtitle">Lezárt bejelentések.</string>
+
+    <!-- Statistics placeholder -->
+    <string name="stats_title">Statisztika</string>
+    <string name="stats_unavailable">A statisztikai összesítések ebben a verzióban még nem érhetők el.</string>
+
+    <!-- Hubs -->
+    <string name="moderation_title">Moderáció</string>
+    <string name="moderation_subtitle">Területi megbízotti központ</string>
+    <string name="admin_title">Adminisztráció</string>
+    <string name="admin_subtitle">Globális kezelés</string>
+    <string name="hub_users_entry">Felhasználók</string>
+    <string name="hub_own_account">Saját fiók</string>
+    <string name="moderation_functions_unavailable">A további moderációs funkciók ebben a verzióban még nem érhetők el.</string>
+    <string name="areas_admin_title">Szolgálati területek</string>
+    <string name="audit_admin_title">Változási előzmények</string>
+    <string name="not_yet_available">Még nem elérhető</string>
+    <string name="active_work_view_all">Minden terület</string>
+
+    <!-- User management -->
+    <string name="users_title">Felhasználók</string>
+    <string name="action_create_user">Új felhasználó</string>
+    <string name="label_manageable">Kezelhető</string>
+    <string name="label_read_only">Csak megtekinthető</string>
+    <string name="field_role">Szerepkör</string>
+    <string name="field_must_change_password">Kötelező jelszóváltás</string>
+    <string name="section_permissions">Jogosultság</string>
+    <string name="section_account">Fiók</string>
+    <string name="action_add_area">Terület hozzáadása</string>
+    <string name="action_revoke">VISSZAVONÁS</string>
+    <string name="action_password_reset">Ideiglenes jelszó kiadása</string>
+    <string name="action_deactivate">Deaktiválás</string>
+    <string name="action_reactivate">Aktiválás</string>
+    <string name="action_change_role_to_moderator">Szerepkör: Moderátor</string>
+    <string name="action_change_role_to_service_user">Szerepkör: Szolgálati munkatárs</string>
+    <string name="action_grant_global_access">Minden terület jogosultság megadása</string>
+    <string name="action_revoke_global_access">Minden terület jogosultság visszavonása</string>
+    <string name="confirm_deactivate_title">Felhasználó deaktiválása</string>
+    <string name="confirm_deactivate_text">A felhasználó nem tud majd bejelentkezni, és a jelenlegi munkamenetei megszűnnek.</string>
+    <string name="confirm_role_change_title">Szerepkör módosítása</string>
+    <string name="confirm_role_change_text">Biztosan módosítja a felhasználó szerepkörét? Ez megváltoztatja a jogosultságait.</string>
+
+    <!-- Create user -->
+    <string name="create_user_title">Új felhasználó</string>
+    <string name="create_user_subtitle">Szolgálati azonosító és ideiglenes jelszó automatikusan generálva.</string>
+    <string name="field_initial_areas">Kezdő szolgálati területek</string>
+    <string name="check_global_access">Minden terület</string>
+    <string name="check_global_access_hint">Hozzáférés minden szolgálati területhez.</string>
+    <string name="create_user_rules_hint">Egy moderátor csak a saját jogosultsági körében hozhat létre szolgálati munkatársat, legalább egy területtel. A főadminisztrátor szolgálati munkatársat vagy moderátort hozhat létre.</string>
+    <string name="action_create">Létrehozás</string>
+
+    <!-- One-time credential display -->
+    <string name="credential_title">Felhasználó létrehozva</string>
+    <string name="credential_reset_title">Új ideiglenes jelszó</string>
+    <string name="credential_warning">Az ideiglenes jelszó csak most látható. Mentse el biztonságosan, mielőtt bezárja ezt az ablakot.</string>
+    <string name="field_new_service_id">Szolgálati azonosító</string>
+    <string name="field_temporary_credential">Ideiglenes jelszó</string>
+    <string name="action_copy">Másolás</string>
+    <string name="action_saved_it">Elmentettem</string>
+
+    <!-- Generic list/pagination -->
+    <string name="action_retry">Újrapróbálkozás</string>
+    <string name="content_description_back">Vissza</string>
+    <string name="content_description_search">Keresés</string>
 </resources>

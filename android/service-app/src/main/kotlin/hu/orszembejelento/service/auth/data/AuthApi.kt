@@ -34,7 +34,17 @@ data class TokenResponse(
 )
 
 @Serializable
-data class MeResponse(val serviceId: String, val role: String)
+data class MeResponse(
+    val serviceId: String,
+    val role: String,
+    // Phase 8: the caller's own service-area scope, for the local "active work view".
+    // Defaulted so an older server (or a test double) that omits them still deserializes.
+    val globalAreaAccess: Boolean = false,
+    val areas: List<MeAreaResponse> = emptyList(),
+)
+
+@Serializable
+data class MeAreaResponse(val id: String, val name: String, val status: String)
 
 /**
  * The server's error shape. Clients switch on [code]; [message] is human-facing and may be

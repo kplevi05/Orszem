@@ -180,6 +180,24 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
             .single()
 
     /**
+     * A user's own assigned areas, name and status included, ordered by name. Used only for
+     * the self-account view (`/account/me`) — the raw id set is [assignedAreaIds].
+     */
+    fun assignedAreas(userId: UUID): List<ServiceArea> =
+        jdbc.sql(
+            """
+            SELECT sa.id, sa.name, sa.status, sa.created_at, sa.updated_at
+              FROM user_service_areas usa
+              JOIN service_areas sa ON sa.id = usa.service_area_id
+             WHERE usa.user_id = :userId
+             ORDER BY sa.name ASC
+            """.trimIndent(),
+        )
+            .param("userId", userId)
+            .query(this::mapArea)
+            .list()
+
+    /**
      * Builds the authorisation view of a user from current database state.
      *
      * Role, the global flag and the assignments are all read fresh, so a change to any of

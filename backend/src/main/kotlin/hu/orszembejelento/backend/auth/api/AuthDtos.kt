@@ -55,16 +55,23 @@ data class TokenResponse(
 }
 
 /**
- * The whole of `/me` in Phase 2.
+ * The current user's own account.
  *
- * Only what the Service app actually needs to render its account screen. No name, no
- * profile, no permission object, no statistics — fields are added when a feature needs
- * them, not in anticipation.
+ * `serviceId` + `role` since Phase 2. Phase 8 added `globalAreaAccess` and `areas` — the
+ * caller's **own** service-area scope, needed to drive the Service app's local "active work
+ * view" selector without giving a SERVICE_USER any user-management endpoint. This is strictly
+ * self-account information: no other user, no `canManage`, no management permission, no audit
+ * data. Fields are still added only when a feature needs them, not in anticipation.
  */
 data class MeResponse(
     val serviceId: String,
     val role: String,
+    val globalAreaAccess: Boolean,
+    val areas: List<MeServiceAreaResponse>,
 )
+
+/** One of the caller's own assigned service areas, with its current activation status. */
+data class MeServiceAreaResponse(val id: String, val name: String, val status: String)
 
 /**
  * Generous enough for any real passphrase while still bounding the work handed to Argon2.
