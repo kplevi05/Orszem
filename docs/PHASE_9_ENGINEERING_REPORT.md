@@ -550,11 +550,11 @@ pushed SHA, following the same bookkeeping pattern Phase 6-8 established.
 - [x] Web: unaffected, full regression green
 - [x] Reference-data / deploy-config: unaffected (no files changed)
 - [x] Live emulator verification, real throwaway data, all three roles + Public
-- [x] 25 screenshots captured (20 original + 5 from the §T correction pass; exceeds the 12 required)
+- [x] 24 screenshots captured (20 original + 4 from the §T correction pass; exceeds the 12 required)
 - [x] Correction pass: nav-bar insets (both filter sheets), card metadata layout,
       `REPORT_ALREADY_DELETED` outcome fix — all verified live, full regression re-run green (§T)
 - [x] This engineering report, including the correction-pass record (§T)
-- [ ] **Push + all 5 GitHub Actions workflows green on the pushed HEAD** — see §T.6/§S
+- [x] Push + all 5 GitHub Actions workflows green on the pushed HEAD `7776603` (§T.6)
 - [ ] **Owner visual approval** — PENDING (§S)
 - [ ] PR — NOT opened, pending owner approval
 - [ ] Merge — NOT done
@@ -639,7 +639,7 @@ files above actually changed):
 
 ### T.5 Recaptured screenshots
 
-Five additional screenshots, using realistic throwaway names rather than
+Four additional screenshots, using realistic throwaway names rather than
 "Phase 9 Verifikacios Terulet" (screenshot/test-data hygiene only, per the owner's own
 framing — not a production-data or code change):
 
@@ -656,17 +656,33 @@ framing — not a production-data or code change):
 git push origin feature/v2-moderation
 ```
 
-Pushed HEAD: `<filled in immediately below, from the actual git output — never guessed>`.
-All 5 GitHub Actions workflows (`backend`, `android`, `web`, `deploy-config`,
-`reference-data`) trigger on `push` as well as `pull_request` (see each workflow's own
-comment), so they run on this push without a PR being open. Results, exact run IDs and
-counts are recorded in §S.
+Pushed HEAD: **`7776603` (full: `77766035f62099bbe023b9135c008fd697a7626f`)** — the
+documentation commit *"docs(phase-9): record correction-pass details and CI-on-push plan"*,
+itself on top of `b0a2cc0` (§T.1-T.4's code fix). All 5 GitHub Actions workflows
+(`backend`, `android`, `web`, `deploy-config`, `reference-data`) trigger on `push` as well as
+`pull_request`, so they ran on this push without any PR being open. Confirmed via the
+public GitHub Actions REST API (`GET /repos/kplevi05/Orszem/actions/runs?head_sha=<full sha>`
+— no `gh` CLI available on this machine, and the repo is public so unauthenticated reads
+work):
+
+| Workflow | Run # | Run ID | Conclusion | URL |
+|---|---|---|---|---|
+| `backend.yml` | 62 | 34625387832 | ✅ success | https://github.com/kplevi05/Orszem/actions/runs/34625387832 |
+| `android.yml` | 73 | 34625387749 | ✅ success | https://github.com/kplevi05/Orszem/actions/runs/34625387749 |
+| `web.yml` | 62 | 34625387864 | ✅ success | https://github.com/kplevi05/Orszem/actions/runs/34625387864 |
+| `deploy-config.yml` | 59 | 34625387884 | ✅ success | https://github.com/kplevi05/Orszem/actions/runs/34625387884 |
+| `reference-data.yml` | 48 | 34625387766 | ✅ success | https://github.com/kplevi05/Orszem/actions/runs/34625387766 |
+
+All 5 started at `2026-09-11T17:02:02Z`; `android` (the longest, as expected — it builds
+both apps twice, runs unit + instrumented-compile + lint) finished last at
+`2026-09-11T17:09:33Z`. **5/5 green on the exact final pushed HEAD.** This satisfies item 6
+of the correction-pass request in full.
 
 ---
 
 ## S. Owner visual approval — record
 
-**PENDING.** All 25 screenshots (the original 20 from §N plus §T.5's 5 corrected/additional
+**PENDING.** All 24 screenshots (the original 20 from §N plus §T.5's 4 corrected/additional
 ones) are being sent to the owner alongside this updated report. Per the exact process
 established in Phase 8: no PR will be opened, nothing will be merged, and Phase 10 will not
 start until the owner explicitly reviews the screenshots and gives visual approval. This
@@ -674,5 +690,5 @@ section will be updated with the date and scope of that approval once given — 
 
 ### CI run record (§T.6)
 
-To be filled in once the push and the 5 workflow runs complete — see the message
-accompanying this report for the live status if this section still says PENDING.
+5/5 GitHub Actions workflows green on pushed HEAD `7776603` — see the table in §T.6 for
+exact run IDs and URLs. No workflow was skipped, retried, or re-run to reach green.
