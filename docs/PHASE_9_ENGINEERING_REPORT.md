@@ -739,13 +739,30 @@ workflow was skipped, retried, or re-run to reach green.
 
 ## U. Phase 9 pull request
 
-Opened after §S's approval and after this approval record itself was committed, pushed, and
-independently confirmed 5/5 green (the owner's explicit instruction: commit/push the
-approval-record update, then wait for CI on *that* resulting exact final HEAD before
-opening the PR — not reuse `611aee1`'s result for a commit made after it):
+The approval-record commit (§S/§T.7) was pushed and independently confirmed 5/5 green in
+its own right — **final HEAD `369fb08` (full: `369fb083d22c5e61a093ab7edace07cd90800271`)**
+— per the owner's explicit instruction to wait for CI on that resulting exact HEAD, not
+reuse `611aee1`'s earlier result for a commit made after it.
 
-- `feature/v2-moderation` → `main`, title *"feat: add V2 report moderation"*
-- PR head SHA: `<filled in immediately below, from this commit's own hash>`
+| Workflow | Run # | Run ID | Conclusion |
+|---|---|---|---|
+| `backend.yml` | 64 | 34627588493 | ✅ success |
+| `android.yml` | 75 | 34627588514 | ✅ success |
+| `web.yml` | 64 | 34627588604 | ✅ success |
+| `deploy-config.yml` | 61 | 34627588490 | ✅ success |
+| `reference-data.yml` | 50 | 34627588497 | ✅ success |
+
+**5/5 green on `369fb08` — the exact final pushed HEAD.**
+
+This environment has no `gh` CLI and no GitHub token configured, so a PR-creation API call
+cannot be authenticated from here (and asking for a token to enter directly would mean
+handling a credential, which is out of scope regardless). GitHub's own push output already
+supplies the compare URL: `https://github.com/kplevi05/Orszem/pull/new/feature/v2-moderation`.
+The PR is opened by the owner directly, using:
+
+- `feature/v2-moderation` → `main`
+- Title: *"feat: add V2 report moderation"*
+- Head SHA: `369fb08`
 - **Not merged, and not auto-merge-enabled** — the owner reviews and merges it themselves.
   Phase 10 has not started.
-- PR: `<filled in immediately after opening — see the chat message for the number/link>`
+- PR number/link: `<to be filled in once the owner opens it>`
