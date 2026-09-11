@@ -35,3 +35,12 @@ fun availableWorkflowActions(status: String, role: String, isOwnAssignment: Bool
         else -> WorkflowActionAvailability()
     }
 }
+
+/**
+ * Whether the normal report-detail screen should offer the moderation-delete action (Phase 9
+ * brief §2/§38) - MODERATOR/SUPER_ADMIN only, independent of the report's current status
+ * (deletion is available from NEW, IN_PROGRESS and ARCHIVED alike, unlike the ordinary
+ * workflow actions above which go silent once a report is ARCHIVED). A UI convenience only -
+ * the backend independently re-authorises by area/UNCLASSIFIED scope on the actual call.
+ */
+fun canModerationDelete(role: String): Boolean = role == "MODERATOR" || role == "SUPER_ADMIN"

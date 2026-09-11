@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.auth.domain.AuthState
+import hu.orszembejelento.service.moderation.data.ModerationRepository
 import hu.orszembejelento.service.nav.ServiceNavHost
 import hu.orszembejelento.service.reports.data.ActiveWorkAreaStore
 import hu.orszembejelento.service.reports.data.CatalogRepository
@@ -42,6 +43,7 @@ fun ServiceAuthHost(
     userManagementRepository: UserManagementRepository,
     catalogRepository: CatalogRepository,
     activeWorkAreaStore: ActiveWorkAreaStore,
+    moderationRepository: ModerationRepository? = null,
 ) {
     val state by viewModel.state.collectAsState()
     val busy by viewModel.busy.collectAsState()
@@ -59,6 +61,7 @@ fun ServiceAuthHost(
             userManagementRepository = userManagementRepository,
             catalogRepository = catalogRepository,
             activeWorkAreaStore = activeWorkAreaStore,
+            moderationRepository = moderationRepository,
         )
 
         else -> Scaffold(

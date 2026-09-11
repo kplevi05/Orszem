@@ -5,6 +5,9 @@ import hu.orszembejelento.backend.auth.application.PasswordChangeRequiredExcepti
 import hu.orszembejelento.backend.auth.application.RateLimitedException
 import hu.orszembejelento.backend.auth.application.SessionInvalidException
 import hu.orszembejelento.backend.identity.domain.PasswordPolicyException
+import hu.orszembejelento.backend.moderation.domain.ModerationForbiddenException
+import hu.orszembejelento.backend.moderation.domain.ReportAlreadyDeletedException
+import hu.orszembejelento.backend.moderation.domain.ReportNotDeletedException
 import hu.orszembejelento.backend.reference.domain.ReferenceDatasetUnavailableException
 import hu.orszembejelento.backend.reference.domain.SettlementQueryTooShortException
 import hu.orszembejelento.backend.reports.domain.IdempotencyKeyReusedException
@@ -249,6 +252,20 @@ class ApiExceptionHandler {
     @ExceptionHandler(InvalidAssigneeException::class)
     fun handleInvalidAssignee(request: HttpServletRequest) =
         error(request, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ASSIGNEE, "The reassignment target is not a valid assignee.")
+
+    // ------------------------------------------------------------------------ Phase 9 - moderation
+
+    @ExceptionHandler(ModerationForbiddenException::class)
+    fun handleModerationForbidden(request: HttpServletRequest) =
+        error(request, HttpStatus.FORBIDDEN, ErrorCode.MODERATION_FORBIDDEN, "Not permitted to perform this moderation operation.")
+
+    @ExceptionHandler(ReportAlreadyDeletedException::class)
+    fun handleReportAlreadyDeleted(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.REPORT_ALREADY_DELETED, "This report has already been moderation-deleted.")
+
+    @ExceptionHandler(ReportNotDeletedException::class)
+    fun handleReportNotDeleted(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.REPORT_NOT_DELETED, "This report is not currently moderation-deleted.")
 
     @ExceptionHandler(Exception::class)
     fun handleUnexpected(exception: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {

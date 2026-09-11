@@ -7,7 +7,6 @@ import hu.orszembejelento.backend.reports.application.SubmitReportCommand
 import hu.orszembejelento.backend.reports.application.SubmitReportOutcome
 import hu.orszembejelento.backend.reports.application.SubmitReportUseCase
 import hu.orszembejelento.backend.reports.domain.Report
-import hu.orszembejelento.backend.reports.domain.toPublic
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -168,6 +167,10 @@ class PublicReportController(
         return builder.body(body)
     }
 
+    // Phase 9: `publicStatus` already folds in the moderation override (see
+    // PublicReportDetail's own KDoc) - nothing here ever renders `report.status` directly,
+    // and nothing about deletion (reason/actor/timestamp/moderation state) is ever put on
+    // this response at all (brief §14/§54).
     private fun PublicReportDetail.toResponse() = PublicReportResponse(
         reportId = report.publicId,
         occurredAt = report.occurredAt,
@@ -176,6 +179,6 @@ class PublicReportController(
         settlement = SettlementSummary(report.settlementId, settlementName),
         category = CategorySummary(category.code, category.displayName),
         eventType = EventTypeSummary(eventType.code, eventType.displayName),
-        status = report.status.toPublic().name,
+        status = publicStatus.name,
     )
 }

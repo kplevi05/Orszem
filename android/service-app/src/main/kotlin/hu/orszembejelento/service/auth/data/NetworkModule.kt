@@ -2,6 +2,9 @@ package hu.orszembejelento.service.auth.data
 
 import android.content.Context
 import hu.orszembejelento.service.BuildConfig
+import hu.orszembejelento.service.moderation.data.DefaultModerationRepository
+import hu.orszembejelento.service.moderation.data.ModerationApi
+import hu.orszembejelento.service.moderation.data.ModerationRepository
 import hu.orszembejelento.service.reports.data.CatalogApi
 import hu.orszembejelento.service.reports.data.CatalogRepository
 import hu.orszembejelento.service.reports.data.DefaultCatalogRepository
@@ -83,4 +86,7 @@ object NetworkModule {
 
     fun catalogRepository(): CatalogRepository =
         DefaultCatalogRepository(api = retrofit.create(CatalogApi::class.java))
+
+    fun moderationRepository(auth: AuthRepository): ModerationRepository =
+        DefaultModerationRepository(api = retrofit.create(ModerationApi::class.java), auth = auth)
 }

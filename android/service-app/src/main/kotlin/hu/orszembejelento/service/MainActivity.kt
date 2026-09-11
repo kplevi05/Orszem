@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
         val reportRepository = NetworkModule.reportWorkflowRepository(repository)
         val userManagementRepository = NetworkModule.userManagementRepository(repository)
         val catalogRepository = NetworkModule.catalogRepository()
+        val moderationRepository = NetworkModule.moderationRepository(repository)
         val activeWorkAreaStore = SharedPrefsActiveWorkAreaStore(applicationContext)
 
         setContent {
@@ -42,6 +43,7 @@ class MainActivity : ComponentActivity() {
                     userManagementRepository,
                     catalogRepository,
                     activeWorkAreaStore,
+                    moderationRepository,
                 )
             }
         }

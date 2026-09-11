@@ -76,8 +76,14 @@ data class ReportWorkflowPage(val items: List<ReportWorkflowRow>, val totalEleme
 @Repository
 class JdbcReportWorkflowQueryRepository(private val jdbc: JdbcClient) {
 
+    /**
+     * Phase 9: excludes a currently moderation-deleted report exactly like every queue below
+     * (brief §12/§13) - ordinary detail must be existence-safe, never distinguishably
+     * "deleted" from "never existed"/"out of scope". Deleted detail has its own, separate
+     * read model: [hu.orszembejelento.backend.moderation.infrastructure.JdbcModerationQueryRepository].
+     */
     fun findByPublicId(publicId: UUID): ReportWorkflowRow? =
-        jdbc.sql("$SELECT_ROW WHERE r.public_id = :id")
+        jdbc.sql("$SELECT_ROW WHERE r.public_id = :id AND rme.id IS NULL")
             .param("id", publicId)
             .query(::mapRow)
             .optional()
@@ -226,12 +232,16 @@ class JdbcReportWorkflowQueryRepository(private val jdbc: JdbcClient) {
         return clauses.joinToString(" AND ") to params
     }
 
-    /** Combines a mandatory status predicate with any number of optional (clause, params) pairs. */
+    /**
+     * Combines the mandatory status predicate, the Phase 9 "not currently moderation-deleted"
+     * predicate (brief §12 - every ordinary queue hides a deleted report, always), and any
+     * number of optional (clause, params) pairs.
+     */
     private fun whereClause(
         statusPredicate: String,
         vararg optional: Pair<String, Map<String, Any>>?,
     ): Pair<String, Map<String, Any>> {
-        val clauses = mutableListOf(statusPredicate)
+        val clauses = mutableListOf(statusPredicate, "rme.id IS NULL")
         val params = mutableMapOf<String, Any>()
         optional.filterNotNull().forEach { (clause, clauseParams) ->
             clauses += "($clause)"
@@ -284,6 +294,9 @@ class JdbcReportWorkflowQueryRepository(private val jdbc: JdbcClient) {
               LEFT JOIN service_areas sa ON sa.id = rs.service_area_id
               LEFT JOIN railway_lines rl ON rl.id = rs.resolved_railway_line_id
               LEFT JOIN users au ON au.id = r.assigned_user_id
+              -- Phase 9: the currently-open moderation episode, if any - rme.id IS NULL is
+              -- how every ordinary read here excludes a moderation-deleted report (brief §12).
+              LEFT JOIN report_moderation_episodes rme ON rme.report_id = r.id AND rme.restored_at IS NULL
         """
 
         val SELECT_ROW = """

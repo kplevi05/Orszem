@@ -35,6 +35,9 @@ fun errorMessageRes(code: String?): Int = when (code) {
     "VALIDATION_ERROR" -> R.string.error_validation
     "RATE_LIMITED" -> R.string.error_rate_limited
     "SESSION_INVALID" -> R.string.error_session_expired
+    "MODERATION_FORBIDDEN" -> R.string.error_moderation_forbidden
+    "REPORT_ALREADY_DELETED" -> R.string.error_report_already_deleted
+    "REPORT_NOT_DELETED" -> R.string.error_report_not_deleted
     else -> R.string.error_unexpected
 }
 

@@ -1,25 +1,41 @@
 package hu.orszembejelento.backend.reports.application
 
+import hu.orszembejelento.backend.moderation.infrastructure.JdbcModerationRepository
 import hu.orszembejelento.backend.reference.infrastructure.JdbcReferenceRepository
 import hu.orszembejelento.backend.reports.domain.PublicReportAccessCredential
 import hu.orszembejelento.backend.reports.domain.PublicReportAccessCredentialHasher
+import hu.orszembejelento.backend.reports.domain.PublicReportStatus
 import hu.orszembejelento.backend.reports.domain.Report
 import hu.orszembejelento.backend.reports.domain.ReportCategory
 import hu.orszembejelento.backend.reports.domain.ReportEventType
 import hu.orszembejelento.backend.reports.domain.ReportNotFoundException
+import hu.orszembejelento.backend.reports.domain.toPublic
 import hu.orszembejelento.backend.reports.infrastructure.JdbcEventCatalogRepository
 import hu.orszembejelento.backend.reports.infrastructure.JdbcReportRepository
 import java.util.UUID
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-/** Everything the Public report-detail response needs, already resolved. */
+/**
+ * Everything the Public report-detail response needs, already resolved.
+ *
+ * [publicStatus] is the one place the Phase 9 moderation override lives (brief §14, FROZEN):
+ * while a report currently has an open moderation episode, this is always `CLOSED`,
+ * regardless of the underlying [Report.status] - `NEW`/`IN_PROGRESS`/`ARCHIVED` all collapse
+ * to the same Public value, exactly like [hu.orszembejelento.backend.reports.domain.toPublic]'s
+ * own KDoc already promised. Nothing about *why* or *when* it was deleted is ever computed
+ * here, let alone exposed - see [hu.orszembejelento.backend.reports.api.PublicReportController].
+ */
 data class PublicReportDetail(
     val report: Report,
     val settlementName: String,
     val category: ReportCategory,
     val eventType: ReportEventType,
-)
+    val currentlyModerationDeleted: Boolean,
+) {
+    val publicStatus: PublicReportStatus
+        get() = if (currentlyModerationDeleted) PublicReportStatus.CLOSED else report.status.toPublic()
+}
 
 /**
  * Looks up one Public report by its public id and access credential (ADR 0008).
@@ -39,6 +55,7 @@ class GetPublicReportUseCase(
     private val reportRepository: JdbcReportRepository,
     private val eventCatalogRepository: JdbcEventCatalogRepository,
     private val referenceRepository: JdbcReferenceRepository,
+    private val moderation: JdbcModerationRepository,
 ) {
 
     @Transactional(readOnly = true)
@@ -62,6 +79,7 @@ class GetPublicReportUseCase(
         val category = eventCatalogRepository.findCategoryByCode(eventType.categoryCode)
             ?: error("event type ${eventType.code} references category ${eventType.categoryCode}, which no longer exists")
 
-        return PublicReportDetail(report, settlement.name, category, eventType)
+        val currentlyDeleted = moderation.hasOpenEpisode(report.id)
+        return PublicReportDetail(report, settlement.name, category, eventType, currentlyDeleted)
     }
 }

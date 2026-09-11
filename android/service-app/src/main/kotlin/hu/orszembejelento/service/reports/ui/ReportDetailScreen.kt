@@ -35,8 +35,10 @@ import hu.orszembejelento.service.common.ui.FullScreenLoading
 import hu.orszembejelento.service.common.ui.InlineErrorBanner
 import hu.orszembejelento.service.common.ui.StatusBadge
 import hu.orszembejelento.service.common.ui.apiErrorMessage
+import hu.orszembejelento.service.moderation.ui.DeleteReasonDialog
 import hu.orszembejelento.service.reports.data.ReportDetailResponse
 import hu.orszembejelento.service.reports.domain.buildAssignmentHistoryEntries
+import hu.orszembejelento.service.reports.domain.canModerationDelete
 import hu.orszembejelento.service.reports.domain.formatInstant
 import hu.orszembejelento.service.reports.domain.isUnclassified
 import hu.orszembejelento.service.reports.domain.shortReportId
@@ -57,11 +59,21 @@ fun ReportDetailScreen(
     viewModel: ReportDetailViewModel,
     userManagementRepository: UserManagementRepository?,
     onBack: () -> Unit,
+    // Called once after a moderation delete resolves - either this call's own success, or
+    // the REPORT_ALREADY_DELETED conflict (brief §42/§43, correction pass §3): the caller
+    // navigates away either way, since the report is no longer reachable through ordinary
+    // detail, but the two carry different snackbar copy - see [ModerationDeleteOutcome].
+    onDeleted: (ModerationDeleteOutcome) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     var confirmReturn by remember { mutableStateOf(false) }
     var confirmClose by remember { mutableStateOf(false) }
     var showReassign by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.moderationDeleteOutcome) {
+        state.moderationDeleteOutcome?.let(onDeleted)
+    }
 
     // A successful mutation's own committed response already replaces `state.detail` (brief
     // §22: "prefer the committed API response") - the refreshed status badge, assignee and
@@ -98,6 +110,9 @@ fun ReportDetailScreen(
                     if (state.mutationError != null) {
                         InlineErrorBanner(apiErrorMessage(state.mutationError!!))
                     }
+                    if (state.moderationDeleteError != null) {
+                        InlineErrorBanner(apiErrorMessage(state.moderationDeleteError!!))
+                    }
 
                     ReportFieldsCard(detail)
 
@@ -115,6 +130,22 @@ fun ReportDetailScreen(
                         onCloseRequested = { confirmClose = true },
                         onReassignRequested = { showReassign = true },
                     )
+
+                    // Deliberately separated from the workflow-action row above (brief §38):
+                    // moderation deletion is a different kind of action from Lezárás /
+                    // Visszaadás / Átrendelés, and must never be visually confused with them.
+                    // SERVICE_USER never sees this at all.
+                    if (canModerationDelete(role)) {
+                        HorizontalDivider()
+                        OutlinedButton(
+                            onClick = { showDeleteDialog = true },
+                            enabled = !state.mutationInFlight && !state.moderationDeleteInFlight,
+                            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.action_moderation_delete))
+                        }
+                    }
 
                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(bottom = 24.dp))
                 }
@@ -149,6 +180,16 @@ fun ReportDetailScreen(
                 showReassign = false
                 viewModel.reassign(target)
             },
+        )
+    }
+    if (showDeleteDialog) {
+        DeleteReasonDialog(
+            isInProgress = state.detail?.status == "IN_PROGRESS",
+            onConfirm = { reason ->
+                showDeleteDialog = false
+                viewModel.deleteReport(reason)
+            },
+            onDismiss = { showDeleteDialog = false },
         )
     }
 }

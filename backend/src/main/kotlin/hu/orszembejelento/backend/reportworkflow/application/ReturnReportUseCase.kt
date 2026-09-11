@@ -5,6 +5,7 @@ import hu.orszembejelento.backend.audit.domain.AuditEventType
 import hu.orszembejelento.backend.audit.domain.AuditTargetType
 import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
+import hu.orszembejelento.backend.moderation.infrastructure.JdbcModerationRepository
 import hu.orszembejelento.backend.reports.domain.Report
 import hu.orszembejelento.backend.reports.domain.ReportStatus
 import hu.orszembejelento.backend.reports.infrastructure.JdbcReportRepository
@@ -38,12 +39,13 @@ class ReturnReportUseCase(
     private val scopeResolver: ReportScopeResolver,
     private val policy: ReportWorkflowPolicy,
     private val audit: JdbcAuditRepository,
+    private val moderation: JdbcModerationRepository,
     private val clock: Clock,
 ) {
 
     @Transactional
     fun returnReport(actor: ReportWorkflowActor, publicReportId: UUID, expectedVersion: Long): Report {
-        val (locked, scope) = lockAndResolve(reports, scopeResolver, publicReportId)
+        val (locked, scope) = lockAndResolve(reports, scopeResolver, moderation::hasOpenEpisode, publicReportId)
         if (!policy.canReturn(actor, scope)) throw ReportNotVisibleException()
 
         when (locked.status) {

@@ -59,8 +59,12 @@ data class ReportScope(
 /** The NEW-queue age bucket (brief §19/§21) — computed by the backend, never rendered by it (§21: no divider text). */
 enum class AgeBucket { RECENT, OLDER }
 
-/** Why an assignment episode ended (brief §4/§6). */
-enum class AssignmentEndReason { RETURNED, REASSIGNED, ARCHIVED }
+/**
+ * Why an assignment episode ended (brief §4/§6). [MODERATION_DELETED] is Phase 9: a
+ * moderation deletion of an IN_PROGRESS report terminates its open episode this way,
+ * business ownership history distinct from the security audit trail (Phase 9 brief §7).
+ */
+enum class AssignmentEndReason { RETURNED, REASSIGNED, ARCHIVED, MODERATION_DELETED }
 
 /**
  * One operational-ownership episode (brief §4/§48) — "who had this report and when", a
