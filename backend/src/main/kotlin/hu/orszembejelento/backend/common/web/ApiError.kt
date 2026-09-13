@@ -196,6 +196,20 @@ enum class ErrorCode {
 
     /** The line is already mapped to the requested target area. */
     RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA,
+
+    // ------------------------------------------------------------------ Phase 11 - analytics
+
+    /** `areaId` does not exist, or exists outside the actor's current analytics scope - one response for both (brief §22). */
+    ANALYTICS_AREA_NOT_AVAILABLE,
+
+    /** `unclassifiedOnly=true` requested by a role never allowed to see `Besorolatlan` (brief §23). */
+    ANALYTICS_UNCLASSIFIED_FORBIDDEN,
+
+    /** `period` did not parse to one of the four fixed period codes. */
+    ANALYTICS_PERIOD_INVALID,
+
+    /** `categoryCode` does not name a known backend catalog category. */
+    ANALYTICS_CATEGORY_NOT_FOUND,
 }
 
 /**

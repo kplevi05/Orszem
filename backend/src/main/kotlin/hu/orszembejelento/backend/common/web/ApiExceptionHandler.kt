@@ -1,5 +1,10 @@
 package hu.orszembejelento.backend.common.web
 
+import hu.orszembejelento.backend.analytics.domain.AnalyticsAreaNotAvailableException
+import hu.orszembejelento.backend.analytics.domain.AnalyticsCategoryNotFoundException
+import hu.orszembejelento.backend.analytics.domain.AnalyticsFilterInvalidException
+import hu.orszembejelento.backend.analytics.domain.AnalyticsPeriodInvalidException
+import hu.orszembejelento.backend.analytics.domain.AnalyticsUnclassifiedForbiddenException
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminInactiveException
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminNotFoundException
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAlreadyAssignedToAreaException
@@ -358,6 +363,28 @@ class ApiExceptionHandler {
         ErrorCode.RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA,
         "This railway line is already assigned to that service area.",
     )
+
+    // ------------------------------------------------------------------ Phase 11 - analytics
+
+    @ExceptionHandler(AnalyticsAreaNotAvailableException::class)
+    fun handleAnalyticsAreaNotAvailable(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.ANALYTICS_AREA_NOT_AVAILABLE, "This service area is not available for analytics.")
+
+    @ExceptionHandler(AnalyticsUnclassifiedForbiddenException::class)
+    fun handleAnalyticsUnclassifiedForbidden(request: HttpServletRequest) =
+        error(request, HttpStatus.FORBIDDEN, ErrorCode.ANALYTICS_UNCLASSIFIED_FORBIDDEN, "This role may not view unclassified analytics.")
+
+    @ExceptionHandler(AnalyticsPeriodInvalidException::class)
+    fun handleAnalyticsPeriodInvalid(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.ANALYTICS_PERIOD_INVALID, "The requested period is invalid.")
+
+    @ExceptionHandler(AnalyticsCategoryNotFoundException::class)
+    fun handleAnalyticsCategoryNotFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.ANALYTICS_CATEGORY_NOT_FOUND, "No such category.")
+
+    @ExceptionHandler(AnalyticsFilterInvalidException::class)
+    fun handleAnalyticsFilterInvalid(exception: AnalyticsFilterInvalidException, request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, exception.message ?: "The request is invalid.")
 
     @ExceptionHandler(Exception::class)
     fun handleUnexpected(exception: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
