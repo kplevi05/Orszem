@@ -5,8 +5,17 @@ Branch: `feature/v2-service-area-admin` (base: `main` @ `9a487a4`, Phase 9 merge
 ## A. Git
 
 - Backend implementation: `4195530` — `feat(area-admin): Phase 10 backend - service area administration`
-- Android implementation, tests, docs, screenshots: committed at the end of this report's own
-  work (see §R for the exact final SHA and CI results, recorded after push).
+- Android implementation, tests, and this report (first draft): `19cc57a` —
+  `feat(area-admin): Phase 10 Service Android - ServiceArea/RailwayLine administration UI`.
+  Confirmed 5/5 green on this exact SHA — see §Q.
+- Documentation/approval-only correction commit (this update: fixes the §Q/§R
+  cross-reference, records owner visual approval): committed and pushed after `19cc57a`, no
+  code/UI/product change included. Per explicit owner instruction, this is the **only**
+  documentation commit made after visual approval — its own resulting SHA and CI results are
+  not chased with a further edit to this file (the Phase 9 branch hit exactly that trap: each
+  documentation commit created a new SHA needing its own verification, chasing itself across
+  several commits). That final pushed SHA and its 5/5 CI confirmation are reported directly in
+  the PR and in the assistant's stop report for this turn instead.
 - No migration was edited, renumbered or deleted. `V006__service_area_administration.sql` is
   purely additive.
 
@@ -76,7 +85,7 @@ second report on the same line, and assert the **first** report's stored routing
 byte-for-byte unchanged while the **second** report snapshots into the new area. All three
 Android confirmation dialogs that touch routing (assign, move, unassign) additionally carry the
 explicit "only future reports are affected" Hungarian copy as a second, human-facing guarantee
-(see §M) — this was also verified live against the real backend (§Q).
+(see §M) — this was also verified live against the real backend (§P).
 
 ## F. Advisory-lock integration
 
@@ -155,7 +164,7 @@ asserts every mutation type produces the correct event type, target and actor.
 Phase 10 use case reads or writes either table, and the ServiceArea detail screen deliberately
 has no user-assignment UI (product rule #3). A dedicated test proves a Phase 6 grant survives a
 Phase 10 deactivate+reactivate cycle unmodified (part of `ServiceAreaLifecycleIT.kt`, and
-independently re-verified live in §Q step 18).
+independently re-verified live in §P step 18).
 
 ## L. Android implementation
 
@@ -274,9 +283,24 @@ Full cross-stack regression run before push (this session):
 - `reference-data/` and `deploy/` are untouched by Phase 10 (confirmed via `git status`) — no
   reference-dataset or deployment-config change to validate for this branch.
 
-Final pushed HEAD and the 5 GitHub Actions workflow results on that exact SHA are recorded in
-§R, checked directly against the pushed commit (not a prior one), per the Phase 9 "CI green only
-on previous SHA" lesson.
+Final implementation HEAD `19cc57a` — 5/5 GitHub Actions workflow results on that exact SHA,
+checked directly against the pushed commit (not a prior one), per the Phase 9 "CI green only on
+previous SHA" lesson:
+
+| Workflow | Conclusion | Run |
+|---|---|---|
+| build (backend) | success | `github.com/kplevi05/Orszem/actions/runs/34653901228` |
+| build (android) | success | `github.com/kplevi05/Orszem/actions/runs/34653901236` |
+| build | success | `github.com/kplevi05/Orszem/actions/runs/34653901195` |
+| validate | success | `github.com/kplevi05/Orszem/actions/runs/34653901190` |
+| caddy | success | `github.com/kplevi05/Orszem/actions/runs/34653901185` |
+
+This is 5/5 green on `19cc57a` itself, which was local `HEAD` and matched
+`origin/feature/v2-service-area-admin` at the time of this check (`git rev-parse HEAD` ==
+`git rev-parse origin/feature/v2-service-area-admin` == `19cc57a`). The documentation/approval
+commit described in §A is pushed on top of this SHA; its own CI result is confirmed green
+before the PR is opened and is reported in that PR and in the assistant's stop report, not by a
+further edit to this file (see §A for why).
 
 ## R. Two cosmetic Compose layout fixes (found and corrected before push)
 
@@ -313,5 +337,13 @@ the dedicated font-scale-1.3 / layout-fix verification pass in §P.
   backend, which was independently confirmed reliable throughout.
 - No Phase 11 (analytics) or Phase 12 (audit query/UI) work was started, per the brief and the
   owner's explicit instruction.
-- **Owner visual approval: PENDING.** No PR has been opened. No merge has occurred. This report
-  and the accompanying screenshots are submitted for that approval.
+- **Owner visual approval: GIVEN — 2026-09-13.** All 23 screenshots were reviewed: the
+  Adminisztráció hub integration; ServiceArea list; create-area screen; active/inactive area
+  detail; RailwayLine section and picker; assign, move (with the future-only routing notice),
+  and unassign confirmations; the mapped-line and open-report deactivation blockers; deactivate
+  and reactivate confirmations/states; font-scale-1.3 behavior; the `FlowRow` filter-chip and
+  stacked-`Column` line-row corrections; 3-button navigation/inset behavior; and the overall
+  Phase 8/9 dark-navy/gold visual language — approved as-is, with no further Phase 10 UI,
+  product, or code changes requested. The Phase 10 PR is opened after this approval, per the
+  owner's explicit instruction, once the documentation/approval commit's own CI is 5/5 green
+  (see §A/§Q).
