@@ -27,6 +27,21 @@ class ErrorCopyTest {
             "MODERATION_FORBIDDEN" to R.string.error_moderation_forbidden,
             "REPORT_ALREADY_DELETED" to R.string.error_report_already_deleted,
             "REPORT_NOT_DELETED" to R.string.error_report_not_deleted,
+            // Phase 10 service-area-administration codes (brief §56-59).
+            "SERVICE_AREA_ADMIN_FORBIDDEN" to R.string.error_service_area_admin_forbidden,
+            "SERVICE_AREA_NOT_FOUND" to R.string.error_service_area_not_found,
+            "SERVICE_AREA_STATE_CHANGED" to R.string.error_service_area_state_changed,
+            "SERVICE_AREA_ALREADY_ACTIVE" to R.string.error_service_area_already_active,
+            "SERVICE_AREA_ALREADY_INACTIVE" to R.string.error_service_area_already_inactive,
+            "SERVICE_AREA_HAS_RAILWAY_LINES" to R.string.error_service_area_has_railway_lines,
+            "SERVICE_AREA_HAS_OPEN_REPORTS" to R.string.error_service_area_has_open_reports,
+            "SERVICE_AREA_NAME_INVALID" to R.string.error_service_area_name_invalid,
+            "SERVICE_AREA_NAME_ALREADY_IN_USE" to R.string.error_service_area_name_already_in_use,
+            "RAILWAY_LINE_NOT_FOUND" to R.string.error_railway_line_not_found,
+            "RAILWAY_LINE_INACTIVE" to R.string.error_railway_line_inactive,
+            "TARGET_SERVICE_AREA_INACTIVE" to R.string.error_target_service_area_inactive,
+            "RAILWAY_LINE_ASSIGNMENT_CHANGED" to R.string.error_railway_line_assignment_changed,
+            "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA" to R.string.error_railway_line_already_assigned,
         )
         expected.forEach { (code, res) -> assertEquals(code, res, errorMessageRes(code)) }
     }
@@ -39,6 +54,11 @@ class ErrorCopyTest {
             "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS", "USER_REQUIRES_SERVICE_AREA", "USER_NOT_FOUND",
             "USER_NOT_MANAGEABLE", "USER_MANAGEMENT_FORBIDDEN",
             "MODERATION_FORBIDDEN", "REPORT_ALREADY_DELETED", "REPORT_NOT_DELETED",
+            "SERVICE_AREA_ADMIN_FORBIDDEN", "SERVICE_AREA_NOT_FOUND", "SERVICE_AREA_STATE_CHANGED",
+            "SERVICE_AREA_ALREADY_ACTIVE", "SERVICE_AREA_ALREADY_INACTIVE", "SERVICE_AREA_HAS_RAILWAY_LINES",
+            "SERVICE_AREA_HAS_OPEN_REPORTS", "SERVICE_AREA_NAME_INVALID", "SERVICE_AREA_NAME_ALREADY_IN_USE",
+            "RAILWAY_LINE_NOT_FOUND", "RAILWAY_LINE_INACTIVE", "TARGET_SERVICE_AREA_INACTIVE",
+            "RAILWAY_LINE_ASSIGNMENT_CHANGED", "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA",
         )
         codes.forEach { code -> org.junit.Assert.assertNotEquals(code, R.string.error_unexpected, errorMessageRes(code)) }
     }

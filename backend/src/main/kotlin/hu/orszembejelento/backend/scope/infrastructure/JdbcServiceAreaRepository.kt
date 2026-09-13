@@ -50,8 +50,8 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
     fun insert(area: ServiceArea) {
         jdbc.sql(
             """
-            INSERT INTO service_areas (id, name, status, created_at, updated_at)
-            VALUES (:id, :name, :status, :createdAt, :updatedAt)
+            INSERT INTO service_areas (id, name, status, created_at, updated_at, admin_version)
+            VALUES (:id, :name, :status, :createdAt, :updatedAt, :adminVersion)
             """.trimIndent(),
         )
             .param("id", area.id)
@@ -59,8 +59,99 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
             .param("status", area.status.name)
             .param("createdAt", java.sql.Timestamp.from(area.createdAt))
             .param("updatedAt", java.sql.Timestamp.from(area.updatedAt))
+            .param("adminVersion", area.adminVersion)
             .update()
     }
+
+    /**
+     * Renames an area and bumps its admin version in one statement (Phase 10 brief §11).
+     * Called only after the row is already locked via [lockById] and the caller's own
+     * `expectedVersion` check against [ServiceArea.adminVersion] has passed - the row lock
+     * is what makes this single-statement write race-safe, not a `WHERE admin_version = ...`
+     * guard (consistent with how [hu.orszembejelento.backend.reports.infrastructure.JdbcReportRepository.updateWorkflowState]
+     * relies on its own prior row lock rather than repeating the version in the `WHERE`).
+     */
+    fun renameAndBumpVersion(id: UUID, name: String, newAdminVersion: Long, now: java.time.Instant) {
+        jdbc.sql("UPDATE service_areas SET name = :name, admin_version = :version, updated_at = :now WHERE id = :id")
+            .param("name", name)
+            .param("version", newAdminVersion)
+            .param("now", java.sql.Timestamp.from(now))
+            .param("id", id)
+            .update()
+    }
+
+    /** Activates/deactivates an area and bumps its admin version in one statement (brief §12/§13). */
+    fun updateStatusAndBumpVersion(id: UUID, status: ServiceAreaStatus, newAdminVersion: Long, now: java.time.Instant) {
+        jdbc.sql("UPDATE service_areas SET status = :status, admin_version = :version, updated_at = :now WHERE id = :id")
+            .param("status", status.name)
+            .param("version", newAdminVersion)
+            .param("now", java.sql.Timestamp.from(now))
+            .param("id", id)
+            .update()
+    }
+
+    /**
+     * Bumps only the admin version, with no other column change - used when a RailwayLine is
+     * assigned into, moved out of, or unassigned from this area (brief §8: every one of those
+     * mutations is admin-visible for the area even though the area's own name/status is
+     * untouched).
+     */
+    fun bumpAdminVersion(id: UUID, newAdminVersion: Long, now: java.time.Instant) {
+        jdbc.sql("UPDATE service_areas SET admin_version = :version, updated_at = :now WHERE id = :id")
+            .param("version", newAdminVersion)
+            .param("now", java.sql.Timestamp.from(now))
+            .param("id", id)
+            .update()
+    }
+
+    /** Every RailwayLine id currently mapped to [serviceAreaId] - the admin detail's lines section (brief §38). */
+    fun mappedRailwayLineIds(serviceAreaId: UUID): List<UUID> =
+        jdbc.sql("SELECT railway_line_id FROM service_area_railway_lines WHERE service_area_id = :areaId")
+            .param("areaId", serviceAreaId)
+            .query(UUID::class.java)
+            .list()
+            .filterNotNull()
+
+    /** How many RailwayLines currently map to [serviceAreaId] - the deactivation blocker (brief §14) and the list-row count (brief §37). */
+    fun countMappedRailwayLines(serviceAreaId: UUID): Int =
+        jdbc.sql("SELECT COUNT(*) FROM service_area_railway_lines WHERE service_area_id = :areaId")
+            .param("areaId", serviceAreaId)
+            .query(Int::class.java)
+            .single()
+
+    /** Removes exactly the mapping for [railwayLineId] currently pointing at [serviceAreaId], if it still does. Returns rows removed (0 or 1). */
+    fun removeRailwayLineMapping(serviceAreaId: UUID, railwayLineId: UUID): Int =
+        jdbc.sql("DELETE FROM service_area_railway_lines WHERE service_area_id = :areaId AND railway_line_id = :lineId")
+            .param("areaId", serviceAreaId)
+            .param("lineId", railwayLineId)
+            .update()
+
+    /**
+     * Every currently-open (NEW or IN_PROGRESS), non-moderation-deleted report whose *routing
+     * snapshot* names [serviceAreaId] - the deactivation blocker (brief §15). Deliberately the
+     * immutable snapshot's area, never current line configuration: a report already routed
+     * here is exactly the "ordinary operational work" a deactivation must not strand, even if
+     * its line has since moved elsewhere. ARCHIVED and moderation-deleted reports are excluded
+     * on purpose (brief §13/§16) - they are not the "currently-visible ordinary operational
+     * work" this blocker exists to protect.
+     */
+    fun countOpenOperationalReports(serviceAreaId: UUID): Int =
+        jdbc.sql(
+            """
+            SELECT COUNT(*)
+              FROM reports r
+              JOIN report_routing_snapshots rs ON rs.report_id = r.id
+             WHERE rs.service_area_id = :areaId
+               AND r.status IN ('NEW', 'IN_PROGRESS')
+               AND NOT EXISTS (
+                   SELECT 1 FROM report_moderation_episodes rme
+                    WHERE rme.report_id = r.id AND rme.restored_at IS NULL
+               )
+            """.trimIndent(),
+        )
+            .param("areaId", serviceAreaId)
+            .query(Int::class.java)
+            .single()
 
     // ------------------------------------------------- line -> area configuration
 
@@ -73,7 +164,7 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
     fun findAreaOfRailwayLine(railwayLineId: UUID): ServiceArea? =
         jdbc.sql(
             """
-            SELECT a.id, a.name, a.status, a.created_at, a.updated_at
+            SELECT a.id, a.name, a.status, a.created_at, a.updated_at, a.admin_version
               FROM service_areas a
               JOIN service_area_railway_lines m ON m.service_area_id = a.id
              WHERE m.railway_line_id = :lineId
@@ -186,7 +277,7 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
     fun assignedAreas(userId: UUID): List<ServiceArea> =
         jdbc.sql(
             """
-            SELECT sa.id, sa.name, sa.status, sa.created_at, sa.updated_at
+            SELECT sa.id, sa.name, sa.status, sa.created_at, sa.updated_at, sa.admin_version
               FROM user_service_areas usa
               JOIN service_areas sa ON sa.id = usa.service_area_id
              WHERE usa.user_id = :userId
@@ -231,9 +322,10 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
         status = ServiceAreaStatus.valueOf(rs.getString("status")),
         createdAt = rs.getTimestamp("created_at").toInstant(),
         updatedAt = rs.getTimestamp("updated_at").toInstant(),
+        adminVersion = rs.getLong("admin_version"),
     )
 
     private companion object {
-        const val SELECT_AREA = "SELECT id, name, status, created_at, updated_at FROM service_areas"
+        const val SELECT_AREA = "SELECT id, name, status, created_at, updated_at, admin_version FROM service_areas"
     }
 }

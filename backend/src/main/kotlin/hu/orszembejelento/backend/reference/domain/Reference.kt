@@ -78,6 +78,11 @@ data class ServiceArea(
     val status: ServiceAreaStatus,
     val createdAt: Instant,
     val updatedAt: Instant,
+    // Phase 10 brief §8: the administrative-mutation optimistic-concurrency counter (V006's
+    // `admin_version`). Carried on the one shared `ServiceArea` type rather than a parallel
+    // admin-only model, so every existing reader (routing, user management) and the new
+    // Phase 10 admin surface always see the same row from the same query.
+    val adminVersion: Long = 0,
 ) {
     val isActive: Boolean get() = status == ServiceAreaStatus.ACTIVE
 }

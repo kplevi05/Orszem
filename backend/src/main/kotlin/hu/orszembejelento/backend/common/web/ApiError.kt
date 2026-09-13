@@ -157,6 +157,45 @@ enum class ErrorCode {
 
     /** Restore was called on a report with no open moderation episode. */
     REPORT_NOT_DELETED,
+
+    // ------------------------------------------------------ Phase 10 - service area administration
+
+    /** The actor's role has no authority to call this administration operation at all - SUPER_ADMIN only. */
+    SERVICE_AREA_ADMIN_FORBIDDEN,
+
+    /** No such ServiceArea. */
+    SERVICE_AREA_NOT_FOUND,
+
+    /** `expectedVersion` no longer matches the area's current `adminVersion`. */
+    SERVICE_AREA_STATE_CHANGED,
+
+    SERVICE_AREA_ALREADY_ACTIVE,
+    SERVICE_AREA_ALREADY_INACTIVE,
+
+    /** Deactivation blocked: one or more RailwayLines still map to this area. */
+    SERVICE_AREA_HAS_RAILWAY_LINES,
+
+    /** Deactivation blocked: currently-visible NEW/IN_PROGRESS operational reports remain. */
+    SERVICE_AREA_HAS_OPEN_REPORTS,
+
+    /** The area name is blank, or (post-trim) already in use by another area. */
+    SERVICE_AREA_NAME_INVALID,
+    SERVICE_AREA_NAME_ALREADY_IN_USE,
+
+    /** No such RailwayLine. */
+    RAILWAY_LINE_NOT_FOUND,
+
+    /** The RailwayLine reference row is not active. */
+    RAILWAY_LINE_INACTIVE,
+
+    /** The assignment/move target ServiceArea exists but is not ACTIVE. */
+    TARGET_SERVICE_AREA_INACTIVE,
+
+    /** `expectedCurrentServiceAreaId` no longer matches the line's actual current mapping. */
+    RAILWAY_LINE_ASSIGNMENT_CHANGED,
+
+    /** The line is already mapped to the requested target area. */
+    RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA,
 }
 
 /**

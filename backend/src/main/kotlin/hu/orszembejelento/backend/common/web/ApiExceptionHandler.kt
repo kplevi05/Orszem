@@ -1,5 +1,19 @@
 package hu.orszembejelento.backend.common.web
 
+import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminInactiveException
+import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminNotFoundException
+import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAlreadyAssignedToAreaException
+import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAssignmentChangedException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminForbiddenException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAlreadyActiveException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAlreadyInactiveException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaHasOpenReportsException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaHasRailwayLinesException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNameAlreadyInUseException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNameBlankException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNotFoundException
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaStateChangedException
+import hu.orszembejelento.backend.areaadmin.domain.TargetServiceAreaInactiveException
 import hu.orszembejelento.backend.auth.application.InvalidCredentialsException
 import hu.orszembejelento.backend.auth.application.PasswordChangeRequiredException
 import hu.orszembejelento.backend.auth.application.RateLimitedException
@@ -266,6 +280,84 @@ class ApiExceptionHandler {
     @ExceptionHandler(ReportNotDeletedException::class)
     fun handleReportNotDeleted(request: HttpServletRequest) =
         error(request, HttpStatus.CONFLICT, ErrorCode.REPORT_NOT_DELETED, "This report is not currently moderation-deleted.")
+
+    // ------------------------------------------------------ Phase 10 - service area administration
+
+    @ExceptionHandler(ServiceAreaAdminForbiddenException::class)
+    fun handleServiceAreaAdminForbidden(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.FORBIDDEN,
+        ErrorCode.SERVICE_AREA_ADMIN_FORBIDDEN,
+        "Not permitted to perform this administration operation.",
+    )
+
+    @ExceptionHandler(ServiceAreaNotFoundException::class)
+    fun handleServiceAreaNotFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.SERVICE_AREA_NOT_FOUND, "No such service area.")
+
+    @ExceptionHandler(ServiceAreaStateChangedException::class)
+    fun handleServiceAreaStateChanged(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.SERVICE_AREA_STATE_CHANGED, "The service area's state has changed.")
+
+    @ExceptionHandler(ServiceAreaAlreadyActiveException::class)
+    fun handleServiceAreaAlreadyActive(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.SERVICE_AREA_ALREADY_ACTIVE, "This service area is already active.")
+
+    @ExceptionHandler(ServiceAreaAlreadyInactiveException::class)
+    fun handleServiceAreaAlreadyInactive(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.SERVICE_AREA_ALREADY_INACTIVE, "This service area is already inactive.")
+
+    @ExceptionHandler(ServiceAreaHasRailwayLinesException::class)
+    fun handleServiceAreaHasRailwayLines(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.SERVICE_AREA_HAS_RAILWAY_LINES,
+        "This service area still has railway lines assigned to it.",
+    )
+
+    @ExceptionHandler(ServiceAreaHasOpenReportsException::class)
+    fun handleServiceAreaHasOpenReports(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.SERVICE_AREA_HAS_OPEN_REPORTS,
+        "This service area still has open reports assigned to it.",
+    )
+
+    @ExceptionHandler(ServiceAreaNameBlankException::class)
+    fun handleServiceAreaNameBlank(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.SERVICE_AREA_NAME_INVALID, "The service area name must not be blank.")
+
+    @ExceptionHandler(ServiceAreaNameAlreadyInUseException::class)
+    fun handleServiceAreaNameAlreadyInUse(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.SERVICE_AREA_NAME_ALREADY_IN_USE, "This service area name is already in use.")
+
+    @ExceptionHandler(RailwayLineAdminNotFoundException::class)
+    fun handleRailwayLineAdminNotFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.RAILWAY_LINE_NOT_FOUND, "No such railway line.")
+
+    @ExceptionHandler(RailwayLineAdminInactiveException::class)
+    fun handleRailwayLineAdminInactive(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.RAILWAY_LINE_INACTIVE, "This railway line is not active.")
+
+    @ExceptionHandler(TargetServiceAreaInactiveException::class)
+    fun handleTargetServiceAreaInactive(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.TARGET_SERVICE_AREA_INACTIVE, "The target service area is not active.")
+
+    @ExceptionHandler(RailwayLineAssignmentChangedException::class)
+    fun handleRailwayLineAssignmentChanged(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.RAILWAY_LINE_ASSIGNMENT_CHANGED,
+        "This railway line's assignment has changed.",
+    )
+
+    @ExceptionHandler(RailwayLineAlreadyAssignedToAreaException::class)
+    fun handleRailwayLineAlreadyAssignedToArea(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA,
+        "This railway line is already assigned to that service area.",
+    )
 
     @ExceptionHandler(Exception::class)
     fun handleUnexpected(exception: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {

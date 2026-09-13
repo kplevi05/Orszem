@@ -38,6 +38,23 @@ fun errorMessageRes(code: String?): Int = when (code) {
     "MODERATION_FORBIDDEN" -> R.string.error_moderation_forbidden
     "REPORT_ALREADY_DELETED" -> R.string.error_report_already_deleted
     "REPORT_NOT_DELETED" -> R.string.error_report_not_deleted
+    // Phase 10 - service area administration. A fresh, dedicated set of codes (brief §40) -
+    // never reused from AREA_NOT_FOUND/AREA_NOT_ASSIGNABLE above, which answer a different
+    // question (a user-grant target) for a different actor.
+    "SERVICE_AREA_ADMIN_FORBIDDEN" -> R.string.error_service_area_admin_forbidden
+    "SERVICE_AREA_NOT_FOUND" -> R.string.error_service_area_not_found
+    "SERVICE_AREA_STATE_CHANGED" -> R.string.error_service_area_state_changed
+    "SERVICE_AREA_ALREADY_ACTIVE" -> R.string.error_service_area_already_active
+    "SERVICE_AREA_ALREADY_INACTIVE" -> R.string.error_service_area_already_inactive
+    "SERVICE_AREA_HAS_RAILWAY_LINES" -> R.string.error_service_area_has_railway_lines
+    "SERVICE_AREA_HAS_OPEN_REPORTS" -> R.string.error_service_area_has_open_reports
+    "SERVICE_AREA_NAME_INVALID" -> R.string.error_service_area_name_invalid
+    "SERVICE_AREA_NAME_ALREADY_IN_USE" -> R.string.error_service_area_name_already_in_use
+    "RAILWAY_LINE_NOT_FOUND" -> R.string.error_railway_line_not_found
+    "RAILWAY_LINE_INACTIVE" -> R.string.error_railway_line_inactive
+    "TARGET_SERVICE_AREA_INACTIVE" -> R.string.error_target_service_area_inactive
+    "RAILWAY_LINE_ASSIGNMENT_CHANGED" -> R.string.error_railway_line_assignment_changed
+    "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA" -> R.string.error_railway_line_already_assigned
     else -> R.string.error_unexpected
 }
 

@@ -1,0 +1,25 @@
+-- Őrszem V2 — Phase 10: Service area administration.
+--
+-- V001-V005 are immutable, merged history. This migration is additive only: one new column
+-- on the existing `service_areas` table. No new table is added — `service_area_railway_lines`
+-- (V002) already carries exactly the current-configuration mapping Phase 10 administers, and
+-- `audit_events` (V001) already carries exactly the mutation trail it needs. Adding a
+-- parallel table for either would duplicate an invariant the database already enforces
+-- elsewhere (Phase 10 brief §7).
+--
+-- ---------------------------------------------------------------------------
+-- service_areas: admin_version
+-- ---------------------------------------------------------------------------
+-- Optimistic-concurrency counter for administrative mutation of one ServiceArea row -
+-- rename, activate, deactivate, and any RailwayLine assignment/move/unassignment that
+-- touches this area (brief §8). Deliberately a new, separate counter from
+-- `reports.workflow_version` (V004) and `report_moderation_episodes` (V005): those version
+-- a REPORT's operational/moderation state, this versions the ServiceArea CONFIGURATION
+-- itself - different resource, different lifecycle, and conflating them would make an
+-- unrelated report mutation look like it changed area configuration (brief §1: these
+-- domains stay separate on purpose).
+--
+-- NOT NULL DEFAULT 0 so every existing row (there may already be ServiceAreas created by
+-- Phase 6 test/seed flows in a persistent environment) starts at a well-defined version
+-- rather than NULL, exactly like `reports.workflow_version` did in V004.
+ALTER TABLE service_areas ADD COLUMN admin_version BIGINT NOT NULL DEFAULT 0;

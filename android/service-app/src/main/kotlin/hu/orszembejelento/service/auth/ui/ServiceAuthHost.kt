@@ -25,6 +25,7 @@ import hu.orszembejelento.service.nav.ServiceNavHost
 import hu.orszembejelento.service.reports.data.ActiveWorkAreaStore
 import hu.orszembejelento.service.reports.data.CatalogRepository
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
+import hu.orszembejelento.service.servicearea.data.AreaAdminRepository
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
 
 /**
@@ -44,6 +45,7 @@ fun ServiceAuthHost(
     catalogRepository: CatalogRepository,
     activeWorkAreaStore: ActiveWorkAreaStore,
     moderationRepository: ModerationRepository? = null,
+    areaAdminRepository: AreaAdminRepository? = null,
 ) {
     val state by viewModel.state.collectAsState()
     val busy by viewModel.busy.collectAsState()
@@ -62,6 +64,7 @@ fun ServiceAuthHost(
             catalogRepository = catalogRepository,
             activeWorkAreaStore = activeWorkAreaStore,
             moderationRepository = moderationRepository,
+            areaAdminRepository = areaAdminRepository,
         )
 
         else -> Scaffold(
