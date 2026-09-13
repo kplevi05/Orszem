@@ -87,13 +87,14 @@ class ServiceAreaAdminComposeTest {
     @Test
     fun the_admin_hub_has_a_live_service_area_entry() {
         compose.setContent {
-            AdminHubScreen(onOpenUsers = {}, onOpenDeletedReports = {}, onOpenServiceAreas = {}, onOpenAccount = {})
+            AdminHubScreen(onOpenUsers = {}, onOpenDeletedReports = {}, onOpenServiceAreas = {}, onOpenAudit = {}, onOpenAccount = {})
         }
         compose.onNodeWithText("Szolgálati területek").assertExists()
-        // The old placeholder is gone specifically for ServiceArea admin - "Még nem elérhető"
-        // still legitimately labels the untouched Phase 12 audit row beside it.
+        // Phase 12 made the former "Még nem elérhető" audit placeholder live too (see
+        // AuditComposeTest.the_admin_hub_shows_the_live_Valtozasi_elozmenyek_entry) - every hub
+        // entry is real now, so no unavailable-placeholder text exists anywhere in this hub.
         compose.onNodeWithText("Változási előzmények").assertExists()
-        compose.onAllNodesWithText("Még nem elérhető").assertCountEquals(1)
+        compose.onAllNodesWithText("Még nem elérhető").assertCountEquals(0)
     }
 
     @Test

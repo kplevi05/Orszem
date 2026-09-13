@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.analytics.data.AnalyticsRepository
+import hu.orszembejelento.service.audit.data.AuditRepository
 import hu.orszembejelento.service.auth.domain.AuthState
 import hu.orszembejelento.service.moderation.data.ModerationRepository
 import hu.orszembejelento.service.nav.ServiceNavHost
@@ -50,6 +51,12 @@ fun ServiceAuthHost(
     // Non-null for every role (brief §33/§57) - unlike moderation/area-admin, analytics has
     // no role-gated null branch: SERVICE_USER, MODERATOR and SUPER_ADMIN all see Statisztika.
     analyticsRepository: AnalyticsRepository,
+    // Constructed unconditionally by MainActivity like every repository here (Phase 12 brief) -
+    // reachability is gated by navigation (only the SUPER_ADMIN Adminisztráció hub ever offers
+    // `Változási előzmények`, mirroring moderationRepository/areaAdminRepository's own
+    // established shape), never by this parameter being null. The backend's own SUPER_ADMIN-only
+    // check (brief §2) is the real authority regardless.
+    auditRepository: AuditRepository,
 ) {
     val state by viewModel.state.collectAsState()
     val busy by viewModel.busy.collectAsState()
@@ -70,6 +77,7 @@ fun ServiceAuthHost(
             moderationRepository = moderationRepository,
             areaAdminRepository = areaAdminRepository,
             analyticsRepository = analyticsRepository,
+            auditRepository = auditRepository,
         )
 
         else -> Scaffold(

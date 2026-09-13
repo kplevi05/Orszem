@@ -3,7 +3,6 @@ package hu.orszembejelento.service.hub.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,7 +11,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -46,16 +44,17 @@ fun ModerationHubScreen(onOpenUsers: () -> Unit, onOpenDeletedReports: () -> Uni
 }
 
 /**
- * `Adminisztráció` (brief §37, Phase 10 §45): live `Felhasználók`, `Törölt bejelentések`
- * (SUPER_ADMIN gets restore controls on the same deleted-report UI) and now `Szolgálati
- * területek`. Only Phase 12 (audit/`Változási előzmények`) remains a visibly, honestly
- * unavailable placeholder - never built, never faked.
+ * `Adminisztráció` (brief §37, Phase 10 §45, Phase 12 §45): live `Felhasználók`, `Törölt
+ * bejelentések` (SUPER_ADMIN gets restore controls on the same deleted-report UI), `Szolgálati
+ * területek`, and now `Változási előzmények` - the last remaining hub entry, previously an
+ * honest "not yet available" placeholder, is live. Every entry in this hub is now real.
  */
 @Composable
 fun AdminHubScreen(
     onOpenUsers: () -> Unit,
     onOpenDeletedReports: () -> Unit,
     onOpenServiceAreas: () -> Unit,
+    onOpenAudit: () -> Unit,
     onOpenAccount: () -> Unit,
 ) {
     Hub(
@@ -74,7 +73,11 @@ fun AdminHubScreen(
                 Text(stringResource(R.string.areas_admin_title), style = MaterialTheme.typography.titleMedium)
             }
         }
-        UnavailableRow(stringResource(R.string.audit_admin_title))
+        Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenAudit)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(stringResource(R.string.audit_admin_title), style = MaterialTheme.typography.titleMedium)
+            }
+        }
     }
 }
 
@@ -103,20 +106,6 @@ private fun Hub(
         Text(stringResource(R.string.hub_own_account), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
         Button(onClick = onOpenAccount, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.hub_own_account))
-        }
-    }
-}
-
-@Composable
-private fun UnavailableRow(label: String) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(stringResource(R.string.not_yet_available), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

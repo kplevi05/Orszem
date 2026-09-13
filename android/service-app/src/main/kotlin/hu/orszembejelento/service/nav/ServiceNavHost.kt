@@ -44,6 +44,11 @@ import hu.orszembejelento.service.R
 import hu.orszembejelento.service.analytics.data.AnalyticsRepository
 import hu.orszembejelento.service.analytics.ui.AnalyticsScreen
 import hu.orszembejelento.service.analytics.ui.AnalyticsViewModel
+import hu.orszembejelento.service.audit.data.AuditRepository
+import hu.orszembejelento.service.audit.ui.AuditDetailScreen
+import hu.orszembejelento.service.audit.ui.AuditDetailViewModel
+import hu.orszembejelento.service.audit.ui.AuditListScreen
+import hu.orszembejelento.service.audit.ui.AuditListViewModel
 import hu.orszembejelento.service.auth.domain.AuthState
 import hu.orszembejelento.service.auth.ui.AccountScreen
 import hu.orszembejelento.service.auth.ui.AuthViewModel
@@ -101,6 +106,8 @@ internal object Routes {
     const val CREATE_SERVICE_AREA = "service-areas/create"
     const val SERVICE_AREA_DETAIL = "service-areas/{areaId}"
     const val RAILWAY_LINE_PICKER = "service-areas/{areaId}/lines/add?areaName={areaName}"
+    const val AUDIT = "audit"
+    const val AUDIT_DETAIL = "audit/{auditEventId}"
 
     fun reportDetail(publicReportId: String) = "reports/$publicReportId"
     fun userDetail(serviceId: String) = "users/$serviceId"
@@ -108,6 +115,7 @@ internal object Routes {
     fun serviceAreaDetail(areaId: String) = "service-areas/$areaId"
     fun railwayLinePicker(areaId: String, areaName: String) =
         "service-areas/$areaId/lines/add?areaName=${android.net.Uri.encode(areaName)}"
+    fun auditDetail(auditEventId: String) = "audit/$auditEventId"
 }
 
 private data class BottomDestination(val route: String, val labelRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector)
@@ -170,6 +178,10 @@ fun ServiceNavHost(
     // Non-null for every role (Phase 11 brief §33) - Statisztika is the third bottom-nav tab
     // for SERVICE_USER, MODERATOR and SUPER_ADMIN alike.
     analyticsRepository: AnalyticsRepository,
+    // Reachable only from the SUPER_ADMIN Adminisztráció hub (Phase 12 brief §46) - the
+    // backend's own SUPER_ADMIN-only check is the real authority, mirroring analytics'
+    // own "role gating is navigation, not repository nullness" shape.
+    auditRepository: AuditRepository,
 ) {
     val navController = rememberNavController()
     val onSessionEnded: () -> Unit = { authViewModel.forceSignedOut() }
@@ -248,6 +260,16 @@ fun ServiceNavHost(
         viewModelStoreOwner = sessionOwner,
         key = "analytics",
         factory = viewModelFactory { AnalyticsViewModel(analyticsRepository, onSessionEnded) },
+    )
+
+    // Session-scoped for the same reason as every other Phase 8-11 list ViewModel here (brief
+    // §60: no cached audit list/search/filter state may flash for the next signed-in user).
+    // Constructed unconditionally like analyticsViewModel - reachability is gated purely by
+    // navigation (only SUPER_ADMIN's Adminisztráció hub ever offers this route).
+    val auditListViewModel: AuditListViewModel = viewModel(
+        viewModelStoreOwner = sessionOwner,
+        key = "audit-list",
+        factory = viewModelFactory { AuditListViewModel(auditRepository, onSessionEnded) },
     )
 
     // Apply the active-work-view area to every queue whenever it changes (including the first
@@ -400,8 +422,26 @@ fun ServiceNavHost(
                     onOpenUsers = { navController.navigate(Routes.USERS) },
                     onOpenDeletedReports = { navController.navigate(Routes.DELETED_REPORTS) },
                     onOpenServiceAreas = { navController.navigate(Routes.SERVICE_AREAS) },
+                    onOpenAudit = { navController.navigate(Routes.AUDIT) },
                     onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
                 )
+            }
+            composable(Routes.AUDIT) {
+                AuditListScreen(
+                    viewModel = auditListViewModel,
+                    onOpenEvent = { navController.navigate(Routes.auditDetail(it)) },
+                )
+            }
+            composable(
+                Routes.AUDIT_DETAIL,
+                arguments = listOf(navArgument("auditEventId") {}),
+            ) { entry ->
+                val auditEventId = entry.arguments?.getString("auditEventId") ?: return@composable
+                val detailViewModel: AuditDetailViewModel = viewModel(
+                    key = "audit-detail-$auditEventId",
+                    factory = viewModelFactory { AuditDetailViewModel(auditEventId, auditRepository, onSessionEnded) },
+                )
+                AuditDetailScreen(viewModel = detailViewModel, onBack = { navController.popBackStack() })
             }
             composable(Routes.DELETED_REPORTS) {
                 val listViewModel = deletedListViewModel ?: return@composable

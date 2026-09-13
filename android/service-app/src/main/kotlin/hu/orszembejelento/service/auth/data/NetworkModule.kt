@@ -5,6 +5,9 @@ import hu.orszembejelento.service.BuildConfig
 import hu.orszembejelento.service.analytics.data.AnalyticsApi
 import hu.orszembejelento.service.analytics.data.AnalyticsRepository
 import hu.orszembejelento.service.analytics.data.DefaultAnalyticsRepository
+import hu.orszembejelento.service.audit.data.AuditApi
+import hu.orszembejelento.service.audit.data.AuditRepository
+import hu.orszembejelento.service.audit.data.DefaultAuditRepository
 import hu.orszembejelento.service.moderation.data.DefaultModerationRepository
 import hu.orszembejelento.service.moderation.data.ModerationApi
 import hu.orszembejelento.service.moderation.data.ModerationRepository
@@ -101,4 +104,7 @@ object NetworkModule {
 
     fun analyticsRepository(auth: AuthRepository): AnalyticsRepository =
         DefaultAnalyticsRepository(api = retrofit.create(AnalyticsApi::class.java), auth = auth)
+
+    fun auditRepository(auth: AuthRepository): AuditRepository =
+        DefaultAuditRepository(api = retrofit.create(AuditApi::class.java), auth = auth)
 }
