@@ -164,7 +164,6 @@
 
     <!-- Statistics placeholder -->
     <string name="stats_title">Statisztika</string>
-    <string name="stats_unavailable">A statisztikai összesítések ebben a verzióban még nem érhetők el.</string>
 
     <!-- Hubs -->
     <string name="moderation_title">Moderáció</string>
@@ -330,4 +329,39 @@
     <string name="error_railway_line_assignment_changed">A vasútvonal hozzárendelése időközben megváltozott. Frissítettük az aktuális állapotot.</string>
     <string name="error_railway_line_already_assigned">Ez a vasútvonal már ehhez a területhez van rendelve.</string>
     <string name="error_service_area_admin_forbidden">Ehhez a művelethez nincs jogosultsága.</string>
+
+    <!-- Phase 11: analytics (brief §33-51). "Statisztika"/nav_stats and stats_title already
+         exist from earlier phases and are reused as-is; stats_unavailable is retired along
+         with StatsPlaceholderScreen. -->
+    <string name="analytics_subtitle">A jogosultsági körébe tartozó bejelentések összesítése.</string>
+    <string name="analytics_status_note">A kiválasztott időszakban beérkezett bejelentések jelenlegi állapota.</string>
+    <string name="analytics_kpi_total">Összes bejelentés</string>
+    <string name="analytics_kpi_new">Új</string>
+    <string name="analytics_kpi_in_progress">Folyamatban</string>
+    <string name="analytics_kpi_archived">Lezárt</string>
+    <string name="analytics_trend_title">Beérkezett bejelentések</string>
+    <string name="analytics_categories_title">Kategóriák</string>
+    <string name="analytics_top_events_title">Leggyakoribb eseménytípusok</string>
+    <string name="analytics_empty">Nincs megjeleníthető adat a kiválasztott időszakban.</string>
+    <string name="analytics_load_error">A statisztika most nem tölthető be.</string>
+    <string name="analytics_freshness">Frissítve: %1$s</string>
+    <string name="analytics_trend_bar_description">%1$s: %2$d bejelentés</string>
+    <string name="analytics_trend_empty_bar_description">%1$s: nincs bejelentés</string>
+
+    <string name="analytics_filter_period_group">Időszak</string>
+    <string name="analytics_period_today">Ma</string>
+    <string name="analytics_period_last_7_days">Utolsó 7 nap</string>
+    <string name="analytics_period_last_30_days">Utolsó 30 nap</string>
+    <string name="analytics_period_last_90_days">Utolsó 90 nap</string>
+    <string name="analytics_area_all">Minden jogosult terület</string>
+    <string name="analytics_area_unclassified">Besorolatlan</string>
+    <string name="analytics_area_inactive_suffix">Inaktív</string>
+    <string name="analytics_category_all">Minden kategória</string>
+
+    <!-- Phase 11 error copy - a fresh, dedicated set of codes (brief §30), never reused from
+         an unrelated area/category error surface. -->
+    <string name="error_analytics_area_not_available">Ez a szolgálati terület jelenleg nem érhető el a statisztikában.</string>
+    <string name="error_analytics_unclassified_forbidden">Ehhez a szűréshez nincs jogosultsága.</string>
+    <string name="error_analytics_period_invalid">Az időszak érvénytelen. Frissítettük az alapértelmezett beállítást.</string>
+    <string name="error_analytics_category_not_found">A kategória nem található.</string>
 </resources>

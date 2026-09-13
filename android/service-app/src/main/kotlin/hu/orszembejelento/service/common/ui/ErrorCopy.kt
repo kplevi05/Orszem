@@ -55,6 +55,11 @@ fun errorMessageRes(code: String?): Int = when (code) {
     "TARGET_SERVICE_AREA_INACTIVE" -> R.string.error_target_service_area_inactive
     "RAILWAY_LINE_ASSIGNMENT_CHANGED" -> R.string.error_railway_line_assignment_changed
     "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA" -> R.string.error_railway_line_already_assigned
+    // Phase 11 - analytics. A fresh, dedicated set of codes (brief §30).
+    "ANALYTICS_AREA_NOT_AVAILABLE" -> R.string.error_analytics_area_not_available
+    "ANALYTICS_UNCLASSIFIED_FORBIDDEN" -> R.string.error_analytics_unclassified_forbidden
+    "ANALYTICS_PERIOD_INVALID" -> R.string.error_analytics_period_invalid
+    "ANALYTICS_CATEGORY_NOT_FOUND" -> R.string.error_analytics_category_not_found
     else -> R.string.error_unexpected
 }
 

@@ -120,20 +120,3 @@ private fun UnavailableRow(label: String) {
         }
     }
 }
-
-/** `Statisztika` (brief §50): the Phase 11 backend does not exist yet - no fake numbers, no fake charts. */
-@Composable
-fun StatsPlaceholderScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(20.dp),
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(stringResource(R.string.stats_title), style = MaterialTheme.typography.headlineSmall)
-        Text(
-            stringResource(R.string.stats_unavailable),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 10.dp),
-        )
-    }
-}

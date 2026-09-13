@@ -41,12 +41,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import hu.orszembejelento.service.R
+import hu.orszembejelento.service.analytics.data.AnalyticsRepository
+import hu.orszembejelento.service.analytics.ui.AnalyticsScreen
+import hu.orszembejelento.service.analytics.ui.AnalyticsViewModel
 import hu.orszembejelento.service.auth.domain.AuthState
 import hu.orszembejelento.service.auth.ui.AccountScreen
 import hu.orszembejelento.service.auth.ui.AuthViewModel
 import hu.orszembejelento.service.hub.ui.AdminHubScreen
 import hu.orszembejelento.service.hub.ui.ModerationHubScreen
-import hu.orszembejelento.service.hub.ui.StatsPlaceholderScreen
 import hu.orszembejelento.service.moderation.data.ModerationRepository
 import hu.orszembejelento.service.moderation.ui.DeletedReportDetailScreen
 import hu.orszembejelento.service.moderation.ui.DeletedReportDetailViewModel
@@ -165,6 +167,9 @@ fun ServiceNavHost(
     // administration is never reachable by those roles, not even indirectly through a
     // wired-but-unused repository (Phase 10 brief §4).
     areaAdminRepository: AreaAdminRepository? = null,
+    // Non-null for every role (Phase 11 brief §33) - Statisztika is the third bottom-nav tab
+    // for SERVICE_USER, MODERATOR and SUPER_ADMIN alike.
+    analyticsRepository: AnalyticsRepository,
 ) {
     val navController = rememberNavController()
     val onSessionEnded: () -> Unit = { authViewModel.forceSignedOut() }
@@ -236,6 +241,14 @@ fun ServiceNavHost(
             factory = viewModelFactory { ServiceAreaAdminListViewModel(repo, onSessionEnded) },
         )
     }
+
+    // Session-scoped for the same reason as above (brief §47: no previous user's aggregates
+    // survive a logout) - available to every role, so unlike the two above this is never null.
+    val analyticsViewModel: AnalyticsViewModel = viewModel(
+        viewModelStoreOwner = sessionOwner,
+        key = "analytics",
+        factory = viewModelFactory { AnalyticsViewModel(analyticsRepository, onSessionEnded) },
+    )
 
     // Apply the active-work-view area to every queue whenever it changes (including the first
     // composition of this session, seeding from the persisted preference).
@@ -359,7 +372,7 @@ fun ServiceNavHost(
                     onAreaFilterChanged = onAreaFilterChanged,
                 )
             }
-            composable(Routes.STATS) { StatsPlaceholderScreen() }
+            composable(Routes.STATS) { AnalyticsScreen(viewModel = analyticsViewModel, catalogRepository = catalogRepository) }
             composable(Routes.PROFILE) {
                 AccountScreen(
                     serviceId = serviceId,

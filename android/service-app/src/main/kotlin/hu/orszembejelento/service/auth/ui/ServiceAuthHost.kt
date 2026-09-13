@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
+import hu.orszembejelento.service.analytics.data.AnalyticsRepository
 import hu.orszembejelento.service.auth.domain.AuthState
 import hu.orszembejelento.service.moderation.data.ModerationRepository
 import hu.orszembejelento.service.nav.ServiceNavHost
@@ -46,6 +47,9 @@ fun ServiceAuthHost(
     activeWorkAreaStore: ActiveWorkAreaStore,
     moderationRepository: ModerationRepository? = null,
     areaAdminRepository: AreaAdminRepository? = null,
+    // Non-null for every role (brief §33/§57) - unlike moderation/area-admin, analytics has
+    // no role-gated null branch: SERVICE_USER, MODERATOR and SUPER_ADMIN all see Statisztika.
+    analyticsRepository: AnalyticsRepository,
 ) {
     val state by viewModel.state.collectAsState()
     val busy by viewModel.busy.collectAsState()
@@ -65,6 +69,7 @@ fun ServiceAuthHost(
             activeWorkAreaStore = activeWorkAreaStore,
             moderationRepository = moderationRepository,
             areaAdminRepository = areaAdminRepository,
+            analyticsRepository = analyticsRepository,
         )
 
         else -> Scaffold(

@@ -42,6 +42,11 @@ class ErrorCopyTest {
             "TARGET_SERVICE_AREA_INACTIVE" to R.string.error_target_service_area_inactive,
             "RAILWAY_LINE_ASSIGNMENT_CHANGED" to R.string.error_railway_line_assignment_changed,
             "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA" to R.string.error_railway_line_already_assigned,
+            // Phase 11 analytics codes (brief §30).
+            "ANALYTICS_AREA_NOT_AVAILABLE" to R.string.error_analytics_area_not_available,
+            "ANALYTICS_UNCLASSIFIED_FORBIDDEN" to R.string.error_analytics_unclassified_forbidden,
+            "ANALYTICS_PERIOD_INVALID" to R.string.error_analytics_period_invalid,
+            "ANALYTICS_CATEGORY_NOT_FOUND" to R.string.error_analytics_category_not_found,
         )
         expected.forEach { (code, res) -> assertEquals(code, res, errorMessageRes(code)) }
     }
@@ -59,6 +64,8 @@ class ErrorCopyTest {
             "SERVICE_AREA_HAS_OPEN_REPORTS", "SERVICE_AREA_NAME_INVALID", "SERVICE_AREA_NAME_ALREADY_IN_USE",
             "RAILWAY_LINE_NOT_FOUND", "RAILWAY_LINE_INACTIVE", "TARGET_SERVICE_AREA_INACTIVE",
             "RAILWAY_LINE_ASSIGNMENT_CHANGED", "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA",
+            "ANALYTICS_AREA_NOT_AVAILABLE", "ANALYTICS_UNCLASSIFIED_FORBIDDEN",
+            "ANALYTICS_PERIOD_INVALID", "ANALYTICS_CATEGORY_NOT_FOUND",
         )
         codes.forEach { code -> org.junit.Assert.assertNotEquals(code, R.string.error_unexpected, errorMessageRes(code)) }
     }

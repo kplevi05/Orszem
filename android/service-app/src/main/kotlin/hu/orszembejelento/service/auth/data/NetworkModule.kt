@@ -2,6 +2,9 @@ package hu.orszembejelento.service.auth.data
 
 import android.content.Context
 import hu.orszembejelento.service.BuildConfig
+import hu.orszembejelento.service.analytics.data.AnalyticsApi
+import hu.orszembejelento.service.analytics.data.AnalyticsRepository
+import hu.orszembejelento.service.analytics.data.DefaultAnalyticsRepository
 import hu.orszembejelento.service.moderation.data.DefaultModerationRepository
 import hu.orszembejelento.service.moderation.data.ModerationApi
 import hu.orszembejelento.service.moderation.data.ModerationRepository
@@ -95,4 +98,7 @@ object NetworkModule {
 
     fun areaAdminRepository(auth: AuthRepository): AreaAdminRepository =
         DefaultAreaAdminRepository(api = retrofit.create(AreaAdminApi::class.java), auth = auth)
+
+    fun analyticsRepository(auth: AuthRepository): AnalyticsRepository =
+        DefaultAnalyticsRepository(api = retrofit.create(AnalyticsApi::class.java), auth = auth)
 }
