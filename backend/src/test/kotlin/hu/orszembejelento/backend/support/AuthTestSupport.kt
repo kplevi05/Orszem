@@ -25,6 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.testcontainers.postgresql.PostgreSQLContainer
@@ -40,8 +41,18 @@ import org.testcontainers.postgresql.PostgreSQLContainer
  *
  * HTTP is driven with the JDK client rather than a framework test client, so requests
  * traverse the real filter chain exactly as a device would.
+ *
+ * [Import] on [Containers] is explicit, not left to Spring Boot's own nested-`@TestConfiguration`
+ * auto-detection: that auto-detection proved unreliable for some (not all) leaf test classes
+ * deep in this hierarchy — `SpringBootTestContextBootstrapper` logs "these classes were
+ * detected but are currently ignored" for a subset of them, silently losing the Testcontainers
+ * Postgres bean and falling back to `application.yml`'s literal `localhost:5432` default,
+ * which then fails outright since nothing listens there in CI or on a clean dev machine. This
+ * import makes the dependency unconditional or every subclass, regardless of which detection
+ * heuristic Spring Boot's bootstrapper happens to apply to it.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(AbstractAuthIntegrationTest.Containers::class)
 abstract class AbstractAuthIntegrationTest {
 
     @TestConfiguration(proxyBeanMethods = false)
