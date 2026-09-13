@@ -132,13 +132,6 @@ fun AnalyticsFilterSheet(
     }
 }
 
-private fun periodChoices(): List<Pair<AnalyticsPeriod, Int>> = listOf(
-    AnalyticsPeriod.TODAY to R.string.analytics_period_today,
-    AnalyticsPeriod.LAST_7_DAYS to R.string.analytics_period_last_7_days,
-    AnalyticsPeriod.LAST_30_DAYS to R.string.analytics_period_last_30_days,
-    AnalyticsPeriod.LAST_90_DAYS to R.string.analytics_period_last_90_days,
-)
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FilterGroup(title: String, content: @Composable FlowRowScope.() -> Unit) {

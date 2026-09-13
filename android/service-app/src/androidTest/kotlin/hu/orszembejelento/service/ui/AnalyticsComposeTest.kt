@@ -1,6 +1,7 @@
 package hu.orszembejelento.service.ui
 
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -166,17 +167,109 @@ class AnalyticsComposeTest {
         compose.onNodeWithText("Beérkezett bejelentések").assertDoesNotExist()
     }
 
+    // Owner correction §2: the frozen brief's own "Újrapróbálás" wording, not the app-wide
+    // "Újrapróbálkozás" - both the first-load full-screen state and the stale-data inline
+    // banner (below) must say it, and each tap must fire exactly one additional request.
+
     @Test
-    fun a_network_failure_is_retryable_and_retry_calls_the_backend_exactly_once_per_tap() {
+    fun a_first_load_network_failure_is_retryable_via_Ujraprobalas_exactly_once_per_tap() {
         val repo = FakeAnalyticsRepo(summaryResult = ApiResult.NetworkError)
         setContentWith(repo)
         compose.onNodeWithText("A statisztika most nem tölthető be.").assertExists()
+        compose.onAllNodesWithText("Újrapróbálkozás").assertCountEquals(0)
 
         val callsBeforeRetry = repo.summaryCalls
         repo.summaryResult = ApiResult.Success(summaryWith())
-        compose.onNodeWithText("Újrapróbálkozás").performClick()
+        compose.onNodeWithText("Újrapróbálás").performClick()
         assertEquals(callsBeforeRetry + 1, repo.summaryCalls)
         compose.onNodeWithText("Nincs megjeleníthető adat a kiválasztott időszakban.").assertDoesNotExist()
+    }
+
+    @Test
+    fun a_refresh_failure_after_a_successful_load_keeps_stale_data_and_offers_Ujraprobalas_once() {
+        val repo = FakeAnalyticsRepo(summaryResult = ApiResult.Success(summaryWith(total = 12, new = 3, inProgress = 4, archived = 5)))
+        val vm = setContentWith(repo)
+        compose.onNodeWithText("12").assertExists()
+
+        repo.summaryResult = ApiResult.NetworkError
+        vm.refresh()
+        compose.onNodeWithText("12").assertExists() // stale KPI content stays visible
+        compose.onNodeWithText("Újrapróbálás").assertExists()
+
+        val callsBeforeRetry = repo.summaryCalls
+        repo.summaryResult = ApiResult.Success(summaryWith(total = 30, new = 3, inProgress = 4, archived = 5))
+        compose.onNodeWithText("Újrapróbálás").performClick()
+        assertEquals(callsBeforeRetry + 1, repo.summaryCalls)
+        compose.onNodeWithText("30").assertExists()
+    }
+
+    // --------------------------------------------------------- scope summary (owner correction §1)
+    //
+    // The always-visible period/area/Besorolatlan/category summary above the KPI grid - added
+    // because a filtered screenshot previously showed only a numeric badge on the filter icon,
+    // with no way to tell the applied scope without reopening the sheet.
+
+    @Test
+    fun the_default_period_is_always_visible_with_no_area_or_category_chip() {
+        setContentWith(FakeAnalyticsRepo())
+        compose.onNodeWithText("Utolsó 30 nap").assertExists()
+        // Nothing non-default is selected, so the summary must stay just the one period chip -
+        // no "Minden jogosult terület"/"Minden kategória" absence-of-filter chip is ever shown.
+        compose.onAllNodesWithText("Minden jogosult terület").assertCountEquals(0)
+        compose.onAllNodesWithText("Minden kategória").assertCountEquals(0)
+        compose.onAllNodesWithText("Besorolatlan").assertCountEquals(0)
+    }
+
+    @Test
+    fun a_selected_area_name_is_visible_in_the_scope_summary_never_a_raw_id() {
+        val repo = FakeAnalyticsRepo(
+            areaOptionsResult = ApiResult.Success(
+                AnalyticsAreaOptionsResponse(listOf(AnalyticsAreaOptionResponse("a1", "Keleti Területi Központ", true)), canViewUnclassified = false),
+            ),
+        )
+        val vm = setContentWith(repo)
+        vm.updateFilter(AnalyticsFilter(period = AnalyticsPeriod.LAST_30_DAYS, areaId = "a1"))
+        compose.onNodeWithText("Keleti Területi Központ").assertExists()
+        compose.onAllNodesWithText("a1").assertCountEquals(0)
+    }
+
+    @Test
+    fun Besorolatlan_is_visible_in_the_scope_summary_when_selected() {
+        val repo = FakeAnalyticsRepo(areaOptionsResult = ApiResult.Success(AnalyticsAreaOptionsResponse(emptyList(), canViewUnclassified = true)))
+        val vm = setContentWith(repo)
+        vm.updateFilter(AnalyticsFilter(period = AnalyticsPeriod.LAST_7_DAYS, unclassifiedOnly = true))
+        compose.onNodeWithText("Besorolatlan").assertExists()
+        compose.onNodeWithText("Utolsó 7 nap").assertExists()
+    }
+
+    @Test
+    fun a_selected_category_name_is_visible_in_the_scope_summary_never_a_raw_code() {
+        // Categories/topEventTypes cleared so the scope chip's own display name cannot coincide
+        // with the (unrelated) category-breakdown section's own row for the same category -
+        // this test is only about the always-visible scope summary, not the breakdown below it.
+        val repo = FakeAnalyticsRepo(
+            summaryResult = ApiResult.Success(summaryWith(categories = emptyList(), topEventTypes = emptyList())),
+        )
+        val vm = setContentWith(repo)
+        vm.updateFilter(AnalyticsFilter(period = AnalyticsPeriod.LAST_30_DAYS, categoryCode = "VIOLENCE_DANGER"))
+        compose.onNodeWithText("Erőszak és közvetlen veszély").assertExists()
+    }
+
+    @Test
+    fun the_scope_summary_wraps_safely_with_multiple_active_chips_at_once() {
+        // A Compose-test-feasible proxy for "wraps cleanly at font scale 1.3 / narrow width"
+        // (the true pixel-level proof is the live re-verification, item 4): every chip in a
+        // long combination must still be laid out and displayed, not silently dropped or
+        // pushed off-screen by a non-wrapping Row.
+        val repo = FakeAnalyticsRepo(
+            areaOptionsResult = ApiResult.Success(
+                AnalyticsAreaOptionsResponse(listOf(AnalyticsAreaOptionResponse("a1", "Keleti Területi Központ", true)), canViewUnclassified = false),
+            ),
+        )
+        val vm = setContentWith(repo)
+        vm.updateFilter(AnalyticsFilter(period = AnalyticsPeriod.LAST_90_DAYS, areaId = "a1"))
+        compose.onNodeWithText("Utolsó 90 nap").assertIsDisplayed()
+        compose.onNodeWithText("Keleti Területi Központ").assertIsDisplayed()
     }
 
     // -------------------------------------------------------------------------------- filters
@@ -200,7 +293,10 @@ class AnalyticsComposeTest {
         compose.onNodeWithText("Minden jogosult terület").assertExists()
         compose.onNodeWithText("Ma").assertExists()
         compose.onNodeWithText("Utolsó 7 nap").assertExists()
-        compose.onNodeWithText("Utolsó 30 nap").assertExists()
+        // "Utolsó 30 nap" now appears twice: the sheet's own selectable period chip, plus the
+        // always-visible scope summary chip behind it showing the still-applied default period
+        // (owner correction §1) - both are expected, not a duplicate-content bug.
+        compose.onAllNodesWithText("Utolsó 30 nap").assertCountEquals(2)
         compose.onNodeWithText("Utolsó 90 nap").assertExists()
     }
 

@@ -344,6 +344,10 @@
     <string name="analytics_top_events_title">Leggyakoribb eseménytípusok</string>
     <string name="analytics_empty">Nincs megjeleníthető adat a kiválasztott időszakban.</string>
     <string name="analytics_load_error">A statisztika most nem tölthető be.</string>
+    <!-- The frozen Phase 11 brief's own exact retry copy (brief §49) - deliberately not the
+         app-wide "Újrapróbálkozás" (action_retry), used only on this screen's own explicit
+         inline retry action alongside the retained stale data. -->
+    <string name="analytics_retry">Újrapróbálás</string>
     <string name="analytics_freshness">Frissítve: %1$s</string>
     <string name="analytics_trend_bar_description">%1$s: %2$d bejelentés</string>
     <string name="analytics_trend_empty_bar_description">%1$s: nincs bejelentés</string>

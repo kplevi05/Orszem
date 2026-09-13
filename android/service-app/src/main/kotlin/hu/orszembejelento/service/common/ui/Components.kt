@@ -47,9 +47,14 @@ fun FullScreenLoading() {
     }
 }
 
-/** A recoverable error state with an explicit retry action (brief §45/§75). */
+/**
+ * A recoverable error state with an explicit retry action (brief §45/§75). [retryLabel]
+ * defaults to the app-wide "Újrapróbálkozás" but a caller may pass its own exact copy - the
+ * Phase 11 analytics screen uses this to show its own frozen-brief "Újrapróbálás" wording
+ * (brief §49) without changing the label every other screen in the app already shares.
+ */
 @Composable
-fun ErrorState(message: String, onRetry: () -> Unit) {
+fun ErrorState(message: String, onRetry: () -> Unit, retryLabel: String = stringResource(R.string.action_retry)) {
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center,
@@ -57,7 +62,7 @@ fun ErrorState(message: String, onRetry: () -> Unit) {
     ) {
         Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = onRetry, modifier = Modifier.padding(top = 16.dp)) {
-            Text(stringResource(R.string.action_retry))
+            Text(retryLabel)
         }
     }
 }
