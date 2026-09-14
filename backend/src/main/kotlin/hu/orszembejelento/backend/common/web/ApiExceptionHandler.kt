@@ -19,6 +19,12 @@ import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNameBlankException
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNotFoundException
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaStateChangedException
 import hu.orszembejelento.backend.areaadmin.domain.TargetServiceAreaInactiveException
+import hu.orszembejelento.backend.audit.domain.AuditEventNotFoundException
+import hu.orszembejelento.backend.audit.domain.AuditEventTypeInvalidException
+import hu.orszembejelento.backend.audit.domain.AuditForbiddenException
+import hu.orszembejelento.backend.audit.domain.AuditPeriodInvalidException
+import hu.orszembejelento.backend.audit.domain.AuditQueryInvalidException
+import hu.orszembejelento.backend.audit.domain.AuditTargetTypeInvalidException
 import hu.orszembejelento.backend.auth.application.InvalidCredentialsException
 import hu.orszembejelento.backend.auth.application.PasswordChangeRequiredException
 import hu.orszembejelento.backend.auth.application.RateLimitedException
@@ -384,6 +390,32 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(AnalyticsFilterInvalidException::class)
     fun handleAnalyticsFilterInvalid(exception: AnalyticsFilterInvalidException, request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, exception.message ?: "The request is invalid.")
+
+    // ------------------------------------------------------------------------------- Phase 12 - audit
+
+    @ExceptionHandler(AuditForbiddenException::class)
+    fun handleAuditForbidden(request: HttpServletRequest) =
+        error(request, HttpStatus.FORBIDDEN, ErrorCode.AUDIT_FORBIDDEN, "Not permitted to query the audit trail.")
+
+    @ExceptionHandler(AuditEventNotFoundException::class)
+    fun handleAuditEventNotFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.AUDIT_EVENT_NOT_FOUND, "No such audit event.")
+
+    @ExceptionHandler(AuditPeriodInvalidException::class)
+    fun handleAuditPeriodInvalid(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.AUDIT_PERIOD_INVALID, "The requested period is invalid.")
+
+    @ExceptionHandler(AuditEventTypeInvalidException::class)
+    fun handleAuditEventTypeInvalid(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.AUDIT_EVENT_TYPE_INVALID, "The requested event type is invalid.")
+
+    @ExceptionHandler(AuditTargetTypeInvalidException::class)
+    fun handleAuditTargetTypeInvalid(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.AUDIT_TARGET_TYPE_INVALID, "The requested target type is invalid.")
+
+    @ExceptionHandler(AuditQueryInvalidException::class)
+    fun handleAuditQueryInvalid(exception: AuditQueryInvalidException, request: HttpServletRequest) =
         error(request, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, exception.message ?: "The request is invalid.")
 
     @ExceptionHandler(Exception::class)

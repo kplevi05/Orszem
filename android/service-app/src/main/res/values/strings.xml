@@ -176,7 +176,8 @@
     <string name="hub_deleted_reports_entry">Törölt bejelentések</string>
     <string name="areas_admin_title">Szolgálati területek</string>
     <string name="audit_admin_title">Változási előzmények</string>
-    <string name="not_yet_available">Még nem elérhető</string>
+    <!-- "not_yet_available" (the former hub-placeholder label) removed here - Phase 12 makes
+         the last remaining Adminisztráció placeholder live, so no hub entry needs it anymore. -->
     <string name="active_work_view_all">Minden terület</string>
 
     <!-- Phase 9: report moderation (soft deletion) -->
@@ -368,4 +369,117 @@
     <string name="error_analytics_unclassified_forbidden">Ehhez a szűréshez nincs jogosultsága.</string>
     <string name="error_analytics_period_invalid">Az időszak érvénytelen. Frissítettük az alapértelmezett beállítást.</string>
     <string name="error_analytics_category_not_found">A kategória nem található.</string>
+
+    <!-- Phase 12 - Változási előzmények (audit history). `audit_admin_title` already exists
+         (the former hub placeholder label) and is reused as the live screen title. Period
+         labels/`filters_title`/`filter_area`/`action_apply`/`action_clear_filters`/
+         `action_filters`/`action_refresh`/`analytics_retry` are all deliberately reused from
+         existing Phase 8-11 resources rather than duplicated (brief §26: "do not create a
+         second inconsistent localization table when an existing mapper can be reused safely"). -->
+    <string name="audit_subtitle">A rendszer adminisztratív és biztonsági eseményei.</string>
+    <string name="audit_search_placeholder">Felhasználó, bejelentés, terület vagy vasútvonal…</string>
+    <string name="audit_empty">Nincs megjeleníthető esemény a kiválasztott feltételekkel.</string>
+    <string name="audit_load_error">A változási előzmények most nem tölthetők be.</string>
+    <string name="audit_period_all">Teljes előzmény</string>
+    <string name="audit_filter_event_type_group">Eseménytípus</string>
+    <string name="audit_filter_target_type_group">Érintett elem</string>
+    <string name="audit_event_type_all">Minden esemény</string>
+    <string name="audit_target_type_all">Minden típus</string>
+    <string name="audit_executed_by_prefix">Végrehajtotta: %1$s</string>
+    <string name="audit_actor_system">Rendszer</string>
+    <string name="audit_generic_event_title">Rendszeresemény</string>
+    <string name="audit_target_generic_session">Munkamenet</string>
+    <string name="audit_target_generic_reference_dataset">Referenciaadat-import</string>
+    <string name="audit_target_prefix_user">Felhasználó: %1$s</string>
+    <string name="audit_target_prefix_report">Bejelentés: %1$s</string>
+    <string name="audit_target_prefix_service_area">Szolgálati terület: %1$s</string>
+    <string name="audit_target_prefix_railway_line">Vasútvonal: %1$s</string>
+
+    <string name="audit_detail_title">Esemény részletei</string>
+    <string name="audit_detail_section_event">Esemény</string>
+    <string name="audit_detail_section_actor">Végrehajtotta</string>
+    <string name="audit_detail_section_target">Érintett elem</string>
+    <string name="audit_detail_section_details">Részletek</string>
+
+    <!-- Event-type titles (brief §25), for the ACTUAL current AuditEventType set only. -->
+    <string name="audit_event_super_admin_created">Főadminisztrátor létrehozva</string>
+    <string name="audit_event_super_admin_password_reset">Főadminisztrátor jelszava visszaállítva</string>
+    <string name="audit_event_initial_password_changed">Kezdeti jelszó módosítva</string>
+    <string name="audit_event_password_changed">Jelszó módosítva</string>
+    <string name="audit_event_session_created">Bejelentkezés</string>
+    <string name="audit_event_session_revoked">Munkamenet visszavonva</string>
+    <string name="audit_event_logout_all">Kijelentkezés minden eszközön</string>
+    <string name="audit_event_refresh_token_reuse_detected">Gyanús munkamenet-újrafelhasználás észlelve</string>
+    <string name="audit_event_reference_dataset_imported">Referenciaadat importálva</string>
+    <string name="audit_event_user_created">Felhasználó létrehozva</string>
+    <string name="audit_event_user_password_reset">Ideiglenes jelszó kiadva</string>
+    <string name="audit_event_user_deactivated">Felhasználó deaktiválva</string>
+    <string name="audit_event_user_reactivated">Felhasználó újraaktiválva</string>
+    <string name="audit_event_user_role_changed">Szerepkör módosítva</string>
+    <string name="audit_event_user_area_granted">Szolgálati terület hozzáadva</string>
+    <string name="audit_event_user_area_revoked">Szolgálati terület eltávolítva</string>
+    <string name="audit_event_user_global_access_granted">Globális hozzáférés engedélyezve</string>
+    <string name="audit_event_user_global_access_revoked">Globális hozzáférés visszavonva</string>
+    <string name="audit_event_report_claimed">Bejelentés átvéve</string>
+    <string name="audit_event_report_returned_to_new">Bejelentés visszahelyezve az új sorba</string>
+    <string name="audit_event_report_reassigned">Bejelentés áthelyezve másik munkatárshoz</string>
+    <string name="audit_event_report_archived">Bejelentés lezárva</string>
+    <string name="audit_event_report_moderation_deleted">Bejelentés moderációval törölve</string>
+    <string name="audit_event_report_moderation_restored">Bejelentés visszaállítva</string>
+    <string name="audit_event_service_area_created">Szolgálati terület létrehozva</string>
+    <string name="audit_event_service_area_renamed">Szolgálati terület átnevezve</string>
+    <string name="audit_event_service_area_activated">Szolgálati terület aktiválva</string>
+    <string name="audit_event_service_area_deactivated">Szolgálati terület deaktiválva</string>
+    <string name="audit_event_railway_line_assigned">Vasútvonal hozzárendelve</string>
+    <string name="audit_event_railway_line_moved">Vasútvonal áthelyezve</string>
+    <string name="audit_event_railway_line_unassigned">Vasútvonal hozzárendelése megszüntetve</string>
+
+    <!-- Target-type labels, for the ACTUAL current AuditTargetType set only. -->
+    <string name="audit_target_type_user">Felhasználó</string>
+    <string name="audit_target_type_session">Munkamenet</string>
+    <string name="audit_target_type_reference_dataset">Referenciaadat-import</string>
+    <string name="audit_target_type_report">Bejelentés</string>
+    <string name="audit_target_type_service_area">Szolgálati terület</string>
+    <string name="audit_target_type_railway_line">Vasútvonal</string>
+
+    <!-- Detail-code labels (brief §23/§55), for the ACTUAL current AuditDetailCode set only. -->
+    <string name="audit_detail_old_role">Korábbi szerepkör</string>
+    <string name="audit_detail_new_role">Új szerepkör</string>
+    <string name="audit_detail_old_name">Korábbi név</string>
+    <string name="audit_detail_new_name">Új név</string>
+    <string name="audit_detail_from_area">Korábbi terület</string>
+    <string name="audit_detail_to_area">Új terület</string>
+    <string name="audit_detail_area">Szolgálati terület</string>
+    <string name="audit_detail_areas">Szolgálati területek</string>
+    <string name="audit_detail_global_access">Globális hozzáférés</string>
+    <string name="audit_detail_from_status">Korábbi állapot</string>
+    <string name="audit_detail_to_status">Új állapot</string>
+    <string name="audit_detail_status_before_delete">Állapot törlés előtt</string>
+    <string name="audit_detail_resulting_status">Állapot visszaállítás után</string>
+    <string name="audit_detail_previous_assignee">Korábbi felelős</string>
+    <string name="audit_detail_new_assignee">Új felelős</string>
+    <string name="audit_detail_reason">Indoklás</string>
+    <string name="audit_detail_revocation_reason">Visszavonás oka</string>
+    <string name="audit_detail_revoked_sessions">Visszavont munkamenetek száma</string>
+    <string name="audit_detail_railway_line">Vasútvonal</string>
+    <string name="audit_detail_source">Forrás</string>
+    <string name="audit_detail_dataset_version">Adatkészlet verziója</string>
+    <string name="audit_detail_settlements_imported">Importált települések száma</string>
+    <string name="audit_detail_railway_lines_imported">Importált vasútvonalak száma</string>
+    <string name="audit_detail_mappings_imported">Importált hozzárendelések száma</string>
+
+    <!-- Values for REVOCATION_REASON detail entries (RevocationReason, backend/auth/domain/AuthSession.kt). -->
+    <string name="audit_revocation_reason_logout">Kijelentkezés</string>
+    <string name="audit_revocation_reason_logout_all">Kijelentkezés minden eszközön</string>
+    <string name="audit_revocation_reason_password_changed">Jelszó módosítva</string>
+    <string name="audit_revocation_reason_initial_password_changed">Kezdeti jelszó módosítva</string>
+    <string name="audit_revocation_reason_admin_password_reset">Adminisztrátori jelszó-visszaállítás</string>
+    <string name="audit_revocation_reason_admin_user_deactivated">Felhasználó deaktiválása</string>
+    <string name="audit_revocation_reason_refresh_token_reuse">Gyanús munkamenet-újrafelhasználás</string>
+
+    <!-- The one SOURCE value every current writer actually produces. -->
+    <string name="audit_source_maintenance_cli">Karbantartási eszköz</string>
+
+    <string name="common_yes">Igen</string>
+    <string name="common_no">Nem</string>
 </resources>

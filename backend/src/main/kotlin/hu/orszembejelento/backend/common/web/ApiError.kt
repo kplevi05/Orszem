@@ -210,6 +210,23 @@ enum class ErrorCode {
 
     /** `categoryCode` does not name a known backend catalog category. */
     ANALYTICS_CATEGORY_NOT_FOUND,
+
+    // --------------------------------------------------------------------- Phase 12 - audit
+
+    /** The actor's role has no authority to call any audit-query endpoint at all - SUPER_ADMIN only. */
+    AUDIT_FORBIDDEN,
+
+    /** No such audit event. */
+    AUDIT_EVENT_NOT_FOUND,
+
+    /** `period` did not parse to one of the five fixed period codes. */
+    AUDIT_PERIOD_INVALID,
+
+    /** `eventType` did not parse to one of the actual current backend event types. */
+    AUDIT_EVENT_TYPE_INVALID,
+
+    /** `targetType` did not parse to one of the actual current backend target types. */
+    AUDIT_TARGET_TYPE_INVALID,
 }
 
 /**
