@@ -40,6 +40,16 @@ enum class ErrorCode {
     INTERNAL_ERROR,
 
     /**
+     * The request path matches no route at all (Phase 13 brief - a client routing mistake
+     * must not masquerade as a server fault). Generic on purpose: it says nothing about
+     * which paths *do* exist.
+     */
+    NOT_FOUND,
+
+    /** The request path is real, but this HTTP method is not one it supports. */
+    METHOD_NOT_ALLOWED,
+
+    /**
      * No reference dataset has ever been successfully imported. Returned with HTTP 503 by
      * the Public reference endpoints instead of an empty 200, which would look like a
      * verified "nothing found" answer rather than "the backend has nothing loaded yet" -
