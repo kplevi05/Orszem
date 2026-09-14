@@ -219,4 +219,11 @@ Final pushed HEAD and its 5/5 GitHub Actions result are recorded in the PR and t
 
 ## V. Owner visual approval
 
-**PENDING.** No PR has been opened. No merge has occurred. Code complete, security review complete, full regression green, real emulator verification complete, screenshot set delivered separately, branch pushed, awaiting 5/5 CI on the exact pushed HEAD and then explicit owner visual approval before any PR is opened.
+**GIVEN — 2026-09-14.** The owner reviewed all 16 delivered screenshots and approved, without requested changes: the Adminisztráció hub integration; the `Változási előzmények` list; mixed audit-event cards; Service ID search; report-ID search; server-side filtered results; the filter sheet; the vertical event-type selector; moderation/report audit presentation; RailwayLine audit presentation; historical before/after detail presentation; actor/target identity presentation; the network-error state with explicit "Újrapróbálás"; the detail error state; the session-isolation result; the font-scale 1.3 list and detail screens; and the existing dark-navy/gold visual language. No further Phase 12 product, UI, or code changes were requested.
+
+Two **non-blocking** notes were recorded for a future phase, explicitly not to be acted on in Phase 12:
+
+1. The already-known shared bottom-navigation label wrapping at extreme narrow width + font scale 1.3 is not a Phase 12 regression (brief §64's own note, reconfirmed).
+2. With 31 audit event types, the full-width vertical `Eseménytípus` filter (brief §50) is safe and readable but requires substantial scrolling. A future phase (tentatively Phase 15) may consider a sticky filter action/footer or an ergonomically equivalent polish — explicitly **not** a Phase 12 redesign.
+
+Following approval: this document was updated with the approval line above (the only permitted post-approval change, per brief §81), committed and pushed as a single docs-only commit, and the PR was opened only after 5/5 CI was reconfirmed green on that exact final HEAD. See the assistant's stop report for the PR link, the exact final SHA, and that SHA's CI results.
