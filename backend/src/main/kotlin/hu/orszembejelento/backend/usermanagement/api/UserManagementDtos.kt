@@ -23,6 +23,15 @@ data class CreateUserRequest(
     val globalAreaAccess: Boolean = false,
 )
 
+/**
+ * `toString` is overridden below on every response DTO carrying a real generated secret
+ * (brief §13/§58, confirmed as a genuine leak vector by
+ * [hu.orszembejelento.backend.common.SecretRedactionTest] - a plain Kotlin `data class`'s
+ * default `toString()` includes every property, and Spring's message-converter logging can
+ * print a serialized response body's `toString()` at `DEBUG` level). The credential still
+ * legitimately appears in the actual JSON response body to the admin, exactly as the
+ * one-time Phase 6 flow requires - only the incidental log exposure is closed here.
+ */
 data class CreateUserResponse(
     val serviceId: String,
     val role: String,
@@ -37,12 +46,17 @@ data class CreateUserResponse(
             mustChangePassword = provisioned.mustChangePassword,
         )
     }
+
+    override fun toString(): String =
+        "CreateUserResponse(serviceId=$serviceId, role=$role, temporaryCredential=[redacted], mustChangePassword=$mustChangePassword)"
 }
 
 data class PasswordResetResponse(val serviceId: String, val temporaryCredential: String) {
     companion object {
         fun from(issued: AdminIssuedCredential) = PasswordResetResponse(issued.serviceId.value, issued.temporaryCredential)
     }
+
+    override fun toString(): String = "PasswordResetResponse(serviceId=$serviceId, temporaryCredential=[redacted])"
 }
 
 data class ChangeRoleRequest(@field:Pattern(regexp = ROLE_PATTERN) val role: String = "")

@@ -15,25 +15,43 @@ import java.time.Instant
  * *not* enforced here: a too-short password must produce a password-policy error from the
  * domain, not a generic validation error, so the client can react correctly.
  */
+/**
+ * [toString] is overridden on every request DTO below that carries a raw client-submitted
+ * secret (brief §13/§58, confirmed by [hu.orszembejelento.backend.common.SecretRedactionTest]
+ * as a genuine leak vector, not a hypothetical one). A plain Kotlin `data class`'s
+ * auto-generated `toString()` includes every property in plaintext; Spring's own
+ * message-converter logging can print a deserialized request body's `toString()` at `DEBUG`
+ * level, which would otherwise put the password straight into the application's logs. The
+ * secret fields are the *only* reason to override `toString()` here — `equals`/`hashCode`
+ * stay the compiler-generated ones, since those never touch logs.
+ */
 data class LoginRequest(
     @field:NotBlank val serviceId: String? = null,
     @field:NotBlank @field:Size(max = MAX_PASSWORD_INPUT) val password: String = "",
-)
+) {
+    override fun toString(): String = "LoginRequest(serviceId=$serviceId, password=[redacted])"
+}
 
 data class CompletePasswordChangeRequest(
     @field:NotBlank val serviceId: String? = null,
     @field:NotBlank @field:Size(max = MAX_PASSWORD_INPUT) val temporaryPassword: String = "",
     @field:NotBlank @field:Size(max = MAX_PASSWORD_INPUT) val newPassword: String = "",
-)
+) {
+    override fun toString(): String = "CompletePasswordChangeRequest(serviceId=$serviceId, temporaryPassword=[redacted], newPassword=[redacted])"
+}
 
 data class RefreshRequest(
     @field:NotBlank @field:Size(max = 512) val refreshToken: String = "",
-)
+) {
+    override fun toString(): String = "RefreshRequest(refreshToken=[redacted])"
+}
 
 data class ChangePasswordRequest(
     @field:NotBlank @field:Size(max = MAX_PASSWORD_INPUT) val currentPassword: String = "",
     @field:NotBlank @field:Size(max = MAX_PASSWORD_INPUT) val newPassword: String = "",
-)
+) {
+    override fun toString(): String = "ChangePasswordRequest(currentPassword=[redacted], newPassword=[redacted])"
+}
 
 /** Credentials returned to the client. Sent with `Cache-Control: no-store`. */
 data class TokenResponse(
