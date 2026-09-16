@@ -2,7 +2,7 @@
 
 Branch: `feature/v2-security-concurrency-hardening` (base: `main` @ `fe7b97d`, Phase 12 merged via PR [#16](https://github.com/kplevi05/Orszem/pull/16))
 
-**Status: implementation, testing and full regression complete. Owner visual approval PENDING (§Y).** Every section below reflects a result actually observed this session — a live test run, a live HTTP call, or a live script run — not an assumption carried over from the brief's own illustrative text.
+**Status: implementation, testing and full regression complete. Owner visual approval GIVEN — 2026-09-16 (§Y).** Every section below reflects a result actually observed this session — a live test run, a live HTTP call, or a live script run — not an assumption carried over from the brief's own illustrative text.
 
 ## A. Git / base / branch
 
@@ -346,4 +346,13 @@ No STOP-condition finding occurred: no committed secret, no required auth/passwo
 
 ## Y. Owner visual approval
 
-**PENDING.**
+**GIVEN — 2026-09-16.**
+
+The compact owner regression screenshot set (§ "Screenshots" above) was reviewed across two rounds:
+
+- Round 1: 8 of 9 applicable items approved directly.
+- Round 2: `07_public_android_history.png` was replaced - the original showed the empty-history state (`Még nincs bejelentés ezen a készüléken.`), which proved nothing was broken but did not show an actual locally-stored report. The replacement was captured by submitting one throwaway report ("Rongálás" in "Példafalva") through the real Public Android app's normal two-step submission flow (Phase 5's own client-side persistence, not a direct API call) and then opening Előzmények to show its real, locally-persisted state (`Beérkezett`). Approved.
+
+All 9 applicable items are now approved; item 10 (UI changed by the fix) remains not applicable - the routing/status-code fix in §J.3 is backend-only.
+
+**One non-blocking Phase 15 note, explicitly not a Phase 13 regression and explicitly not to be changed now**: the Public Android history screen renders its date/time in an English/US format (e.g. `9/16/26, 11:40 AM`) inside an otherwise fully Hungarian UI. Recorded here for Phase 15 localization/polish scope only.
