@@ -24,24 +24,22 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.app.R
 import hu.orszembejelento.app.report.data.local.ReportHistoryEntity
 import hu.orszembejelento.app.report.domain.PublicReportStatus
 import hu.orszembejelento.app.report.domain.SubmissionState
 import hu.orszembejelento.app.ui.PublicPalette
+import hu.orszembejelento.app.ui.components.HungarianDateTime
 import hu.orszembejelento.app.ui.components.PillTone
 import hu.orszembejelento.app.ui.components.SoftCard
 import hu.orszembejelento.app.ui.components.StatusPill
 import hu.orszembejelento.app.ui.newreport.publicStatusLabel
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.time.ZoneId
 
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel) {
@@ -99,24 +97,30 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
  */
 @Composable
 fun HistoryItemCard(item: ReportHistoryEntity, onRetry: () -> Unit, onRefresh: () -> Unit, modifier: Modifier = Modifier) {
-    val formatter = remember { DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()) }
-
     SoftCard(modifier = modifier) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            // Phase 15: the pill is measured first (unweighted, so it always keeps the room
+            // it needs for one line) and the title takes whatever is left over - at increased
+            // font scale a long event-type name used to claim the row's full width first and
+            // squeeze the pill down to almost nothing, wrapping its short status text
+            // mid-word. The title itself wraps onto a second line instead of losing words to
+            // an ellipsis, since the event-type name is the primary information on this card.
             Text(
                 item.eventTypeDisplaySnapshot,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(end = 8.dp),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp),
             )
             SubmissionStatePill(item)
         }
         Column(modifier = Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(item.settlementNameSnapshot, style = MaterialTheme.typography.bodyMedium, color = PublicPalette.TextMuted)
             item.trainIdentifier?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = PublicPalette.TextMuted) }
-            Text(formatter.format(item.occurredAt), style = MaterialTheme.typography.bodySmall, color = PublicPalette.TextMuted)
+            Text(HungarianDateTime.format(item.occurredAt), style = MaterialTheme.typography.bodySmall, color = PublicPalette.TextMuted)
             item.lastStatusCheckedAt?.let {
                 Text(
-                    stringResource(R.string.history_last_checked, formatter.format(it)),
+                    stringResource(R.string.history_last_checked, HungarianDateTime.format(it)),
                     style = MaterialTheme.typography.bodySmall,
                     color = PublicPalette.TextMuted,
                 )

@@ -24,12 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.app.R
+import hu.orszembejelento.app.ui.components.HungarianDateTime
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 /**
  * A date + time editor for `occurredAt` (§46). Defaults to now; the user may move it into
@@ -43,18 +42,15 @@ fun OccurredAtPicker(value: Instant, onValueChange: (Instant) -> Unit) {
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
 
-    val dateFormatter = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM) }
-    val timeFormatter = remember { DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT) }
-
     Column {
         Text(stringResource(R.string.field_occurred_at), style = MaterialTheme.typography.labelLarge)
         Row {
             OutlinedButton(onClick = { showDatePicker = true }) {
-                Text(zoned.toLocalDate().format(dateFormatter))
+                Text(zoned.toLocalDate().format(HungarianDateTime.DATE))
             }
             Spacer(Modifier.width(8.dp))
             OutlinedButton(onClick = { showTimePicker = true }) {
-                Text(zoned.toLocalTime().format(timeFormatter))
+                Text(zoned.toLocalTime().format(HungarianDateTime.TIME))
             }
         }
     }

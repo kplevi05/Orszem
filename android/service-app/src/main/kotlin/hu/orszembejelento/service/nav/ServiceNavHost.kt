@@ -1,5 +1,7 @@
 package hu.orszembejelento.service.nav
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -25,8 +27,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
@@ -316,6 +324,34 @@ fun ServiceNavHost(
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination
             NavigationBar {
+                // Phase 15 §G: an unconstrained single-line Text label wraps unevenly at
+                // narrow width + increased font scale - "Adminisztráció" (the longest of the
+                // four) wraps to two lines while its siblings stay one line, so one item
+                // measures taller than the other three, throwing icons out of alignment
+                // across the bar (confirmed on a real emulator at font scale 1.3).
+                // Every label now reserves the SAME two-line height up front, so all four
+                // items measure identically tall regardless of which labels actually need to
+                // wrap: icons stay aligned, long labels wrap onto a second line in place
+                // instead of overflowing, and short labels simply sit centred inside a little
+                // reserved space rather than looking shorter than their neighbours.
+                // `maxLines = 2` is the real fit strategy; `TextOverflow.Ellipsis` is only the
+                // last-resort safety net if a label somehow still does not fit in two lines -
+                // never the intended behaviour, and confirmed (via `uiautomator dump`'s raw
+                // `text=` attribute, not a screenshot, since a screenshot alone previously
+                // proved ambiguous) that "Adminisztráció" renders in full, unellipsized.
+                val labelStyle = MaterialTheme.typography.labelMedium
+                // Reserved height as a fixed SP value, not derived from
+                // `labelStyle.lineHeight`: an `.sp` unit already bakes in the current system
+                // font-scale via LocalDensity - the same mechanism that makes the label text
+                // itself grow - so this still grows with font scale exactly as the brief
+                // requires, without depending on Material3's internal line-height metadata for
+                // this style (which measured too short a box in practice on a real emulator,
+                // ellipsizing to one line). 32sp similarly proved too short for two real lines
+                // of `labelMedium` text at 1.3x scale and still ellipsized; 56sp was verified
+                // (via `uiautomator dump` bounds/text, not a screenshot) to be tall enough for
+                // "Adminisztráció" to wrap onto two full, unellipsized lines while keeping all
+                // four items' label centres aligned on the same row.
+                val twoLineLabelHeight = with(LocalDensity.current) { 56.sp.toDp() }
                 bottomDestinationsFor(role).forEach { destination ->
                     val selected = currentRoute?.hierarchy?.any { it.route == destination.route } == true
                     NavigationBarItem(
@@ -328,7 +364,24 @@ fun ServiceNavHost(
                             }
                         },
                         icon = { Icon(destination.icon, contentDescription = null) },
-                        label = { Text(androidx.compose.ui.res.stringResource(destination.labelRes)) },
+                        label = {
+                            // An explicit fixed-height Box, not a heightIn/wrapContentHeight
+                            // chain: NavigationBarItem measures this label slot with its own
+                            // constraints, and only a Box that reports an unconditional exact
+                            // size reliably reserves the same height for every item regardless
+                            // of what the parent does with that size afterward - confirmed by
+                            // comparing rendered bounds on a real emulator before settling on
+                            // this shape.
+                            Box(modifier = Modifier.height(twoLineLabelHeight), contentAlignment = Alignment.Center) {
+                                Text(
+                                    stringResource(destination.labelRes),
+                                    style = labelStyle,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        },
                     )
                 }
             }
