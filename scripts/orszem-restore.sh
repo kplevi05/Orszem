@@ -33,7 +33,23 @@
 #      allowed only with --skip-checksum-verification, which prints a loud warning.
 #   3. `pg_restore -l` can read the archive's table of contents (rejects a corrupted or
 #      truncated dump before anything is touched).
-#   4. All required flags, including --confirm-restore, are present.
+#   4. The target database is empty (read-only inspection - see "Why the target must be
+#      empty" below).
+#   5. All required flags, including --confirm-restore, are present.
+#
+# Why the target must be empty, rather than "cleaned" first:
+# `pg_restore --clean --if-exists` only knows how to drop objects that the ARCHIVE itself
+# names - it replays DROP statements it generates from the archive's own table of contents.
+# An object that exists in the target but was never in the archive (a table from a newer
+# schema version, a leftover from a previous, different restore, anything an operator
+# created by hand) is invisible to `--clean` and is silently left behind. That is exactly
+# wrong for the case this script exists for: disaster recovery and rollback, where the
+# target may well have started from a NEWER schema than the archive being restored. Rather
+# than try to enumerate and drop "everything not in the archive" (fragile, and one
+# accidental wildcard away from `DROP DATABASE` territory this script deliberately never
+# goes near), the contract is simpler and stronger: this script never restores into
+# anything but a database an operator has just created empty. If the target is not empty,
+# it refuses and explains why, rather than guessing what is safe to remove.
 set -euo pipefail
 
 DUMP=""
@@ -56,8 +72,10 @@ ORSZEM_DB_* configuration, on purpose - see this script's header comment.
 
 Export PGPASSWORD before running. Never pass the password as an argument.
 
-This REPLACES the contents of the target database. It is meant for a dedicated
-restore/drill/disaster-recovery target, never for a database anything else is using.
+The target database must already exist and be EMPTY (no application tables/views - see
+this script's header comment for why). Create a fresh empty database for the restore
+first; this script only ever restores INTO it, never drops or recreates it, and never
+"cleans" a populated one.
 USAGE
 }
 
@@ -102,9 +120,9 @@ echo "  user         ${PG_USER}"
 echo "  dump         ${DUMP}"
 echo "(password not shown)"
 echo
-echo "This will DROP AND RECREATE every object pg_restore --clean touches inside"
-echo "database '${DB_NAME}' on ${PG_HOST}:${PG_PORT}. Existing content in that database"
-echo "will be replaced by the archive's content."
+echo "This restores the archive's full content into database '${DB_NAME}' on"
+echo "${PG_HOST}:${PG_PORT}. The target must already be empty - this script refuses to"
+echo "run against a database that has any application table or view already in it."
 
 # --- 1. dump file present and non-empty --------------------------------------------------
 if [ ! -f "$DUMP" ]; then
@@ -144,7 +162,33 @@ if ! pg_restore -l "$DUMP" >/dev/null 2>&1; then
 fi
 echo "Archive integrity OK."
 
-# --- 4. explicit confirmation ---------------------------------------------------------------
+# --- 4. the target must be empty - a read-only inspection, nothing is written here ---------
+# "Empty" means no application object exists yet: no table and no view outside Postgres's
+# own pg_catalog/information_schema/pg_toast* schemas. A fresh `CREATE DATABASE` satisfies
+# this trivially; anything this check rejects means the target is not the dedicated, freshly
+# created database this script requires - see the header comment for why "clean it first"
+# is not an acceptable alternative.
+echo "Checking the target database is empty ..."
+NONEMPTY_OBJECTS="$(psql \
+      --host="$PG_HOST" --port="$PG_PORT" \
+      --username="$PG_USER" --no-password \
+      --dbname="$DB_NAME" \
+      -tAc "select table_schema || '.' || table_name from information_schema.tables
+            where table_schema not in ('pg_catalog', 'information_schema')
+              and table_schema not like 'pg_toast%'
+            order by 1" 2>&1)" \
+  || { echo "ERROR: could not connect to the target to check it is empty:" >&2; echo "$NONEMPTY_OBJECTS" >&2; exit 1; }
+if [ -n "$NONEMPTY_OBJECTS" ]; then
+  echo "ERROR: target database '${DB_NAME}' is not empty. Found existing object(s):" >&2
+  echo "$NONEMPTY_OBJECTS" | sed 's/^/  - /' >&2
+  echo "Refusing to restore. The target was not touched." >&2
+  echo "Create a fresh, empty database for the restore instead - see" >&2
+  echo "docs/OPERATIONS_RUNBOOK.md 'Restore' for the exact rollback procedure." >&2
+  exit 1
+fi
+echo "Target database is empty."
+
+# --- 5. explicit confirmation ---------------------------------------------------------------
 if [ "$CONFIRM" -ne 1 ]; then
   echo
   echo "Dry run only: --confirm-restore was not passed, so nothing was restored."
@@ -158,7 +202,7 @@ if ! pg_restore \
       --host="$PG_HOST" --port="$PG_PORT" \
       --username="$PG_USER" --no-password \
       --dbname="$DB_NAME" \
-      --clean --if-exists --no-owner --no-privileges \
+      --no-owner --no-privileges \
       "$DUMP"; then
   echo "ERROR: pg_restore reported a failure. Inspect its output above; the target" >&2
   echo "       database may now be in a partially-restored state and should not be" >&2

@@ -108,9 +108,10 @@ first place (the OS, Caddy's TLS state) needing to be recreated from scratch on 
 
 ### 6. Latest backup corrupted
 
-- `scripts/orszem-restore.sh` refuses a corrupted archive before touching anything
-  (verified by the automated negative test in `scripts/orszem-restore-drill.sh` - see
-  Phase 14 engineering report §M) - this scenario is caught, not silently made worse.
+- `scripts/orszem-restore.sh` refuses a corrupted archive, a mismatched checksum, and a
+  non-empty target database before touching anything (all three verified by automated
+  negative tests in `scripts/orszem-restore-drill.sh` - see Phase 14 engineering report
+  §M) - this scenario is caught, not silently made worse.
 - Fall back to the next-most-recent verified backup. This is the practical argument for
   the retention proposal in `OPERATIONS_RUNBOOK.md` (daily/weekly/monthly, owner review
   pending) rather than keeping only the single latest copy.

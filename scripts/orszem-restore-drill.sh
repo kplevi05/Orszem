@@ -10,15 +10,26 @@
 #      documented here as a deliberately small, fast fixture; a fuller realistic dataset
 #      created through the ordinary HTTP APIs was exercised manually for the Phase 14
 #      drill and is described in docs/PHASE_14_ENGINEERING_REPORT.md, not repeated here
-#      on every run);
-#   3. run scripts/orszem-backup.sh for real;
+#      on every run), import the example reference dataset, and submit one real Public
+#      report with a real client-held capability;
+#   3. run scripts/orszem-backup.sh for real, racing it against a SECOND real Public
+#      report submitted concurrently through the actual POST endpoint - proving the
+#      snapshot is never torn (report present with its routing snapshot present, or both
+#      absent - never one without the other), not merely that a read succeeds;
 #   4. start a throwaway, empty "target" PostgreSQL;
-#   5. run scripts/orszem-restore.sh for real;
-#   6. start the real backend against the restored database and confirm Flyway accepts
-#      the restored history without reapplying anything, and that the row from step 2
-#      is present;
-#   7. negative-test the restore guard: a corrupted archive and a mismatched checksum
-#      must both be refused, and neither may touch the target database.
+#   5. negative-test the restore guard: a corrupted archive, a mismatched checksum, and a
+#      NON-EMPTY target (a sentinel table the archive knows nothing about) must all three
+#      be refused, and none of them may touch the target database - the non-empty-target
+#      case is exactly what `pg_restore --clean` cannot be trusted to catch, since it only
+#      knows how to drop what the archive itself names;
+#   6. run scripts/orszem-restore.sh for real, against a freshly created, still-empty
+#      second database in the same target container (the sentinel test above deliberately
+#      dirties the first one);
+#   7. start the real backend against the restored database and confirm Flyway accepts
+#      the restored history without reapplying anything, that the fixture row from step 2
+#      is present, that the Public report capability from step 2 still resolves correctly
+#      (and a wrong one still returns a generic 404), and that the step-3 concurrent
+#      write's snapshot invariant holds.
 #
 # All Docker resources this script creates are named with the orszem_drill_ prefix and
 # only resources with that exact prefix are ever removed - see "Cleanup safety" in
@@ -207,17 +218,45 @@ LOOKUP_BEFORE="$(curl -s -o /dev/null -w '%{http_code}' \
 [ "$LOOKUP_BEFORE" = "200" ] || fail "capability lookup before backup returned $LOOKUP_BEFORE, expected 200"
 log "OK: capability lookup succeeds before backup."
 
-log "running scripts/orszem-backup.sh for real, concurrently with one write ..."
-# §81: prove a normal write racing the dump does not corrupt the snapshot. The write may
-# land either just inside or just outside the snapshot - both are correct; what must NOT
-# happen is a broken archive.
-( sleep 1; curl -sf -o /dev/null -X GET "http://127.0.0.1:${BACKEND_PORT}/api/v1/meta" || true ) &
+log "running scripts/orszem-backup.sh for real, racing a REAL write against it (§81) ..."
+# §81: prove a write racing the dump does not corrupt the snapshot - and prove it with an
+# actual mutation (a second Public report submitted through the real POST endpoint), not a
+# read. `reports` and `report_routing_snapshots` are written in one transaction
+# (report_routing_snapshots.report_id is itself PRIMARY KEY REFERENCES reports(id) - see
+# V003__public_reports_and_event_catalog.sql), so PostgreSQL's own snapshot isolation
+# guarantees pg_dump can only ever observe this submission as a whole (both rows) or not at
+# all (neither row) - never one without the other. That is the actual property under test;
+# §M/§N verify it directly against the restored database below, and neither outcome is
+# treated as the "right" one - only a torn (partial) result is a failure.
+CONCURRENT_SUBMISSION_ID="$(uuid_v4)"
+CONCURRENT_CAPABILITY="pr_$(openssl rand -base64 32 | tr '+/' '-_' | tr -d '=')"
+(
+  curl -s -o "$WORKDIR/concurrent-submit-response.json" -w '%{http_code}' \
+    -X POST "http://127.0.0.1:${BACKEND_PORT}/api/v1/public/reports" \
+    -H "Content-Type: application/json" \
+    -H "X-Orszem-Report-Access: ${CONCURRENT_CAPABILITY}" \
+    -d "{\"clientSubmissionId\":\"${CONCURRENT_SUBMISSION_ID}\",\"occurredAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"settlementId\":\"${SETTLEMENT_ID}\",\"eventTypeCode\":\"THEFT\"}" \
+    > "$WORKDIR/concurrent-submit.code" 2>"$WORKDIR/concurrent-submit.err"
+) &
+CONCURRENT_PID=$!
 MSYS_NO_PATHCONV=1 docker run --rm --network "$NETWORK" \
   -v "$VOL_SCRIPT_DIR:/scripts:ro" -v "$VOL_BACKUP_DIR:/backups" \
   -e ORSZEM_DB_URL="jdbc:postgresql://${SOURCE_DB}:5432/orszem_v2" \
   -e ORSZEM_DB_USERNAME=orszem_v2 -e ORSZEM_DB_PASSWORD=drillpw \
   -e ORSZEM_RELEASE_SHA="$(git -C "$SCRIPT_DIR/.." rev-parse HEAD 2>/dev/null || echo unknown)" \
   "$CLIENT_IMAGE" bash /scripts/orszem-backup.sh /backups
+wait "$CONCURRENT_PID" || true
+
+CONCURRENT_HTTP_CODE="$(cat "$WORKDIR/concurrent-submit.code" 2>/dev/null || echo "")"
+[ "$CONCURRENT_HTTP_CODE" = "201" ] || fail "the concurrent Public report submission itself failed (http $CONCURRENT_HTTP_CODE) - the race could not be exercised; see $WORKDIR/concurrent-submit-response.json and .err"
+log "OK: the concurrent write committed for real (http 201) while the backup ran - clientSubmissionId=$CONCURRENT_SUBMISSION_ID."
+
+# Sanity: this real, committed write must be visible on the SOURCE database regardless of
+# whether the dump caught it - it only might be absent from the SNAPSHOT, never from the
+# live source that accepted it.
+SOURCE_HAS_CONCURRENT="$(docker exec "$SOURCE_DB" psql -U orszem_v2 -d orszem_v2 -tAc \
+  "select exists(select 1 from reports where client_submission_id = '${CONCURRENT_SUBMISSION_ID}')")"
+[ "$SOURCE_HAS_CONCURRENT" = "t" ] || fail "the concurrent report was accepted (201) but is not in the source database at all - that is a real backend bug, not a snapshot-timing question"
 
 DUMP_FILE="$(find "$BACKUP_DIR" -maxdepth 1 -name '*.dump' | head -1)"
 [ -n "$DUMP_FILE" ] || fail "backup script did not leave a .dump file behind"
@@ -285,18 +324,58 @@ TABLE_COUNT_BEFORE="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d orszem_v2 -t
 [ "$TABLE_COUNT_BEFORE" -eq 0 ] || fail "target database was not empty after the negative tests (expected 0 tables, got $TABLE_COUNT_BEFORE) - a negative test must never touch the target"
 log "OK: target database is still untouched (0 tables) after both negative tests."
 
-# --- the real restore ---------------------------------------------------------------------
-log "running scripts/orszem-restore.sh for real ..."
+log "negative test: a NON-EMPTY target must be refused, even with a perfectly valid archive ..."
+# The real archive, correct checksum, everything else legitimate - the ONLY thing wrong is
+# that the target already has an application object in it. This is the case
+# 'pg_restore --clean' would have silently papered over (it only drops what the ARCHIVE
+# names, never a pre-existing object the archive knows nothing about) - see
+# scripts/orszem-restore.sh's own header for why that is not good enough for rollback.
+docker exec "$TARGET_DB" psql -U orszem_v2 -d orszem_v2 -c \
+  "create table sentinel_not_in_archive (id int primary key)" >/dev/null
+docker exec "$TARGET_DB" psql -U orszem_v2 -d orszem_v2 -c \
+  "insert into sentinel_not_in_archive values (1)" >/dev/null
+if MSYS_NO_PATHCONV=1 docker run --rm --network "$NETWORK" \
+    -v "$VOL_SCRIPT_DIR:/scripts:ro" -v "$VOL_BACKUP_DIR:/backups" \
+    -e PGPASSWORD=drillpw \
+    "$CLIENT_IMAGE" bash /scripts/orszem-restore.sh \
+    --dump "/backups/$(basename "$DUMP_FILE")" --target-environment orszem-drill \
+    --host "$TARGET_DB" --port 5432 --database orszem_v2 --user orszem_v2 \
+    --confirm-restore >"$WORKDIR/restore-nonempty.log" 2>&1; then
+  cat "$WORKDIR/restore-nonempty.log" >&2
+  fail "restore script accepted a non-empty target - this must never happen"
+fi
+grep -qi "not empty" "$WORKDIR/restore-nonempty.log" \
+  || fail "restore was refused, but not for the expected reason - see $WORKDIR/restore-nonempty.log"
+log "OK: non-empty target was refused (see $WORKDIR/restore-nonempty.log)."
+
+SENTINEL_SURVIVED="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d orszem_v2 -tAc \
+  "select count(*) from sentinel_not_in_archive")"
+[ "$SENTINEL_SURVIVED" = "1" ] || fail "the sentinel row did not survive the refused restore untouched (expected 1, got '$SENTINEL_SURVIVED') - the target was modified despite the refusal"
+TABLE_COUNT_AFTER_SENTINEL_TEST="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d orszem_v2 -tAc \
+  "select count(*) from information_schema.tables where table_schema='public'")"
+[ "$TABLE_COUNT_AFTER_SENTINEL_TEST" = "1" ] || fail "expected exactly the one sentinel table to remain (got $TABLE_COUNT_AFTER_SENTINEL_TEST) - the refused restore touched the target"
+log "OK: the sentinel object is still the ONLY object in the target - the refused restore touched nothing."
+
+# --- the real restore, into a genuinely fresh empty database ------------------------------
+# orszem_v2 (above) is now deliberately dirtied by the sentinel test, so the successful
+# restore uses a second, newly created, still-empty database in the SAME throwaway
+# container - exactly the "operator creates a fresh empty target" step
+# docs/OPERATIONS_RUNBOOK.md now documents as part of the real rollback procedure.
+RESTORE_DB=orszem_v2_restore_ok
+log "creating a fresh, empty target database ($RESTORE_DB) for the real restore ..."
+docker exec "$TARGET_DB" psql -U orszem_v2 -d postgres -c "create database ${RESTORE_DB}" >/dev/null
+
+log "running scripts/orszem-restore.sh for real, against the fresh empty target ..."
 MSYS_NO_PATHCONV=1 docker run --rm --network "$NETWORK" \
   -v "$VOL_SCRIPT_DIR:/scripts:ro" -v "$VOL_BACKUP_DIR:/backups" \
   -e PGPASSWORD=drillpw \
   "$CLIENT_IMAGE" bash /scripts/orszem-restore.sh \
   --dump "/backups/$(basename "$DUMP_FILE")" --target-environment orszem-drill \
-  --host "$TARGET_DB" --port 5432 --database orszem_v2 --user orszem_v2 \
+  --host "$TARGET_DB" --port 5432 --database "$RESTORE_DB" --user orszem_v2 \
   --confirm-restore
 
 log "starting the real backend against the restored database ..."
-ORSZEM_DB_URL="jdbc:postgresql://localhost:${TARGET_PORT}/orszem_v2" \
+ORSZEM_DB_URL="jdbc:postgresql://localhost:${TARGET_PORT}/${RESTORE_DB}" \
 ORSZEM_DB_USERNAME=orszem_v2 \
 ORSZEM_DB_PASSWORD=drillpw \
 java -jar "$JAR" \
@@ -311,14 +390,29 @@ for i in $(seq 1 60); do
 done
 log "OK: backend started cleanly against the restored database (Flyway accepted the restored history)."
 
-MIGRATION_COUNT="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d orszem_v2 -tAc \
+MIGRATION_COUNT="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d "$RESTORE_DB" -tAc \
   "select count(*) from flyway_schema_history where success = true")"
 log "flyway_schema_history has $MIGRATION_COUNT successful row(s) after restore (no reapplication expected)."
 
-RESTORED_ROW="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d orszem_v2 -tAc \
+RESTORED_ROW="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d "$RESTORE_DB" -tAc \
   "select service_id from users where service_id = '${FIXTURE_SERVICE_ID}'")"
 [ "$RESTORED_ROW" = "$FIXTURE_SERVICE_ID" ] || fail "fixture row $FIXTURE_SERVICE_ID was not found in the restored database"
 log "OK: fixture row $FIXTURE_SERVICE_ID survived the backup/restore round trip unchanged."
+
+log "verifying the concurrent-write snapshot invariant (§81) against the restored database ..."
+CONCURRENT_REPORT_PRESENT="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d "$RESTORE_DB" -tAc \
+  "select exists(select 1 from reports where client_submission_id = '${CONCURRENT_SUBMISSION_ID}')")"
+CONCURRENT_SNAPSHOT_PRESENT="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d "$RESTORE_DB" -tAc \
+  "select exists(select 1 from report_routing_snapshots s join reports r on r.id = s.report_id
+                 where r.client_submission_id = '${CONCURRENT_SUBMISSION_ID}')")"
+if [ "$CONCURRENT_REPORT_PRESENT" != "$CONCURRENT_SNAPSHOT_PRESENT" ]; then
+  fail "PARTIAL STATE DETECTED for the concurrent report: reports row present=$CONCURRENT_REPORT_PRESENT, report_routing_snapshots row present=$CONCURRENT_SNAPSHOT_PRESENT - these must always match (§81 snapshot-consistency invariant)"
+fi
+if [ "$CONCURRENT_REPORT_PRESENT" = "t" ]; then
+  log "OK: the concurrent write landed INSIDE the backup snapshot - report and its routing snapshot are both present, consistently, after restore."
+else
+  log "OK: the concurrent write landed just OUTSIDE the backup snapshot - report and its routing snapshot are both absent, consistently, after restore. (Both outcomes are correct; only a partial one would not be.)"
+fi
 
 log "verifying the Public capability invariant (§22/§97) against the restored database ..."
 LOOKUP_AFTER="$(curl -s -o "$WORKDIR/lookup-after.json" -w '%{http_code}' \

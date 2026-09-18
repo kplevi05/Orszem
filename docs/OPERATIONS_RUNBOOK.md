@@ -170,13 +170,42 @@ never paste its contents into a screenshot, a chat, or the engineering report. S
 
 **Destructive. Read this whole section before running it against anything that matters.**
 
+### The target must be a freshly created, empty database
+
+`orszem-restore.sh` only ever restores INTO an already-empty database - it never drops,
+recreates, or "cleans" a populated one, and it refuses outright if the target has any
+application table or view in it already. This is deliberate, not a missing feature:
+`pg_restore --clean --if-exists` only knows how to drop objects the *archive itself*
+names - an object that exists in the target but was never in the archive (leftover from a
+newer schema, from a previous different restore, anything created by hand) is invisible to
+`--clean` and would be silently left behind. That is exactly the wrong failure mode for
+disaster recovery / rollback, where the target may have started from a *newer* schema than
+the archive being restored. So the contract is simpler and stronger: create a fresh, empty
+target first; the script proves it is empty (read-only check) before touching it.
+
 ```bash
+# 1. Stop the backend - stop writes before anything else.
+sudo systemctl stop orszem-backend
+
+# 2. Create a fresh, empty target database - a NEW name, never a database that already
+#    exists, even one you intend to overwrite (see above for why "restore will clean it
+#    for me" is not true). This script never drops a database; if a previous restore
+#    rehearsal left one behind under this name, that is a separate, deliberate operator
+#    decision - pick a new name instead of reusing it.
+sudo -u postgres psql -c "CREATE DATABASE orszem_v2_restore_target OWNER orszem_v2;"
+
+# 3. Restore into it.
 export PGPASSWORD='...'   # never on the command line
 ./scripts/orszem-restore.sh \
   --dump /home/opc/backups/orszem-v2-2026-09-18T030000Z.dump \
   --target-environment production-restore \
-  --host 127.0.0.1 --port 5432 --database orszem_v2 --user orszem_v2 \
+  --host 127.0.0.1 --port 5432 --database orszem_v2_restore_target --user orszem_v2 \
   --confirm-restore
+
+# 4. Verify (§9 below) BEFORE pointing production at it.
+
+# 5. Only once verified: point ORSZEM_DB_URL at the restored database (rename it to the
+#    name the application expects, or update ORSZEM_DB_URL to match) and start the backend.
 ```
 
 Every connection flag is required and none of them default to the running application's
@@ -191,7 +220,10 @@ Safety checks, each of which aborts before the target database is touched:
 2. its companion `.sha256` matches (or `--skip-checksum-verification` was passed
    explicitly, with a loud warning);
 3. `pg_restore -l` can read its table of contents (rejects a corrupted/truncated archive);
-4. `--confirm-restore` was actually passed.
+4. the target database is empty - a read-only inspection (no table/view outside
+   `pg_catalog`/`information_schema`/`pg_toast*`); a non-empty target is refused with the
+   specific object(s) found named in the error, and is never modified;
+5. `--confirm-restore` was actually passed.
 
 ### After a restore
 
@@ -234,12 +266,16 @@ cd ..
 ```
 
 Runs the whole chain - empty-DB bootstrap, a real fixture row, a real Public report and
-its capability, `orszem-backup.sh`, two negative restore tests (corrupted archive,
-mismatched checksum - both must be refused without touching the target), the real restore,
-backend startup against the restored database, and invariant checks - against Docker
-containers it creates and destroys itself (`orszem_drill_*` only; see the script's cleanup
-trap). Safe to run repeatedly, including in CI (`.github/workflows/deploy-config.yml`).
-See `docs/PHASE_14_ENGINEERING_REPORT.md` §M for a narrated run and what it proved.
+its capability, `orszem-backup.sh` raced against a second, real, concurrently-submitted
+Public report (proving the snapshot is never torn - §81), three negative restore tests
+(corrupted archive, mismatched checksum, and a non-empty target with a sentinel object the
+archive knows nothing about - all three must be refused without touching the target), the
+real restore into a freshly created empty database, backend startup against the restored
+database, and invariant checks (including the concurrent-write snapshot invariant and the
+Public capability round trip) - against Docker containers it creates and destroys itself
+(`orszem_drill_*` only; see the script's cleanup trap). Safe to run repeatedly, including
+in CI (`.github/workflows/deploy-config.yml`). See
+`docs/PHASE_14_ENGINEERING_REPORT.md` §M for a narrated run and what it proved.
 
 ## 8. Database backup before deploy
 
@@ -297,12 +333,17 @@ this is possible without rebuilding under pressure.
 that changed something the previous application version cannot tolerate):
 
 Do **not** "downgrade migrations", do not manually edit or delete rows from
-`flyway_schema_history`. The preferred and only supported recovery is:
+`flyway_schema_history`, and do not attempt to restore over the live, populated
+production database in place - `orszem-restore.sh` refuses that outright (§6). The
+preferred and only supported recovery is:
 
 1. stop the backend (stop writes);
-2. restore the known-good backup taken before the migration in question was applied
-   (§8 - this is exactly why a pre-migration backup is mandatory);
-3. deploy the application version that matches that backup's schema.
+2. create a fresh, empty target database (§6) - never the live one;
+3. restore the known-good backup taken before the migration in question was applied
+   (§8 - this is exactly why a pre-migration backup is mandatory) into that fresh target;
+4. verify the restored invariants (§9);
+5. point the application at the restored database (rename it into place, or update
+   `ORSZEM_DB_URL`) and deploy the application version that matches that backup's schema.
 
 See `docs/PHASE_14_ENGINEERING_REPORT.md` §U for the current rollback-compatibility matrix
 (which recent Phases actually shipped a migration, and whether app-only rollback across
@@ -353,7 +394,9 @@ See `docs/PHASE_14_ENGINEERING_REPORT.md` §AA for the full owner-gate table. In
 mechanically:
 
 - [ ] current `main`/release SHA known and recorded;
-- [ ] 5/5 CI green on that exact SHA;
+- [ ] every CI workflow green on that exact SHA (5 workflow files - `backend`, `android`,
+      `web`, `deploy-config`, `reference-data` - `deploy-config` alone now reports 2 check
+      runs, `caddy` and `backup-restore-scripts`, so 6 check runs total);
 - [ ] `./scripts/orszem-preflight.sh` passes against the real environment file;
 - [ ] a fresh backup exists and `./scripts/orszem-backup-age-check.sh` confirms it;
 - [ ] `caddy validate` passes against the real Caddyfile;
