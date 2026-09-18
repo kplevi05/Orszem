@@ -69,9 +69,9 @@ fun OccurredAtPicker(value: Instant, onValueChange: (Instant) -> Unit) {
                         onValueChange(newDate.atTime(zoned.toLocalTime()).atZone(zone).toInstant())
                     }
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_confirm)) }
             },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Mégse") } },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.action_cancel)) } },
         ) {
             DatePicker(state = state)
         }
@@ -86,9 +86,9 @@ fun OccurredAtPicker(value: Instant, onValueChange: (Instant) -> Unit) {
                     val newTime = LocalTime.of(state.hour, state.minute)
                     onValueChange(zoned.toLocalDate().atTime(newTime).atZone(zone).toInstant())
                     showTimePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.action_confirm)) }
             },
-            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("Mégse") } },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.action_cancel)) } },
             text = { TimePicker(state = state) },
         )
     }

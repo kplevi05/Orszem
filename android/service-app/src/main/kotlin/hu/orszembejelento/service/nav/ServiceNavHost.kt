@@ -1,6 +1,7 @@
 package hu.orszembejelento.service.nav
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -31,10 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
@@ -95,6 +98,9 @@ import hu.orszembejelento.service.usermanagement.ui.UserDetailViewModel
 import hu.orszembejelento.service.usermanagement.ui.UsersListViewModel
 import hu.orszembejelento.service.usermanagement.ui.UsersScreen
 import kotlinx.coroutines.launch
+
+/** Most lines a bottom-nav label may wrap to before the last-resort ellipsis applies. */
+private const val NAV_LABEL_MAX_LINES = 3
 
 internal object Routes {
     const val REPORTS = "reports"
@@ -323,66 +329,59 @@ fun ServiceNavHost(
         bottomBar = {
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination
-            NavigationBar {
-                // Phase 15 §G: an unconstrained single-line Text label wraps unevenly at
-                // narrow width + increased font scale - "Adminisztráció" (the longest of the
-                // four) wraps to two lines while its siblings stay one line, so one item
-                // measures taller than the other three, throwing icons out of alignment
-                // across the bar (confirmed on a real emulator at font scale 1.3).
-                // Every label now reserves the SAME two-line height up front, so all four
-                // items measure identically tall regardless of which labels actually need to
-                // wrap: icons stay aligned, long labels wrap onto a second line in place
-                // instead of overflowing, and short labels simply sit centred inside a little
-                // reserved space rather than looking shorter than their neighbours.
-                // `maxLines = 2` is the real fit strategy; `TextOverflow.Ellipsis` is only the
-                // last-resort safety net if a label somehow still does not fit in two lines -
-                // never the intended behaviour, and confirmed (via `uiautomator dump`'s raw
-                // `text=` attribute, not a screenshot, since a screenshot alone previously
-                // proved ambiguous) that "Adminisztráció" renders in full, unellipsized.
+            val destinations = bottomDestinationsFor(role)
+            // Phase 15 §G. An unconstrained label wraps unevenly when it does not fit its item
+            // (large font scale and/or a narrow screen): "Adminisztráció" wraps to two lines
+            // while its siblings stay on one, so that item measures taller and the icons fall
+            // out of alignment. The fix is adaptive: labels are measured against the real item
+            // width, and ONLY when at least one needs a second line do all labels reserve the
+            // tallest measured height so every item is the same height. When every label fits
+            // on one line (normal font scale, normal width) nothing is reserved and the bar is
+            // the plain Material height, exactly as before Phase 15.
+            BoxWithConstraints {
                 val labelStyle = MaterialTheme.typography.labelMedium
-                // Reserved height as a fixed SP value, not derived from
-                // `labelStyle.lineHeight`: an `.sp` unit already bakes in the current system
-                // font-scale via LocalDensity - the same mechanism that makes the label text
-                // itself grow - so this still grows with font scale exactly as the brief
-                // requires, without depending on Material3's internal line-height metadata for
-                // this style (which measured too short a box in practice on a real emulator,
-                // ellipsizing to one line). 32sp similarly proved too short for two real lines
-                // of `labelMedium` text at 1.3x scale and still ellipsized; 56sp was verified
-                // (via `uiautomator dump` bounds/text, not a screenshot) to be tall enough for
-                // "Adminisztráció" to wrap onto two full, unellipsized lines while keeping all
-                // four items' label centres aligned on the same row.
-                val twoLineLabelHeight = with(LocalDensity.current) { 56.sp.toDp() }
-                bottomDestinationsFor(role).forEach { destination ->
-                    val selected = currentRoute?.hierarchy?.any { it.route == destination.route } == true
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(destination.icon, contentDescription = null) },
-                        label = {
-                            // An explicit fixed-height Box, not a heightIn/wrapContentHeight
-                            // chain: NavigationBarItem measures this label slot with its own
-                            // constraints, and only a Box that reports an unconditional exact
-                            // size reliably reserves the same height for every item regardless
-                            // of what the parent does with that size afterward - confirmed by
-                            // comparing rendered bounds on a real emulator before settling on
-                            // this shape.
-                            Box(modifier = Modifier.height(twoLineLabelHeight), contentAlignment = Alignment.Center) {
-                                Text(
-                                    stringResource(destination.labelRes),
-                                    style = labelStyle,
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                        },
-                    )
+                val labels = destinations.map { stringResource(it.labelRes) }
+                val textMeasurer = rememberTextMeasurer()
+                val density = LocalDensity.current
+                // Material3 NavigationBarItem pads each item horizontally by 8dp per side.
+                val labelWidthPx = with(density) { (maxWidth / destinations.size - 16.dp).roundToPx() }
+                val reservedLabelHeight: Dp? = remember(labels, labelStyle, labelWidthPx, density) {
+                    val measured = labels.map { textMeasurer.measure(it, labelStyle, maxLines = NAV_LABEL_MAX_LINES, constraints = Constraints(maxWidth = labelWidthPx)) }
+                    if (measured.any { it.lineCount > 1 }) with(density) { measured.maxOf { it.size.height }.toDp() } else null
+                }
+                NavigationBar {
+                    destinations.forEachIndexed { index, destination ->
+                        val selected = currentRoute?.hierarchy?.any { it.route == destination.route } == true
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { Icon(destination.icon, contentDescription = null) },
+                            label = {
+                                val text: @Composable () -> Unit = {
+                                    Text(
+                                        labels[index],
+                                        style = labelStyle,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = NAV_LABEL_MAX_LINES,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                if (reservedLabelHeight == null) {
+                                    text()
+                                } else {
+                                    // A fixed-height Box (not heightIn/wrapContentHeight, which had
+                                    // no effect on the label slot when tried on a real emulator).
+                                    Box(modifier = Modifier.height(reservedLabelHeight), contentAlignment = Alignment.Center) { text() }
+                                }
+                            },
+                        )
+                    }
                 }
             }
         },
