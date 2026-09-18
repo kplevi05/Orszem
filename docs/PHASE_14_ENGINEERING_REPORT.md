@@ -1,6 +1,6 @@
 # Phase 14 Engineering Report — Deployment / Backup / Restore Hardening
 
-**Status: implementation, testing and full regression complete. Owner approval: PENDING.**
+**Status: implementation, testing and full regression complete. Owner approval: GIVEN — 2026-09-18.**
 
 Phase 14 adds no new product functionality. It makes the existing V2 system reproducibly
 deployable, safely configurable, backupable and restorable, and operationally documented —
@@ -847,7 +847,12 @@ the brief specifies until the owner explicitly changes one.
 
 ## AB. Owner approval
 
-**PENDING.**
+**GIVEN — 2026-09-18.** The accepted pre-approval implementation/evidence HEAD is
+`f434dceacd278ad86f78b5d6122ceea0b7ae1025` (three consecutive clean local restore-drill
+runs, every restore-safety/evidence assertion closed, 6/6 CI green on first attempt — see
+§AC). This approval is Phase 14's technical closure only — it is **not** production
+deployment approval; all five owner gates below remain exactly `NO` until the owner
+changes one explicitly.
 
 Everything in the Phase 14 brief's "Owner review gate" (§93) checklist is complete: backup
 script complete and failure-tested; restore script/process complete and failure-tested,
@@ -880,9 +885,8 @@ green (via CI — see §R); deployment/preflight validated; both runbooks comple
 for the corrected restore contract and the comprehensive empty-target definition; full
 regression run and its results recorded honestly, not rounded up (§Y).
 
-Per §93/§94 of the brief: **no PR is opened until explicit owner approval is given.** This
-report will be updated with the owner's approval date, one docs-only commit will record
-that approval, and only then — after 6/6 CI on that exact resulting HEAD — will the PR be
+Per §93/§94 of the brief: owner approval has now been given, recorded above by this one
+docs-only commit. Once that commit's exact resulting HEAD is 6/6 CI green, the PR will be
 opened, titled `chore: harden V2 deployment backup and restore`, `main` ←
 `feature/v2-deployment-backup-restore-hardening`, with auto-merge left disabled.
 
