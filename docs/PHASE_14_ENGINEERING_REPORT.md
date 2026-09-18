@@ -473,6 +473,20 @@ datasource-credential default) already guarantee and what Phase 13's own regress
 already covers — named here explicitly as not independently re-tested this phase, rather
 than silently assumed covered.
 
+**A real failure this phase actually hit, reported honestly:** the first push of this
+branch's implementation commit failed CI's new `backup-restore-scripts` job with
+`Permission denied` on every script invocation. Root cause: this development workstation's
+Git configuration has `core.fileMode=false` (a common Windows default), so the local
+`chmod +x` run on each new script was never recorded in the Git index — the scripts were
+committed as `100644` (not executable) despite being executable on disk locally. Fixed
+with `git update-index --chmod=+x <file>` on each of the five new scripts, verified
+locally (`git ls-files -s` now shows `100755` for all five), and a new CI step ("Every
+deployment script is executable") was added ahead of the syntax-check step specifically to
+catch this class of regression immediately in the future, by checking the mode Git
+actually recorded rather than the local working tree's permissions. This is exactly the
+kind of thing full regression is supposed to catch — it is recorded here rather than
+quietly amended away.
+
 ## W. Operations runbook
 
 `docs/OPERATIONS_RUNBOOK.md` (new). Architecture, required software/environment variables,

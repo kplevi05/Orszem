@@ -100,6 +100,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A script that is readable but not executable fails with "Permission denied" the
+      # first time anyone actually runs it - caught here directly, rather than only when
+      # a later step tries to invoke one. Windows checkouts in particular can silently
+      # drop the executable bit (core.fileMode=false is the common default there), so this
+      # checks the bit Git actually recorded, not the working tree's local permissions.
+      - name: Every deployment script is executable
+        run: |
+          fail=0
+          for f in scripts/orszem-backup.sh scripts/orszem-restore.sh \
+                   scripts/orszem-preflight.sh scripts/orszem-backup-age-check.sh \
+                   scripts/orszem-restore-drill.sh; do
+            mode="$(git ls-files -s "$f" | cut -d' ' -f1)"
+            case "$mode" in
+              100755) echo "OK: $f ($mode)" ;;
+              *) echo "NOT EXECUTABLE in git: $f ($mode)"; fail=1 ;;
+            esac
+          done
+          exit $fail
+
       - name: Syntax-check every deployment script
         run: |
           for f in scripts/orszem-backup.sh scripts/orszem-restore.sh \
