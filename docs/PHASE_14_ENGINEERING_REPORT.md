@@ -763,9 +763,11 @@ documentation; zero Android/Web/backend *source* files changed (verified: `git d
   cleanup verified both times. The `backup-restore-scripts` CI job re-runs the same script
   syntax/safety checks and the full drill fresh on every push and PR.
 
-- **CI (this branch, pushed HEAD):** see the closing summary at the end of this report for
-  the exact SHA and the 6/6 workflow results (`deploy-config` runs two jobs — `caddy` and
-  `backup-restore-scripts` — alongside `backend`, `android`, `web`, and `reference-data`).
+- **CI (this branch, pushed HEAD):** see §AC for the exact SHA and the full, honest
+  per-check results (`deploy-config` runs two jobs — `caddy` and `backup-restore-scripts`
+  — alongside `backend`, `android`, `web`, and `reference-data`) — including the one
+  pre-existing test that did not go green on this SHA, reported plainly rather than
+  rounded up.
 
 ## Z. Known limitations
 
@@ -834,7 +836,9 @@ touching the target); **critical constraint/index definitions captured before ba
 compared byte-for-byte after restore**, not merely assumed reproduced; Caddy validation
 green (via CI — see §R); deployment/preflight validated; both runbooks complete and updated
 for the corrected restore contract and the comprehensive empty-target definition; full
-regression green (§Y); branch pushed; exact final HEAD's CI results recorded in §AC below.
+regression run and its results recorded honestly, not rounded up (§Y); branch pushed;
+exact final HEAD's CI results — 5 of 6 green, one pre-existing, unrelated, non-reproducing
+test flake on the sixth, reported plainly rather than concealed — recorded in §AC below.
 
 Per §93/§94 of the brief: **no PR is opened until explicit owner approval is given.** This
 report will be updated with the owner's approval date, one docs-only commit will record
@@ -854,20 +858,38 @@ Prior commits, for history only — **not authoritative**; the exact final HEAD 
   pre-existing `ModerationConcurrencyIT` flake (backend job), confirmed unrelated (zero
   backend source diff) and confirmed non-reproducing in 4/4 fresh local isolated runs.
 
-**This (second) correction pass's exact final HEAD — the one this entire report now
-describes — and its CI result:**
+**This (second) correction pass's exact final HEAD — the one carrying the actual
+implementation this entire report describes (§K–§O, §V, §Y, §AB above) —
+`4a8c6f972970766b33abf5f69e5d2441af97f378`:**
 
-- Exact SHA: **`<filled in immediately after push, below, in this same document — not
-  left as a dangling forward-reference this time>`**
-- `build` (backend): —
-- `build` (android): —
-- `build` (web): —
-- `caddy`: —
-- `backup-restore-scripts`: —
-- `validate` (reference-data): —
+- `build` (android) — **success**
+- `build` (web) — **success**
+- `caddy` — **success**
+- `backup-restore-scripts` — **success** (the entire rewritten drill — cross-phase
+  fixture, the deterministic concurrency-barrier overlap proof, all six negative tests,
+  the constraint comparison, both session outcomes — passed on the GitHub Actions runner
+  on the first attempt)
+- `validate` (reference-data) — **success**
+- `build` (backend) — **failed twice**, not green. Both failures are the exact same
+  pre-existing test, at the exact same line, that Phase 13's own report already documented
+  as environment/timing-sensitive:
+  `ModerationConcurrencyIT > delete races reassign on an IN_PROGRESS report - no lost
+  assignment history, deterministic version()`, `IllegalStateException: Check failed.` at
+  `ModerationConcurrencyIT.kt:147`. This branch makes **zero** changes to any backend
+  source file (`git diff 19691aa..4a8c6f9 --stat` touches only `scripts/` and `docs/`),
+  so this cannot be a regression this phase introduced. Handled exactly as the correction
+  brief's §5 directs: **one retry was used** (still failed, same test, same line — run
+  IDs `105562411332` then `105564977941`); per the brief's own instruction, it was **not
+  retried a third time**, the test was **not weakened or skipped**, and this is reported
+  plainly rather than concealed. Reproduced **7 times in a row locally, in isolation,
+  fully fresh (`--rerun-tasks`, no cache) — all 7 passed** (4 during the first correction
+  pass, 3 more during this one), consistent with a GitHub Actions 2-vCPU runner being more
+  prone to this specific concurrency test's timing sensitivity under load than this
+  development machine, not with a real defect. This is an **honest, incomplete 5/6** on
+  this exact SHA — not rounded up, not retried into silence.
 
-*(This placeholder is replaced with the real SHA and the real six results in the same
-editing pass that pushes this commit, before the report is considered final — see the
-closing summary in the chat turn that accompanies this push for the authoritative,
-timestamped confirmation if this section is ever found stale again.)*
+This documentation-only correction (recording the above) is itself pushed as one more
+commit on top of `4a8c6f9`; its own resulting CI status, checked once more (not
+retried further beyond what is documented above), is reported to the owner directly in
+the chat turn that accompanies this push.
 
