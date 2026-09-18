@@ -14,21 +14,37 @@
 #      IN_PROGRESS/ARCHIVED/moderation-deleted workflow states, two real login sessions
 #      (one left valid, one explicitly logged out before the backup) and the imported
 #      reference dataset;
-#   3. capture the definitions of the database's critical constraints/indexes;
+#   3. capture the definitions of the database's critical constraints/indexes - including
+#      the routing snapshot's PRIMARY KEY *and*, separately, its FOREIGN KEY back to
+#      reports (a primary key is not also a foreign key - found by relation + constraint
+#      type, not a hard-coded generated name); and one concrete report/audit event/
+#      moderation episode each, by their own immutable ids, not merely their tables'
+#      row counts;
 #   4. run scripts/orszem-backup.sh for real, with a FIFTH Public report submitted through
 #      the real POST endpoint while pg_dump is provably still active - not a race decided
-#      by luck, but a PostgreSQL lock used as a deterministic test barrier (§2 of the
-#      correction brief this addresses) - then assert the snapshot is never torn;
+#      by luck, but a PostgreSQL lock used as a deterministic test barrier - then assert
+#      the snapshot is never torn;
 #   5. negative-test the restore guard against a corrupted archive, a mismatched checksum,
 #      and FOUR different shapes of non-empty target (an ordinary table, a sequence, a
-#      materialized view, a function - the classes of object §1 of the correction brief
-#      names) - all refused, none touching the target;
+#      materialized view, a function) - all refused, none touching the target, each
+#      confirmed by directly re-querying the sentinel object itself afterward (not merely
+#      "left as found");
 #   6. run scripts/orszem-restore.sh for real, into a freshly created, still-empty target;
 #   7. start the real backend against the restored database and verify: Flyway's history,
-#      every fixture's immutable identity and current state, the constraint definitions
-#      captured in step 3, the concurrent-write snapshot invariant, the Public capability
-#      round trip, and both session outcomes (still-valid session still authenticates;
-#      already-revoked session stays revoked).
+#      every fixture's immutable identity and current state, the constraint/index
+#      definitions captured in step 3 (including the routing-snapshot foreign key), the
+#      concrete report/audit-event/moderation-episode identities captured in step 3, the
+#      concurrent-write snapshot invariant, the Public capability round trip, and both
+#      session outcomes (still-valid session still authenticates; already-revoked session
+#      stays revoked).
+#
+# This is defense-in-depth against the classes of object the implementation and these
+# tests actually cover (tables, views, materialized views, sequences, foreign tables,
+# functions/procedures, custom types/domains/enums, custom schemas, non-default
+# extensions) - not a claim that every conceivable PostgreSQL catalog object class is
+# exhaustively enumerated. The supported operational contract remains simple: an operator
+# creates a genuinely fresh, empty target database for every restore; this guard is the
+# safety net that catches the mistake if that did not actually happen.
 #
 # All Docker resources this script creates are named with the orszem_drill_ prefix and
 # only resources with that exact prefix are ever removed - see "Cleanup safety" in
@@ -156,9 +172,17 @@ sql_source() { docker exec "$SOURCE_DB" psql -U orszem_v2 -d orszem_v2 -tAc "$1"
 sql_restore() { docker exec "$TARGET_DB" psql -U orszem_v2 -d "$RESTORE_DB" -tAc "$1"; }
 
 # The critical constraint/index definitions this drill compares before backup and after
-# restore. A mix of plain unique indexes (CREATE UNIQUE INDEX never registers as a
-# pg_constraint row) and named table constraints (which do) - both are covered, since
-# `pg_get_constraintdef` alone would silently miss every index-only rule below.
+# restore. Three kinds, all covered because none alone would prove the whole picture:
+#   - plain unique indexes (CREATE UNIQUE INDEX never registers as a pg_constraint row -
+#     pg_get_constraintdef alone would silently miss every one of these);
+#   - the routing snapshot's PRIMARY KEY (identity/uniqueness - one snapshot per report);
+#   - the routing snapshot's FOREIGN KEY back to reports (referential integrity - a
+#     PRIMARY KEY is not also a FOREIGN KEY; the two are separate pg_constraint rows even
+#     though PostgreSQL creates both from the single inline
+#     "report_id UUID PRIMARY KEY REFERENCES reports(id)" column definition - confirmed
+#     empirically against a real PostgreSQL 16 instance, not assumed). Found by relation +
+#     constraint type (conrelid/contype), not by its generated name, precisely because a
+#     generated FK name is an implementation detail this query should not depend on.
 read -r -d '' CONSTRAINT_QUERY <<'SQL' || true
 select 'INDEX:' || indexname || ':' || indexdef
 from pg_indexes
@@ -174,6 +198,11 @@ union all
 select 'CONSTRAINT:' || conname || ':' || pg_get_constraintdef(oid)
 from pg_constraint
 where conname in ('report_routing_snapshots_pkey', 'service_area_railway_lines_pkey')
+union all
+select 'CONSTRAINT:' || conname || ':' || pg_get_constraintdef(oid)
+from pg_constraint
+where conrelid = 'report_routing_snapshots'::regclass and contype = 'f'
+  and confrelid = 'reports'::regclass
 order by 1;
 SQL
 
@@ -387,8 +416,27 @@ LOOKUP_BEFORE="$(curl -s -o /dev/null -w '%{http_code}' \
 # Everything checked again after restore, captured now so "unchanged" means something.
 BEFORE_INPROGRESS_ROW="$(sql_source "select status,assigned_user_id from reports where public_id='${INPROGRESS_REPORT_ID}'")"
 BEFORE_ARCHIVED_ROW="$(sql_source "select status,archived_at from reports where public_id='${ARCHIVED_REPORT_ID}'")"
-BEFORE_ROUTING_ROW="$(sql_source "select routing_status,service_area_id from report_routing_snapshots s join reports r on r.id=s.report_id where r.public_id='${INPROGRESS_REPORT_ID}'")"
-BEFORE_MODERATION_ROW="$(sql_source "select reason,restored_at is null from report_moderation_episodes e join reports r on r.id=e.report_id where r.public_id='${MODERATED_REPORT_ID}'")"
+# The representative report's full immutable identity: public_id, submitted_at, status,
+# and its routing snapshot's identity/area/reason together - not merely two of its
+# columns in isolation.
+BEFORE_REPORT_IDENTITY_ROW="$(sql_source "select r.public_id, r.submitted_at, r.status, s.routing_status, s.service_area_id, s.routing_reason
+  from reports r join report_routing_snapshots s on s.report_id = r.id
+  where r.public_id = '${INPROGRESS_REPORT_ID}'")"
+[ -n "$BEFORE_REPORT_IDENTITY_ROW" ] || fail "sanity check failed: the representative report's identity row could not be read from the source database"
+# One concrete moderation episode: its own id, reason, the actual deletion timestamp, its
+# open/closed state, and the immutable stored id of the actor who deleted it - not just
+# reason and open/closed.
+BEFORE_MODERATION_ROW="$(sql_source "select e.id, e.reason, e.deleted_at, e.restored_at is null, e.deleted_by_user_id
+  from report_moderation_episodes e join reports r on r.id = e.report_id
+  where r.public_id = '${MODERATED_REPORT_ID}'")"
+[ -n "$BEFORE_MODERATION_ROW" ] || fail "sanity check failed: the moderation episode row could not be read from the source database"
+# One concrete audit event, identified precisely (not merely counted): the
+# REPORT_MODERATION_DELETED event the moderation-delete call above must have written,
+# tied to this exact report by its internal id - its own id, type and timestamp.
+BEFORE_AUDIT_EVENT_ROW="$(sql_source "select a.id, a.event_type, a.created_at
+  from audit_events a join reports r on r.id = a.target_id
+  where a.event_type = 'REPORT_MODERATION_DELETED' and r.public_id = '${MODERATED_REPORT_ID}'")"
+[ -n "$BEFORE_AUDIT_EVENT_ROW" ] || fail "sanity check failed: the concrete REPORT_MODERATION_DELETED audit event could not be found in the source database"
 BEFORE_AUDIT_COUNT="$(sql_source "select count(*) from audit_events")"
 BEFORE_REFERENCE_ROW="$(sql_source "select dataset_version,is_current from reference_dataset_imports where is_current")"
 BEFORE_AREA_MAPPING_ROW="$(sql_source "select service_area_id from service_area_railway_lines where railway_line_id='${LINE_900_ID}'")"
@@ -398,8 +446,10 @@ BEFORE_DEACTIVATED_STATUS="$(sql_source "select status from users where service_
 log "capturing critical constraint/index definitions before backup ..."
 BEFORE_CONSTRAINTS="$(sql_source "$CONSTRAINT_QUERY")"
 CONSTRAINT_ROW_COUNT="$(echo "$BEFORE_CONSTRAINTS" | grep -c ':' || true)"
-[ "$CONSTRAINT_ROW_COUNT" -ge 8 ] || fail "expected at least 8 constraint/index definitions captured, got $CONSTRAINT_ROW_COUNT - the comparison would prove nothing if this list were empty"
-log "OK: captured $CONSTRAINT_ROW_COUNT constraint/index definitions."
+[ "$CONSTRAINT_ROW_COUNT" -ge 9 ] || fail "expected at least 9 constraint/index definitions captured (6 indexes + 2 PKs + the routing-snapshot FK), got $CONSTRAINT_ROW_COUNT - the comparison would prove nothing if this list were incomplete"
+echo "$BEFORE_CONSTRAINTS" | grep -q "report_routing_snapshots_.*fkey\|report_routing_snapshots.*FOREIGN KEY" \
+  || fail "the routing-snapshot -> reports FOREIGN KEY was not found in the captured constraint list - a PRIMARY KEY is not also a FOREIGN KEY, and the comparison must cover both"
+log "OK: captured $CONSTRAINT_ROW_COUNT constraint/index definitions, including the routing-snapshot FOREIGN KEY back to reports (not just its PRIMARY KEY)."
 
 # ------------------------------------------------- deterministic concurrent-write + backup
 
@@ -547,8 +597,35 @@ log "OK: target database is still untouched (0 tables) after both archive-integr
 # Four shapes of "non-empty" (§1 of the correction brief) - each against its own small,
 # otherwise-empty database, so the refusal reason is unambiguous. Each uses the real,
 # valid, correctly-checksummed archive: the ONLY thing wrong is the pre-existing object.
-run_nonempty_negative_test() { # run_nonempty_negative_test LABEL DB_NAME DDL EXPECTED_TYPE_WORD
-  local label="$1" db="$2" ddl="$3" expect_word="$4"
+#
+# After the refused restore, the sentinel object itself is queried directly in its own
+# catalog (pg_class for relations, pg_proc for the function) and its exact expected form
+# asserted - "target left as found" is a claim, not a check, unless something actually
+# re-reads the object and confirms it is still there, still the right kind, unchanged.
+# information_schema.tables cannot do this: it does not even list sequences or functions,
+# and a materialized view's presence there is an implementation detail, not the object's
+# defining property (relkind is).
+
+assert_relation_survived() { # assert_relation_survived DB NAME EXPECTED_RELKIND
+  local db="$1" name="$2" expected_kind="$3" found
+  found="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d "$db" -tAc \
+    "select relkind from pg_class where relname='${name}' and relnamespace='public'::regnamespace")"
+  [ "$found" = "$expected_kind" ] \
+    || fail "sentinel relation '${name}' (expected relkind '${expected_kind}') was not found unchanged in '${db}' after the refused restore - got relkind '${found:-<absent>}'"
+}
+
+assert_function_survived() { # assert_function_survived DB NAME
+  local db="$1" name="$2" found
+  found="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d "$db" -tAc \
+    "select count(*) from pg_proc where proname='${name}' and pronamespace='public'::regnamespace")"
+  [ "$found" = "1" ] \
+    || fail "sentinel function '${name}' was not found unchanged in '${db}' after the refused restore (found ${found:-0} matching pg_proc rows, expected 1)"
+}
+
+run_nonempty_negative_test() { # run_nonempty_negative_test LABEL DB_NAME DDL SENTINEL_NAME ASSERT_KIND
+  # ASSERT_KIND is a pg_class relkind letter ('r' table, 'S' sequence, 'm' materialized
+  # view) or the literal word "function".
+  local label="$1" db="$2" ddl="$3" sentinel_name="$4" assert_kind="$5"
   log "negative test: a non-empty target (${label}) must be refused ..."
   docker exec "$TARGET_DB" psql -U orszem_v2 -d postgres -c "create database ${db}" >/dev/null
   docker exec "$TARGET_DB" psql -U orszem_v2 -d "$db" -c "$ddl" >/dev/null
@@ -558,22 +635,24 @@ run_nonempty_negative_test() { # run_nonempty_negative_test LABEL DB_NAME DDL EX
   fi
   grep -qi "not empty" "$WORKDIR/restore-attempt.log" \
     || fail "restore was refused for ${label}, but not for the expected reason - see $WORKDIR/restore-attempt.log"
-  grep -qi "$expect_word" "$WORKDIR/restore-attempt.log" \
-    || fail "the refusal for ${label} did not name the offending object (expected to see '${expect_word}') - see $WORKDIR/restore-attempt.log"
-  local remaining
-  remaining="$(docker exec "$TARGET_DB" psql -U orszem_v2 -d "$db" -tAc \
-    "select count(*) from information_schema.tables where table_schema='public'")"
-  log "OK: non-empty target (${label}) was refused and named correctly; target left as found."
+  grep -qi "$sentinel_name" "$WORKDIR/restore-attempt.log" \
+    || fail "the refusal for ${label} did not name the offending object (expected to see '${sentinel_name}') - see $WORKDIR/restore-attempt.log"
+  if [ "$assert_kind" = "function" ]; then
+    assert_function_survived "$db" "$sentinel_name"
+  else
+    assert_relation_survived "$db" "$sentinel_name" "$assert_kind"
+  fi
+  log "OK: non-empty target (${label}) was refused, named correctly, and the sentinel object '${sentinel_name}' was directly re-queried and confirmed still present in its original form."
 }
 
 run_nonempty_negative_test "an ordinary table" orszem_v2_nonempty_table \
-  "create table sentinel_not_in_archive (id int primary key)" "sentinel_not_in_archive"
+  "create table sentinel_not_in_archive (id int primary key)" sentinel_not_in_archive r
 run_nonempty_negative_test "a sequence with no table at all" orszem_v2_nonempty_sequence \
-  "create sequence sentinel_sequence" "sentinel_sequence"
+  "create sequence sentinel_sequence" sentinel_sequence S
 run_nonempty_negative_test "a materialized view" orszem_v2_nonempty_matview \
-  "create materialized view sentinel_matview as select 1 as x" "sentinel_matview"
+  "create materialized view sentinel_matview as select 1 as x" sentinel_matview m
 run_nonempty_negative_test "a user-defined function" orszem_v2_nonempty_function \
-  "create function sentinel_fn() returns int as \$\$ select 1 \$\$ language sql" "sentinel_fn"
+  "create function sentinel_fn() returns int as \$\$ select 1 \$\$ language sql" sentinel_fn function
 
 # --------------------------------------------------------------------- the real restore
 
@@ -611,7 +690,7 @@ if [ "$BEFORE_CONSTRAINTS" != "$AFTER_CONSTRAINTS" ]; then
   echo "--- after (restored) ---" >&2; echo "$AFTER_CONSTRAINTS" >&2
   fail "constraint/index definitions differ between the source snapshot and the restored database"
 fi
-log "OK: all $CONSTRAINT_ROW_COUNT critical constraint/index definitions are byte-identical after restore (users/service_id, reports/public_id, reports/client_submission_id, the open-assignment invariant, the open-moderation-episode invariant, the routing-snapshot PK, the ServiceArea<->RailwayLine mapping's PK and its one-area-per-line uniqueness)."
+log "OK: all $CONSTRAINT_ROW_COUNT critical constraint/index definitions are byte-identical after restore (users/service_id, reports/public_id, reports/client_submission_id, the open-assignment invariant, the open-moderation-episode invariant, the routing-snapshot's PRIMARY KEY *and* its separate FOREIGN KEY back to reports, and the ServiceArea<->RailwayLine mapping's PK and its one-area-per-line uniqueness)."
 
 # -------------------------------------------------------------- cross-phase invariant checks
 
@@ -630,15 +709,26 @@ AFTER_INPROGRESS_ROW="$(sql_restore "select status,assigned_user_id from reports
 [ "$AFTER_INPROGRESS_ROW" = "$BEFORE_INPROGRESS_ROW" ] || fail "the IN_PROGRESS report's status/assignment changed across restore (before='$BEFORE_INPROGRESS_ROW' after='$AFTER_INPROGRESS_ROW')"
 AFTER_ARCHIVED_ROW="$(sql_restore "select status,archived_at from reports where public_id='${ARCHIVED_REPORT_ID}'")"
 [ "$AFTER_ARCHIVED_ROW" = "$BEFORE_ARCHIVED_ROW" ] || fail "the ARCHIVED report's status/archived_at changed across restore (before='$BEFORE_ARCHIVED_ROW' after='$AFTER_ARCHIVED_ROW')"
-AFTER_ROUTING_ROW="$(sql_restore "select routing_status,service_area_id from report_routing_snapshots s join reports r on r.id=s.report_id where r.public_id='${INPROGRESS_REPORT_ID}'")"
-[ "$AFTER_ROUTING_ROW" = "$BEFORE_ROUTING_ROW" ] || fail "the routing snapshot (area/status) changed across restore (before='$BEFORE_ROUTING_ROW' after='$AFTER_ROUTING_ROW')"
-AFTER_MODERATION_ROW="$(sql_restore "select reason,restored_at is null from report_moderation_episodes e join reports r on r.id=e.report_id where r.public_id='${MODERATED_REPORT_ID}'")"
-[ "$AFTER_MODERATION_ROW" = "$BEFORE_MODERATION_ROW" ] || fail "the moderation episode changed across restore (before='$BEFORE_MODERATION_ROW' after='$AFTER_MODERATION_ROW')"
-log "OK: IN_PROGRESS/ARCHIVED workflow states, the routing snapshot, and the moderation episode are all byte-identical after restore."
+AFTER_REPORT_IDENTITY_ROW="$(sql_restore "select r.public_id, r.submitted_at, r.status, s.routing_status, s.service_area_id, s.routing_reason
+  from reports r join report_routing_snapshots s on s.report_id = r.id
+  where r.public_id = '${INPROGRESS_REPORT_ID}'")"
+[ "$AFTER_REPORT_IDENTITY_ROW" = "$BEFORE_REPORT_IDENTITY_ROW" ] \
+  || fail "the representative report's identity (public_id/submitted_at/status/routing snapshot) changed across restore (before='$BEFORE_REPORT_IDENTITY_ROW' after='$AFTER_REPORT_IDENTITY_ROW')"
+AFTER_MODERATION_ROW="$(sql_restore "select e.id, e.reason, e.deleted_at, e.restored_at is null, e.deleted_by_user_id
+  from report_moderation_episodes e join reports r on r.id = e.report_id
+  where r.public_id = '${MODERATED_REPORT_ID}'")"
+[ "$AFTER_MODERATION_ROW" = "$BEFORE_MODERATION_ROW" ] \
+  || fail "the moderation episode (id/reason/deleted_at/open-state/actor) changed across restore (before='$BEFORE_MODERATION_ROW' after='$AFTER_MODERATION_ROW')"
+log "OK: IN_PROGRESS/ARCHIVED workflow states, the representative report's full identity (public_id/submitted_at/status/routing snapshot), and the moderation episode's full identity (id/reason/timestamp/state/actor) are all byte-identical after restore."
 
+AFTER_AUDIT_EVENT_ROW="$(sql_restore "select a.id, a.event_type, a.created_at
+  from audit_events a join reports r on r.id = a.target_id
+  where a.event_type = 'REPORT_MODERATION_DELETED' and r.public_id = '${MODERATED_REPORT_ID}'")"
+[ "$AFTER_AUDIT_EVENT_ROW" = "$BEFORE_AUDIT_EVENT_ROW" ] \
+  || fail "the concrete REPORT_MODERATION_DELETED audit event (id/type/timestamp) changed or disappeared across restore (before='$BEFORE_AUDIT_EVENT_ROW' after='$AFTER_AUDIT_EVENT_ROW')"
 AFTER_AUDIT_COUNT="$(sql_restore "select count(*) from audit_events")"
 [ "$AFTER_AUDIT_COUNT" -ge "$BEFORE_AUDIT_COUNT" ] || fail "audit_events row count dropped across restore (before=$BEFORE_AUDIT_COUNT after=$AFTER_AUDIT_COUNT)"
-log "OK: audit event history intact ($BEFORE_AUDIT_COUNT rows before backup, $AFTER_AUDIT_COUNT after restore - the concurrent write may add at most one more, never fewer)."
+log "OK: the concrete REPORT_MODERATION_DELETED audit event's id/type/timestamp survived unchanged, and the total row count is intact too ($BEFORE_AUDIT_COUNT rows before backup, $AFTER_AUDIT_COUNT after restore - the concurrent write may add at most one more, never fewer)."
 
 AFTER_REFERENCE_ROW="$(sql_restore "select dataset_version,is_current from reference_dataset_imports where is_current")"
 [ "$AFTER_REFERENCE_ROW" = "$BEFORE_REFERENCE_ROW" ] || fail "the current reference-import row changed across restore (before='$BEFORE_REFERENCE_ROW' after='$AFTER_REFERENCE_ROW')"

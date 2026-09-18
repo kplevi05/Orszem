@@ -331,9 +331,11 @@ ERROR: target database 'orszem_v2_nonempty_function' is not empty. Found existin
 
 (The materialized-view case names two objects, not one — PostgreSQL automatically creates
 a composite row type for every relation, including a materialized view; both are
-genuinely present, so reporting both is correct, not a bug.) Every sentinel object was
-confirmed still present, alone, and unchanged immediately after its refused restore
-attempt — the target was not touched, in all four cases.
+genuinely present, so reporting both is correct, not a bug.) After each refused attempt,
+the drill directly re-queries the sentinel object's own catalog entry — `pg_class.relkind`
+for the table/sequence/materialized-view cases, `pg_proc` for the function — and asserts
+it is still present with the expected kind, rather than only checking a table count or
+logging "left as found" as an unverified claim; all four passed.
 
 ## M. Restore drill
 
@@ -392,8 +394,9 @@ rewrite; two full clean runs, both `PASS`, ~90 seconds each; full logs retained)
      otherwise-empty database, using the real, valid, correctly-checksummed archive: an
      ordinary table, a sequence with no table at all, a materialized view, and a
      user-defined function — see §L for the exact transcripts and the object each refusal
-     named. Every sentinel object was confirmed still present, alone, and unchanged
-     immediately afterward.
+     named. Each sentinel object's own catalog entry (`pg_class`/`pg_proc`) was
+     re-queried directly and asserted still present with the correct kind immediately
+     afterward — not merely logged as "left as found".
 7. A **seventh**, genuinely empty database (`orszem_v2_restore_ok`) is created in the same
    target container, and `scripts/orszem-restore.sh --confirm-restore` is run for real
    against it. Checksum verifies, `pg_restore -l` succeeds, the (corrected, comprehensive)
@@ -467,9 +470,10 @@ against the restored database after restore — not by row count, and not assume
 | The deactivated user's `status` | still `DEACTIVATED` (restore never resurrects one) |
 | `IN_PROGRESS` report's `status`/`assigned_user_id` | byte-identical before/after |
 | `ARCHIVED` report's `status`/`archived_at` | byte-identical before/after |
-| That report's routing snapshot (`routing_status`/`service_area_id`) | byte-identical before/after |
-| The moderation episode's `reason`/open-or-closed state | byte-identical before/after |
-| `audit_events` row count | 22 before backup, 22 after restore this run (never drops; the concurrent write may add at most one more) |
+| That report's full identity: `public_id`, `submitted_at`, `status`, and its routing snapshot's `routing_status`/`service_area_id`/`routing_reason` together | byte-identical before/after — not two columns in isolation |
+| One concrete moderation episode, by its own `id`: `reason`, `deleted_at`, open/closed state, and `deleted_by_user_id` (the immutable stored actor identity) | byte-identical before/after |
+| One concrete audit event, by its own `id`: the real `REPORT_MODERATION_DELETED` event tied to the moderated report — `id`, `event_type`, `created_at` | byte-identical before/after |
+| `audit_events` total row count | 22 before backup, 22 after restore this run (an additional sanity check, never the only proof) — never drops; the concurrent write may add at most one more |
 | The current reference-import row (`dataset_version`/`is_current`) | byte-identical before/after |
 | The ServiceArea↔RailwayLine mapping row for the fixture line | byte-identical before/after |
 | The concurrent-write snapshot invariant (§81) | `reports` and `report_routing_snapshots` agree — both absent this run, exactly as the barrier's timing predicts (see §M) — a torn result would be the only failure |
@@ -482,9 +486,18 @@ against the restored database after restore — not by row count, and not assume
 
 The prior version of this report treated `pg_restore` reproducing DDL as sufficient proof
 that constraints survive. The correction brief is right that this is an assumption, not a
-check. The drill now captures the *actual catalog definitions* of the rules that protect
-the invariants above, before the backup and after the restore, and compares them
-byte-for-byte:
+check — and a second review found the first correction's own query still incomplete: it
+named `report_routing_snapshots_pkey` and, in prose, called that primary key "also its
+foreign key back to reports". **That was wrong. A primary key is not a foreign key, even
+when both happen to be declared on the same column** — PostgreSQL creates two entirely
+separate `pg_constraint` rows from a single inline `report_id UUID PRIMARY KEY REFERENCES
+reports (id)` column definition (confirmed empirically against a real PostgreSQL 16
+instance: `report_routing_snapshots_pkey`, `contype = 'p'`, and
+`report_routing_snapshots_report_id_fkey`, `contype = 'f'`, as two distinct rows). The
+query now captures both, and the foreign key is found **by relation and constraint type
+(`conrelid`/`contype`/`confrelid`), not by its generated name** — a more robust query, per
+the correction brief's own preference, that would keep working even if Postgres's naming
+convention ever changed:
 
 ```sql
 select 'INDEX:' || indexname || ':' || indexdef
@@ -498,21 +511,31 @@ union all
 select 'CONSTRAINT:' || conname || ':' || pg_get_constraintdef(oid)
 from pg_constraint
 where conname in ('report_routing_snapshots_pkey', 'service_area_railway_lines_pkey')
+union all
+select 'CONSTRAINT:' || conname || ':' || pg_get_constraintdef(oid)
+from pg_constraint
+where conrelid = 'report_routing_snapshots'::regclass and contype = 'f'
+  and confrelid = 'reports'::regclass
 order by 1;
 ```
 
 Plain unique indexes (`CREATE UNIQUE INDEX`) never register as `pg_constraint` rows, so
 `pg_get_constraintdef` alone would have silently missed every one of them — `pg_indexes`
-covers those, `pg_constraint`/`pg_get_constraintdef` covers the two primary keys. Together
-this names: the users/service_id uniqueness, the reports/public_id and
+covers those; `pg_constraint`/`pg_get_constraintdef` covers the three named constraints.
+Together this now names: the users/service_id uniqueness, the reports/public_id and
 reports/client_submission_id uniqueness (the idempotency key), the "at most one open
 assignment per report" invariant, the "at most one open moderation episode per report"
-invariant, the report_routing_snapshots primary key (which is also its foreign key back to
-reports — the mechanism §81's "never torn" property structurally relies on), and the
-ServiceArea↔RailwayLine mapping's primary key plus its "a line belongs to at most one
-area" uniqueness. **8 definitions captured this run**, asserted to be at least 8 before
-the comparison even runs (so an empty comparison could never pass by accident), and found
-**byte-identical** between the source snapshot and the restored database.
+invariant, the report_routing_snapshots table's **primary key** (identity/uniqueness — one
+snapshot per report) **and, separately, its foreign key** back to `reports` (referential
+integrity — the actual mechanism §81's "never torn" property structurally relies on), and
+the ServiceArea↔RailwayLine mapping's primary key plus its "a line belongs to at most one
+area" uniqueness. **9 definitions captured this run** (the FK query correctly returns
+exactly one row — `report_routing_snapshots`'s two *other* foreign keys, to
+`railway_lines` and `service_areas`, are deliberately excluded by the `confrelid =
+'reports'` filter, since only the FK back to `reports` was in scope), asserted to be at
+least 9 before the comparison even runs (so an incomplete comparison could never pass by
+accident), and found **byte-identical** between the source snapshot and the restored
+database.
 
 ## O. Session/capability behaviour after restore
 
@@ -793,12 +816,21 @@ Stated honestly, not presented as defects where they are intentionally gated:
 - **No paid external monitoring or backup service is used or assumed.**
 - **No automatic production deployment from CI** — by design (§75/§94); CI in this
   repository validates and tests only.
-- **One item in the restored-data invariant checklist (critical DB constraints) was
-  verified indirectly** rather than via a fresh, separate `psql \d+` walk this run — see
-  the explicit note at the end of §N.
-- **Service-session restore semantics were documented and reasoned about, not re-drilled
-  live with a fresh login this phase** beyond the Public-capability and fixture-row checks
-  actually performed — see §O.
+- **The empty-target guard is defense-in-depth, not an exhaustive enumeration of every
+  conceivable PostgreSQL catalog object class.** It covers the object kinds the
+  implementation and its tests actually exercise — tables, views, materialized views,
+  sequences, foreign tables, functions/procedures, custom types/domains/enums, custom
+  schemas, non-default extensions (§L) — which is what a database an operator actually
+  populated by hand or with a previous restore would contain. The supported operational
+  contract is, and remains, that an operator creates a genuinely fresh, empty target
+  database for every restore (`docs/OPERATIONS_RUNBOOK.md` §6); this guard is the safety
+  net that catches the mistake if that did not happen, not a substitute for it.
+
+Two items in earlier drafts of this report — "critical DB constraints were only verified
+indirectly" and "service-session restore semantics were not re-drilled live" — are removed
+here because they are no longer true: both are now directly proven (§N, §O, and the FK-vs-
+PK correction below) and calling them limitations would contradict the report's own
+evidence.
 
 ## AA. Owner gates
 
@@ -819,26 +851,34 @@ the brief specifies until the owner explicitly changes one.
 
 Everything in the Phase 14 brief's "Owner review gate" (§93) checklist is complete: backup
 script complete and failure-tested; restore script/process complete and failure-tested,
-**requiring and verifying a genuinely empty target** (every object kind, not just tables —
-sequences, materialized views, foreign tables, functions, custom types/schemas,
-non-default extensions — §L) **rather than trusting `pg_restore --clean`**; throwaway
-backup verified (non-empty, `pg_restore -l`-readable); checksum verified (and its
+**requiring and verifying a genuinely empty target** — as defense-in-depth for the object
+kinds the implementation and its tests actually cover (tables, views, materialized views,
+sequences, foreign tables, functions/procedures, custom types/domains/enums, custom
+schemas, non-default extensions — §L), not a claim of exhaustive coverage of every
+conceivable PostgreSQL catalog object class; the supported contract remains an operator
+creating a genuinely fresh, empty target — **rather than trusting `pg_restore --clean`**;
+throwaway backup verified (non-empty, `pg_restore -l`-readable); checksum verified (and its
 mismatch rejected); throwaway restore completed; restored backend starts; restored-data
 invariants verified against a **real cross-phase fixture** — four users spanning
 active/deactivated, a ServiceArea with a RailwayLine mapped into it, four Public reports
 covering NEW/IN_PROGRESS/ARCHIVED/moderation-deleted, two real service sessions (one valid,
-one revoked before the backup) — including the Public-capability round trip, the
+one revoked before the backup) — including one concrete report's full identity
+(`public_id`/`submitted_at`/`status`/routing snapshot), one concrete moderation episode's
+full identity (`id`/`reason`/`deleted_at`/open-state/actor), one concrete audit event's
+full identity (`id`/`event_type`/`created_at`), the Public-capability round trip, the
 service-session outcomes, and the concurrent-write snapshot-consistency invariant now
 proven via a **deterministic PostgreSQL-lock test barrier** (not an assumed race) with a
 real POST; the restore guard tested with **six** negative cases (corrupted archive,
 mismatched checksum, and four non-empty-target object shapes — all six rejected without
-touching the target); **critical constraint/index definitions captured before backup and
-compared byte-for-byte after restore**, not merely assumed reproduced; Caddy validation
+touching the target, **each sentinel object's own catalog entry directly re-queried and
+confirmed unchanged afterward**, not merely logged as "left as found"); **critical
+constraint/index definitions captured before backup and compared byte-for-byte after
+restore, correctly including the routing snapshot's primary key AND, separately, its
+foreign key back to `reports` — a primary key is not a foreign key, even on the same
+column, and this report's own prior draft wrongly said otherwise** (§N); Caddy validation
 green (via CI — see §R); deployment/preflight validated; both runbooks complete and updated
 for the corrected restore contract and the comprehensive empty-target definition; full
-regression run and its results recorded honestly, not rounded up (§Y); branch pushed;
-exact final HEAD's CI results — 5 of 6 green, one pre-existing, unrelated, non-reproducing
-test flake on the sixth, reported plainly rather than concealed — recorded in §AC below.
+regression run and its results recorded honestly, not rounded up (§Y).
 
 Per §93/§94 of the brief: **no PR is opened until explicit owner approval is given.** This
 report will be updated with the owner's approval date, one docs-only commit will record
@@ -848,48 +888,44 @@ opened, titled `chore: harden V2 deployment backup and restore`, `main` ←
 
 ## AC. CI status on this branch
 
-Prior commits, for history only — **not authoritative**; the exact final HEAD below is:
+Two different things, kept deliberately separate rather than conflated: the commit history
+that produced and evidenced the implementation this report describes, and the CI status of
+the branch's actual latest tip at the time this section was last written. This section
+does **not** attempt to name its own commit's resulting SHA inside itself — that SHA does
+not exist until after this file is committed, so no document can correctly contain it in
+advance; the chat turn that accompanies each push is the actual source of truth for "the
+current tip", and this section is refreshed after the fact, honestly, rather than guessed.
 
-- `e239cee52c6a00d12a0c230d03ef4897d440672c` (initial implementation) — 5/6, one genuine
-  failure (`backup-restore-scripts`, a real executable-bit bug), fixed in the next commit.
-- `b5fab0a42fd2b60dc78831078560e8c76564d014` (executable-bit fix) — 6/6 green.
-- `ef8690f44d6198016c92a8b0c8c57f63bc6a9177` (first correction pass — empty-target v1,
-  real-write concurrency, initial cross-phase report) — 6/6 green after one retry of a
-  pre-existing `ModerationConcurrencyIT` flake (backend job), confirmed unrelated (zero
-  backend source diff) and confirmed non-reproducing in 4/4 fresh local isolated runs.
+### Implementation/evidence commit history (not the current tip — historical record only)
 
-**This (second) correction pass's exact final HEAD — the one carrying the actual
-implementation this entire report describes (§K–§O, §V, §Y, §AB above) —
-`4a8c6f972970766b33abf5f69e5d2441af97f378`:**
+- `e239cee52c6a00d12a0c230d03ef4897d440672c` — initial implementation. 5/6: one genuine
+  failure (`backup-restore-scripts`, a real executable-bit bug), fixed next commit.
+- `b5fab0a42fd2b60dc78831078560e8c76564d014` — executable-bit fix. 6/6 green.
+- `ef8690f44d6198016c92a8b0c8c57f63bc6a9177` — first correction pass (empty-target v1,
+  real-write concurrency v1, initial cross-phase fixture). 6/6 green after one retry of
+  the pre-existing `ModerationConcurrencyIT` flake; confirmed unrelated (zero backend
+  source diff) and non-reproducing in 4/4 fresh local isolated runs.
+- `4a8c6f972970766b33abf5f69e5d2441af97f378` — second correction pass: the comprehensive
+  empty-target check (every object kind, §L), the deterministic PostgreSQL-lock overlap
+  barrier (§M), and the expanded cross-phase fixture (four users, ServiceArea/RailwayLine
+  mapping, four workflow-state reports, two sessions). **5/6** on this exact SHA: `build`
+  (backend) failed twice on the same pre-existing `ModerationConcurrencyIT` flake
+  (`ModerationConcurrencyIT.kt:147`, zero backend source diff on this branch, one retry
+  used per the correction brief's own §5 allowance, not retried further, not weakened or
+  skipped, reproduced 7/7 clean in fresh local isolated runs across both correction
+  passes) — the other five checks (`android`, `web`, `caddy`,
+  `backup-restore-scripts` including the entire rewritten drill, `reference-data`) were
+  green on the first attempt.
+- `12756d39bfb7df31f231f4221eeb75bc08776646` — docs-only commit recording the honest 5/6
+  result above (no code change). **6/6 green** — the pre-existing flake did not recur on
+  this SHA's own backend run.
 
-- `build` (android) — **success**
-- `build` (web) — **success**
-- `caddy` — **success**
-- `backup-restore-scripts` — **success** (the entire rewritten drill — cross-phase
-  fixture, the deterministic concurrency-barrier overlap proof, all six negative tests,
-  the constraint comparison, both session outcomes — passed on the GitHub Actions runner
-  on the first attempt)
-- `validate` (reference-data) — **success**
-- `build` (backend) — **failed twice**, not green. Both failures are the exact same
-  pre-existing test, at the exact same line, that Phase 13's own report already documented
-  as environment/timing-sensitive:
-  `ModerationConcurrencyIT > delete races reassign on an IN_PROGRESS report - no lost
-  assignment history, deterministic version()`, `IllegalStateException: Check failed.` at
-  `ModerationConcurrencyIT.kt:147`. This branch makes **zero** changes to any backend
-  source file (`git diff 19691aa..4a8c6f9 --stat` touches only `scripts/` and `docs/`),
-  so this cannot be a regression this phase introduced. Handled exactly as the correction
-  brief's §5 directs: **one retry was used** (still failed, same test, same line — run
-  IDs `105562411332` then `105564977941`); per the brief's own instruction, it was **not
-  retried a third time**, the test was **not weakened or skipped**, and this is reported
-  plainly rather than concealed. Reproduced **7 times in a row locally, in isolation,
-  fully fresh (`--rerun-tasks`, no cache) — all 7 passed** (4 during the first correction
-  pass, 3 more during this one), consistent with a GitHub Actions 2-vCPU runner being more
-  prone to this specific concurrency test's timing sensitivity under load than this
-  development machine, not with a real defect. This is an **honest, incomplete 5/6** on
-  this exact SHA — not rounded up, not retried into silence.
+### Third correction pass — sentinel-preservation assertions, extended immutable
+### comparisons (report/audit/moderation), the routing-snapshot foreign-key proof
 
-This documentation-only correction (recording the above) is itself pushed as one more
-commit on top of `4a8c6f9`; its own resulting CI status, checked once more (not
-retried further beyond what is documented above), is reported to the owner directly in
-the chat turn that accompanies this push.
+This pass changes `scripts/orszem-restore-drill.sh` (assertion logic only — no restore
+contract change) and this document. Its own resulting commit SHA and 6/6 (or honestly
+reported otherwise) CI status are **not written into this file** — see the chat turn that
+accompanies the push for the authoritative current branch tip, per the note at the top of
+this section.
 
