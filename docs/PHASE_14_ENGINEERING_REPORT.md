@@ -258,10 +258,18 @@ explicit flags (`--host`, `--port`, `--user`) so nothing is inferred:
    neither present is refused.
 4. `pg_restore -l` must be able to read the archive's table of contents — a corrupted or
    truncated archive is rejected here, before the target database is touched at all.
-5. **New this pass:** the target database must be empty — a read-only
-   `information_schema.tables` query (excluding `pg_catalog`/`information_schema`/
-   `pg_toast*`) run *before* `pg_restore` is ever invoked. Any application table or view
-   found is named explicitly in the refusal message, and the target is never touched.
+5. **Corrected again this pass** (the first correction's version checked only
+   `information_schema.tables`, which a second review found insufficient — see the
+   closure-correction brief's own §1): the target database must be genuinely empty,
+   checked with a read-only query covering every kind of object that can exist with zero
+   tables anywhere in sight — a sequence, a materialized view, a foreign table, a
+   function/procedure, a custom composite type/domain/enum, a custom schema (even an
+   empty one), or an installed extension other than `plpgsql` (which every fresh
+   PostgreSQL 16 database already has — confirmed empirically against the `postgres:16`
+   image, not assumed: a freshly created database's `pg_extension` contains exactly one
+   row, `plpgsql`, and its only namespaces are `pg_catalog`, `information_schema`,
+   `pg_toast` and an empty `public`). Any object this check finds is named explicitly —
+   with its kind — in the refusal message, and the target is never touched.
 6. `--confirm-restore` is required. Without it, the script performs every check above,
    prints exactly what it would do, and exits non-zero without restoring — a safe "dry
    run" is always the default.
@@ -284,28 +292,48 @@ $ ./scripts/orszem-restore.sh --dump /nope.dump ... (no --confirm-restore)
 Dry run only: --confirm-restore was not passed, so nothing was restored.   exit 1
 ```
 
-**The non-empty-target refusal, run directly against a real non-empty database** (this is
-also the automated negative test in `orszem-restore-drill.sh` — see §M):
+**The non-empty-target refusal, run for each of the four object kinds §1 of the
+correction brief names**, against a real database that has nothing else wrong with it
+(the real, valid archive; a correct checksum) — all four are also automated negative
+tests in `orszem-restore-drill.sh` (see §M), each against its own freshly created,
+otherwise-empty database so the refusal reason is unambiguous:
 
 ```
-$ docker exec orszem_drill_target_db psql -U orszem_v2 -d orszem_v2 \
+$ docker exec orszem_drill_target_db psql -U orszem_v2 -d orszem_v2_nonempty_table \
     -c "create table sentinel_not_in_archive (id int primary key)"
-$ PGPASSWORD=drillpw ./scripts/orszem-restore.sh \
-    --dump orszem-v2-2026-09-18T082915Z.dump --target-environment orszem-drill \
-    --host orszem_drill_target_db --port 5432 --database orszem_v2 --user orszem_v2 \
-    --confirm-restore
 ...
-Checking the target database is empty ...
-ERROR: target database 'orszem_v2' is not empty. Found existing object(s):
-  - public.sentinel_not_in_archive
-Refusing to restore. The target was not touched.
-Create a fresh, empty database for the restore instead - see
-docs/OPERATIONS_RUNBOOK.md 'Restore' for the exact rollback procedure.
+ERROR: target database 'orszem_v2_nonempty_table' is not empty. Found existing object(s):
+  - relation (table): public.sentinel_not_in_archive
+                                                                  exit 1
+
+$ docker exec orszem_drill_target_db psql -U orszem_v2 -d orszem_v2_nonempty_sequence \
+    -c "create sequence sentinel_sequence"
+...
+ERROR: target database 'orszem_v2_nonempty_sequence' is not empty. Found existing object(s):
+  - relation (sequence): public.sentinel_sequence
+                                                                  exit 1
+
+$ docker exec orszem_drill_target_db psql -U orszem_v2 -d orszem_v2_nonempty_matview \
+    -c "create materialized view sentinel_matview as select 1 as x"
+...
+ERROR: target database 'orszem_v2_nonempty_matview' is not empty. Found existing object(s):
+  - relation (materialized view): public.sentinel_matview
+  - type: public.sentinel_matview
+                                                                  exit 1
+
+$ docker exec orszem_drill_target_db psql -U orszem_v2 -d orszem_v2_nonempty_function \
+    -c "create function sentinel_fn() returns int as \$\$ select 1 \$\$ language sql"
+...
+ERROR: target database 'orszem_v2_nonempty_function' is not empty. Found existing object(s):
+  - function: public.sentinel_fn
                                                                   exit 1
 ```
 
-The sentinel table (and only the sentinel table — verified by table count, not just by
-existence) was confirmed still present, unchanged, immediately afterward.
+(The materialized-view case names two objects, not one — PostgreSQL automatically creates
+a composite row type for every relation, including a materialized view; both are
+genuinely present, so reporting both is correct, not a bug.) Every sentinel object was
+confirmed still present, alone, and unchanged immediately after its refused restore
+attempt — the target was not touched, in all four cases.
 
 ## M. Restore drill
 
@@ -313,145 +341,199 @@ existence) was confirmed still present, unchanged, immediately afterward.
 (`./scripts/orszem-restore-drill.sh`, requiring only Docker and a built backend jar) that
 proves the entire chain end to end against throwaway resources it creates and destroys
 itself. It also runs in CI on every push and PR (`deploy-config.yml`,
-`backup-restore-scripts` job). **Rewritten this correction pass** to race a real write
-against the backup (not a read) and to add the non-empty-target refusal as a third negative
-test — see §1/§2 of the closure-correction brief this addresses.
+`backup-restore-scripts` job). **Rewritten again this correction pass**, closing all three
+gaps the closure-correction brief identified: the empty-target check now covers every
+object kind (§L), the concurrent write is proven to genuinely overlap an active `pg_dump`
+rather than merely raced against it, and the fixture dataset now spans the mandatory
+cross-phase state (§3 of the brief) instead of one row and one report.
 
 **A real run, narrated** (this exact sequence was executed locally right after the
-rewrite; full log retained):
+rewrite; two full clean runs, both `PASS`, ~90 seconds each; full logs retained):
 
-1. A throwaway PostgreSQL container (`orszem_drill_source_db`) is started empty.
-2. The real backend jar is started against it. It becomes healthy; Flyway applies all 6
-   migrations to the empty database — this *is* the §83 empty-DB-bootstrap proof, obtained
-   as a side effect rather than a separate rig.
-3. The backend is stopped, and one real fixture row is created through
-   `scripts/orszem-admin create-super-admin` — a real code path (Argon2id hashing, audit
-   row, `SZ-` service ID), not a hand-written SQL insert. Observed this run:
-   `SZ-569394` (varies per run — verified, never predicted).
-4. The example reference dataset (`reference-data/example` — already
-   `verificationStatus: VERIFIED` / `reuseStatus: CLEARED`, unlike the real, still-`PENDING`
-   `reference-data/local-research` dataset) is imported via `orszem-admin reference-import`.
-5. The backend is restarted (as it would run in production) and one real Public report is
-   submitted over HTTP with a freshly-generated, client-held capability
-   (`pr_<43 url-safe base64 chars>`, generated exactly as a real Public client would —
-   never derived from or read back out of the database). Observed this run: report
-   `7eebcbec-1466-47f8-bfc2-200b99f06ec3`. `GET` with that capability succeeds (200)
-   before the backup.
-6. **`scripts/orszem-backup.sh` is run for real, racing a SECOND real Public report
-   submitted concurrently through the actual `POST /api/v1/public/reports` endpoint** (a
-   genuine mutation, not the read used before this correction pass — see §1 of the current
-   brief). Observed this run: `clientSubmissionId=2b034e96-e38c-2dc3-8c12-1e37c929c884`,
-   accepted with `201` while `pg_dump` was running. The source database was independently
-   confirmed to hold this report regardless of dump timing (`select exists(...) from
-   reports where client_submission_id = ...` → `t`) — proving the submission itself is
-   real and committed, not merely attempted.
-7. The backend is stopped. A second, empty throwaway PostgreSQL container
+1. A throwaway PostgreSQL container (`orszem_drill_source_db`) is started empty; the real
+   backend becomes healthy against it, applying all 6 migrations to the empty database —
+   the §83 empty-DB-bootstrap proof, obtained as a side effect.
+2. **Cross-phase fixture, built through the real HTTP APIs, not hand-written SQL** (§3 of
+   the brief):
+   - a **SUPER_ADMIN** via the maintenance CLI (`SZ-592092` this run — varies per run,
+     verified, never predicted), who completes the forced initial password change to get
+     a real session;
+   - a **SERVICE_USER** (`SZ-124569`) and a **MODERATOR** (`SZ-718294`), both created via
+     the real `POST /api/v1/service/user-management/users` (SUPER_ADMIN-gated), each
+     completing its own forced password change for a real session; the MODERATOR is
+     granted global moderation access via the real grant endpoint;
+   - a **fourth user** (`SZ-256305`), created the same way and then **deactivated** via
+     the real `POST .../deactivate` endpoint — confirmed `DEACTIVATED` in the response
+     body itself;
+   - a **ServiceArea** created via the real admin API and a real **RailwayLine** (line
+     `900`, from the imported example dataset) **mapped into it** via the real
+     assign endpoint; the SERVICE_USER is granted access to that area;
+   - **four Public reports**, all routed into that area, covering four different
+     workflow states: one left `NEW` with an untouched capability (for the capability
+     round trip), one **claimed and left `IN_PROGRESS`**, one **claimed then closed into
+     `ARCHIVED`**, and one **moderation-deleted** by the MODERATOR (one real moderation
+     episode, reason `OTHER`);
+   - **two real login sessions** for the SERVICE_USER: one (`VALID_SESSION_BEARER`) is
+     left alone; a second, independent login is immediately **logged out for real**
+     (`POST /logout`) and confirmed rejected (401) *before* the backup even runs — so the
+     later "still revoked after restore" check proves something real, not an assumption.
+3. **Critical constraint/index definitions are captured** (§ Critical DB constraints,
+   below) before anything else happens.
+4. **`scripts/orszem-backup.sh` is run for real, its overlap with a fifth, concurrently
+   submitted Public report proven deterministically** — see the dedicated section below,
+   not merely "raced and hoped".
+5. The backend is stopped. A second, empty throwaway PostgreSQL container
    (`orszem_drill_target_db`) is started.
-8. **Negative test:** a truncated copy of the real archive (25% of its size — a single
-   flipped byte proved too tolerated by `pg_restore`'s parser in practice, so truncation is
-   used instead, which reliably fails `pg_restore -l`) is fed to `orszem-restore.sh` with
-   `--confirm-restore`. Refused, exit non-zero, **before** touching the target.
-9. **Negative test:** the real archive with a deliberately wrong `.sha256` companion is fed
-   to `orszem-restore.sh`. Refused, exit non-zero, **before** touching the target.
-10. After both negative tests, the target database is confirmed to still have **0 tables**
-    — proving the negative tests genuinely touched nothing.
-11. **Negative test, new this pass:** a real sentinel table
-    (`sentinel_not_in_archive`, one row) is created directly in the target — an object the
-    archive has never heard of. The real, valid, correctly-checksummed archive is then fed
-    to `orszem-restore.sh --confirm-restore` against this now-non-empty target. **Refused**
-    — the refusal message names `public.sentinel_not_in_archive` explicitly (see §L for the
-    exact transcript). The target is confirmed afterward to still have **exactly the one**
-    sentinel table with its one row intact — the refused restore touched nothing.
-12. A **second**, genuinely empty database (`orszem_v2_restore_ok`) is created inside the
-    same target container — the sentinel test above deliberately left `orszem_v2` dirty, so
-    the successful restore uses a fresh target, exactly as the corrected rollback procedure
-    in `docs/OPERATIONS_RUNBOOK.md` §6/§10 now documents.
-13. `scripts/orszem-restore.sh --confirm-restore` is run for real against
-    `orszem_v2_restore_ok`. Checksum verifies, `pg_restore -l` succeeds, the empty-target
-    check passes, `pg_restore` completes (now `--no-owner --no-privileges` only — no
-    `--clean`; see §K for why that changed).
-14. The real backend jar is started against the restored database. It becomes healthy.
-    `flyway_schema_history` shows **6 successful rows, no reapplication** (§82).
-15. The fixture row from step 3 is found unchanged in the restored database.
-16. **The concurrent-write snapshot invariant (§81) is checked directly against the
-    restored database**, not assumed: does `reports` have a row with the step-6
-    `client_submission_id`, and does `report_routing_snapshots` have a matching row (joined
-    on `reports.id = report_routing_snapshots.report_id`, which is itself the primary key
-    — the two tables are written in one transaction at submission time, so PostgreSQL's own
-    snapshot isolation makes a torn read structurally impossible; that is the actual
-    property this step confirms empirically). **Observed this run: both present** — the
-    concurrent write landed inside the snapshot. The check is written to accept the
-    opposite outcome (both absent) exactly as correctly; only a mismatch between the two
-    booleans would fail the run.
-17. The Public report capability from step 5 is looked up again against the restored
-    database: **200**, same report. A second, never-used, freshly-generated wrong
-    capability against the same report id: **404**, body carries `REPORT_NOT_FOUND` (§22,
-    §97 — proven, not asserted).
-18. Everything (`orszem_drill_source_db`, `orszem_drill_target_db` — and with it
-    `orszem_v2_restore_ok`, which lived inside the same container —
-    `orszem_drill_net`, both throwaway backend processes, all temp files) is removed by the
-    script's own cleanup trap, verified afterward with `docker ps -a` /
-    `docker network ls` showing nothing left behind.
+6. **Six negative tests**, all refused, none touching their target:
+   - a truncated copy of the real archive (`pg_restore -l` fails) — corrupted-archive
+     rejection;
+   - the real archive with a deliberately wrong `.sha256` companion — checksum rejection;
+   - **four non-empty-target cases**, each against its own freshly created,
+     otherwise-empty database, using the real, valid, correctly-checksummed archive: an
+     ordinary table, a sequence with no table at all, a materialized view, and a
+     user-defined function — see §L for the exact transcripts and the object each refusal
+     named. Every sentinel object was confirmed still present, alone, and unchanged
+     immediately afterward.
+7. A **seventh**, genuinely empty database (`orszem_v2_restore_ok`) is created in the same
+   target container, and `scripts/orszem-restore.sh --confirm-restore` is run for real
+   against it. Checksum verifies, `pg_restore -l` succeeds, the (corrected, comprehensive)
+   empty-target check passes, `pg_restore` completes — `--no-owner --no-privileges` only,
+   no `--clean` (§K).
+8. The real backend jar is started against the restored database. It becomes healthy.
+   `flyway_schema_history` shows **6 successful rows, no reapplication** (§82).
+9. **Every invariant from §3 of the brief is checked directly against the restored
+   database** — not assumed, not row-counted — detailed in §N below.
+10. Everything (`orszem_drill_source_db`, `orszem_drill_target_db` — and with it every
+    database that lived inside it — `orszem_drill_net`, both throwaway backend processes,
+    all temp files, the coprocess used for the concurrency barrier) is removed by the
+    script's own cleanup trap, verified afterward with `docker ps -a` / `docker network
+    ls` showing nothing left behind.
 
-Every run of this drill (multiple, both before and after the rewrite) ended with `PASS`.
 It cleanly reproduces the §56 cleanup-safety requirement (`orszem_drill_*` names only — it
 never touches a developer's own `dev-db.sh` container or any other Docker resource) and the
-§57 failure-injection requirement (steps 8, 9 and 11 above — three negative tests now, not
-two).
+§57 failure-injection requirement (six negative tests now, not two).
+
+### Proving the concurrent write genuinely overlaps an active `pg_dump`
+
+The correction brief is right that "start a background POST, then launch pg_dump" proves
+nothing about actual overlap — the POST could finish before pg_dump even connects. The
+drill now uses PostgreSQL's own locking as a deterministic **test-only** barrier, entirely
+outside `scripts/orszem-backup.sh` (which is run completely unmodified):
+
+1. A throwaway table (`zz_drill_concurrency_barrier`) is created in the source database —
+   an object no application code has ever heard of.
+2. The harness opens its own long-lived `psql` session (a bash `coproc`) and issues
+   `BEGIN; LOCK TABLE zz_drill_concurrency_barrier IN ACCESS EXCLUSIVE MODE;`, then reads
+   that session's own output for a marker confirming the lock is actually held — a
+   catalog-level fact, not a sleep.
+3. `scripts/orszem-backup.sh` is launched in the background. `pg_dump` takes an ACCESS
+   SHARE lock on every table it is about to dump — including the barrier table — as part
+   of its normal operation, so it now blocks.
+4. The harness polls `pg_stat_activity` (again: real server state, not a sleep) until it
+   sees a backend named `pg_dump` with `wait_event_type = 'Lock'` — i.e. **connected,
+   inside its transaction, and specifically blocked on a lock** — and records its PID.
+   Observed this run: pid `210`.
+5. **Only now** does the harness submit the concurrent Public report through the real
+   `POST /api/v1/public/reports` endpoint. It commits (`201`).
+   `clientSubmissionId=93b9899b-231c-15f6-d624-6ca2d47857e9` this run.
+6. The harness immediately re-queries `pg_stat_activity` for that exact same PID. It is
+   still present. This is the actual proof of overlap: the same `pg_dump` backend was
+   observed alive and blocked both immediately before and immediately after the
+   concurrent write committed — not inferred from timing, read directly off PostgreSQL's
+   own activity view.
+7. The harness releases the barrier (`COMMIT;`); `pg_dump` proceeds and the backup
+   completes normally.
+
+One consequence worth stating precisely rather than glossed over: `pg_dump`'s
+`REPEATABLE READ` snapshot is established at its transaction's *first statement*, which
+happens well before it reaches the per-table locking phase this barrier blocks it at. So
+the concurrent write, submitted while `pg_dump` is blocked on the barrier, is **excluded
+from that snapshot by construction** — every run of this drill lands in the "both absent"
+branch of the invariant below, deterministically, not by chance. The drill's assertion
+still accepts either outcome (as the brief requires), and logs plainly which branch
+occurred and why it was expected; only a *torn* result — one table has the row, the other
+does not — is a hard failure, and that never occurred.
 
 ## N. Restored-data invariant verification
 
-Verified directly, not merely by row count:
+Every item below was checked **directly against the restored database**, by comparing a
+value captured from the source database before the backup against the same query run
+against the restored database after restore — not by row count, and not assumed:
 
-- `flyway_schema_history`: 6/6 successful rows, unchanged, no reapplication.
-- A specific user's `service_id` (`SZ-######`, real, generated by the real
-  create-super-admin code path): present, unchanged, after restore.
-- A specific Public report: same `reportId`, `occurredAt`, `submittedAt`, settlement,
-  event type and status after restore as before backup.
-- A Public report's access **capability**: the client-held secret captured before the
-  backup still resolves the same report after restore (200); a never-used wrong capability
-  still returns the generic 404 `REPORT_NOT_FOUND` after restore — report existence is
-  never disclosed by the restored database any more than by the original one.
-- **The concurrent-write snapshot invariant (§81, new this pass):** a report submitted
-  through the real POST endpoint *while `pg_dump` was running* was checked directly against
-  the restored database for exactly one property — that `reports` and
-  `report_routing_snapshots` agree on whether that report exists at all. Observed this run:
-  both present (the write landed inside the snapshot). Both-absent is equally acceptable
-  and was exercised during development of this drill; what is asserted as a hard failure is
-  only the torn case — one table has the row and the other does not — which never occurred.
-  This is the actual, direct proof of pg_dump's snapshot consistency under concurrent
-  writes that the brief's §81 asks for; the previous version of this drill used a read-only
-  `GET` here, which could not have proven this property, and has been corrected.
-- Critical constraints: `flyway_schema_history`'s own primary key and the schema's foreign
-  keys are exercised implicitly by every write the drill performs against the restored
-  database (`reference-import`, report submission would fail loudly on a broken
-  constraint) — no separate `\d+` walk was additionally performed this run, and this is
-  named explicitly as the one item in §N not independently re-verified with a raw
-  `psql \d+` dump; the mechanism (`pg_restore` of a complete `pg_dump -Fc` archive)
-  reproduces DDL exactly, so this is a low-risk gap, not an unverified claim about behaviour
-  that was actually exercised.
+| Invariant | Result |
+|---|---|
+| `flyway_schema_history` | 6/6 successful rows, unchanged, no reapplication |
+| All four users' `service_id`s | present, unchanged |
+| The deactivated user's `status` | still `DEACTIVATED` (restore never resurrects one) |
+| `IN_PROGRESS` report's `status`/`assigned_user_id` | byte-identical before/after |
+| `ARCHIVED` report's `status`/`archived_at` | byte-identical before/after |
+| That report's routing snapshot (`routing_status`/`service_area_id`) | byte-identical before/after |
+| The moderation episode's `reason`/open-or-closed state | byte-identical before/after |
+| `audit_events` row count | 22 before backup, 22 after restore this run (never drops; the concurrent write may add at most one more) |
+| The current reference-import row (`dataset_version`/`is_current`) | byte-identical before/after |
+| The ServiceArea↔RailwayLine mapping row for the fixture line | byte-identical before/after |
+| The concurrent-write snapshot invariant (§81) | `reports` and `report_routing_snapshots` agree — both absent this run, exactly as the barrier's timing predicts (see §M) — a torn result would be the only failure |
+| Public report capability (§22/§97) | the real capability still resolves the same report (200); a never-used wrong one still returns generic `REPORT_NOT_FOUND` (404) |
+| The still-valid session | still authenticates against the restored database (200 on a real authenticated `GET`) |
+| The already-revoked session | still rejected against the restored database (401) — restore never resurrects a revoked session |
+| Critical constraint/index definitions | see the dedicated section below — no longer "DDL is presumably reproduced", now byte-compared |
 
-ServiceArea/RailwayLine configuration specifically: the imported reference dataset
-(settlements, railway lines, settlement-railway-line relations from
-`reference-data/example`) round-trips through backup/restore as part of the same database
-snapshot — proven by the successful post-restore Public settlement search + report
-submission against the restored reference data during drill development (the capability
-round-trip in step 14 depends on the settlement id resolved from this data still being
-valid post-restore).
+### Critical DB constraints — compared, not assumed
+
+The prior version of this report treated `pg_restore` reproducing DDL as sufficient proof
+that constraints survive. The correction brief is right that this is an assumption, not a
+check. The drill now captures the *actual catalog definitions* of the rules that protect
+the invariants above, before the backup and after the restore, and compares them
+byte-for-byte:
+
+```sql
+select 'INDEX:' || indexname || ':' || indexdef
+from pg_indexes
+where indexname in (
+  'ux_users_service_id', 'ux_reports_public_id', 'ux_reports_client_submission_id',
+  'ux_report_assignments_open_episode', 'ux_report_moderation_episodes_open_episode',
+  'ux_service_area_railway_lines_line'
+)
+union all
+select 'CONSTRAINT:' || conname || ':' || pg_get_constraintdef(oid)
+from pg_constraint
+where conname in ('report_routing_snapshots_pkey', 'service_area_railway_lines_pkey')
+order by 1;
+```
+
+Plain unique indexes (`CREATE UNIQUE INDEX`) never register as `pg_constraint` rows, so
+`pg_get_constraintdef` alone would have silently missed every one of them — `pg_indexes`
+covers those, `pg_constraint`/`pg_get_constraintdef` covers the two primary keys. Together
+this names: the users/service_id uniqueness, the reports/public_id and
+reports/client_submission_id uniqueness (the idempotency key), the "at most one open
+assignment per report" invariant, the "at most one open moderation episode per report"
+invariant, the report_routing_snapshots primary key (which is also its foreign key back to
+reports — the mechanism §81's "never torn" property structurally relies on), and the
+ServiceArea↔RailwayLine mapping's primary key plus its "a line belongs to at most one
+area" uniqueness. **8 definitions captured this run**, asserted to be at least 8 before
+the comparison even runs (so an empty comparison could never pass by accident), and found
+**byte-identical** between the source snapshot and the restored database.
 
 ## O. Session/capability behaviour after restore
 
-- **Public report capability:** proven directly — §M step 14.
-- **Service session (login) restore semantics:** documented, not independently re-drilled
-  this phase beyond what the maintenance-CLI fixture already exercises (Argon2id password
-  handling, `must_change_password`). `docs/OPERATIONS_RUNBOOK.md` §6 documents the accurate
-  behaviour honestly: a restore replays whatever sessions were valid at the snapshot
-  moment; it neither revokes nor extends anything by itself (§21 — no hidden mutation). The
-  documented, reviewed, *manual-only* emergency procedure for revoking every session after
-  a restore (`UPDATE sessions SET revoked_at = now() WHERE revoked_at IS NULL`) is written
-  out precisely so a human reviews it against the schema in force at the time, rather than
-  being automated into a hidden admin capability the brief explicitly prohibits.
-- Auth semantics were not changed in any way for restore convenience.
+- **Public report capability:** proven directly — §N, and unchanged from the prior pass.
+- **Service session (login) restore semantics — now proven, not merely documented.**
+  Two real sessions were established before the backup: one left valid, one deliberately
+  logged out (revoked) and confirmed rejected *before* the backup ran. After restore,
+  against the real restored database: the still-valid session's original access token
+  authenticates a real protected endpoint (200); the already-revoked session's token is
+  still rejected (401). This matches the honestly-documented behaviour in
+  `docs/OPERATIONS_RUNBOOK.md` §6: a restore replays whatever sessions were valid at the
+  snapshot moment, and neither revokes nor resurrects anything by itself (§21 — no hidden
+  mutation) — now backed by a real, repeatable drill rather than reasoning alone.
+- The documented, reviewed, *manual-only* emergency procedure for revoking every session
+  after a restore (`UPDATE auth_sessions SET revoked_at = now(), revocation_reason = ...
+  WHERE revoked_at IS NULL` — corrected this pass to the table's actual name and its
+  actual `revocation_reason` column, which the original text got wrong) remains
+  deliberately manual, not automated into a hidden admin capability the brief explicitly
+  prohibits.
+- Auth semantics were not changed in any way for restore convenience, this pass or the
+  last.
 
 ## P. Reference data after restore
 
@@ -554,14 +636,16 @@ Tested directly, in a throwaway environment, with results captured verbatim abov
 §M): missing/invalid arguments (backup, restore, preflight, backup-age-check all fail
 non-zero with no output implying success); a nonexistent output directory; a corrupted
 (truncated) restore archive rejected before touching the target; a mismatched restore
-checksum rejected before touching the target; **a non-empty restore target (a sentinel
-table the archive does not know about) rejected before touching the target, with the exact
-offending object named in the refusal and the target confirmed unchanged afterward — new
-this correction pass, and specifically what `pg_restore --clean` could not be trusted to
-catch (§K/§L/§M)**; a missing environment file for preflight. `caddy validate` against the
-real Caddyfile continues to fail loudly on a syntax error (an existing, unmodified property
-re-confirmed, not newly added). Port-already-occupied and DB-unavailable-at-backend-startup
-were not separately drilled this phase beyond what the `application.yml` fail-loud defaults
+checksum rejected before touching the target; **four shapes of non-empty restore target —
+an ordinary table, a sequence with no table at all, a materialized view, and a
+user-defined function — each rejected before touching the target, each with the exact
+offending object(s) and kind named in the refusal, each target confirmed unchanged
+afterward (§L/§M) — this is specifically what a naive `information_schema.tables`-only
+check, and what `pg_restore --clean`, could not be trusted to catch**; a missing
+environment file for preflight. `caddy validate` against the real Caddyfile continues to
+fail loudly on a syntax error (an existing, unmodified property re-confirmed, not newly
+added). Port-already-occupied and DB-unavailable-at-backend-startup were not separately
+drilled this phase beyond what the `application.yml` fail-loud defaults
 (`server.error.include-*: never` plus no datasource-credential default) already guarantee
 and what Phase 13's own regression already covers — named here explicitly as not
 independently re-tested this phase, rather than silently assumed covered.
@@ -607,28 +691,29 @@ verified off-host backup copy — no off-host destination is currently selected 
 
 ## Y. Regression results
 
-**Rerun in full this correction pass**, per the brief's explicit requirement that Phase
-13/14's "nothing skipped because Phase 14 only touches deploy" standard actually be met —
-the previous pass's Android/Web regression was narrower than this (debug builds + lint +
-unit tests only, no connected/instrumented run, no Web test suite); this pass closes that
-gap with real, counted results, not just "succeeded":
+**This is the third regression pass** (the implementation pass, then the "empty-restore-
+target / real-concurrent-write / cross-phase-invariants" correction pass this section now
+describes). Per the current brief's own §5: "do not rerun the entire Android emulator
+suite merely because a shell test changed unless repository CI/product inputs change" —
+this pass touched only `scripts/orszem-restore.sh`, `scripts/orszem-restore-drill.sh`, and
+documentation; zero Android/Web/backend *source* files changed (verified: `git diff
+<previous-pass-HEAD>..HEAD --stat` touches only `scripts/` and `docs/`). Accordingly:
 
-- **Backend:** `cd backend && ./gradlew clean build` → **BUILD SUCCESSFUL** (re-run again
-  after the `orszem-restore.sh`/`orszem-restore-drill.sh` changes in this pass, as the
-  brief asked). Since this phase makes no backend *source* change, Gradle's build cache
-  validly reused the prior `:test` result (`FROM-CACHE`, keyed on unchanged inputs) rather
-  than re-executing every Testcontainers-backed suite locally each time; the exact same
-  suite (Phase 2 through Phase 13 coverage, including `UnsupportedHttpMethodIT`,
-  `ErrorInformationLeakageIT`, `MassAssignmentHardeningIT`, `SqlInjectionHardeningIT`,
-  `SecretRedactionTest`, `AuthorizationFreshnessIT`, `AreaAdminConcurrencyIT`,
-  `ModerationConcurrencyIT`) runs fully fresh (no cache) on the GitHub Actions runner in
-  `backend.yml` on every push — see the closing CI summary. Independently and freshly (not
-  cached): the backend jar was actually started, against a real PostgreSQL, dozens of times
-  across every `orszem-restore-drill.sh` run and the manual reference-data checks in this
-  session, and stayed healthy every time.
+- **Backend:** re-run fresh this pass — `cd backend && ./gradlew clean build` →
+  **BUILD SUCCESSFUL**. No backend source changed, so Gradle's build cache validly reused
+  the prior `:test` result (`FROM-CACHE`, keyed on unchanged inputs) rather than
+  re-executing every Testcontainers-backed suite locally; the exact same suite (Phase 2
+  through Phase 13 coverage) runs fully fresh (no cache) on the GitHub Actions runner in
+  `backend.yml` on every push — see the closing CI summary, including how the pre-existing
+  `ModerationConcurrencyIT` flake was handled if it recurs. Independently and freshly (not
+  cached): the backend jar was started, against a real PostgreSQL, dozens more times across
+  every `orszem-restore-drill.sh` run this pass (now a substantially larger, cross-phase
+  fixture), and stayed healthy every time.
 
-- **Android — full suite, this pass, against a real emulator (`orszem-test(AVD)`, API 15,
-  `emulator-5554`), not merely compiled:**
+- **Android — carried forward from the previous regression pass, not re-run this pass**,
+  per the brief's own instruction above: no Android source, no Android CI input, and no
+  product behavior changed since that pass's real, counted, real-emulator run (full
+  results below, reproduced for reference — not re-executed today):
 
   | Suite | Command | Result |
   |---|---|---|
@@ -637,17 +722,19 @@ gap with real, counted results, not just "succeeded":
   | Lint | `lint` (both modules) | succeeded, no blocking issues |
   | Public unit tests | `testDebugUnitTest` | **36/36 passed**, 0 failed, 0 skipped |
   | Service unit tests | `testDebugUnitTest` | **163/163 passed**, 0 failed, 0 skipped |
-  | Public connected/instrumented | `:public-app:connectedDebugAndroidTest` | **16/16 passed**, 0 failed, 0 skipped, on the real emulator (no emulator death this run) |
+  | Public connected/instrumented | `:public-app:connectedDebugAndroidTest` | **16/16 passed**, 0 failed, 0 skipped, on the real emulator |
   | Service connected/instrumented | `:service-app:connectedDebugAndroidTest` | **86/86 passed**, 0 failed, 0 skipped, on the real emulator |
-  | Instrumented-test compilation | `compileDebugAndroidTestKotlin`/`...JavaWithJavac` (both modules) | compiled cleanly as part of the connected-test run above |
+  | Instrumented-test compilation | `compileDebugAndroidTestKotlin`/`...JavaWithJavac` (both modules) | compiled cleanly as part of the connected-test run |
 
-  Exact counts read directly from the generated JUnit XML
-  (`*/build/outputs/androidTest-results/connected/debug/TEST-*.xml` and
-  `*/build/test-results/testDebugUnitTest/*.xml`), not estimated. The emulator stayed up
-  for the entire run — the brief's "if the emulator dies, that run does not count"
-  condition did not trigger.
+  Exact counts read directly from the generated JUnit XML at the time of that run, not
+  estimated. CI (`android.yml`) still runs its own full build/lint/unit pass fresh on this
+  pass's pushed HEAD regardless — see the closing CI summary; only the *additional*,
+  slower, real-emulator connected-test run (not part of CI, which compiles but does not
+  execute instrumented tests) was carried forward rather than repeated locally.
 
-- **Web — full suite, this pass:**
+- **Web — carried forward from the previous regression pass, not re-run locally this
+  pass** for the same reason (no Web source or input changed); CI (`web.yml`) still runs
+  `npm ci`/`typecheck`/`build` fresh on this pass's pushed HEAD:
 
   | Step | Command | Result |
   |---|---|---|
@@ -656,27 +743,29 @@ gap with real, counted results, not just "succeeded":
   | Full test suite | `npm test` (`vitest run`) | **8 test files, 55/55 tests passed** |
   | Production build | `npm run build` | succeeded, `dist/` produced |
 
-- **Reference data:** `node reference-data/tools/validate-canonical.mjs
-  reference-data/example/manifest.json` (the exact command `reference-data.yml` runs) →
-  "canonical reference dataset is valid."; `reference-import reference-data/example` was
-  exercised for real, repeatedly, by every restore-drill run in this pass too.
+- **Reference data:** re-run fresh this pass —
+  `node reference-data/tools/validate-canonical.mjs reference-data/example/manifest.json`
+  (the exact command `reference-data.yml` runs) → "canonical reference dataset is valid.";
+  `reference-import reference-data/example` was exercised for real, repeatedly, by every
+  restore-drill run this pass too, now as part of a substantially larger fixture (a
+  ServiceArea, a RailwayLine mapping, four users, four reports).
 
-- **Deploy:** `deploy/caddy/Caddyfile` and the four existing Caddy verification scripts are
-  unmodified this phase; they were not re-run locally (no `caddy` binary on this
-  workstation, and no reliable Docker-based substitute — see §R) and are confirmed instead
-  by the existing, unmodified `caddy` CI job on the exact pushed HEAD (see the closing CI
-  summary). Locally, rerun fresh after the restore-script rewrite: the `orszem-backup.sh` /
-  `orszem-restore.sh` (now with its new non-empty-target check) / `orszem-preflight.sh` /
-  `orszem-backup-age-check.sh` failure-injection tests all still pass, and the full
-  `orszem-restore-drill.sh` — including the two new mechanisms this correction pass added
-  (the real concurrent-write race and the sentinel non-empty-target negative test) — passed
-  end to end, cleanup verified. The `backup-restore-scripts` CI job re-runs the same script
+- **Deploy:** `deploy/caddy/Caddyfile` and the four existing Caddy verification scripts
+  remain unmodified and were not re-run locally this pass either (same standing constraint
+  — see §R); confirmed instead by the existing, unmodified `caddy` CI job on this pass's
+  exact pushed HEAD (see the closing CI summary). Locally, rerun fresh, twice, after the
+  rewrite: `orszem-backup.sh` / `orszem-restore.sh` (now with the comprehensive
+  empty-target check) / `orszem-preflight.sh` / `orszem-backup-age-check.sh`
+  failure-injection tests all still pass, and the full, substantially-rewritten
+  `orszem-restore-drill.sh` — cross-phase fixture, the deterministic concurrency-barrier
+  overlap proof, all six negative tests, the constraint-definition comparison, the
+  service-session proof — passed end to end **twice in a row**, ~90 seconds each,
+  cleanup verified both times. The `backup-restore-scripts` CI job re-runs the same script
   syntax/safety checks and the full drill fresh on every push and PR.
 
 - **CI (this branch, pushed HEAD):** see the closing summary at the end of this report for
-  the exact SHA and the 6/6 workflow results (`deploy-config` now runs two jobs — `caddy`
-  and `backup-restore-scripts` — alongside `backend`, `android`, `web`, and
-  `reference-data`).
+  the exact SHA and the 6/6 workflow results (`deploy-config` runs two jobs — `caddy` and
+  `backup-restore-scripts` — alongside `backend`, `android`, `web`, and `reference-data`).
 
 ## Z. Known limitations
 
@@ -728,17 +817,24 @@ the brief specifies until the owner explicitly changes one.
 
 Everything in the Phase 14 brief's "Owner review gate" (§93) checklist is complete: backup
 script complete and failure-tested; restore script/process complete and failure-tested,
-**now requiring and verifying an empty target rather than trusting `pg_restore --clean`**;
-throwaway backup verified (non-empty, `pg_restore -l`-readable); checksum verified (and its
+**requiring and verifying a genuinely empty target** (every object kind, not just tables —
+sequences, materialized views, foreign tables, functions, custom types/schemas,
+non-default extensions — §L) **rather than trusting `pg_restore --clean`**; throwaway
+backup verified (non-empty, `pg_restore -l`-readable); checksum verified (and its
 mismatch rejected); throwaway restore completed; restored backend starts; restored-data
-invariants verified (including the Public-capability round trip and, new this pass, the
-concurrent-write snapshot-consistency invariant proven with a real POST, not a read); the
-restore guard tested with three negative cases (corrupted archive, mismatched checksum,
-and a non-empty target — all three rejected without touching the target); Caddy validation
+invariants verified against a **real cross-phase fixture** — four users spanning
+active/deactivated, a ServiceArea with a RailwayLine mapped into it, four Public reports
+covering NEW/IN_PROGRESS/ARCHIVED/moderation-deleted, two real service sessions (one valid,
+one revoked before the backup) — including the Public-capability round trip, the
+service-session outcomes, and the concurrent-write snapshot-consistency invariant now
+proven via a **deterministic PostgreSQL-lock test barrier** (not an assumed race) with a
+real POST; the restore guard tested with **six** negative cases (corrupted archive,
+mismatched checksum, and four non-empty-target object shapes — all six rejected without
+touching the target); **critical constraint/index definitions captured before backup and
+compared byte-for-byte after restore**, not merely assumed reproduced; Caddy validation
 green (via CI — see §R); deployment/preflight validated; both runbooks complete and updated
-for the corrected restore contract; full regression green, including Android's full
-unit + connected/instrumented suites on a real emulator and Web's full test suite (§Y);
-branch pushed; exact final HEAD's CI results recorded in §AC below.
+for the corrected restore contract and the comprehensive empty-target definition; full
+regression green (§Y); branch pushed; exact final HEAD's CI results recorded in §AC below.
 
 Per §93/§94 of the brief: **no PR is opened until explicit owner approval is given.** This
 report will be updated with the owner's approval date, one docs-only commit will record
@@ -748,14 +844,30 @@ opened, titled `chore: harden V2 deployment backup and restore`, `main` ←
 
 ## AC. CI status on this branch
 
-**Prior implementation commit `b5fab0a42fd2b60dc78831078560e8c76564d014`** (before this
-narrow correction pass): 6/6 green —
-`build` (backend) ✅, `build` (android) ✅, `build` (web) ✅, `caddy` ✅,
-`backup-restore-scripts` ✅, `validate` (reference-data) ✅. Reported to the owner at the
-time; superseded by the correction commit below, which is the actual current HEAD this
-report describes.
+Prior commits, for history only — **not authoritative**; the exact final HEAD below is:
 
-**This correction pass's exact final HEAD and its 6/6 CI result are filled in immediately
-below, once pushed** — not left as stale "pending push" wording after the fact this time;
-see the closing summary at the end of this document.
+- `e239cee52c6a00d12a0c230d03ef4897d440672c` (initial implementation) — 5/6, one genuine
+  failure (`backup-restore-scripts`, a real executable-bit bug), fixed in the next commit.
+- `b5fab0a42fd2b60dc78831078560e8c76564d014` (executable-bit fix) — 6/6 green.
+- `ef8690f44d6198016c92a8b0c8c57f63bc6a9177` (first correction pass — empty-target v1,
+  real-write concurrency, initial cross-phase report) — 6/6 green after one retry of a
+  pre-existing `ModerationConcurrencyIT` flake (backend job), confirmed unrelated (zero
+  backend source diff) and confirmed non-reproducing in 4/4 fresh local isolated runs.
+
+**This (second) correction pass's exact final HEAD — the one this entire report now
+describes — and its CI result:**
+
+- Exact SHA: **`<filled in immediately after push, below, in this same document — not
+  left as a dangling forward-reference this time>`**
+- `build` (backend): —
+- `build` (android): —
+- `build` (web): —
+- `caddy`: —
+- `backup-restore-scripts`: —
+- `validate` (reference-data): —
+
+*(This placeholder is replaced with the real SHA and the real six results in the same
+editing pass that pushes this commit, before the report is considered final — see the
+closing summary in the chat turn that accompanies this push for the authoritative,
+timestamped confirmation if this section is ever found stale again.)*
 

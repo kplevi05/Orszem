@@ -163,20 +163,72 @@ fi
 echo "Archive integrity OK."
 
 # --- 4. the target must be empty - a read-only inspection, nothing is written here ---------
-# "Empty" means no application object exists yet: no table and no view outside Postgres's
-# own pg_catalog/information_schema/pg_toast* schemas. A fresh `CREATE DATABASE` satisfies
-# this trivially; anything this check rejects means the target is not the dedicated, freshly
-# created database this script requires - see the header comment for why "clean it first"
-# is not an acceptable alternative.
+# "Empty" means genuinely equivalent to a freshly created PostgreSQL database, not merely
+# "no table". A database can hold zero tables and still not be a fresh target: a sequence,
+# a materialized view, a foreign table, a function/procedure, a custom type/domain/enum, a
+# custom schema, or an installed extension can all exist with no table anywhere in sight.
+# The previous version of this check only looked at information_schema.tables (which does
+# not even cover sequences or materialized views on some Postgres versions) - corrected here
+# to inspect the actual catalogs pg_class/pg_proc/pg_type/pg_namespace/pg_extension.
+#
+# The baseline this is measured against is exactly what `CREATE DATABASE` produces on a
+# real, unmodified PostgreSQL 16 server (verified empirically against the postgres:16
+# image, not assumed): the pg_catalog/information_schema/pg_toast* internal schemas, an
+# empty `public` schema, and the `plpgsql` procedural-language extension, which every fresh
+# database has installed by default. Nothing else may exist.
 echo "Checking the target database is empty ..."
 NONEMPTY_OBJECTS="$(psql \
       --host="$PG_HOST" --port="$PG_PORT" \
       --username="$PG_USER" --no-password \
       --dbname="$DB_NAME" \
-      -tAc "select table_schema || '.' || table_name from information_schema.tables
-            where table_schema not in ('pg_catalog', 'information_schema')
-              and table_schema not like 'pg_toast%'
-            order by 1" 2>&1)" \
+      -tAc "
+        -- any schema besides the standard baseline ones (a custom schema, even an empty one)
+        select 'schema: ' || nspname
+        from pg_namespace
+        where nspname not in ('pg_catalog', 'information_schema', 'public')
+          and nspname !~ '^pg_toast' and nspname !~ '^pg_temp'
+
+        union all
+
+        -- any table, view, materialized view, sequence, foreign table or partitioned table,
+        -- in ANY non-baseline schema (including public, where application objects live)
+        select 'relation (' ||
+               case c.relkind
+                 when 'r' then 'table' when 'p' then 'partitioned table' when 'v' then 'view'
+                 when 'm' then 'materialized view' when 'S' then 'sequence'
+                 when 'f' then 'foreign table' else c.relkind::text
+               end || '): ' || n.nspname || '.' || c.relname
+        from pg_class c join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname not in ('pg_catalog', 'information_schema')
+          and n.nspname !~ '^pg_toast' and n.nspname !~ '^pg_temp'
+          and c.relkind in ('r', 'v', 'm', 'S', 'f', 'p')
+
+        union all
+
+        -- any user-defined function or procedure
+        select 'function: ' || n.nspname || '.' || p.proname
+        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname not in ('pg_catalog', 'information_schema')
+          and n.nspname !~ '^pg_toast' and n.nspname !~ '^pg_temp'
+
+        union all
+
+        -- any user-defined composite type, domain or enum (base types need a C extension
+        -- and are covered by the extension check below; array/row types Postgres creates
+        -- automatically for a relation are redundant with that relation already being
+        -- reported above, which is harmless - this is a detector, not a precise count)
+        select 'type: ' || n.nspname || '.' || t.typname
+        from pg_type t join pg_namespace n on n.oid = t.typnamespace
+        where n.nspname not in ('pg_catalog', 'information_schema')
+          and n.nspname !~ '^pg_toast' and n.nspname !~ '^pg_temp'
+          and t.typtype in ('c', 'd', 'e')
+
+        union all
+
+        -- any installed extension other than plpgsql, which every fresh database already has
+        select 'extension: ' || extname from pg_extension where extname <> 'plpgsql'
+
+        order by 1" 2>&1)" \
   || { echo "ERROR: could not connect to the target to check it is empty:" >&2; echo "$NONEMPTY_OBJECTS" >&2; exit 1; }
 if [ -n "$NONEMPTY_OBJECTS" ]; then
   echo "ERROR: target database '${DB_NAME}' is not empty. Found existing object(s):" >&2

@@ -220,9 +220,12 @@ Safety checks, each of which aborts before the target database is touched:
 2. its companion `.sha256` matches (or `--skip-checksum-verification` was passed
    explicitly, with a loud warning);
 3. `pg_restore -l` can read its table of contents (rejects a corrupted/truncated archive);
-4. the target database is empty - a read-only inspection (no table/view outside
-   `pg_catalog`/`information_schema`/`pg_toast*`); a non-empty target is refused with the
-   specific object(s) found named in the error, and is never modified;
+4. the target database is genuinely empty - a read-only inspection covering every kind of
+   object that can exist with zero tables in sight (a sequence, a materialized view, a
+   foreign table, a function/procedure, a custom type/domain/enum, a custom schema, or any
+   installed extension besides `plpgsql`, which every fresh database already has), not just
+   `information_schema.tables`; a non-empty target is refused with the specific object(s)
+   found named in the error, and is never modified;
 5. `--confirm-restore` was actually passed.
 
 ### After a restore
@@ -249,12 +252,15 @@ backdoor the brief prohibits in §21). The precise, reviewed, transactional stat
 
 ```sql
 -- Run manually, deliberately, against the restored database only, by an operator who has
--- read this. Revokes every session; touches nothing else.
-UPDATE sessions SET revoked_at = now() WHERE revoked_at IS NULL;
+-- read this. Revokes every session; touches nothing else. revocation_reason must be set
+-- together with revoked_at (ck_auth_sessions_revocation) - any short, honest label works.
+UPDATE auth_sessions SET revoked_at = now(), revocation_reason = 'RESTORE_DR_EMERGENCY'
+  WHERE revoked_at IS NULL;
 ```
 
-Confirm this statement still matches the current `sessions` table shape before running it
-(inspect the latest migration that touches `sessions`) - it is documented here, not
+Confirm this statement still matches the current `auth_sessions` table shape before
+running it (inspect the latest migration that touches it -
+`V001__identity_session_and_audit.sql` as of this writing) - it is documented here, not
 automated, precisely so a human reviews it against the schema that exists at the time.
 
 ## 7. Restore drill (repeatable, automated)
@@ -265,16 +271,25 @@ cd ..
 ./scripts/orszem-restore-drill.sh
 ```
 
-Runs the whole chain - empty-DB bootstrap, a real fixture row, a real Public report and
-its capability, `orszem-backup.sh` raced against a second, real, concurrently-submitted
-Public report (proving the snapshot is never torn - §81), three negative restore tests
-(corrupted archive, mismatched checksum, and a non-empty target with a sentinel object the
-archive knows nothing about - all three must be refused without touching the target), the
-real restore into a freshly created empty database, backend startup against the restored
-database, and invariant checks (including the concurrent-write snapshot invariant and the
-Public capability round trip) - against Docker containers it creates and destroys itself
-(`orszem_drill_*` only; see the script's cleanup trap). Safe to run repeatedly, including
-in CI (`.github/workflows/deploy-config.yml`). See
+Runs the whole chain against a real, cross-phase dataset built through the real HTTP
+APIs - not just a lone fixture row: a SUPER_ADMIN, a SERVICE_USER, a MODERATOR, a
+deactivated user, a ServiceArea with a RailwayLine mapped into it, four Public reports
+covering NEW/IN_PROGRESS/ARCHIVED/moderation-deleted, and two real login sessions (one
+left valid, one explicitly logged out before the backup). `orszem-backup.sh` is then run
+for real, racing a fifth Public report submitted through the real POST endpoint while
+`pg_dump` is *provably* still active - a PostgreSQL lock held by the harness as a
+deterministic test barrier, not a hopeful sleep - proving the snapshot is never torn
+(§81). Six negative restore tests follow (a corrupted archive, a mismatched checksum, and
+four different shapes of non-empty target - an ordinary table, a sequence, a materialized
+view, a function - each refused without touching the target). The real restore then runs
+into a freshly created empty database; the backend starts against it; and the drill
+verifies Flyway's history, every fixture's immutable identity and current state, the
+definitions of the database's critical constraints/indexes (captured before the backup
+and compared byte-for-byte after restore), the concurrent-write snapshot invariant, the
+Public capability round trip, and both session outcomes. All of it runs against Docker
+containers the script creates and destroys itself (`orszem_drill_*` only; see the
+script's cleanup trap). Safe to run repeatedly, including in CI
+(`.github/workflows/deploy-config.yml`). See
 `docs/PHASE_14_ENGINEERING_REPORT.md` §M for a narrated run and what it proved.
 
 ## 8. Database backup before deploy
@@ -294,21 +309,36 @@ deployment" and does not need its own backup).
 
 ## 9. Restore verification checklist
 
-After any restore (drill or real), confirm - not merely "row counts look plausible":
+After any restore (drill or real), confirm - not merely "row counts look plausible". This
+is the exact list `scripts/orszem-restore-drill.sh` automatically exercises every run
+(§7) against synthetic, throwaway data - treat a real restore as unverified until the
+same properties have actually been checked against it, not merely assumed from the drill
+having once passed against different data:
 
 - [ ] `flyway_schema_history` intact, no unexpected new rows;
-- [ ] a known user's `service_id` present and unchanged;
-- [ ] a known Public report's public id, `submitted_at`, and routing snapshot
-      (`service_area_id` / reason) unchanged;
-- [ ] a known audit event's id/time/type unchanged;
-- [ ] a known moderation episode's history unchanged;
-- [ ] ServiceArea / RailwayLine configuration intact;
+- [ ] every known user's `service_id` present and unchanged, and a known deactivated
+      user's status is still `DEACTIVATED` (restore must never resurrect one);
+- [ ] a known Public report's public id, `submitted_at`, workflow status
+      (NEW/IN_PROGRESS/ARCHIVED), and routing snapshot (`service_area_id` / reason)
+      unchanged;
+- [ ] a known moderation episode's reason and open/closed state unchanged;
+- [ ] a known audit event's id/time/type unchanged, and the total row count has not
+      dropped;
+- [ ] ServiceArea / RailwayLine configuration intact - the mapping row for a known line
+      into a known area still exists, unchanged;
+- [ ] the current reference-dataset-import row (`dataset_version`, `is_current`)
+      unchanged - restore replays the snapshot, it never re-imports a newer dataset;
 - [ ] a Public report capability captured before the backup still resolves the same
       report after restore, and a wrong capability still returns generic
       `REPORT_NOT_FOUND` (404) - never a different error, never a different status;
-- [ ] critical DB constraints still exist (foreign keys, uniqueness) - `\d+ <table>` in
-      `psql` against the restored database, spot-checked against the migration that
-      created them.
+- [ ] a service session that was valid before the backup still authenticates after
+      restore, and a session that was already revoked before the backup stays revoked -
+      never assume, always issue a real request with the real token;
+- [ ] critical DB constraint/index definitions match exactly - compare
+      `pg_get_constraintdef`/`pg_indexes.indexdef` for the named rules by their catalog
+      name (see `scripts/orszem-restore-drill.sh`'s `CONSTRAINT_QUERY` for the exact list
+      and query) between the source snapshot and the restored database, not merely
+      "the table still exists".
 
 Never treat "the restore command exited 0" alone as proof.
 
