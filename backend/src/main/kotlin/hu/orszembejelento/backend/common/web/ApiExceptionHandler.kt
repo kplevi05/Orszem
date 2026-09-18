@@ -145,6 +145,45 @@ class ApiExceptionHandler {
         "The request is invalid.",
     )
 
+    /**
+     * A request path that maps to no handler at all (Phase 13 brief - a routing error must
+     * not masquerade as an internal server failure). Since Spring Boot 3.2, an unmapped path
+     * surfaces as [org.springframework.web.servlet.resource.NoResourceFoundException] - a
+     * genuinely 404-shaped condition by construction (it extends `ErrorResponseException`
+     * with `HttpStatus.NOT_FOUND` already attached) - not [Exception] in general. Without
+     * this handler it was being caught by [handleUnexpected] below purely because that
+     * catch-all is declared on `Exception::class`, which is more general than this one
+     * specific type; Spring always prefers the more specific `@ExceptionHandler` within one
+     * advice bean, so declaring this handler is enough to take precedence - no change to
+     * dispatch configuration, no per-route special-casing.
+     */
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException::class)
+    fun handleNoResourceFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND, "No such resource.")
+
+    /**
+     * A request whose path matches a real `@RequestMapping` but whose HTTP method does not -
+     * e.g. `POST` against a `@GetMapping`-only route (brief §54's audit/analytics case). Same
+     * reasoning as [handleNoResourceFound]: [HttpRequestMethodNotSupportedException] is a
+     * genuinely 405-shaped condition Spring itself would map correctly if nothing more
+     * general caught it first. The `Allow` header is populated from the methods Spring itself
+     * already knows are valid for that path, exactly as its own default handling would.
+     */
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException::class)
+    fun handleMethodNotSupported(
+        exception: org.springframework.web.HttpRequestMethodNotSupportedException,
+        request: HttpServletRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val allow = exception.supportedMethods?.joinToString(", ").orEmpty()
+        return error(
+            request,
+            HttpStatus.METHOD_NOT_ALLOWED,
+            ErrorCode.METHOD_NOT_ALLOWED,
+            "This HTTP method is not supported for this resource.",
+            extraHeaders = if (allow.isNotEmpty()) mapOf(HttpHeaders.ALLOW to allow) else emptyMap(),
+        )
+    }
+
     @ExceptionHandler(SettlementQueryTooShortException::class)
     fun handleSettlementQueryTooShort(exception: SettlementQueryTooShortException, request: HttpServletRequest) =
         error(

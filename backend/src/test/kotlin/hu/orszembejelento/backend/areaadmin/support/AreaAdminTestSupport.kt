@@ -124,6 +124,48 @@ abstract class AreaAdminTestSupport : ModerationTestSupport() {
             .orElse(null)
     }
 
+    /**
+     * The full routing decision, not just its area (Phase 13 brief - "no partial/mixed
+     * routing state"). `ck_report_routing_snapshots_coherence` already enforces, at the
+     * database level, that `ROUTED` always carries an area/line and no reason and
+     * `UNCLASSIFIED` always carries a reason and no area - reading all three fields together
+     * is what lets a test assert the row is one of exactly those two coherent shapes, never a
+     * value in between.
+     */
+    protected data class RoutingSnapshotRow(val routingStatus: String, val routingReason: String?, val serviceAreaId: UUID?, val resolvedRailwayLineId: UUID?)
+
+    protected fun routingSnapshot(publicReportId: UUID): RoutingSnapshotRow {
+        val reportId = internalReportId(publicReportId)
+        return jdbc.sql(
+            "SELECT routing_status, routing_reason, service_area_id, resolved_railway_line_id " +
+                "FROM report_routing_snapshots WHERE report_id = :id",
+        )
+            .param("id", reportId)
+            .query { rs, _ ->
+                RoutingSnapshotRow(
+                    routingStatus = rs.getString("routing_status"),
+                    routingReason = rs.getString("routing_reason"),
+                    serviceAreaId = rs.getObject("service_area_id", UUID::class.java),
+                    resolvedRailwayLineId = rs.getObject("resolved_railway_line_id", UUID::class.java),
+                )
+            }
+            .single()
+    }
+
+    protected fun routingSnapshotCount(publicReportId: UUID): Int {
+        val reportId = internalReportId(publicReportId)
+        return jdbc.sql("SELECT COUNT(*) FROM report_routing_snapshots WHERE report_id = :id")
+            .param("id", reportId)
+            .query(Int::class.java)
+            .single()
+    }
+
+    protected fun reportRowCount(publicReportId: UUID): Int =
+        jdbc.sql("SELECT COUNT(*) FROM reports WHERE public_id = :id")
+            .param("id", publicReportId)
+            .query(Int::class.java)
+            .single()
+
     protected fun storedAssignmentExists(userId: UUID, areaId: UUID): Boolean =
         jdbc.sql("SELECT 1 FROM user_service_areas WHERE user_id = :u AND service_area_id = :a")
             .param("u", userId).param("a", areaId)

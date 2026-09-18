@@ -32,8 +32,20 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # v3's own default ("tools platform-tools") tries to install the legacy `tools`
+      # package, which the Android SDK repository no longer carries - the action fails
+      # before this workflow's own "Install SDK platform" step (below) ever runs, even
+      # though nothing here has ever needed `tools`: it is a pre-2018 legacy component
+      # (the old `android`/`monitor` GUI tools), superseded by cmdline-tools/sdkmanager,
+      # which this workflow already uses directly. `packages: ' '` (the action's own
+      # documented way to request zero additional packages - it splits on whitespace,
+      # trims, and drops empty entries) skips that default install entirely; the actual
+      # required packages are unaffected, since they are installed explicitly by name in
+      # "Install SDK platform" immediately below, exactly as before.
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ' '
 
       # Only the platform is installed. No build-tools package is pinned: AGP 9.4.0
       # selects its own default (36.0.0), and compileSdk 37 does not imply build-tools 37.
