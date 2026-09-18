@@ -91,3 +91,81 @@ jobs:
             echo "possible credential committed under deploy/"; exit 1
           fi
           echo "deploy/ carries no secret material"
+
+  backup-restore-scripts:
+    # Phase 14. CI never touches production, restores a database, or generates a signing
+    # key (see the "CI" section of docs/PHASE_14_ENGINEERING_REPORT.md) - everything here
+    # runs against throwaway resources this job creates and destroys itself.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A script that is readable but not executable fails with "Permission denied" the
+      # first time anyone actually runs it - caught here directly, rather than only when
+      # a later step tries to invoke one. Windows checkouts in particular can silently
+      # drop the executable bit (core.fileMode=false is the common default there), so this
+      # checks the bit Git actually recorded, not the working tree's local permissions.
+      - name: Every deployment script is executable
+        run: |
+          fail=0
+          for f in scripts/orszem-backup.sh scripts/orszem-restore.sh \
+                   scripts/orszem-preflight.sh scripts/orszem-backup-age-check.sh \
+                   scripts/orszem-restore-drill.sh; do
+            mode="$(git ls-files -s "$f" | cut -d' ' -f1)"
+            case "$mode" in
+              100755) echo "OK: $f ($mode)" ;;
+              *) echo "NOT EXECUTABLE in git: $f ($mode)"; fail=1 ;;
+            esac
+          done
+          exit $fail
+
+      - name: Syntax-check every deployment script
+        run: |
+          for f in scripts/orszem-backup.sh scripts/orszem-restore.sh \
+                   scripts/orszem-preflight.sh scripts/orszem-backup-age-check.sh \
+                   scripts/orszem-restore-drill.sh; do
+            echo "-- $f --"
+            bash -n "$f"
+          done
+
+      # Static safety checks (§76): no script may default to a production-shaped target,
+      # and every one must fail safely - non-zero, no output implying success - when
+      # called with no arguments at all.
+      - name: No hard-coded production target in the backup/restore scripts
+        run: |
+          if grep -nE 'orszembejelento\.hu|129\.159\.31\.175' \
+               scripts/orszem-backup.sh scripts/orszem-restore.sh \
+               scripts/orszem-preflight.sh scripts/orszem-backup-age-check.sh \
+               scripts/orszem-restore-drill.sh; then
+            echo "a deployment script names a real environment - it must not"; exit 1
+          fi
+          echo "OK: no production-shaped hostname in any deployment script"
+
+      - name: Safe missing-argument behaviour
+        run: |
+          set +e
+          fail=0
+          ./scripts/orszem-backup.sh; [ $? -ge 1 ] || { echo "backup: accepted no args"; fail=1; }
+          ./scripts/orszem-restore.sh; [ $? -ge 1 ] || { echo "restore: accepted no args"; fail=1; }
+          ./scripts/orszem-preflight.sh /nonexistent-on-purpose.env; [ $? -ge 1 ] || { echo "preflight: accepted a missing file"; fail=1; }
+          ./scripts/orszem-backup-age-check.sh; [ $? -ge 1 ] || { echo "backup-age-check: accepted no args"; fail=1; }
+          exit $fail
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build the backend jar for the drill
+        working-directory: backend
+        run: ./gradlew bootJar --no-daemon
+
+      # The real end-to-end proof: empty-DB bootstrap, a real fixture row, a real Public
+      # report and its capability, the real backup script, two negative restore tests
+      # (corrupted archive / mismatched checksum - both must be refused untouched), the
+      # real restore script, and backend startup against the restored database. All
+      # against orszem_drill_*-prefixed Docker resources this step creates and removes
+      # itself - see scripts/orszem-restore-drill.sh's own header.
+      - name: Run the backup/restore drill
+        run: ORSZEM_BACKEND_JAR=backend/build/libs/backend.jar ./scripts/orszem-restore-drill.sh
