@@ -24,6 +24,11 @@ class ApprovedCopyInstrumentedTest {
     }
 
     @Test
+    fun the_ksh_link_is_exactly_the_address_in_the_licence_attribution() {
+        assertEquals("https://www.ksh.hu", context.getString(R.string.settlement_data_source_url))
+    }
+
+    @Test
     fun the_ksh_attribution_is_the_approved_text() {
         assertEquals("Településadatok forrása: KSH (CC BY 4.0)", context.getString(R.string.settlement_data_source))
     }

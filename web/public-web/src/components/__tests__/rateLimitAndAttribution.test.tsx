@@ -16,6 +16,8 @@ afterEach(cleanup)
 /** The owner-approved wording, pinned exactly so a later edit cannot quietly change it. */
 const RATE_LIMITED_TEXT = 'Túl sok bejelentés érkezett rövid időn belül. Kérjük, várjon egy kicsit, majd próbálja újra.'
 const KSH_TEXT = 'Településadatok forrása: KSH (CC BY 4.0)'
+/** The address named in the licence's own required attribution string ("Forrás: KSH — https://www.ksh.hu"). */
+const KSH_URL = 'https://www.ksh.hu'
 
 function pending(lastErrorCode: string | null): ReportRecord {
   return {
@@ -48,6 +50,10 @@ describe('approved copy', () => {
 
   it('the KSH attribution is the approved text', () => {
     expect(strings.settlementDataSource).toBe(KSH_TEXT)
+  })
+
+  it('the KSH link target is exactly the address in the licence attribution - nothing invented', () => {
+    expect(strings.settlementDataSourceUrl).toBe(KSH_URL)
   })
 
   it('the rate-limit message does not blame the person (the limit is per network)', () => {
@@ -86,6 +92,15 @@ describe('KSH attribution (CC BY 4.0) beside the settlement data', () => {
     expect(screen.getByText(KSH_TEXT)).toBeInTheDocument()
   })
 
+  it('is a real link to the KSH address, opened safely in a new tab, with the approved wording as its name', () => {
+    render(<Step1Form state={initialNewReportState()} dispatch={vi.fn()} />)
+    const link = screen.getByRole('link', { name: KSH_TEXT })
+    expect(link).toHaveAttribute('href', KSH_URL)
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link.getAttribute('rel')).toContain('noopener')
+    expect(link.getAttribute('rel')).toContain('noreferrer')
+  })
+
   it('appears on the History screen, which lists settlement names', () => {
     const reportRepository = {
       submit: vi.fn(),
@@ -108,5 +123,6 @@ describe('KSH attribution (CC BY 4.0) beside the settlement data', () => {
       </MemoryRouter>,
     )
     expect(screen.getByText(KSH_TEXT)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: KSH_TEXT })).toHaveAttribute('href', KSH_URL)
   })
 })

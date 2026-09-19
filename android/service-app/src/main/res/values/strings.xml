@@ -77,6 +77,8 @@
     <string name="reports_subtitle">Az Ön jogosultsági körébe tartozó bejelentések.</string>
     <!-- CC BY 4.0 attribution required for the KSH settlement data shown alongside reports. -->
     <string name="settlement_data_source">Településadatok forrása: KSH (CC BY 4.0)</string>
+    <!-- The KSH address named in the licence's own required attribution string; not translatable. -->
+    <string name="settlement_data_source_url" translatable="false">https://www.ksh.hu</string>
     <string name="tab_new">Új</string>
     <string name="tab_in_progress">Folyamatban</string>
     <string name="older_reports_divider">Régebbi bejelentések</string>

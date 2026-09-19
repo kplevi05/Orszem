@@ -1,5 +1,6 @@
 import type { Dispatch } from 'react'
 import { strings } from '../strings'
+import { SettlementDataSourceNote } from './SettlementDataSourceNote'
 import type { NewReportAction, NewReportState } from '../routes/newReportState'
 
 function toLocalDateTimeInputValue(date: Date): string {
@@ -51,9 +52,7 @@ export function Step1Form({ state, dispatch }: { readonly state: NewReportState;
             aria-describedby="settlement-results"
           />
         </label>
-        <p className="muted" style={{ margin: '0.25rem 0 0' }}>
-          {strings.settlementDataSource}
-        </p>
+        <SettlementDataSourceNote style={{ margin: '0.25rem 0 0' }} />
         {state.settlementSearching && <p className="muted">…</p>}
         {state.settlementResults.length > 0 && (
           <ul id="settlement-results" className="suggestion-list">

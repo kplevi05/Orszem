@@ -35,6 +35,7 @@ import hu.orszembejelento.app.report.data.SettlementOption
 import hu.orszembejelento.app.report.domain.LineAnswer
 import hu.orszembejelento.app.report.domain.RailwayLineStep
 import hu.orszembejelento.app.ui.PublicPalette
+import hu.orszembejelento.app.ui.components.SettlementDataSourceNote
 import hu.orszembejelento.app.ui.components.HelpCard
 import hu.orszembejelento.app.ui.components.PillTone
 import hu.orszembejelento.app.ui.components.SoftCard
@@ -64,12 +65,7 @@ fun Step1Content(state: NewReportUiState, viewModel: NewReportViewModel, onLocat
             )
 
             SettlementField(state, viewModel, modifier = Modifier.padding(top = 14.dp))
-            Text(
-                stringResource(R.string.settlement_data_source),
-                style = MaterialTheme.typography.bodySmall,
-                color = PublicPalette.TextMuted,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+            SettlementDataSourceNote(color = PublicPalette.TextMuted, modifier = Modifier.padding(top = 4.dp))
 
             OutlinedButton(
                 onClick = onLocateMe,

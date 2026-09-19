@@ -92,6 +92,8 @@
     <string name="error_rate_limited">Túl sok bejelentés érkezett rövid időn belül. Kérjük, várjon egy kicsit, majd próbálja újra.</string>
     <!-- CC BY 4.0 attribution required for the KSH settlement data. -->
     <string name="settlement_data_source">Településadatok forrása: KSH (CC BY 4.0)</string>
+    <!-- The KSH address named in the licence's own required attribution string; not translatable. -->
+    <string name="settlement_data_source_url" translatable="false">https://www.ksh.hu</string>
 
     <!-- GPS-off dialog - exact copy, §31, do not change without owner approval -->
     <string name="location_off_title">Helymeghatározás kikapcsolva</string>

@@ -37,6 +37,7 @@ import hu.orszembejelento.app.report.domain.SubmissionState
 import hu.orszembejelento.app.ui.PublicPalette
 import hu.orszembejelento.app.ui.components.HungarianDateTime
 import hu.orszembejelento.app.ui.components.PillTone
+import hu.orszembejelento.app.ui.components.SettlementDataSourceNote
 import hu.orszembejelento.app.ui.components.SoftCard
 import hu.orszembejelento.app.ui.components.StatusPill
 import hu.orszembejelento.app.ui.newreport.publicStatusLabel
@@ -67,12 +68,7 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                 style = MaterialTheme.typography.bodySmall,
                 color = PublicPalette.TextMuted,
             )
-            Text(
-                stringResource(R.string.settlement_data_source),
-                style = MaterialTheme.typography.bodySmall,
-                color = PublicPalette.TextMuted,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+            SettlementDataSourceNote(color = PublicPalette.TextMuted, modifier = Modifier.padding(top = 4.dp))
         }
 
         if (history.isEmpty()) {

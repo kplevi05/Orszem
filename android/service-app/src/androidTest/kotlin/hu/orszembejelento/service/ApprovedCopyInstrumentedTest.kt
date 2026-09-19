@@ -14,6 +14,12 @@ import org.junit.runner.RunWith
 class ApprovedCopyInstrumentedTest {
 
     @Test
+    fun the_ksh_link_is_exactly_the_address_in_the_licence_attribution() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("https://www.ksh.hu", context.getString(R.string.settlement_data_source_url))
+    }
+
+    @Test
     fun the_ksh_attribution_is_the_approved_text() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("Településadatok forrása: KSH (CC BY 4.0)", context.getString(R.string.settlement_data_source))

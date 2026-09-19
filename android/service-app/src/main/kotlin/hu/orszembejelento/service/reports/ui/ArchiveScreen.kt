@@ -1,5 +1,6 @@
 package hu.orszembejelento.service.reports.ui
 
+import hu.orszembejelento.service.common.ui.SettlementDataSourceNote
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -29,11 +30,7 @@ fun ArchiveScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = stringResource(R.string.settlement_data_source),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            SettlementDataSourceNote(color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         ReportQueueBody(
             viewModel = viewModel,
