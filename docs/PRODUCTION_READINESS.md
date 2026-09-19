@@ -36,6 +36,7 @@ secrets and host facts in Gate 5.
 | KSH attribution | **Approved** and implemented as one caption line in the Public Web, Public Android and Service Android |
 | B9 | **Not cleared.** Backup made, working manifest upgraded with `reuseStatus: PENDING`, validation and the import refusal verified. The owner's decision is still needed |
 | Single-instance constraint | Documented in ADR 0010, ARCHITECTURE, the operations runbook and the env template: **do not run more than one backend instance without a shared rate-limit design** |
+| B9 in the release decision | **Does not block the V2.0.1 software release; it blocks production deployment** (owner, final). The recovered working copies were removed from OneDrive after the backup was re-verified |
 | Still owner-only | signing key, V1 backup and restore, production configuration and secrets, DNS/HTTPS, the go/no-go, the `v2.0.1` tag, the B9 clearance |
 
 ## 2. Gate 1 — B6: anonymous Public submission rate limiting
@@ -201,8 +202,9 @@ machine**. Editing the manifest by hand is the alternative; the data hashes stay
   be shown with the data. **`v2.0.0` shows it nowhere**, although the Public apps display KSH-derived
   settlement names. **Approved and implemented in the V2.0.1 candidate** as one caption line: Public Web
   (form and History), Public Android (New Report and History) and Service Android (queue and archive
-  headers, both detail screens). The Web app has no footer, so none was added. The line is plain text;
-  the licence also asks for a working link when online, which is left as an owner decision.
+  headers, both detail screens). The Web app has no footer, so none was added. The line **links to
+  `https://www.ksh.hu`** (the address in the licence's own attribution string), so the "working link when
+  online" requirement is met.
 - **E4 — Budapest (B8).** The dataset contains the city and its 23 districts as separate settlements;
   decide how a Budapest report should route.
 - **E5 — Coverage expectation.** Only 25.9% of settlements have a verified relation, so a

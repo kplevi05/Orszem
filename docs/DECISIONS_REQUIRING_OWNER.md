@@ -146,7 +146,9 @@ See [`PHASE_3B_DECISION_GATE.md`](PHASE_3B_DECISION_GATE.md) §3.
 manifest is upgraded to the current schema with `reuseStatus: PENDING`, and the importer's refusal was
 verified. The per-source reuse/provenance memo is
 [`deployment/REFERENCE_DATA_REUSE_MEMO.md`](deployment/REFERENCE_DATA_REUSE_MEMO.md). Awaiting the owner's
-clearance decision (options A-D in the memo). The KSH CC BY 4.0 attribution is now shown in the clients.
+clearance decision (options A-D in the memo). The KSH CC BY 4.0 attribution is now shown in the clients and links to
+`https://www.ksh.hu`. **Owner's final position:** B9 blocks production deployment but does not block the V2.0.1
+software release; the recovered working copies were removed from the OneDrive-synced repository (backup kept).
 
 VPE publishes no explicit reuse licence for the HÜSZ annexes the railway reference data is
 derived from. The current basis — mandatory regulatory publication by a body performing a

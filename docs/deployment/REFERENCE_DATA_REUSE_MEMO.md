@@ -31,7 +31,7 @@ with this data in production **is** publishing those relations (§4).
 | Source SHA-256 | `d059a14883a27963daa234d9f3954eb68b4cbf967e796710a4bcdb4f03437991` |
 | Licence | CC BY 4.0 (KSH terms of use, `https://www.ksh.hu/copyright`); required attribution "Forrás: KSH — https://www.ksh.hu", not hidden or separated from the data, with a working link when online |
 | Derived file | `settlements.csv` (3,178 rows), tracked in Git, SHA-256 `70b34b3a…359cd` |
-| Attribution status | **Closed in this patch.** The owner-approved line "Településadatok forrása: KSH (CC BY 4.0)" is shown where settlement names are chosen or listed: Public Web (form, History), Public Android (New Report, History), Service Android (Új/Folyamatban and Archívum headers, both report detail screens). It is plain text: it does not link to `ksh.hu`, which the licence asks for "when online". A link would be a further visible change and is left as an owner decision |
+| Attribution status | **Closed in this patch.** The owner-approved line "Településadatok forrása: KSH (CC BY 4.0)" is shown where settlement names are chosen or listed: Public Web (form, History), Public Android (New Report, History), Service Android (Új/Folyamatban and Archívum headers, both report detail screens). It **links to `https://www.ksh.hu`**, the address named in the licence's own required attribution string ("Forrás: KSH — https://www.ksh.hu"), so the "working link when online" requirement is met. Only an underline was added; the wording is unchanged |
 
 ### 2.2 VPE HÜSZ annex 5.2-4 (MÁV) — lines and relations (not cleared)
 
@@ -97,7 +97,7 @@ production can still launch under option C.
 
 | Action | Result |
 |---|---|
-| Durable backup outside the Git store | `C:\Users\ottva\.orszem\reference-data\2026.09.07-1\`: 9 files (original manifest, three canonical files, review files, `SHA256SUMS.txt`, `README.txt`), read-only, all checksums verified. **Outside OneDrive** on purpose |
+| Durable backup outside the Git store | `C:\Users\ottva\.orszem\reference-data\2026.09.07-1\`: 9 files (original manifest, three canonical files, review files, `SHA256SUMS.txt`, `README.txt`), read-only, all checksums verified (re-verified before the working copies were removed). **Outside OneDrive** on purpose |
 | Working-copy manifest upgraded to the current schema | Only two things added: `reuseStatus: "PENDING"` and the component `coverage` (`settlements: COMPLETE`, `railwayLines: PARTIAL`, `settlementRailwayLines: PARTIAL`). **All sources, URLs, dates, hashes, licence references and the original coverage statistics are unchanged.** The original is kept beside it (`manifest.v0-original.json`) |
 | Data files | Untouched. All three canonical files still match the manifest's recorded SHA-256 |
 | `validate-canonical.mjs` | valid: 3,178 settlements, 231 lines, 967 relations, `VERIFIED / PARTIAL / PENDING` |
@@ -110,9 +110,13 @@ settlements and the canonical HÜSZ `line_code` for lines. Imports match on them
 
 ## 7. Two things worth knowing
 
-- **The repository lives inside OneDrive.** The gitignored `reference-data/local-research/` copies
-  are therefore synced to Microsoft's cloud. If that is not acceptable for an uncleared dataset,
-  move the working copies out of the synced folder. The backup in `.orszem\` is already outside it.
+- **The repository lives inside OneDrive, so the recovered working copies were removed from it** (owner
+  authorisation, after re-verifying the backup): the five data/manifest files and the manifest original in
+  `reference-data/local-research/` were each confirmed byte-identical to the backup and then deleted. Only the
+  tracked `README.md` remains there. The upgraded working manifest is the original plus `reuseStatus` and
+  `coverage` and is regenerable. **OneDrive keeps deleted files in its recycle bin and version history for a
+  while**, so the cloud copies are not purged instantly; empty the OneDrive recycle bin if that matters. The
+  backup in `.orszem\` is outside OneDrive and untouched.
 - **Do not create a Git ref to the orphaned commit** (for example a "backup" branch): that would
   make the previously exposed data reachable and pushable again.
 

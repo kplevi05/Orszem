@@ -18,6 +18,7 @@ No signing, DNS, V1, secrets or deployment change.
 | `011ae96` | ADR 0010, B9 reuse memo, register and readiness updates |
 | `cf47161` | version `2.0.1` (Android `versionCode` 2); a separate commit so it is trivial to adjust |
 | `ef7508b` | fix found by the full regression: the limiter tolerates a backwards clock step |
+| `6c75139` | the KSH attribution now links to `https://www.ksh.hu` (owner-approved; tests tap the link) |
 
 ## 2. The rate limit
 
@@ -47,11 +48,10 @@ fail without the check. The focused tests had passed before; only the full suite
 |---|---|
 | 429 handling (Public Android and Web) | explicit branch: the record stays `PENDING` under the **same** `clientSubmissionId` and credential, code `RATE_LIMITED`; recognised even without a body (a proxy). **No automatic retry**: one request per manual action |
 | Message | "Túl sok bejelentés érkezett rövid időn belül. Kérjük, várjon egy kicsit, majd próbálja újra." on the New Report screen and on the History card, above the existing Retry button. It does not blame the person |
-| KSH attribution | "Településadatok forrása: KSH (CC BY 4.0)": Public Android (New Report step 1 under the settlement field; History), Public Web (under the settlement field; History), Service Android (Új/Folyamatban and Archívum headers; both report detail screens). Plain text; no new screen or navigation. The Web app has no footer, so none was added |
+| KSH attribution | "Településadatok forrása: KSH (CC BY 4.0)": Public Android (New Report step 1 under the settlement field; History), Public Web (under the settlement field; History), Service Android (Új/Folyamatban and Archívum headers; both report detail screens). The line **links to `https://www.ksh.hu`**, the address in the licence's own required attribution string (nothing invented); underline only, wording unchanged. Android: `LinkAnnotation.Url`; Web: `target="_blank"` with `rel="noopener noreferrer"`. No new screen or navigation. The Web app has no footer, so none was added |
 
 Not covered by the attribution line: the Service moderation *list* of deleted reports, the Home
-screens' history previews, and the Service filter sheet. The licence's "working link when online" is
-not met by plain text; that is left as an owner decision.
+screens' history previews, and the Service filter sheet.
 
 ## 4. Results (exact final code, uncached builds)
 
@@ -60,9 +60,9 @@ not met by plain text; that is left as an owner decision.
 | Backend `clean build --no-build-cache` | **840 tests, 90 suites, 0 failures, 0 errors, 0 skipped**, all 9 tasks executed (789 before + 31 limiter unit + 20 limiter integration) |
 | Public Android unit | **48** (39 + 9), 0 failures |
 | Service Android unit | **169**, 0 failures |
-| Public Android instrumented (cold-booted emulator) | **26** (21 + 5), 0 failures |
-| Service Android instrumented | **90** (89 + 1), 0 failures |
-| Public Web | **69** in 9 files (55 + 14), typecheck and production build green, `npm ci` 0 vulnerabilities |
+| Public Android instrumented (cold-booted emulator) | **29** (21 + 8), 0 failures |
+| Service Android instrumented | **93** (89 + 4), 0 failures |
+| Public Web | **71** in 9 files (55 + 16), typecheck and production build green, `npm ci` 0 vulnerabilities |
 | Android lint | 0 errors; Public 11 and Service 3 warnings, unchanged (dependency-update notices) |
 | Android builds | `assembleDebug` and `assembleRelease`, both apps; release APKs are **unsigned** |
 | Caddy | validate valid, fmt clean; routing, redaction and CSP scripts exit 0 |
@@ -86,7 +86,10 @@ emulator and shows the attribution on New Report and History.
 Backup outside Git and outside OneDrive, working manifest upgraded with `reuseStatus: PENDING`, validator and the
 backend's `reference-validate`/`reference-diff` pass, and `reference-import` is refused
 (`REFERENCE_DATASET_REUSE_NOT_CLEARED`, 0 rows written). Details and the owner's options:
-[REFERENCE_DATA_REUSE_MEMO.md](deployment/REFERENCE_DATA_REUSE_MEMO.md). **Awaiting the owner's clearance decision.**
+[REFERENCE_DATA_REUSE_MEMO.md](deployment/REFERENCE_DATA_REUSE_MEMO.md). **Awaiting the owner's clearance decision.** Owner's final position: B9 stays `PENDING` / NOT CLEARED. It is a **production-deployment
+blocker but does not block the V2.0.1 software release.** After re-verifying the backup (8 of 8 checksums OK, 9 files, read-only), the
+recovered gitignored working copies were removed from the OneDrive-synced `reference-data/local-research/` (each confirmed
+byte-identical to the backup first); only the tracked `README.md` remains, and the backup is untouched.
 
 ## 6. Limitations
 
@@ -96,6 +99,21 @@ backend's `reference-validate`/`reference-diff` pass, and `reference-import` is 
 - The Service Android attribution was verified by compilation, the pinned-copy test and code review, not by a logged-in
   visual pass (that needs a Service account).
 - Physical-device testing was not done; everything ran on one emulator.
+
+## 6a. Final owner decisions and final verification
+
+| Decision | State |
+|---|---|
+| Android `versionCode` | **Approved: keep 2** (versionName 2.0.1) |
+| KSH attribution link | **Approved and implemented** (see §3). Re-verified: Web 71, Android unit 48/169, lint 0 errors, release builds, instrumented Public 29 and Service 93, all passing; the link tap is asserted on device |
+| B9 | stays PENDING / NOT CLEARED; importer gate untouched; not a software-release blocker |
+| Recovered VPE working copy | removed from OneDrive after backup re-verification (§5) |
+
+**PR diff verification (`origin/main..HEAD`).** 59 files (the earlier 53 plus the link components, their tests and this
+documentation): backend 12, Android 24, Web 14, docs 8, deploy 1. No deleted or renamed files and no binaries. **No dataset,
+manifest, CSV, keystore or `reference-data/` path is in the diff**, and a content scan of all 1,789 added lines against all 2,250
+rows of the recovered railway-lines, relations and needs-review files (read from the backup) found **0** matching rows. Every
+change is V2.0.1 code, tests, docs or configuration.
 
 ## 7. Remaining owner gates (unchanged by this patch)
 
