@@ -71,7 +71,7 @@ proxy: 503 → honest "server unreachable" message, token kept, the next launch 
 | S6 | Refresh rejected (401 SESSION_INVALID) and a real `logout-all` from another session | login screen, token cleared, one refresh sent; revoked session refused by backend immediately |
 | S7 | Refresh answered 503 | **defect 2, fixed**; token kept, message shown, next start restores |
 | S8 | Refresh connection dropped before reaching the backend | recoverable error, token kept, one attempt, next start restores |
-| S9 | Backend processed refresh but the response was lost | exactly **one** request (no blind retry). Next start is refused and needs a sign-in — see B11 |
+| S9 | Backend processed refresh but the response was lost | exactly **one** request (no blind retry). Next start is refused and needs a sign-in — accepted by the owner, see B11 |
 | S10 | Forced first-password change; own-password change | login → change screen → app; process death mid-change persists nothing; own change revokes other sessions and keeps this one |
 | S11 | Session revocation | `logout-all` revokes the other session's access token at once (401) |
 | S13 | Process death (`am kill`) and relaunch | restored with one refresh |
@@ -239,13 +239,13 @@ touched. The following remain **owner** actions:
 3. DNS records for `orszembejelento.hu`, `www` and `api`, and HTTPS issuance.
 4. Generate the V2 release signing key, back it up off-machine (`docs/deployment/ANDROID_SIGNING.md`); optionally back up the V1 pilot key.
 5. Final production configuration and secrets (`/etc/orszem/backend.env`), first SUPER_ADMIN via the maintenance CLI.
-6. Decision B11 (refresh-token rotation without a grace window).
-7. If the Public app is ever shipped as an App Bundle, disable language splits (Phase 15 §Z).
+6. If the Public app is ever shipped as an App Bundle, disable language splits (Phase 15 §Z).
 
 ## L. Known limitations
 
 - **B11 / S9:** a refresh response lost in transit forces one re-login. Deliberate security
-  behaviour; documented for an owner decision, not changed.
+  behaviour. **Owner decision: ACCEPTED as a V2.0.0 tradeoff, not a release blocker**; an ambiguous
+  refresh is never blindly retried, and no grace window is planned for V2.0.0.
 - The 62 s `ComposeNotIdleException` in §I is unexplained (one occurrence in four runs).
 - `deploy/caddy/Caddyfile;C` is an empty, untracked directory (a Windows bind-mount artefact).
   Git ignores it; it is unrelated to the release and was left in place.
