@@ -1,5 +1,6 @@
 package hu.orszembejelento.service.reports.ui
 
+import hu.orszembejelento.service.common.ui.SettlementDataSourceNote
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -235,6 +236,10 @@ private fun ReportFieldsCard(detail: ReportDetailResponse) {
             detail.assignee?.let { DetailRow(stringResource(R.string.field_current_assignee), it.serviceId) }
             detail.archivedAt?.let { DetailRow(stringResource(R.string.field_closed_at), formatInstant(it)) }
             DetailRow(stringResource(R.string.field_report_id), shortReportId(detail.publicReportId))
+            SettlementDataSourceNote(
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
         }
     }
 }

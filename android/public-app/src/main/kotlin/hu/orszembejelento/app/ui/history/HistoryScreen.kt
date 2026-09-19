@@ -37,9 +37,11 @@ import hu.orszembejelento.app.report.domain.SubmissionState
 import hu.orszembejelento.app.ui.PublicPalette
 import hu.orszembejelento.app.ui.components.HungarianDateTime
 import hu.orszembejelento.app.ui.components.PillTone
+import hu.orszembejelento.app.ui.components.SettlementDataSourceNote
 import hu.orszembejelento.app.ui.components.SoftCard
 import hu.orszembejelento.app.ui.components.StatusPill
 import hu.orszembejelento.app.ui.newreport.publicStatusLabel
+import hu.orszembejelento.app.report.data.network.ApiErrorCode
 
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel) {
@@ -66,6 +68,7 @@ fun HistoryScreen(viewModel: HistoryViewModel) {
                 style = MaterialTheme.typography.bodySmall,
                 color = PublicPalette.TextMuted,
             )
+            SettlementDataSourceNote(color = PublicPalette.TextMuted, modifier = Modifier.padding(top = 4.dp))
         }
 
         if (history.isEmpty()) {
@@ -133,11 +136,23 @@ fun HistoryItemCard(item: ReportHistoryEntity, onRetry: () -> Unit, onRefresh: (
                 modifier = Modifier.padding(top = 4.dp),
                 colors = ButtonDefaults.textButtonColors(contentColor = PublicPalette.Primary),
             ) { Text(stringResource(R.string.history_refresh)) }
-            SubmissionState.PENDING -> TextButton(
-                onClick = onRetry,
-                modifier = Modifier.padding(top = 4.dp),
-                colors = ButtonDefaults.textButtonColors(contentColor = PublicPalette.Primary),
-            ) { Text(stringResource(R.string.action_retry)) }
+            SubmissionState.PENDING -> {
+                // A throttled attempt (429) leaves the report PENDING with its identity intact;
+                // say why, in words that do not blame the person (the limit is per network).
+                if (item.lastErrorCode == ApiErrorCode.RATE_LIMITED) {
+                    Text(
+                        stringResource(R.string.error_rate_limited),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PublicPalette.TextMuted,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                }
+                TextButton(
+                    onClick = onRetry,
+                    modifier = Modifier.padding(top = 4.dp),
+                    colors = ButtonDefaults.textButtonColors(contentColor = PublicPalette.Primary),
+                ) { Text(stringResource(R.string.action_retry)) }
+            }
             SubmissionState.ACCESS_LOST -> Text(
                 stringResource(R.string.history_access_lost),
                 style = MaterialTheme.typography.bodySmall,

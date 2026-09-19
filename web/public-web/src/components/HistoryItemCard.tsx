@@ -60,9 +60,14 @@ export function HistoryItemCard({
       )}
 
       {record.submissionState === 'PENDING' && (
-        <button type="button" className="button button--primary button--inline" onClick={onRetry}>
-          {strings.actionRetry}
-        </button>
+        <>
+          {/* A throttled attempt (429) leaves the report PENDING with its identity intact; say why,
+              in words that do not blame the person (the limit is per network). */}
+          {record.lastErrorCode === 'RATE_LIMITED' && <p className="meta-line">{strings.errorRateLimited}</p>}
+          <button type="button" className="button button--primary button--inline" onClick={onRetry}>
+            {strings.actionRetry}
+          </button>
+        </>
       )}
     </article>
   )

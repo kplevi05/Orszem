@@ -179,6 +179,8 @@ when they are built.
 
 ## Decision 8 — rate limiting is explicitly deferred
 
+> **Superseded by [ADR 0010](0010-public-submission-rate-limit.md)** (owner decision B6, V2.0.1). The text below is the Phase 4 record.
+
 `LoginRateLimiter` (Phase 2) is coupled to `AuthProperties` and to service-ID/IP dual-bucket
 semantics built for credential-guessing defence. Reusing it for anonymous report submission
 would mean touching auth semantics or inventing a materially different, unjustified

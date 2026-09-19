@@ -698,3 +698,10 @@ legend {
     transition: none !important;
   }
 }
+
+/* The KSH attribution is a link inside a .muted line: same colour as the text around it, underlined
+   so it reads as a link. No new colour or layout. */
+.muted a {
+  color: inherit;
+  text-decoration: underline;
+}

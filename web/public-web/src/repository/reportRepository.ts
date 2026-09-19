@@ -83,6 +83,14 @@ export function createReportRepository(api: PublicApi = publicApi) {
       return { kind: 'conflict' }
     }
 
+    if (result.status === 429) {
+      // Throttled (B6): the backend created nothing. Keep the record PENDING under the SAME
+      // clientSubmissionId and credential and let the person retry by hand. There is
+      // deliberately no automatic retry, so a limiter is never hammered by this client.
+      await putReport({ ...record, submissionState: 'PENDING', lastErrorCode: ApiErrorCode.RATE_LIMITED })
+      return { kind: 'ambiguous-failure', code: ApiErrorCode.RATE_LIMITED }
+    }
+
     if (result.status === 503) {
       await putReport({ ...record, submissionState: 'PENDING', lastErrorCode: ApiErrorCode.REFERENCE_DATASET_UNAVAILABLE })
       return { kind: 'ambiguous-failure', code: ApiErrorCode.REFERENCE_DATASET_UNAVAILABLE }

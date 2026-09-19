@@ -10,6 +10,9 @@ import hu.orszembejelento.app.report.data.network.RailwayLineItemBody
 import hu.orszembejelento.app.report.data.network.RailwayLinesForSettlementResponseBody
 import hu.orszembejelento.app.report.domain.LineCoverage
 import hu.orszembejelento.app.report.domain.RailwayLineStep
+import hu.orszembejelento.app.report.domain.SubmissionState
+import hu.orszembejelento.app.ui.newreport.ReportStep
+import hu.orszembejelento.app.ui.newreport.UiErrorReason
 import hu.orszembejelento.app.ui.newreport.NewReportViewModel
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
@@ -22,9 +25,11 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
+import java.io.IOException
 import retrofit2.Response
 
 /**
@@ -111,5 +116,66 @@ class NewReportViewModelTest {
         val finalStep = viewModel.state.value.lineStep
         assertEquals(LineCoverage.PARTIAL, (finalStep as RailwayLineStep.RequiresChoice).coverage)
         assertEquals(settlementBId, viewModel.state.value.selectedSettlement?.id)
+    }
+
+    // ---------------------------------------------------------- 429 (B6): the dedicated message
+
+    private fun readyToSubmit(api: FakePublicApi, dao: FakeReportHistoryDao): NewReportViewModel {
+        api.railwayLinesHandler = { Response.success(RailwayLinesForSettlementResponseBody("COMPLETE", emptyList())) }
+        val viewModel = NewReportViewModel(
+            ReportRepository(dao, FakeCryptoBox(), api),
+            CatalogRepository(api),
+            ReferenceRepository(api),
+            LocationAssist(mock(Context::class.java)),
+        )
+        viewModel.onSettlementSelected(SettlementOption(UUID.randomUUID(), "Alfaváros", null))
+        viewModel.onEventTypeSelected("FIGHT")
+        dispatcher.scheduler.advanceUntilIdle()
+        return viewModel
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `a 429 on submit shows the dedicated rate-limit message, stays on the form and keeps the report PENDING`() = runTest(dispatcher.scheduler) {
+        val api = FakePublicApi()
+        val dao = FakeReportHistoryDao()
+        val viewModel = readyToSubmit(api, dao)
+        api.submitResponse = FakePublicApi.errorResponse(429, """{"code":"RATE_LIMITED"}""")
+
+        viewModel.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(UiErrorReason.RATE_LIMITED, viewModel.state.value.error)
+        assertEquals(false, viewModel.state.value.submitting)
+        assertTrue("the person is not moved off the form", viewModel.state.value.step != ReportStep.SUCCESS)
+        assertEquals(SubmissionState.PENDING, dao.observeAll().value.single().submissionState)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `other failures still map as before - a network error is NETWORK, not the rate-limit message`() = runTest(dispatcher.scheduler) {
+        val api = FakePublicApi()
+        val viewModel = readyToSubmit(api, FakeReportHistoryDao())
+        api.throwOnSubmit = IOException("boom")
+
+        viewModel.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(UiErrorReason.NETWORK, viewModel.state.value.error)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `a 429 is never retried by the view model itself - one submit is one request`() = runTest(dispatcher.scheduler) {
+        val api = FakePublicApi()
+        val viewModel = readyToSubmit(api, FakeReportHistoryDao())
+        api.submitResponse = FakePublicApi.errorResponse(429, """{"code":"RATE_LIMITED"}""")
+
+        viewModel.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        dispatcher.scheduler.advanceTimeBy(10 * 60 * 1000)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("no automatic retry, however long we wait", 1, api.submitCallCount)
     }
 }

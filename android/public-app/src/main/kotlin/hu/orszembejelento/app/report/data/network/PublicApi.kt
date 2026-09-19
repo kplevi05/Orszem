@@ -92,6 +92,7 @@ object ApiErrorCode {
     const val IDEMPOTENCY_KEY_REUSED = "IDEMPOTENCY_KEY_REUSED"
     const val REPORT_NOT_FOUND = "REPORT_NOT_FOUND"
     const val REFERENCE_DATASET_UNAVAILABLE = "REFERENCE_DATASET_UNAVAILABLE"
+    const val RATE_LIMITED = "RATE_LIMITED"
 }
 
 private const val REPORT_ACCESS_HEADER = "X-Orszem-Report-Access"

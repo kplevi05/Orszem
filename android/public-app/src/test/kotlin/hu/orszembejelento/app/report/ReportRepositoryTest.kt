@@ -237,6 +237,98 @@ class ReportRepositoryTest {
         assertNotNull(stored?.publicReportId)
     }
 
+    // ------------------------------------------------------- 429: throttled by the backend (B6)
+
+    @Test
+    fun `a 429 keeps the record PENDING under the same identity and reports RATE_LIMITED, with no report id`() = runTest {
+        val dao = FakeReportHistoryDao()
+        val api = FakePublicApi().apply {
+            submitResponse = FakePublicApi.errorResponse(429, """{"code":"RATE_LIMITED","message":"x","correlationId":"c"}""")
+        }
+        val repository = ReportRepository(dao, FakeCryptoBox(), api, now = { fixedNow })
+
+        val outcome = repository.submit(draft(), display)
+
+        assertEquals(SubmitOutcome.AmbiguousFailure("RATE_LIMITED"), outcome)
+        val stored = requireNotNull(dao.findByClientSubmissionId(findOnlyId(dao)))
+        assertEquals(SubmissionState.PENDING, stored.submissionState)
+        assertEquals("RATE_LIMITED", stored.lastErrorCode)
+        assertNull("nothing was created, so there is no report id", stored.publicReportId)
+    }
+
+    @Test
+    fun `a 429 with no readable body (for example from a proxy) is still recognised as throttling`() = runTest {
+        val dao = FakeReportHistoryDao()
+        val api = FakePublicApi().apply { submitResponse = FakePublicApi.errorResponse(429, "") }
+        val repository = ReportRepository(dao, FakeCryptoBox(), api, now = { fixedNow })
+
+        val outcome = repository.submit(draft(), display)
+
+        assertEquals(SubmitOutcome.AmbiguousFailure("RATE_LIMITED"), outcome)
+        assertEquals(SubmissionState.PENDING, dao.findByClientSubmissionId(findOnlyId(dao))?.submissionState)
+    }
+
+    @Test
+    fun `a 429 is never retried automatically - exactly one request is made`() = runTest {
+        val api = FakePublicApi().apply { submitResponse = FakePublicApi.errorResponse(429, """{"code":"RATE_LIMITED"}""") }
+        val repository = ReportRepository(FakeReportHistoryDao(), FakeCryptoBox(), api, now = { fixedNow })
+
+        repository.submit(draft(), display)
+
+        assertEquals("the client must never loop against a limiter", 1, api.submitCallCount)
+    }
+
+    @Test
+    fun `after a 429 the manual retry resends the exact same identity, credential and payload and can succeed`() = runTest {
+        val dao = FakeReportHistoryDao()
+        val api = FakePublicApi().apply { submitResponse = FakePublicApi.errorResponse(429, """{"code":"RATE_LIMITED"}""") }
+        val repository = ReportRepository(dao, FakeCryptoBox(), api, now = { fixedNow })
+        repository.submit(draft(), display)
+        val id = findOnlyId(dao)
+        val firstBody = api.lastSubmitBody
+        val firstCredential = api.lastSubmitCredential
+
+        val publicId = UUID.randomUUID()
+        api.submitResponse = Response.success(201, SubmitReportResponseBody(publicId.toString(), fixedNow.toString(), "RECEIVED"))
+        val outcome = repository.retry(id)
+
+        assertTrue(outcome is SubmitOutcome.Created)
+        assertEquals("the same clientSubmissionId", firstBody, api.lastSubmitBody)
+        assertEquals("the same access credential", firstCredential, api.lastSubmitCredential)
+        val stored = requireNotNull(dao.findByClientSubmissionId(id))
+        assertEquals(SubmissionState.SUBMITTED, stored.submissionState)
+        assertNull("the throttling note is cleared once the report is accepted", stored.lastErrorCode)
+        assertEquals("still one record, never a duplicate", 1, dao.observeAll().value.size)
+    }
+
+    @Test
+    fun `a repeated 429 on retry keeps the record PENDING and keeps saying why`() = runTest {
+        val dao = FakeReportHistoryDao()
+        val api = FakePublicApi().apply { submitResponse = FakePublicApi.errorResponse(429, """{"code":"RATE_LIMITED"}""") }
+        val repository = ReportRepository(dao, FakeCryptoBox(), api, now = { fixedNow })
+        repository.submit(draft(), display)
+        val id = findOnlyId(dao)
+
+        val outcome = repository.retry(id)
+
+        assertEquals(SubmitOutcome.AmbiguousFailure("RATE_LIMITED"), outcome)
+        assertEquals(SubmissionState.PENDING, dao.findByClientSubmissionId(id)?.submissionState)
+        assertEquals("one call per manual action, no more", 2, api.submitCallCount)
+    }
+
+    @Test
+    fun `a 429 does not disturb any other outcome - a 503 is still reference-unavailable and other 4xx still retryable`() = runTest {
+        val dao503 = FakeReportHistoryDao()
+        val api503 = FakePublicApi().apply { submitResponse = FakePublicApi.errorResponse(503, """{"code":"REFERENCE_DATASET_UNAVAILABLE"}""") }
+        assertEquals(
+            SubmitOutcome.AmbiguousFailure("REFERENCE_DATASET_UNAVAILABLE"),
+            ReportRepository(dao503, FakeCryptoBox(), api503, now = { fixedNow }).submit(draft(), display),
+        )
+        val api418 = FakePublicApi().apply { submitResponse = FakePublicApi.errorResponse(418, "") }
+        val outcome = ReportRepository(FakeReportHistoryDao(), FakeCryptoBox(), api418, now = { fixedNow }).submit(draft(), display)
+        assertTrue(outcome is SubmitOutcome.AmbiguousFailure)
+    }
+
     // ------------------------------------------------------------------------------- ordering
 
     @Test

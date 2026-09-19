@@ -3,6 +3,7 @@ import { strings } from '../strings'
 import { useReportHistory } from '../hooks/useReportHistory'
 import { useRepositories } from '../repositoryContext'
 import { HistoryItemCard } from '../components/HistoryItemCard'
+import { SettlementDataSourceNote } from '../components/SettlementDataSourceNote'
 
 export function HistoryScreen() {
   const { reportRepository } = useRepositories()
@@ -34,6 +35,7 @@ export function HistoryScreen() {
         <p className="muted" style={{ margin: 0 }}>
           {strings.historyStorageNotice}
         </p>
+        <SettlementDataSourceNote style={{ margin: '0.25rem 0 0' }} />
       </div>
 
       {history.length === 0 ? (

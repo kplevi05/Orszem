@@ -254,10 +254,10 @@ class NewReportViewModel(
                 is SubmitOutcome.AmbiguousFailure -> _state.update {
                     it.copy(
                         submitting = false,
-                        error = if (outcome.code == ApiErrorCode.REFERENCE_DATASET_UNAVAILABLE) {
-                            UiErrorReason.REFERENCE_UNAVAILABLE
-                        } else {
-                            UiErrorReason.NETWORK
+                        error = when (outcome.code) {
+                            ApiErrorCode.REFERENCE_DATASET_UNAVAILABLE -> UiErrorReason.REFERENCE_UNAVAILABLE
+                            ApiErrorCode.RATE_LIMITED -> UiErrorReason.RATE_LIMITED
+                            else -> UiErrorReason.NETWORK
                         },
                     )
                 }

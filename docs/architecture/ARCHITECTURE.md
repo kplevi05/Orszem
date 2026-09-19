@@ -72,6 +72,13 @@ served by the backend but are **not** routed publicly by Caddy.
 Deliberately absent: Docker as a requirement, Kubernetes, microservices, message brokers,
 Redis, a Node application server in production.
 
+### Single backend instance
+
+The deployment runs **one** backend instance. Two throttles keep their counters in process memory: the
+Service login throttle and the anonymous Public report-creation limit (ADR 0010). **Do not run more
+than one backend instance until a shared rate-limit design exists**; each instance would otherwise
+enforce its own counters, multiplying the effective limits by the instance count.
+
 ## 5. Backend structure
 
 A modular monolith. Each business module is a vertical slice with the layering described in

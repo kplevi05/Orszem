@@ -76,6 +76,12 @@ export const strings = {
   errorLocalStorage: 'A böngésző nem tudta biztonságosan elmenteni a bejelentés helyi adatait, ezért a bejelentés nem lett elküldve.',
   errorAccessLost: 'A bejelentéshez való helyi hozzáférés nem érhető el ebben a böngészőben.',
   errorGeneric: 'Váratlan hiba történt.',
+  // 429: the limit is per network address, so the wording does not blame the person.
+  errorRateLimited: 'Túl sok bejelentés érkezett rövid időn belül. Kérjük, várjon egy kicsit, majd próbálja újra.',
+  // CC BY 4.0 attribution required for the KSH settlement data.
+  settlementDataSource: 'Településadatok forrása: KSH (CC BY 4.0)',
+  // The KSH address named in the licence's own required attribution string ("Forrás: KSH — https://www.ksh.hu").
+  settlementDataSourceUrl: 'https://www.ksh.hu',
 
   locateUnavailableWeb: 'A helyzet meghatározása nem érhető el a webes alkalmazásban - kérjük, keresse meg a települést kézzel.',
 } as const

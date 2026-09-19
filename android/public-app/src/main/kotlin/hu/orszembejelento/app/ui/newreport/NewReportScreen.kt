@@ -181,6 +181,7 @@ private fun ErrorBanner(reason: UiErrorReason) {
         UiErrorReason.VALIDATION -> R.string.error_validation
         UiErrorReason.REFERENCE_UNAVAILABLE -> R.string.error_reference_unavailable
         UiErrorReason.NETWORK -> R.string.error_network
+        UiErrorReason.RATE_LIMITED -> R.string.error_rate_limited
         UiErrorReason.CONFLICT -> R.string.error_conflict
         UiErrorReason.LOCAL_STORAGE -> R.string.error_local_storage
         UiErrorReason.ACCESS_LOST -> R.string.error_access_lost

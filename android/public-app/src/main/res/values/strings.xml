@@ -88,6 +88,12 @@
     <string name="error_local_storage">A készülék nem tudta biztonságosan elmenteni a bejelentés helyi adatait, ezért a bejelentés nem lett elküldve.</string>
     <string name="error_access_lost">A bejelentéshez való helyi hozzáférés nem érhető el ezen a készüléken.</string>
     <string name="error_generic">Váratlan hiba történt.</string>
+    <!-- 429: the limit is per network address, so the wording does not blame the person. -->
+    <string name="error_rate_limited">Túl sok bejelentés érkezett rövid időn belül. Kérjük, várjon egy kicsit, majd próbálja újra.</string>
+    <!-- CC BY 4.0 attribution required for the KSH settlement data. -->
+    <string name="settlement_data_source">Településadatok forrása: KSH (CC BY 4.0)</string>
+    <!-- The KSH address named in the licence's own required attribution string; not translatable. -->
+    <string name="settlement_data_source_url" translatable="false">https://www.ksh.hu</string>
 
     <!-- GPS-off dialog - exact copy, §31, do not change without owner approval -->
     <string name="location_off_title">Helymeghatározás kikapcsolva</string>

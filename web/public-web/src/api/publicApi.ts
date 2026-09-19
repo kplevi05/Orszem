@@ -82,6 +82,7 @@ export const ApiErrorCode = {
   IDEMPOTENCY_KEY_REUSED: 'IDEMPOTENCY_KEY_REUSED',
   REPORT_NOT_FOUND: 'REPORT_NOT_FOUND',
   REFERENCE_DATASET_UNAVAILABLE: 'REFERENCE_DATASET_UNAVAILABLE',
+  RATE_LIMITED: 'RATE_LIMITED',
 } as const
 
 /** A completed HTTP exchange - status plus a parsed body, never a thrown exception for a non-2xx response. */
