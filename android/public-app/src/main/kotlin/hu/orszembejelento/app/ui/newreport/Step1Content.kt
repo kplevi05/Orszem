@@ -64,6 +64,12 @@ fun Step1Content(state: NewReportUiState, viewModel: NewReportViewModel, onLocat
             )
 
             SettlementField(state, viewModel, modifier = Modifier.padding(top = 14.dp))
+            Text(
+                stringResource(R.string.settlement_data_source),
+                style = MaterialTheme.typography.bodySmall,
+                color = PublicPalette.TextMuted,
+                modifier = Modifier.padding(top = 4.dp),
+            )
 
             OutlinedButton(
                 onClick = onLocateMe,

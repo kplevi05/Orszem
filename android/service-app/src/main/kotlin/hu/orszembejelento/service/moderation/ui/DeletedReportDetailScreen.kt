@@ -149,6 +149,12 @@ private fun ReportFieldsCard(detail: DeletedReportDetailResponse) {
                 detail.serviceArea?.name ?: stringResource(R.string.value_unclassified_area),
             )
             DetailRow(stringResource(R.string.field_report_id), shortReportId(detail.publicReportId))
+            Text(
+                text = stringResource(R.string.settlement_data_source),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
         }
     }
 }

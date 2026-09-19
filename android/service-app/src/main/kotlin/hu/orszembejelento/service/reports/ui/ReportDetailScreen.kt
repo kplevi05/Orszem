@@ -235,6 +235,12 @@ private fun ReportFieldsCard(detail: ReportDetailResponse) {
             detail.assignee?.let { DetailRow(stringResource(R.string.field_current_assignee), it.serviceId) }
             detail.archivedAt?.let { DetailRow(stringResource(R.string.field_closed_at), formatInstant(it)) }
             DetailRow(stringResource(R.string.field_report_id), shortReportId(detail.publicReportId))
+            Text(
+                text = stringResource(R.string.settlement_data_source),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
         }
     }
 }

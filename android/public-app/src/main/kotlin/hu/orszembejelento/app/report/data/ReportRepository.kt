@@ -179,6 +179,14 @@ class ReportRepository(
                 SubmitOutcome.Conflict
             }
 
+            429 -> {
+                // Throttled (B6): the backend created nothing. Keep the record PENDING under the
+                // SAME clientSubmissionId and credential and let the person retry by hand; there is
+                // deliberately no automatic retry, so a limiter is never hammered by this client.
+                dao.markState(entity.clientSubmissionId, SubmissionState.PENDING, ApiErrorCode.RATE_LIMITED)
+                SubmitOutcome.AmbiguousFailure(ApiErrorCode.RATE_LIMITED)
+            }
+
             503 -> {
                 dao.markState(entity.clientSubmissionId, SubmissionState.PENDING, ApiErrorCode.REFERENCE_DATASET_UNAVAILABLE)
                 SubmitOutcome.AmbiguousFailure(ApiErrorCode.REFERENCE_DATASET_UNAVAILABLE)
