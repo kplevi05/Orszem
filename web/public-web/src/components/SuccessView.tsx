@@ -1,5 +1,6 @@
 import { strings } from '../strings'
 import { CheckIcon } from './NavIcons'
+import { SettlementDataSourceNote } from './SettlementDataSourceNote'
 import type { SuccessInfo } from '../routes/newReportState'
 
 export function SuccessView({
@@ -26,6 +27,7 @@ export function SuccessView({
         {info.trainIdentifier && <p className="meta-line">{strings.successTrain(info.trainIdentifier)}</p>}
         <p className="meta-line">{strings.successSettlement(info.settlementName)}</p>
         <p className="meta-line">{strings.successStatus(strings.statusReceived)}</p>
+        <SettlementDataSourceNote style={{ margin: '0.25rem 0 0' }} />
       </div>
 
       <div className="success-actions">

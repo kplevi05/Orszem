@@ -23,6 +23,7 @@ import hu.orszembejelento.app.R
 import hu.orszembejelento.app.ui.PublicPalette
 import hu.orszembejelento.app.ui.components.BadgeChip
 import hu.orszembejelento.app.ui.components.QuickGrid
+import hu.orszembejelento.app.ui.components.SettlementDataSourceNote
 import hu.orszembejelento.app.ui.components.SoftCard
 import hu.orszembejelento.app.ui.history.HistoryItemCard
 import hu.orszembejelento.app.ui.history.HistoryViewModel
@@ -87,6 +88,7 @@ fun HomeScreen(historyViewModel: HistoryViewModel, onNewReport: () -> Unit, onVi
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 history.take(3).forEach { item -> HistoryItemCard(item, onRetry = {}, onRefresh = {}) }
+                SettlementDataSourceNote(color = PublicPalette.TextMuted, modifier = Modifier.padding(start = 4.dp))
             }
         }
     }
