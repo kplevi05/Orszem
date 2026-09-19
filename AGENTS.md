@@ -40,8 +40,9 @@ cd web/public-web && npm ci && npm run typecheck && npm run build
 
 ## Rules for agents
 
-1. **Do not expand the current phase's scope.** Phase 1 is the technical baseline; Phase 2
-   is authentication. If a task appears to need a later-phase feature, stop and raise it.
+1. **Do not expand the current scope.** The roadmap (Phases 1–17) is complete and V2.0.0 is
+   the baseline (see `CLAUDE.md`, "Current phase"). If a task appears to need a new feature
+   or an undecided product question, stop and raise it.
 2. **Schema changes only through new Flyway migrations.** Applied migrations are immutable.
 3. **Keep HTTP shapes conformant to the generated OpenAPI contract**, and grow the contract
    with the features that are actually implemented — never document endpoints in advance.

@@ -11,10 +11,17 @@ Do not redesign the product. Do not implement features belonging to a later phas
 
 ## Current phase
 
-**Phase 2 (authentication foundation) is complete.** Phase 3 is reference data and the report domain.
+**The roadmap (Phases 1–17) is complete. Phase 17 is the V2.0.0 final release**, the last
+roadmap phase. The version is `2.0.0`; it is tagged `v2.0.0` only after the Phase 17 PR is
+merged and verified. Each phase's evidence is in `docs/PHASE_<n>_ENGINEERING_REPORT.md`; the
+release state, artefacts and remaining owner gates are in `docs/PHASE_17_ENGINEERING_REPORT.md`.
 
-Nothing beyond the current phase is implemented. If a task seems to require a feature from
-a later phase, stop and raise it rather than inventing behaviour.
+Production **deployment** is a separate step from the software release and stays gated on
+owner actions (see `docs/DECISIONS_REQUIRING_OWNER.md` §A and the Phase 17 report).
+
+Work after 2.0.0 is maintenance and deliberate evolution (2.0.1, 2.1.0, …). If a task
+seems to require a new feature or a product decision nobody has taken, stop and raise it
+rather than inventing behaviour.
 
 ## Read first
 
