@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import mockwebserver3.SocketEffect
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import org.junit.After
@@ -42,6 +43,7 @@ class AuthRepositoryTest {
     val folder = TemporaryFolder()
 
     private lateinit var server: MockWebServer
+    private lateinit var api: AuthApi
     private lateinit var repository: AuthRepository
     private lateinit var store: EncryptedTokenStore
 
@@ -57,7 +59,7 @@ class AuthRepositoryTest {
         server.start()
 
         val json = Json { ignoreUnknownKeys = true }
-        val api = Retrofit.Builder()
+        api = Retrofit.Builder()
             .baseUrl(server.url("/"))
             .client(OkHttpClient.Builder().retryOnConnectionFailure(false).build())
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
@@ -206,6 +208,90 @@ class AuthRepositoryTest {
     @Test
     fun `refresh with nothing stored reports the session as ended`() = runTest {
         assertEquals(AuthOutcome.SessionEnded, repository.refresh())
+    }
+
+    // Phase 16 (S7): only a definitive 401 may end the session. An outage says nothing about it.
+
+    private suspend fun signedInWith(refresh: String) {
+        server.enqueue(tokens("at_1.secret", refresh))
+        server.enqueue(me())
+        repository.login("SZ-123456", "korte alma szilva dio")
+    }
+
+    @Test
+    fun `a refresh answered with a server error keeps the stored session and reports a recoverable failure`() = runTest {
+        signedInWith("rt_1.secret")
+
+        server.enqueue(MockResponse.Builder().code(503).build())
+        val outcome = repository.refresh()
+
+        assertEquals(AuthOutcome.Failure(AuthErrorKind.NETWORK), outcome)
+        assertEquals("a transient outage must not delete the token", "rt_1.secret", store.load()?.refreshToken)
+    }
+
+    @Test
+    fun `a rate limited refresh keeps the stored session`() = runTest {
+        signedInWith("rt_1.secret")
+
+        server.enqueue(error(429, "RATE_LIMITED"))
+        val outcome = repository.refresh()
+
+        assertEquals(AuthOutcome.Failure(AuthErrorKind.RATE_LIMITED), outcome)
+        assertEquals("rt_1.secret", store.load()?.refreshToken)
+    }
+
+    @Test
+    fun `after a transient refresh failure a later refresh still restores the session`() = runTest {
+        signedInWith("rt_1.secret")
+
+        server.enqueue(MockResponse.Builder().code(503).build())
+        repository.refresh()
+
+        server.enqueue(tokens("at_2.secret", "rt_2.secret"))
+        server.enqueue(me())
+        val outcome = repository.refresh()
+
+        assertTrue(outcome is AuthOutcome.Success)
+        assertEquals("rt_2.secret", store.load()?.refreshToken)
+    }
+
+    @Test
+    fun `a transport failure during refresh is not blindly retried and keeps the stored token`() = runTest {
+        signedInWith("rt_1.secret")
+        val requestsAfterLogin = server.requestCount
+
+        // The request reaches the server, but the answer is lost: the token may have been
+        // consumed, so the client must not send it a second time on its own.
+        server.enqueue(MockResponse.Builder().onResponseStart(SocketEffect.CloseSocket()).build())
+        val outcome = repository.refresh()
+
+        assertEquals(AuthOutcome.Failure(AuthErrorKind.NETWORK), outcome)
+        assertEquals("exactly one refresh request", 1, server.requestCount - requestsAfterLogin)
+        assertEquals("rt_1.secret", store.load()?.refreshToken)
+    }
+
+    @Test
+    fun `a protected call whose refresh hits an outage throws instead of reporting the session gone`() = runTest {
+        signedInWith("rt_1.secret")
+
+        server.enqueue(error(401, "SESSION_INVALID")) // stale access token on the protected call
+        server.enqueue(MockResponse.Builder().code(503).build()) // refresh: outage
+
+        val thrown = runCatching { repository.authorizedCall { bearer -> api.me(bearer) } }.exceptionOrNull()
+
+        assertTrue("callers map this to a retryable network error", thrown is java.io.IOException)
+        assertEquals("rt_1.secret", store.load()?.refreshToken)
+    }
+
+    @Test
+    fun `a protected call whose refresh is rejected reports the session gone and clears it`() = runTest {
+        signedInWith("rt_1.secret")
+
+        server.enqueue(error(401, "SESSION_INVALID")) // protected call
+        server.enqueue(error(401, "SESSION_INVALID")) // refresh: revoked / consumed / deactivated user
+
+        assertNull(repository.authorizedCall { bearer -> api.me(bearer) })
+        assertNull(store.load())
     }
 
     @Test
