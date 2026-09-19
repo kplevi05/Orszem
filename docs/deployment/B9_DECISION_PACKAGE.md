@@ -1,126 +1,152 @@
 # B9 — owner decision package (production reference dataset)
 
-**Status: `reuseStatus: PENDING`. Nothing is `CLEARED`, nothing was imported, and this document decides
-nothing.** It is an engineering evidence review for the owner, **not legal advice**. It builds on
-[REFERENCE_DATA_REUSE_MEMO.md](REFERENCE_DATA_REUSE_MEMO.md) and does not contradict it.
+Engineering evidence review, **not legal advice**. It builds on
+[REFERENCE_DATA_REUSE_MEMO.md](REFERENCE_DATA_REUSE_MEMO.md) and contains **aggregate figures only**: no
+row-level VPE-derived data. First issued 2026-09-19; updated the same day with the owner's decisions.
 
-Every statement below was checked against the actual files on 2026-09-19: the durable backup
-(`C:\Users\ottva\.orszem\reference-data\2026.09.07-1\`, 8 of 8 checksums OK), the tracked repository files,
-the licence file, ADR 0005/0006/0007, `docs/PHASE_3B_DECISION_GATE.md`, the builder/validator tools and the
-backend code. It contains **aggregate figures only**: no row-level VPE-derived data.
+B9 is split in two, because they have different owners of the answer and different exit conditions:
 
-`v2.0.1` is untouched. Deployment, DNS, V1, signing keys and production secrets are out of scope.
+| | Question | Exit condition |
+|---|---|---|
+| **B9-A — reuse / licence clearance** | May each component lawfully be used in the public production service? | Owner decision per component; for the railway data, **written VPE confirmation** |
+| **B9-B — reference-data quality / completeness** | Is the data good and complete enough to be useful in routing? | A worked review plan ([B9B_REFERENCE_DATA_QUALITY_PLAN.md](B9B_REFERENCE_DATA_QUALITY_PLAN.md)); independent of B9-A |
 
-## 1. Per-component evidence
+Neither is done by the other: a cleared dataset can still be too sparse, and a complete one can still be unusable
+without permission. `reuseStatus` in the manifest stays **`PENDING`** while any component is uncleared; the
+importer's dataset-level gate is unchanged. **No import, no deployment, `v2.0.1` unmodified.**
 
-Labels are the requested three: `CLEAR EVIDENCE FOR REUSE`, `INSUFFICIENT EVIDENCE`, `DO NOT REUSE`. A
-label is an evidence assessment, **not** a clearance.
+## 0. Owner decisions recorded (2026-09-19)
 
-### 1.1 KSH settlements — **CLEAR EVIDENCE FOR REUSE**
+| Component | Owner decision | State |
+|---|---|---|
+| KSH settlements | **CLEARED**, conditional on the provenance showing the public Helységnévtár download and not a custom extract; KSH's current terms independently checked (CC BY 4.0, mandatory source attribution with a working link) | Provenance condition **verified below (§A1)**. Six surfaces still lack the attribution line in `v2.0.1` (§A1.2) |
+| Event taxonomy | **CLEARED** | First-party; no action |
+| Service areas | No reuse decision needed | Operational data (B2) |
+| Quarantined candidates | **DO NOT REUSE** | Backup only |
+| Railway-line roster | **PENDING** | Needs written VPE confirmation |
+| Settlement ↔ line relations | **PENDING** | Needs written VPE confirmation |
 
-| | |
-|---|---|
-| Exact source | KSH, *Magyarország helységnévtára*, `https://www.ksh.hu/docs/helysegnevtar/hnt_letoltes_2025.xlsx`, state 2025-01-01, retrieved 2026-09-07, SHA-256 `d059a148…37991` (recorded in the licence file and the manifest) |
-| Provenance | Derived to `settlements.csv` (`ksh_code`, `name`, `county_name`; 3,178 rows). The tracked copy `reference-data/cleared/settlements.csv` hashes to `70b34b3a…359cd`, identical to the manifest |
-| Licence evidence present | `reference-data/LICENSES/KSH-helysegnevtar.md`: CC BY 4.0 under KSH's terms; the CC BY-NC restriction applies only to individual-request extracts, not to this download |
-| Attribution | Required: "Forrás: KSH — https://www.ksh.hu", visible, with a working link when online. Implemented in `2.0.1`: "Településadatok forrása: KSH (CC BY 4.0)" linking to `https://www.ksh.hu` on Public Web, Public Android and Service Android (not on three minor screens, see the patch report §3) |
-| Production use = redistribution/publication? | Yes, and that is permitted: CC BY allows it with attribution. The file is already public in this repository under that licence |
-| Public API reconstructs it? | Yes (name search, ≥ 2 characters, 20 results per call, no login). Irrelevant for the verdict: the licence permits it |
-| Evidence supporting reuse | Explicit public licence, licence file with retrieval hash, tracked file matches the manifest hash, attribution shipped |
-| Evidence missing | The KSH terms page was **not re-read online** for this package (the licence file records what was read at retrieval). Attribution is absent from the Service moderation deleted-list, Home history previews and the Service filter sheet |
+The owner **rejected** the option "declare the basis sufficient ourselves" (memo option B). Written confirmation from the
+current KTI VPE Igazgatóság is required before either railway component may be marked `CLEARED`. The request is drafted,
+**not sent**: [VPE_PERMISSION_REQUEST_DRAFT.md](VPE_PERMISSION_REQUEST_DRAFT.md).
 
-### 1.2 Railway-line roster — **INSUFFICIENT EVIDENCE**
+---
 
-| | |
-|---|---|
-| Exact source | VPE (KTI VPE Igazgatóság), *Hálózati Üzletszabályzat 2026/2027*: annex 5.2-4 (MÁV, "AE. sz. módosítás") and annex 5.2-5 (GYSEV, "D. sz. módosítás"), archive `https://vpe.kti.hu/wp-content/uploads/2026/09/husz-2026-2027-ae-sz-modositas.zip`, retrieved 2026-09-07 |
-| Provenance | `railway-lines.csv`: 231 lines (`line_code`, `display_name`), SHA-256 `efba4fd3…457c6`. `display_name` is **our** string, built by the builder from the first and last service point of the line (`displayNameFor`), not a source field. The source archive was **never hashed** (`sha256: null` for both annexes) and the source files are **not on this machine**, so rows cannot be re-derived today. Documented per-annex line counts (207 MÁV + 20 GYSEV-only = 227 distinct) do **not** add up to 231; the four-line difference is not explained in any recorded document |
-| Licence evidence present | **None.** Recorded basis only: mandatory network statement (Directive 2012/34/EU Art. 27); public-body data (Act LXIII of 2012 on reuse of public data); factual rows only; source not redistributed. The manifest itself says "owner confirmation recommended before external distribution". GYSEV rows: gysev.hu's legal notice forbids putting site content in a database without written permission; the data came from the VPE annex, but whether GYSEV holds any right in its own service-point data was not investigated |
-| Attribution | None required or specified. If reuse were granted in writing, any attribution term would come with that grant |
-| Production use = publication? | **Yes in effect.** The Public API returns each settlement's lines to anonymous callers |
-| Public API reconstructs it? | **Partly.** Exposed per line: internal id, `code`, `displayName`. Enumerating settlements (substring search, ≥ 2 chars, ≤ 20 results, no rate limit on lookups) and calling `GET /public/reference/settlements/{id}/railway-lines` for each yields the **147 lines that have a relation** completely. The **84 lines with no relation are never returned**. MÁV/GYSEV origin and service-point names are not exposed. Read from the code (`PublicReferenceController`, `PublicReferenceQueryUseCase`, `JdbcReferenceRepository`); not exercised against the real data |
-| Evidence supporting reuse | Recorded regulatory/public-body basis; only factual identifiers derived; VPE is the source for both networks; no evidence of any restriction on the VPE annexes was found either (absence of a licence, not a prohibition) |
-| Evidence missing | Written grant or licence statement from VPE; VPE source hash and a retained copy of the annexes; resolution of the 227/231 difference; any GYSEV position; legal view that "factual rows" cover a line roster with our derived display names |
+# B9-A — reuse and licence clearance
 
-### 1.3 Settlement ↔ railway-line relations — **INSUFFICIENT EVIDENCE**
+## A1. KSH settlements — CLEARED by owner (evidence)
 
-| | |
-|---|---|
-| Exact source | Same VPE annexes, joined to KSH settlements by exact normalised name |
-| Provenance | `settlement-railway-lines.csv`: 967 pairs (`ksh_code`, `line_code`), SHA-256 `3ce18969…6ed6695`, from 989 exact deterministic candidates (22 duplicates collapse). No similarity score anywhere; 0 manual decisions. Source hash never recorded; sources absent (as 1.2) |
-| Licence evidence present | As 1.2, plus a **compilation** element: the pairing is our derivation (annex service point → KSH settlement), so it is derived data over a source with no stated licence |
-| Attribution | As 1.2 |
-| Production use = publication? | **Yes in effect, and most directly.** This is exactly what the settlement→lines endpoint returns |
-| Public API reconstructs it? | **Yes, completely.** All 967 pairs are recoverable by enumeration (3,178 settlement lookups after enumerating settlements). Verified from code; the API returns only active lines and the settlement's coverage flag |
-| Evidence supporting reuse | Same as 1.2; rows are exact matches only, so correctness is strong for what is included |
-| Evidence missing | Same as 1.2. Additionally: no completeness evidence (§2) |
-
-### 1.4 Other derived / reference components
-
-| Component | Evidence and label |
-|---|---|
-| **Quarantined candidates** (`needs-review.csv`, 1,122 rows: 606 `AMBIGUOUS_NAME`, 516 `NO_SETTLEMENT_MATCH`) | Same VPE origin, **not** verified, not part of the canonical dataset, never imported, not exposed by any API. **DO NOT REUSE** in production: unverified and outside the manifest. Remain backup/research material |
-| **Manual review file** (`manual-review.csv`) | Header only, 0 decisions. Nothing to reuse |
-| **Event-type taxonomy** (7 categories, 61 types) | First-party, carried from the owner's own Demo v1.1 taxonomy into migration V003 and `docs/product/EVENT_CATALOG_V2.md`. Not third-party data, not part of the reference dataset, not gated by `reuseStatus`. **CLEAR EVIDENCE FOR REUSE** (owner-authored; no third-party rights in evidence) |
-| **Service areas and line→area assignments** | Operational data created by a SUPER_ADMIN after import (B2 open). Not dataset content. Not applicable to the reuse question |
-| **Import provenance row** (`reference_dataset_imports`, audit event) | Written by the importer from the manifest, including licence references. No independent rights question |
-
-## 2. Coverage: what is the 25.9 %?
-
-Verified figures (manifest, `build-summary.json`, Phase 3B §2; all consistent):
-
-| | |
-|---|---|
-| Settlements / lines / relations | 3,178 / 231 / 967 |
-| Settlements with ≥ 1 relation | 824 (25.9 %); 2,354 without |
-| Lines with ≥ 1 relation | 147 (63.6 %); 84 without |
-| Relations per settlement | 716 have 1, 80 have 2, 23 have 3, 4 have 4, 1 has 6 |
-| Source extraction | 2,111 of 2,116 annex data rows parsed (99.76 %; 5 rows not extracted, not itemised) |
-| Extracted rows → outcome | 989 exact (→ 967 relations) + 606 ambiguous + 516 no match = 2,111 |
-
-**Determination: (c) not determinable from the available evidence. Both (a) and (b) contribute and the
-documents do not split them.**
-
-- **Partly by design (a).** Phase 3B §7 records that the annexes list *service points* (stations, stops,
-  junctions, sidings), not every settlement a line crosses. A settlement the track passes without a
-  service point cannot appear, "no matter how much manual review is done". Some of the 2,354 settlements
-  therefore legitimately have no relation *in this source*.
-- **Partly incomplete processing (b).** 1,122 of 2,111 extracted station rows (53 %) were **quarantined**,
-  not matched, by the deliberately strict exact-name rule, with **0** manual decisions made. Phase 3B §3
-  states an "unknown minority" of uncovered settlements have a railway "that only the quarantine would
-  reveal". Budapest is at 0 of 24 for this reason (8 quarantined rows). The 25.9 % is therefore a floor
-  produced by conservative matching, not a completed result.
-- **Why (c).** Phase 3B §3 says most uncovered settlements have no railway, but that is an assertion: no
-  recorded measurement separates railway-served settlements from the rest, and the source cannot show it
-  (§7). Quantifying it would require inferring or resolving the quarantined rows, which this package does
-  not do. The dataset is honest about this: ADR 0006 marks the relation component `PARTIAL`, and an empty
-  result means "no verified reference", never "no railway".
-
-## 3. Production suitability (separate from reuse rights)
+### A1.1 Provenance check: public download, not a custom extract
 
 | Check | Result |
 |---|---|
-| Schema compatibility | Compatible. The three canonical files use the importer's headers (`ksh_code,name,county_name`; `line_code,display_name`; `ksh_code,line_code`); `reference-validate` returned VALID and `reference-diff` showed +3,178 / +231 / +967, 0 removals (earlier this session, disposable DB) |
-| Manifest compatibility | The recovered manifest is the **original** (v0): it lacks `reuseStatus` and per-component `coverage`. An upgraded working manifest (adding only those two, everything else unchanged) validated. **That working copy was removed from OneDrive**; it must be rebuilt from the backup before any import. Regenerable, not automatic |
-| Hashes / integrity | The three canonical file hashes match the manifest; the backup's 8 checksums verify; the tracked KSH file matches its hash. **Source integrity is unproven** for VPE: no source hash |
-| Validation result | `validate-canonical.mjs`: valid, `VERIFIED / PARTIAL / PENDING`; backend `reference-validate`: VALID; `reference-import`: **refused** with `REFERENCE_DATASET_REUSE_NOT_CLEARED` (0 rows written) |
-| Reference completeness | Settlements `COMPLETE`. Lines and relations `PARTIAL` (§2). Budapest city vs 23 districts undecided (B8/E4) |
-| Import requirements | Rebuild working dir from backup; set `reuseStatus` only per the owner's decision; import is transactional, advisory-locked, idempotent by `ksh_code`/`line_code`; needs a first administrator; runs at deployment step 7 |
-| PARTIAL vs COMPLETE | `PARTIAL` (current): the importer never deletes on absence, and routing **never auto-infers**: even a settlement with exactly one verified line yields `UNCLASSIFIED / RAILWAY_LINE_NOT_SELECTED` unless the reporter selects it; a settlement with no relation yields `NO_VERIFIED_RAILWAY_LINE_REFERENCE`. `COMPLETE` would allow inferring a single verified line. The recovered data **cannot honestly be declared COMPLETE** (it would need paid boundary data, Phase 3B §7) |
-| Service-area mappings | **Must be configured manually after import.** The import creates no service area and no line→area assignment. Without them an active line routes `UNCLASSIFIED / RAILWAY_LINE_UNASSIGNED`. That is B2 work by a SUPER_ADMIN, needed under every option |
+| Source recorded | `https://www.ksh.hu/docs/helysegnevtar/hnt_letoltes_2025.xlsx`, a `/docs/` path of the public site, state 2025-01-01, retrieved 2026-09-07 (manifest `sources.KSH`; `reference-data/LICENSES/KSH-helysegnevtar.md`) |
+| Anything indicating an individual request | **None.** No request, correspondence, order number or restricted-use notice is recorded anywhere in the manifest, licence file, builder or docs. The licence file states the CC BY-NC exception (data extracted from KSH's databases *on individual request*) and records that it does **not** apply to this download |
+| Content matches a standard published table | The builder reads a plain worksheet (`sheet1`: name, 5-digit KSH code, county) from the unzipped `.xlsx`, the shape of a published registry, not a bespoke extract |
+| Derived file integrity | `reference-data/cleared/settlements.csv` (tracked, public) hashes to `70b34b3a…359cd`, equal to the manifest; 3,178 rows |
+| Not verifiable | The source workbook is **not retained**, so its recorded hash `d059a148…37991` cannot be re-checked from here. Re-downloading it (a download, needing your approval) and comparing the hash would close this fully |
 
-**Suitability verdict:** technically importable and validated *if* the owner authorises it. What it delivers
-is limited by design: most reports will be `UNCLASSIFIED` (visible only to global MODERATOR/SUPER_ADMIN)
-until relations and service areas are extended (E5).
+**Conclusion:** the preserved provenance is consistent with the public download and contains nothing pointing to a custom extract.
+The condition is met on the recorded evidence; the one residual is that the workbook itself was not kept.
 
-## 4. Owner decision table
+### A1.2 Client surfaces that show KSH-derived settlement names
+
+Audited every place in the three clients (code sweep for settlement names, then traced which screens render each card and
+list). The earlier package said "three minor Service surfaces" (deleted list, Home history previews, filter sheet). **That was
+incomplete and is corrected here: six surfaces lack the line in `v2.0.1`**: it missed the two submission-success screens, and
+the Home previews are two surfaces (Public Android and Public Web).
+
+| Client | Surface | In `v2.0.1` | In the patch candidate |
+|---|---|---|---|
+| Public Android | New Report step 1; History | shown | unchanged |
+| Public Android | **Home** (last three history cards) | **missing** | added |
+| Public Android | **Submission-success screen** ("Település: …") | **missing** | added |
+| Public Web | Step 1 form; History | shown | unchanged |
+| Public Web | **Home** (history preview) | **missing** | added |
+| Public Web | **Submission-success view** | **missing** | added |
+| Service Android | Reports (new/in progress) and Archive headers; report detail; deleted-report detail | shown | unchanged |
+| Service Android | **Deleted-reports list** | **missing** | added |
+| Service Android | **Report filter sheet** (settlement search and chip) | **missing** | added |
+
+No other screen presents settlement names (analytics, audit, area administration and login were checked).
+
+**Smallest compliance patch, prepared and not tagged:** branch `release/v2.0.2`, one commit `8a24b3c` on `main` (`a80f6e5`,
+= `v2.0.1`). It reuses the existing `SettlementDataSourceNote` (same approved wording and `https://www.ksh.hu` link) with one
+line per surface: 9 files, +134/−7 including tests. **No version bump** (a release step, not part of this fix), **no tag**.
+
+| Verification | Result |
+|---|---|
+| Web | typecheck and production build green; **74** tests (71 + 3 new); the two behavioural new tests fail without the change |
+| Android | `assembleDebug` both apps, unit tests, `lint` all green |
+| Instrumented (emulator) | Public **30** (29 + 1), Service **94** (93 + 1), 0 failures |
+| Limits | The filter sheet is verified by compilation and code review only (no test seam: it needs a live catalogue repository); the Web Home test also asserts the note is absent when no settlement name is shown |
+
+## A2. Railway-line roster and settlement ↔ line relations — PENDING
+
+Assessment unchanged by the owner's decision, which now fixes the path: **written confirmation is required**.
+
+| | Roster (`railway-lines.csv`, 231) | Relations (`settlement-railway-lines.csv`, 967) |
+|---|---|---|
+| Source | VPE *Hálózati Üzletszabályzat 2026/2027*, annex 5.2-4 (MÁV, "AE. sz. módosítás") and 5.2-5 (GYSEV, "D. sz. módosítás"), retrieved 2026-09-07 from `https://vpe.kti.hu/wp-content/uploads/2026/09/husz-2026-2027-ae-sz-modositas.zip` | same, joined to KSH settlements by exact normalised name |
+| Hash | `efba4fd3…457c6` | `3ce18969…6ed6695` |
+| Licence evidence | **None.** Only a recorded basis (Directive 2012/34/EU Art. 27; Act LXIII of 2012). GYSEV: gysev.hu's legal notice forbids database use without permission; whether it has a claim over its data inside the VPE annex is uninvestigated | as roster, plus our derivation over it |
+| Evidence label | **INSUFFICIENT EVIDENCE** | **INSUFFICIENT EVIDENCE** |
+| Publication in production | Yes in effect: 147 of 231 lines are reconstructable by enumerating the Public API (id, `code`, `displayName`); the 84 lines with no relation are never returned | Yes, completely: all 967 pairs are reconstructable (settlement search ≥ 2 chars, ≤ 20 per call, then one lookup per settlement) |
+| `display_name` | Our string: first and last service point of the line (`displayNameFor`), not a source field | n/a |
+| Missing evidence | Written VPE grant (use, publication via API, modification/normalisation, commercial use, attribution wording, GYSEV coverage); VPE source hash and retained annex copy | same |
+
+**What the written confirmation must cover** (all in the drafted request): the exact annexes; derivation of a line roster and relations
+database; public production service; public API return making the relations reconstructable; derived names and normalisation;
+redistribution, publication and modification; commercial use; attribution and its exact wording/link; whether GYSEV material
+needs separate permission.
+
+**Before sending, the owner should:** confirm `vpe@kti.hu` is the current official contact (not verified from here); optionally
+re-download and hash the annex archive so the provenance gap (`sha256: null`) is closed and the email cites a verifiable file.
+
+## A3. Other components
+
+| Component | Decision / label |
+|---|---|
+| Quarantined candidates (1,122 rows) and the empty manual-review file | **DO NOT REUSE** (owner). Unverified, unimported, exposed by no API |
+| Event taxonomy (7 categories, 61 types, migration V003) | **CLEARED** (owner); first-party |
+| Service areas and line→area assignments | No reuse question; SUPER_ADMIN configuration after import (B2) |
+| Import provenance row | Written by the importer from the manifest; no separate rights question |
+
+## A4. Consequence for production while B9-A is open
+
+The importer gate is **dataset-level**: the recovered manifest carries one `reuseStatus`. Two consequences the owner should know:
+
+- With the two railway components PENDING, the recovered dataset **cannot be imported in any form**; this is the intended state.
+- KSH being `CLEARED` does not by itself allow a settlements-only launch (memo option C). That needs a **separate KSH-only dataset**
+  (settlements `COMPLETE`, empty line and relation files, `reuseStatus: CLEARED`). Whether the validator and importer accept an
+  empty roster/relation file is **not verified** here; it is a small, testable question to settle if option C is chosen. Nothing was built.
+
+---
+
+# B9-B — reference-data quality and completeness
+
+Full plan and numbers: [B9B_REFERENCE_DATA_QUALITY_PLAN.md](B9B_REFERENCE_DATA_QUALITY_PLAN.md). No quarantined row was classified and no
+relation inferred. Headlines:
+
+| Question | Answer |
+|---|---|
+| The 227 vs 231 line difference | **Explained, no missing data.** 207 (MÁV) and 32 (GYSEV) with 12 shared are the lines that have **at least one quarantined row** (227 distinct). The other **4** lines have relations and no quarantined row (7 relations). 227 + 4 = 231, and the union of "lines with a relation" and "lines with a quarantined row" is exactly the 231-line roster. The Phase 3B §4 heading "lines seen" therefore over-states what those figures are |
+| The 1,122 quarantined rows | 973 MÁV + 149 GYSEV; 606 flagged `AMBIGUOUS_NAME` by a **lexical rule** (a marker character/word in the name) and 516 `NO_SETTLEMENT_MATCH`; 935 distinct names on 227 lines. The flag is not proof of ambiguity |
+| Zero manual decisions | The review file was created as an **empty template** in the same commit as the pipeline (2026-09-07) and no decision was ever recorded. No document records a reason beyond Phase 3B listing the work as future manual effort needing an authoritative source per decision |
+| Budapest 0 / 24 | 8 quarantined rows (4 distinct names, on 7 lines), all flagged by the `Budapest` marker rule; the exact settlement name `Budapest` is not matched because station names are composites. Attribution to a district needs a person and B8 (city vs district) |
+| Routing impact | **84 lines** (of 231) have only quarantined rows: 193 rows, 155 names. They cannot be selected by anyone until reviewed. Whether that matters depends on which lines the owner assigns to service areas (B2), which is not yet configured |
+| PARTIAL semantics | Acceptable as a *safe* state (never a false claim); it does make many reports `UNCLASSIFIED` (see the plan §5). It does not become `COMPLETE` however many rows are reviewed |
+
+---
+
+# Decision table (remaining owner items)
 
 | Component | Evidence | Missing evidence | Recommended owner decision choices |
 |---|---|---|---|
-| KSH settlements | CC BY 4.0 on file, hash-matched, attribution shipped with link | Online re-read of KSH terms; attribution on 3 minor Service screens | (1) Accept as reuse-cleared and record it; (2) first re-read the KSH terms page. *Recommended: 1, optionally after 2* |
-| Railway-line roster | Recorded public-body basis only; 147 of 231 lines publicly reconstructable through the API | Written VPE grant; VPE source hash and copy; GYSEV position; 227 vs 231 line-count difference | (A) Obtain written VPE confirmation, then decide; (B) declare the basis sufficient yourself and record it; (C) launch without the roster; (D) author your own roster. *Memo recommendation: A* |
-| Settlement ↔ line relations | Same basis; 967 exact pairs, fully reconstructable through the API | Same as roster; no completeness evidence (25.9 % not determinable) | Same A / B / C / D, decided **together with the roster** since neither is usable alone. *Memo recommendation: A; C is the safe fallback for go-live* |
-| Other: quarantined candidates, manual-review file | Unverified, not imported | Any verification | Keep as backup only; do not import. Optionally start manual review later |
-| Other: event taxonomy, service areas | First-party / operational | none for reuse | No decision needed (service areas are B2 work after import) |
+| KSH settlements | CLEARED by owner; public-download provenance consistent; CC BY 4.0 verified; attribution on 8 of 14 surfaces in `v2.0.1` | Retained source workbook (optional re-check); attribution on 6 surfaces | Approve/merge the `release/v2.0.2` candidate and its version bump and tag (separate step), or accept the six gaps knowingly until then. *Recommended: patch before production* |
+| Railway-line roster | Recorded basis only; 147 of 231 publicly reconstructable | Written VPE confirmation; VPE source hash | (A) Send the drafted request (after checking the address); (C) plan go-live without it; (D) author your own. B is excluded |
+| Settlement ↔ line relations | Same; 967 exact pairs fully reconstructable | Same | Decide together with the roster; go-live fallback is C, which also needs a KSH-only dataset to be built and validated |
+| B9-B quality | Numbers and plan ready; nothing classified | A decision to start review, who reviews, which authoritative source per row | Approve the plan's tiers; start with Budapest (8 rows) and the 84 zero-relation lines; or defer and launch knowing most reports route `UNCLASSIFIED` |
+| Quarantine, taxonomy, service areas | Owner decisions recorded | none | none |
 
-**STOP.** Nothing is `CLEARED`; no import will be run until you decide.
+**STOP.** Railway data is not `CLEARED`, nothing was imported, no deployment, `v2.0.1` unmodified.

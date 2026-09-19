@@ -142,6 +142,14 @@ See [`PHASE_3B_DECISION_GATE.md`](PHASE_3B_DECISION_GATE.md) §3.
 
 ### B9. VPE reuse confirmation
 
+**Split (2026-09-19):** **B9-A** reuse/licence clearance and **B9-B** reference-data quality/completeness. See
+[`deployment/B9_DECISION_PACKAGE.md`](deployment/B9_DECISION_PACKAGE.md) and
+[`deployment/B9B_REFERENCE_DATA_QUALITY_PLAN.md`](deployment/B9B_REFERENCE_DATA_QUALITY_PLAN.md). **Owner decisions:** KSH settlements
+and the event taxonomy **CLEARED**; quarantined candidates **DO NOT REUSE**; the railway-line roster and the settlement↔line relations
+stay **PENDING** and need **written KTI VPE confirmation** (the "declare the basis sufficient" option is rejected; the request is drafted in
+[`deployment/VPE_PERMISSION_REQUEST_DRAFT.md`](deployment/VPE_PERMISSION_REQUEST_DRAFT.md), **not sent**). Six client surfaces still lack the KSH
+attribution in `v2.0.1`; a `release/v2.0.2` candidate (untagged) adds it.
+
 **Status: NOT CLEARED (owner, V2.0.1 work).** The recovered dataset is backed up outside Git, its working
 manifest is upgraded to the current schema with `reuseStatus: PENDING`, and the importer's refusal was
 verified. The per-source reuse/provenance memo is
