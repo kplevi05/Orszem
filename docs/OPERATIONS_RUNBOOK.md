@@ -45,10 +45,23 @@ See `deploy/env/backend.env.example` for the authoritative, commented list. In s
 | `ORSZEM_BIND_ADDRESS` | no (defaults to loopback) | never set this to a public address |
 | `ORSZEM_PORT` | no (defaults to 8081 via the env file) | |
 | everything under "Authentication" in the example file | no | tuned pilot defaults |
+| `ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_*` | no | anonymous report-creation limit: burst 10, one token per 20 s (ADR 0010). In-memory, **single instance only** |
 
 Run `./scripts/orszem-preflight.sh /etc/orszem/backend.env` before (re)starting the
 service after any configuration change. It reports **missing variable names only**, never
 values - see its own header comment.
+
+### Public submission rate limit (ADR 0010)
+
+Anonymous report creation is limited per source (IPv4 address, or IPv6 /64) to a burst of 10 and one more
+every 20 seconds. A throttled request gets `429 RATE_LIMITED` with `Retry-After`; a replay of an already
+accepted `clientSubmissionId` is never throttled. To see it working, watch for the single WARN line
+"public report submissions are being throttled (N requests ...)" (at most one a minute; it never names a
+source). If legitimate reporters are being blocked (for example many passengers behind one carrier
+address), raise `ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_BURST` and restart; no release is needed.
+
+**The counters are per process. Do not run more than one backend instance until a shared rate-limit
+design exists** (ADR 0010, "Consequences").
 
 ## 4. Safe deployment
 

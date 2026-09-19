@@ -10,13 +10,14 @@ controlled deployment. It does not repeat the phase reports; it links to them.
 | `origin/main` when this was written | `ab984bb90adb55ac203a57a6895679b0b6fb3b68` (Phase 17 closure docs merged, PR #22). Only documentation changed after the tag. |
 | Production hosts (unchanged) | `https://orszembejelento.hu`, `https://api.orszembejelento.hu`; `www` redirects to the apex |
 | Deployment rule | Nothing is deployed, tagged, merged or changed on production infrastructure without a separate, explicit owner instruction |
+| **V2.0.1 patch candidate** | Branch `release/v2.0.1`: B6 rate limit, the Public 429 message and the KSH attribution (owner-approved). **Not tagged, not released.** `v2.0.0` does **not** contain these; production must deploy `2.0.1` (or later), not `2.0.0`. See §1a |
 
 ## 1. Gate summary
 
 | Gate | Status | Blocker | Next action | Owner/Claude |
 |---|---|---|---|---|
-| 1 — B6 Public submission rate limit | **Designed, not implemented** | No numeric policy exists in any active document; the values are a product decision | Approve or amend the proposed policy in §2.5 (D1–D4). Then implement and test as post-2.0.0 patch `2.0.1` | **Owner** decides; Claude implements after |
-| 2 — B9 production reference dataset | **Data found and integrity-verified; not importable** | (a) The importer refuses a `PENDING` dataset with no bypass; reuse rights are unconfirmed. (b) KSH CC BY 4.0 attribution is not shown in any client | Decide the reuse basis (§3.6). Authorise the manifest upgrade + dry-run (§3.7). Decide where to show the KSH attribution | **Owner** (legal basis, attribution); Claude (dry-run) after authorisation |
+| 1 — B6 Public submission rate limit | **Implemented in the 2.0.1 candidate; awaiting merge, tag and deployment** | Not in `v2.0.0`; needs the `2.0.1` release and the go/no-go. Single backend instance only (ADR 0010) | Owner reviews and merges the patch PR, then approves the `v2.0.1` tag | **Owner** |
+| 2 — B9 production reference dataset | **Backed up, upgraded (still `PENDING`), validated; NOT CLEARED** | The importer refuses a `PENDING` dataset with no bypass (verified). VPE reuse rights are unconfirmed; see `deployment/REFERENCE_DATA_REUSE_MEMO.md` | **Owner decides E1** (memo options A–D): written VPE confirmation, an owner-declared basis, or launch without VPE data | **Owner** |
 | 3 — Android signing | **Instructions ready** | No V2 release key exists (owner-only by design) | Generate and back up the key on your own machine (§4) | **Owner** |
 | 4 — V1 backup and rollback evidence | **Runbook ready** | No production access here; V1 must not be touched | Run §5 on the server and workstation; report the checksum and restore result | **Owner** |
 | 5 — Production configuration inventory | **Complete** (§6) | Owner must supply the secrets and host facts listed | Provide the "owner must provide" items; generate the secrets on the server | **Owner** (secrets); Claude (no action) |
@@ -26,7 +27,22 @@ controlled deployment. It does not repeat the phase reports; it links to them.
 Gate 1 (decision + patch), Gate 2 (reuse basis), Gate 3 (key), Gate 4 (verified V1 backup) and the
 secrets and host facts in Gate 5.
 
+### 1a. What changed since the first pass (V2.0.1 candidate)
+
+| Item | State |
+|---|---|
+| B6 policy | **Approved** and implemented exactly: burst 10, one token per 20 s, IPv4 exact, IPv6 /64, trusted-proxy resolver unchanged, replays and 409s never throttled, 429 + `RATE_LIMITED` + `Retry-After`. Design and constraints: [ADR 0010](architecture/adr/0010-public-submission-rate-limit.md) |
+| Public 429 UX | **Approved** and implemented: the dedicated Hungarian message on both Public clients, the report stays `PENDING` with the same identity, manual retry only |
+| KSH attribution | **Approved** and implemented as one caption line in the Public Web, Public Android and Service Android |
+| B9 | **Not cleared.** Backup made, working manifest upgraded with `reuseStatus: PENDING`, validation and the import refusal verified. The owner's decision is still needed |
+| Single-instance constraint | Documented in ADR 0010, ARCHITECTURE, the operations runbook and the env template: **do not run more than one backend instance without a shared rate-limit design** |
+| Still owner-only | signing key, V1 backup and restore, production configuration and secrets, DNS/HTTPS, the go/no-go, the `v2.0.1` tag, the B9 clearance |
+
 ## 2. Gate 1 — B6: anonymous Public submission rate limiting
+
+> **Update:** approved and implemented in the V2.0.1 candidate (see §1a and ADR 0010). §2.1–§2.6 below are the
+> design record from the first pass and are kept for traceability.
+
 
 ### 2.1 Finding
 
@@ -182,10 +198,11 @@ machine**. Editing the manifest by hand is the alternative; the data hashes stay
 - **E2 — Back the recovered files up now, securely.** They exist only as unreachable objects (plus
   the gitignored copies above). Store them off-repository with the manifest and its hashes.
 - **E3 — KSH attribution (CC BY 4.0).** The licence requires "Forrás: KSH — https://www.ksh.hu" to
-  be shown with the data. **No client, and no backend response, currently shows it**, although the
-  Public apps display KSH-derived settlement names. Decide where it goes (Public Web footer and an
-  about/info spot in the Public app). This is visible text and needs your approval, and would ship
-  in the same patch as B6 or another one.
+  be shown with the data. **`v2.0.0` shows it nowhere**, although the Public apps display KSH-derived
+  settlement names. **Approved and implemented in the V2.0.1 candidate** as one caption line: Public Web
+  (form and History), Public Android (New Report and History) and Service Android (queue and archive
+  headers, both detail screens). The Web app has no footer, so none was added. The line is plain text;
+  the licence also asks for a working link when online, which is left as an owner decision.
 - **E4 — Budapest (B8).** The dataset contains the city and its 23 districts as separate settlements;
   decide how a Budapest report should route.
 - **E5 — Coverage expectation.** Only 25.9% of settlements have a verified relation, so a
@@ -489,7 +506,7 @@ not a guarantee. Keep the existing VM and public IP; nothing found requires new 
 | 2 | **Verified V1 backup** | ✅ Owner | §5.1–§5.4 passed and recorded |
 | 3 | **V1 write/service-access shutdown** | ✅ Owner | Freeze writes: `docker compose … stop api` (keeps the database), then take the **final dump** (§5.4) and verify it. Only then `docker compose … down` (**no `-v`**: volumes kept). This frees 80/443. `V1_DECOMMISSION.md` Option 1 |
 | 4 | **Create the V2 database and role** | ✅ Owner | `SERVER_RUNBOOK.md` §2; password from a password manager; confirm loopback-only |
-| 5 | **Install the backend artefact and config** | ✅ Owner | Build the JAR from the approved tag (`./gradlew clean bootJar`), record its SHA-256, copy it up, install as `orszem`. Create `/etc/orszem/backend.env` (mode 640) from the template; run `scripts/orszem-preflight.sh` |
+| 5 | **Install the backend artefact and config** | ✅ Owner | Build the JAR from the approved **`v2.0.1`** tag (never `v2.0.0`, which lacks the rate limit) (`./gradlew clean bootJar`), record its SHA-256, copy it up, install as `orszem`. Create `/etc/orszem/backend.env` (mode 640) from the template; run `scripts/orszem-preflight.sh` |
 | 6 | **Start the backend; run migrations** | ✅ Owner | `systemctl enable --now orszem-backend`. Flyway applies **V001–V006** to the empty DB. Check `journalctl -u orszem-backend` for a clean start, and `curl http://127.0.0.1:8081/actuator/health` → `UP`. Confirm the startup log has **no** generated-password line |
 | 7 | **First administrator, then reference import** | ✅ Owner | `scripts/orszem-admin create-super-admin` (store the printed credential securely; it is one-time). Then `reference-validate`, `reference-diff`, `reference-import` of the **approved production dataset** (only if `CLEARED`, §3) |
 | 8 | **Deploy the Public Web build** | ✅ Owner | `npm ci && npm run build` from the approved tag; rsync `dist/` (excluding `*.map`) to `/home/opc/apps/orszem-v2/web` |
