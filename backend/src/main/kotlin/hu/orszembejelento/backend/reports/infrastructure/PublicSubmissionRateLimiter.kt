@@ -28,9 +28,17 @@ import org.springframework.stereotype.Component
  * allowed  = now >= allowAt
  * ```
  *
- * A source that has been idle has `tat <= now`, which is a full bucket. One number per source
- * keeps memory tiny, and updating it inside Caffeine's per-key `compute` makes every decision
- * atomic, so concurrent requests from one source cannot overspend the bucket.
+ * A source that has been idle has `tat <= now`, which is a full bucket. Two numbers per source
+ * (the `tat` and when it was last touched) keep memory tiny, and updating them inside Caffeine's
+ * per-key `compute` makes every decision atomic, so concurrent requests from one source cannot
+ * overspend the bucket.
+ *
+ * ## A clock that steps backwards
+ * The clock is the system clock, which an NTP correction can step backwards. A `tat` recorded
+ * before such a step would then lie far in the future and throttle the source for the size of the
+ * step. So each entry also remembers the time it was last touched; if `now` is earlier than that,
+ * the clock went backwards, the entry is meaningless, and the bucket starts full. Briefly admitting
+ * a burst after a clock step is harmless; throttling people because of one is not.
  *
  * ## Who a "source" is
  * The caller passes the address `ClientIpResolver` resolved. That resolver already believes
@@ -70,7 +78,10 @@ class PublicSubmissionRateLimiter(
     /** Nanoseconds on this limiter's clock; the same source drives both the maths and expiry. */
     private fun nowNanos(): Long = Math.multiplyExact(clock.millis(), 1_000_000L)
 
-    private val buckets: Cache<String, AtomicLong> = Caffeine.newBuilder()
+    /** `tat`: when the bucket would be empty. `seen`: the clock reading at the last update. */
+    private class Bucket(val tat: Long, val seen: Long)
+
+    private val buckets: Cache<String, Bucket> = Caffeine.newBuilder()
         .ticker(Ticker { nowNanos() })
         // Once the bucket would be full again the entry is worthless; keep it that long, no more.
         .expireAfterWrite(Duration.ofNanos(burstWindowNanos).plusSeconds(1))
@@ -94,14 +105,15 @@ class PublicSubmissionRateLimiter(
         val now = nowNanos()
         var retryAfterNanos = 0L
         buckets.asMap().compute(key) { _, current ->
-            val tat = current?.get() ?: now
+            // No entry, or the clock has stepped backwards since it was written: a full bucket.
+            val tat = if (current == null || now < current.seen) now else current.tat
             val newTat = maxOf(tat, now) + periodNanos
             val allowAt = newTat - burstWindowNanos
             if (now >= allowAt) {
-                AtomicLong(newTat)
+                Bucket(newTat, now)
             } else {
                 retryAfterNanos = allowAt - now
-                current ?: AtomicLong(tat)
+                Bucket(tat, now)
             }
         }
 
@@ -114,9 +126,11 @@ class PublicSubmissionRateLimiter(
 
     /** Gives back a token taken for a request that turned out not to create anything. */
     private fun refund(key: String) {
+        val now = nowNanos()
         buckets.asMap().computeIfPresent(key) { _, current ->
             // Never credit beyond a full bucket: a refund is a correction, not extra allowance.
-            AtomicLong(maxOf(current.get() - periodNanos, nowNanos()))
+            val tat = if (now < current.seen) now else current.tat
+            Bucket(maxOf(tat - periodNanos, now), now)
         }
     }
 

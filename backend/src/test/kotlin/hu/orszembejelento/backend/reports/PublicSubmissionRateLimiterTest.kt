@@ -284,6 +284,61 @@ class PublicSubmissionRateLimiterTest {
         assertEquals(100_000L, defaults.maximumTrackedKeys)
     }
 
+    // --------------------------------------------------------------- a clock that steps backwards
+
+    @Test
+    fun `a clock that steps far backwards never leaves an exhausted source throttled by the skew`() {
+        val limiter = limiter()
+        repeat(10) { limiter.acquire("203.0.113.5") }
+        assertTrue(limiter.tryOnce("203.0.113.5") != null, "exhausted")
+
+        clock.advance(Duration.ofDays(-30)) // an NTP step, or a test resetting a shared clock
+
+        assertEquals(null, limiter.tryOnce("203.0.113.5"), "the stale entry must not throttle after a backwards step")
+    }
+
+    @Test
+    fun `after a backwards step the source gets one fresh burst and is then limited normally again`() {
+        val limiter = limiter()
+        repeat(10) { limiter.acquire("203.0.113.5") }
+        clock.advance(Duration.ofHours(-1))
+
+        var allowed = 0
+        repeat(25) { if (limiter.tryOnce("203.0.113.5") == null) allowed++ }
+        assertEquals(10, allowed, "a fresh full bucket, no more")
+        assertEquals(20L, limiter.tryOnce("203.0.113.5"), "and the ordinary Retry-After resumes")
+    }
+
+    @Test
+    fun `even a one-second backwards step resets rather than trusting an unreliable clock reading`() {
+        val limiter = limiter()
+        repeat(10) { limiter.acquire("203.0.113.5") }
+        clock.advance(Duration.ofSeconds(-1))
+        assertEquals(null, limiter.tryOnce("203.0.113.5"))
+    }
+
+    @Test
+    fun `a refund after a backwards step is harmless and still never over-credits`() {
+        val limiter = limiter()
+        val permits = (1..3).map { limiter.acquire("203.0.113.5") }
+        clock.advance(Duration.ofMinutes(-5))
+
+        permits.forEach { it.refund() }
+
+        var allowed = 0
+        repeat(25) { if (limiter.tryOnce("203.0.113.5") == null) allowed++ }
+        assertEquals(10, allowed)
+    }
+
+    @Test
+    fun `moving forward is unaffected - refill works exactly as before`() {
+        val limiter = limiter()
+        repeat(10) { limiter.acquire("203.0.113.5") }
+        clock.advance(Duration.ofSeconds(20))
+        assertEquals(null, limiter.tryOnce("203.0.113.5"))
+        assertEquals(20L, limiter.tryOnce("203.0.113.5"))
+    }
+
     // -------------------------------------------------------------- bounded memory, eviction
 
     @Test
