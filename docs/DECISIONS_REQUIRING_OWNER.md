@@ -102,6 +102,11 @@ limits, a CAPTCHA-equivalent (no paid CAPTCHA service without owner approval, §
 what a limited client sees when throttled. See `PHASE_4_ENGINEERING_REPORT.md` §L for the
 full account of what is and is not defended today.
 
+**Re-confirmed by Phase 17 (V2.0.0), still open:** 60 rapid anonymous submissions to
+`POST /api/v1/public/reports` were all accepted (`201`). V2.0.0 ships without a submission
+rate limit or abuse defence. This does not block the software release, but it is a **production
+deployment gate**: decide the limits and mechanism before the Public endpoint is exposed.
+
 ### B7. Moderation
 Who moderates, on what basis, and what states does moderation produce?
 
