@@ -70,7 +70,7 @@ the Home previews are two surfaces (Public Android and Public Web).
 
 No other screen presents settlement names (analytics, audit, area administration and login were checked).
 
-**Smallest compliance patch, prepared and not tagged:** branch `release/v2.0.2`, one commit `8a24b3c` on `main` (`a80f6e5`,
+**Smallest compliance patch (owner-accepted 2026-09-19; PR open, not merged, not tagged):** branch `release/v2.0.2`, code commit `8a24b3c` on `main` (`a80f6e5`,
 = `v2.0.1`). It reuses the existing `SettlementDataSourceNote` (same approved wording and `https://www.ksh.hu` link) with one
 line per surface: 9 files, +134/−7 including tests. **No version bump** (a release step, not part of this fix), **no tag**.
 
@@ -117,7 +117,7 @@ re-download and hash the annex archive so the provenance gap (`sha256: null`) is
 The importer gate is **dataset-level**: the recovered manifest carries one `reuseStatus`. Two consequences the owner should know:
 
 - With the two railway components PENDING, the recovered dataset **cannot be imported in any form**; this is the intended state.
-- KSH being `CLEARED` does not by itself allow a settlements-only launch (memo option C). That needs a **separate KSH-only dataset**
+- KSH being `CLEARED` does not by itself allow a settlements-only launch (memo option C). That would need a **separate KSH-only dataset** (**owner: not to be built or given an importer path at this time**)
   (settlements `COMPLETE`, empty line and relation files, `reuseStatus: CLEARED`). Whether the validator and importer accept an
   empty roster/relation file is **not verified** here; it is a small, testable question to settle if option C is chosen. Nothing was built.
 

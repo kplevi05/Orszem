@@ -1,5 +1,7 @@
 # B9-B — reference-data quality and completeness: findings and review plan
 
+**Status (owner, 2026-09-19): plan approved; manual quarantine classification is DEFERRED until written VPE reuse confirmation is received.** Step 0 onwards below does not start before then.
+
 Part of [B9_DECISION_PACKAGE.md](B9_DECISION_PACKAGE.md). B9-B is about whether the recovered railway reference data is
 **good and complete enough to route reports**. It is independent of the licence question (B9-A): nothing here depends on
 VPE's answer, and nothing here is affected by it, except that reviewed data may only be *used* once B9-A allows it.
@@ -32,7 +34,7 @@ station names or rows appear here, and none may be committed (see the memo §7 a
 
 ### 2.1 The 227 vs 231 railway-line difference: explained
 
-The roster has 231 lines. Phase 3B §4 gives 207 (MÁV annex), 32 (GYSEV annex), 12 in both, so 227 distinct. Recomputing from the
+The roster has 231 lines. Phase 3B §4 originally labelled 207 (MÁV), 32 (GYSEV) and 12 (both), so 227 distinct, as "lines seen"; that label has been corrected. Recomputing from the
 backup: those three figures equal the number of lines **having at least one quarantined row** by source (207 / 32 / 12, union 227),
 not the number of lines in each annex. The remaining **4** lines have relations and **no** quarantined rows (every service point
 on them matched exactly), so they never appear in the quarantine. 227 + 4 = 231, and every roster line is in the union of
