@@ -70,7 +70,7 @@ the Home previews are two surfaces (Public Android and Public Web).
 
 No other screen presents settlement names (analytics, audit, area administration and login were checked).
 
-**Smallest compliance patch (owner-accepted 2026-09-19; PR open, not merged, not tagged):** branch `release/v2.0.2`, code commit `8a24b3c` on `main` (`a80f6e5`,
+**Smallest compliance patch (owner-accepted 2026-09-19; PR not yet opened by the tooling here, not merged, not tagged; version bump commit `1319360`):** branch `release/v2.0.2`, code commit `8a24b3c` on `main` (`a80f6e5`,
 = `v2.0.1`). It reuses the existing `SettlementDataSourceNote` (same approved wording and `https://www.ksh.hu` link) with one
 line per surface: 9 files, +134/−7 including tests. **No version bump** (a release step, not part of this fix), **no tag**.
 
