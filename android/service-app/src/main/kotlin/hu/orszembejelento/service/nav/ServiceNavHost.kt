@@ -15,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -362,6 +363,10 @@ fun ServiceNavHost(
                                 }
                             },
                             icon = { Icon(destination.icon, contentDescription = null) },
+                            // Material3 defaults the SELECTED label to `secondary`, which this dark scheme maps to
+                            // the dark navy `SurfaceAlt` - measured at 1.40:1 against the bar (WCAG AA needs 4.5:1).
+                            // `onSurface` is 15.16:1 on the same bar; icon, indicator and unselected colours stay default.
+                            colors = NavigationBarItemDefaults.colors(selectedTextColor = MaterialTheme.colorScheme.onSurface),
                             label = {
                                 val text: @Composable () -> Unit = {
                                     Text(
