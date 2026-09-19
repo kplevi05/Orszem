@@ -18,8 +18,9 @@ import hu.orszembejelento.service.R
 
 /**
  * `Moderáció` (brief §36): the live `Felhasználók` entry, the now-live `Törölt bejelentések`
- * moderation feature (Phase 9), plus own-account actions. Only ServiceArea administration
- * (Phase 10) remains an honest "not yet available" placeholder here - never a fake button.
+ * moderation feature (Phase 9), plus own-account actions. ServiceArea administration is
+ * SUPER_ADMIN-only (enforced by the backend), so a Moderator sees an explanatory note here
+ * instead of a button.
  */
 @Composable
 fun ModerationHubScreen(onOpenUsers: () -> Unit, onOpenDeletedReports: () -> Unit, onOpenAccount: () -> Unit) {
@@ -35,7 +36,7 @@ fun ModerationHubScreen(onOpenUsers: () -> Unit, onOpenDeletedReports: () -> Uni
             }
         }
         Text(
-            stringResource(R.string.moderation_functions_unavailable),
+            stringResource(R.string.moderation_service_areas_require_admin),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),

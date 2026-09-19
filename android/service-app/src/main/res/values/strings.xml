@@ -172,7 +172,7 @@
     <string name="admin_subtitle">Globális kezelés</string>
     <string name="hub_users_entry">Felhasználók</string>
     <string name="hub_own_account">Saját fiók</string>
-    <string name="moderation_functions_unavailable">A szolgálati területek kezelése ebben a verzióban még nem érhető el.</string>
+    <string name="moderation_service_areas_require_admin">A szolgálati területek kezelése rendszergazdai jogosultságot igényel.</string>
     <string name="hub_deleted_reports_entry">Törölt bejelentések</string>
     <string name="areas_admin_title">Szolgálati területek</string>
     <string name="audit_admin_title">Változási előzmények</string>

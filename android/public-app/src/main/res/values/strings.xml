@@ -51,6 +51,8 @@
     <string name="action_submit">Bejelentés küldése</string>
     <string name="catalog_load_failed">A kategórialista betöltése nem sikerült.</string>
     <string name="action_retry">Újrapróbálás</string>
+    <string name="action_confirm">Rendben</string>
+    <string name="action_cancel">Mégse</string>
 
     <!-- Success -->
     <string name="success_title">Bejelentés elküldve</string>

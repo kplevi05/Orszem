@@ -1,10 +1,12 @@
 package hu.orszembejelento.service.ui
 
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import hu.orszembejelento.service.audit.data.AuditDetailItemResponse
 import hu.orszembejelento.service.audit.data.AuditEventDetailResponse
@@ -228,6 +230,26 @@ class AuditComposeTest {
         compose.onNodeWithText("Szolgálati terület").performClick()
         compose.onNodeWithText("Alkalmaz").performClick()
         assertEquals("SERVICE_AREA", repo.seenFilters.last().targetType)
+    }
+
+    @Test
+    fun the_apply_and_clear_actions_stay_on_screen_after_scrolling_the_full_event_type_list_to_its_end() {
+        // Phase 15 §H: Apply/Clear used to sit at the bottom of the SAME scrollable column as
+        // the ~31 real event-type chips, so reaching them meant scrolling past every chip
+        // first. They now live in a separate, non-scrolling region - scrolling the full,
+        // realistic event-type list all the way to its last entry must never push them off
+        // screen. Uses the product's own real event-type roster, not a two-item fake list,
+        // since that is exactly the list length the bug needed to reproduce.
+        val repo = FakeAuditRepo(
+            optionsResult = ApiResult.Success(
+                AuditOptionsResponse(eventTypes = hu.orszembejelento.service.audit.ui.AUDIT_EVENT_TYPE_ORDER, targetTypes = listOf("USER", "SERVICE_AREA")),
+            ),
+        )
+        setListContentWith(repo)
+        compose.onNodeWithContentDescriptionCompat("Szűrők").performClick()
+        compose.onNodeWithText("Referenciaadat importálva").performScrollTo()
+        compose.onNodeWithText("Alkalmaz").assertIsDisplayed()
+        compose.onNodeWithText("Szűrők törlése").assertIsDisplayed()
     }
 
     @Test

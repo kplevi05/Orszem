@@ -1,5 +1,8 @@
 package hu.orszembejelento.service.nav
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -12,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -25,8 +29,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
@@ -87,6 +99,9 @@ import hu.orszembejelento.service.usermanagement.ui.UserDetailViewModel
 import hu.orszembejelento.service.usermanagement.ui.UsersListViewModel
 import hu.orszembejelento.service.usermanagement.ui.UsersScreen
 import kotlinx.coroutines.launch
+
+/** Most lines a bottom-nav label may wrap to before the last-resort ellipsis applies. */
+private const val NAV_LABEL_MAX_LINES = 3
 
 internal object Routes {
     const val REPORTS = "reports"
@@ -315,21 +330,63 @@ fun ServiceNavHost(
         bottomBar = {
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination
-            NavigationBar {
-                bottomDestinationsFor(role).forEach { destination ->
-                    val selected = currentRoute?.hierarchy?.any { it.route == destination.route } == true
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(destination.icon, contentDescription = null) },
-                        label = { Text(androidx.compose.ui.res.stringResource(destination.labelRes)) },
-                    )
+            val destinations = bottomDestinationsFor(role)
+            // Phase 15 §G. An unconstrained label wraps unevenly when it does not fit its item
+            // (large font scale and/or a narrow screen): "Adminisztráció" wraps to two lines
+            // while its siblings stay on one, so that item measures taller and the icons fall
+            // out of alignment. The fix is adaptive: labels are measured against the real item
+            // width, and ONLY when at least one needs a second line do all labels reserve the
+            // tallest measured height so every item is the same height. When every label fits
+            // on one line (normal font scale, normal width) nothing is reserved and the bar is
+            // the plain Material height, exactly as before Phase 15.
+            BoxWithConstraints {
+                val labelStyle = MaterialTheme.typography.labelMedium
+                val labels = destinations.map { stringResource(it.labelRes) }
+                val textMeasurer = rememberTextMeasurer()
+                val density = LocalDensity.current
+                // Material3 NavigationBarItem pads each item horizontally by 8dp per side.
+                val labelWidthPx = with(density) { (maxWidth / destinations.size - 16.dp).roundToPx() }
+                val reservedLabelHeight: Dp? = remember(labels, labelStyle, labelWidthPx, density) {
+                    val measured = labels.map { textMeasurer.measure(it, labelStyle, maxLines = NAV_LABEL_MAX_LINES, constraints = Constraints(maxWidth = labelWidthPx)) }
+                    if (measured.any { it.lineCount > 1 }) with(density) { measured.maxOf { it.size.height }.toDp() } else null
+                }
+                NavigationBar {
+                    destinations.forEachIndexed { index, destination ->
+                        val selected = currentRoute?.hierarchy?.any { it.route == destination.route } == true
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { Icon(destination.icon, contentDescription = null) },
+                            // Material3 defaults the SELECTED label to `secondary`, which this dark scheme maps to
+                            // the dark navy `SurfaceAlt` - measured at 1.40:1 against the bar (WCAG AA needs 4.5:1).
+                            // `onSurface` is 15.16:1 on the same bar; icon, indicator and unselected colours stay default.
+                            colors = NavigationBarItemDefaults.colors(selectedTextColor = MaterialTheme.colorScheme.onSurface),
+                            label = {
+                                val text: @Composable () -> Unit = {
+                                    Text(
+                                        labels[index],
+                                        style = labelStyle,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = NAV_LABEL_MAX_LINES,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                if (reservedLabelHeight == null) {
+                                    text()
+                                } else {
+                                    // A fixed-height Box (not heightIn/wrapContentHeight, which had
+                                    // no effect on the label slot when tried on a real emulator).
+                                    Box(modifier = Modifier.height(reservedLabelHeight), contentAlignment = Alignment.Center) { text() }
+                                }
+                            },
+                        )
+                    }
                 }
             }
         },

@@ -38,6 +38,12 @@ import hu.orszembejelento.service.audit.data.AuditPeriod
  * horizontal row"), unlike the short period/target-type groups, which stay `FlowRow` chips
  * exactly like every earlier Phase 8-11 filter sheet.
  *
+ * Phase 15 §H: with ~31 real event types, that vertical list alone is far taller than any
+ * phone screen, so `Apply`/`Clear` used to sit at the very bottom of one long scrollable
+ * column - reaching them meant scrolling past every chip first. The actions are now a
+ * separate, sticky region *outside* the scrollable content, always visible regardless of
+ * scroll position - filter semantics, option source and chip behaviour are all unchanged.
+ *
  * `navigationBarsPadding()` clears 3-button navigation, mirroring every earlier filter sheet.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -53,40 +59,50 @@ fun AuditFilterSheet(
     var targetType by remember { mutableStateOf(current.targetType) }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 20.dp).navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Text(stringResource(R.string.filters_title), style = MaterialTheme.typography.titleLarge)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text(stringResource(R.string.filters_title), style = MaterialTheme.typography.titleLarge)
 
-            // Reuses the Phase 11 analytics string verbatim (brief §26: "do not create a second
-            // inconsistent localization table when an existing mapper can be reused safely").
-            FilterGroup(stringResource(R.string.analytics_filter_period_group)) {
-                auditPeriodChoices().forEach { (value, labelRes) ->
-                    FilterChip(selected = period == value, onClick = { period = value }, label = { Text(stringResource(labelRes)) })
-                }
-            }
-
-            FilterGroup(stringResource(R.string.audit_filter_target_type_group)) {
-                FilterChip(selected = targetType == null, onClick = { targetType = null }, label = { Text(stringResource(R.string.audit_target_type_all)) })
-                options?.targetTypes?.forEach { code ->
-                    val labelRes = auditTargetTypeLabelRes(code) ?: return@forEach
-                    FilterChip(selected = targetType == code, onClick = { targetType = code }, label = { Text(stringResource(labelRes)) })
-                }
-            }
-
-            Text(stringResource(R.string.audit_filter_event_type_group), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 6.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                EventTypeRow(label = stringResource(R.string.audit_event_type_all), selected = eventType == null, onClick = { eventType = null })
-                (options?.eventTypes ?: emptyList())
-                    .sortedBy { code -> AUDIT_EVENT_TYPE_ORDER.indexOf(code).let { if (it < 0) Int.MAX_VALUE else it } }
-                    .forEach { code ->
-                        val labelRes = auditEventTypeLabelRes(code) ?: return@forEach
-                        EventTypeRow(label = stringResource(labelRes), selected = eventType == code, onClick = { eventType = code })
+                // Reuses the Phase 11 analytics string verbatim (brief §26: "do not create a
+                // second inconsistent localization table when an existing mapper can be reused
+                // safely").
+                FilterGroup(stringResource(R.string.analytics_filter_period_group)) {
+                    auditPeriodChoices().forEach { (value, labelRes) ->
+                        FilterChip(selected = period == value, onClick = { period = value }, label = { Text(stringResource(labelRes)) })
                     }
+                }
+
+                FilterGroup(stringResource(R.string.audit_filter_target_type_group)) {
+                    FilterChip(selected = targetType == null, onClick = { targetType = null }, label = { Text(stringResource(R.string.audit_target_type_all)) })
+                    options?.targetTypes?.forEach { code ->
+                        val labelRes = auditTargetTypeLabelRes(code) ?: return@forEach
+                        FilterChip(selected = targetType == code, onClick = { targetType = code }, label = { Text(stringResource(labelRes)) })
+                    }
+                }
+
+                Text(stringResource(R.string.audit_filter_event_type_group), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 6.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    EventTypeRow(label = stringResource(R.string.audit_event_type_all), selected = eventType == null, onClick = { eventType = null })
+                    (options?.eventTypes ?: emptyList())
+                        .sortedBy { code -> AUDIT_EVENT_TYPE_ORDER.indexOf(code).let { if (it < 0) Int.MAX_VALUE else it } }
+                        .forEach { code ->
+                            val labelRes = auditEventTypeLabelRes(code) ?: return@forEach
+                            EventTypeRow(label = stringResource(labelRes), selected = eventType == code, onClick = { eventType = code })
+                        }
+                }
             }
 
-            Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Sticky: outside the scrollable Column above, so it never scrolls out of reach.
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 20.dp).navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Button(
                     onClick = { onApply(current.copy(period = period, eventType = eventType, targetType = targetType)) },
                     modifier = Modifier.fillMaxWidth(),
