@@ -77,15 +77,34 @@ object NetworkModule {
             .build()
     }
 
-    fun authRepository(context: Context, scope: CoroutineScope = CoroutineScope(SupervisorJob())): AuthRepository {
-        val store = EncryptedTokenStore(
-            // App-private storage, and excluded from cloud backup and device transfer by
-            // data_extraction_rules.xml / backup_rules.xml.
-            file = File(context.filesDir, EncryptedTokenStore.FILE_NAME),
-            crypto = KeystoreCryptoBox(),
-        )
-        return AuthRepository(api = retrofit.create(AuthApi::class.java), tokenStore = store, scope = scope)
-    }
+    @Volatile
+    private var authRepositoryInstance: AuthRepository? = null
+
+    /**
+     * The one [AuthRepository] for the whole process.
+     *
+     * It must be process-scoped, not Activity-scoped: the access token lives only in this
+     * object's memory (never on disk), while [AuthViewModel][hu.orszembejelento.service.auth.ui.AuthViewModel]
+     * is retained across configuration changes and the encrypted refresh-token file is shared.
+     * Building a new repository on every Activity creation (rotation, font-scale, dark-mode,
+     * locale change...) left the new screens with an empty in-memory token: their calls
+     * returned "no session", the app signed itself out and deleted the stored refresh token,
+     * although the backend session was still valid. [scope] and [context] only matter for the
+     * first call.
+     */
+    fun authRepository(context: Context, scope: CoroutineScope = CoroutineScope(SupervisorJob())): AuthRepository =
+        authRepositoryInstance ?: synchronized(this) {
+            authRepositoryInstance ?: run {
+                val store = EncryptedTokenStore(
+                    // App-private storage, and excluded from cloud backup and device transfer by
+                    // data_extraction_rules.xml / backup_rules.xml.
+                    file = File(context.applicationContext.filesDir, EncryptedTokenStore.FILE_NAME),
+                    crypto = KeystoreCryptoBox(),
+                )
+                AuthRepository(api = retrofit.create(AuthApi::class.java), tokenStore = store, scope = scope)
+                    .also { authRepositoryInstance = it }
+            }
+        }
 
     fun reportWorkflowRepository(auth: AuthRepository): ReportWorkflowRepository =
         DefaultReportWorkflowRepository(api = retrofit.create(ReportWorkflowApi::class.java), auth = auth)
