@@ -9,3 +9,13 @@ spring:
     url: jdbc:postgresql://localhost:5432/unused
     username: test
     password: test
+
+# The Public-submission limiter stays ENABLED in every integration test, so each existing
+# submission test still runs through it. Its burst is simply huge here, because the whole suite
+# shares one loopback source and many tests submit far more than ten reports. The dedicated
+# PublicSubmissionRateLimitIT overrides these to the production values and proves the limit.
+orszem:
+  public-submission-rate-limit:
+    enabled: true
+    burst: 1000000
+    refill-period: 1s

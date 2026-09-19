@@ -42,6 +42,7 @@ import hu.orszembejelento.backend.reports.domain.InvalidReportAccessCredentialEx
 import hu.orszembejelento.backend.reports.domain.InvalidSettlementException
 import hu.orszembejelento.backend.reports.domain.OccurredAtTooFarInFutureException
 import hu.orszembejelento.backend.reports.domain.ReportNotFoundException
+import hu.orszembejelento.backend.reports.domain.SubmissionRateLimitedException
 import hu.orszembejelento.backend.reports.domain.TrainIdentifierTooLongException
 import hu.orszembejelento.backend.reportworkflow.domain.InvalidAssigneeException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportAlreadyArchivedException
@@ -129,6 +130,21 @@ class ApiExceptionHandler {
             HttpStatus.TOO_MANY_REQUESTS,
             ErrorCode.RATE_LIMITED,
             "Too many attempts. Please wait before trying again.",
+            extraHeaders = mapOf(HttpHeaders.RETRY_AFTER to exception.retryAfterSeconds.toString()),
+        )
+
+    /**
+     * A Public source has created too many reports in a short time (decision B6). Same public
+     * contract as the login throttle: 429, `RATE_LIMITED`, `Retry-After`. The body says nothing
+     * about any report or credential - only that this caller must wait.
+     */
+    @ExceptionHandler(SubmissionRateLimitedException::class)
+    fun handleSubmissionRateLimited(exception: SubmissionRateLimitedException, request: HttpServletRequest) =
+        error(
+            request,
+            HttpStatus.TOO_MANY_REQUESTS,
+            ErrorCode.RATE_LIMITED,
+            "Too many reports in a short time. Please wait before trying again.",
             extraHeaders = mapOf(HttpHeaders.RETRY_AFTER to exception.retryAfterSeconds.toString()),
         )
 

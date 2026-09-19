@@ -1,5 +1,6 @@
 package hu.orszembejelento.backend.reports.api
 
+import hu.orszembejelento.backend.auth.infrastructure.ClientIpResolver
 import hu.orszembejelento.backend.common.web.ApiPaths
 import hu.orszembejelento.backend.reports.application.GetPublicReportUseCase
 import hu.orszembejelento.backend.reports.application.PublicReportDetail
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -92,6 +94,7 @@ data class PublicReportResponse(
 class PublicReportController(
     private val submitReport: SubmitReportUseCase,
     private val getPublicReport: GetPublicReportUseCase,
+    private val clientIpResolver: ClientIpResolver,
 ) {
 
     @PostMapping
@@ -106,6 +109,12 @@ class PublicReportController(
     @ApiResponse(responseCode = "200", description = "An identical prior submission was replayed.")
     @ApiResponse(responseCode = "400", description = "INVALID_REPORT_ACCESS_CREDENTIAL, INVALID_SETTLEMENT, INVALID_EVENT_TYPE, INVALID_RAILWAY_LINE, or VALIDATION_ERROR.")
     @ApiResponse(responseCode = "409", description = "IDEMPOTENCY_KEY_REUSED.")
+    @ApiResponse(
+        responseCode = "429",
+        description = "RATE_LIMITED - this source has created too many reports in a short time and no report was " +
+            "created. `Retry-After` gives the seconds to wait. Retry with the SAME `clientSubmissionId` and " +
+            "credential. A replay of an already accepted submission is never throttled.",
+    )
     @ApiResponse(responseCode = "503", description = "REFERENCE_DATASET_UNAVAILABLE - no report was created.")
     fun submit(
         @Valid @RequestBody request: SubmitReportRequest,
@@ -116,6 +125,7 @@ class PublicReportController(
             required = true,
         )
         @RequestHeader(value = REPORT_ACCESS_HEADER, required = false) accessCredential: String?,
+        httpRequest: HttpServletRequest,
     ): ResponseEntity<SubmitReportResponse> {
         val command = SubmitReportCommand(
             clientSubmissionId = request.clientSubmissionId!!,
@@ -125,7 +135,9 @@ class PublicReportController(
             railwayLineId = request.railwayLineId,
             eventTypeCode = request.eventTypeCode!!,
         )
-        return when (val outcome = submitReport.submit(command, accessCredential)) {
+        // The source is resolved by the same trusted-proxy-aware resolver the login throttle uses.
+        val sourceAddress = clientIpResolver.resolve(httpRequest)
+        return when (val outcome = submitReport.submit(command, accessCredential, sourceAddress)) {
             is SubmitReportOutcome.Created -> receipt(outcome.report, HttpStatus.CREATED, withLocation = true)
             is SubmitReportOutcome.Replayed -> receipt(outcome.report, HttpStatus.OK, withLocation = false)
         }

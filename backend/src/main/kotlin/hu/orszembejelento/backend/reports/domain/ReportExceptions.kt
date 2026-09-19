@@ -58,3 +58,15 @@ class IdempotencyKeyReusedException :
  */
 class ReportNotFoundException :
     ReportException("REPORT_NOT_FOUND", "no report matches the given id and access credential")
+
+/**
+ * This source has created too many reports in a short time (decision B6, ADR 0010). Carries
+ * how long until it may try again, for the `Retry-After` header.
+ *
+ * Raised only on the **creation** path, after the replay check: a request whose
+ * `clientSubmissionId` already exists is never throttled, so a legitimate retry of an accepted
+ * report always gets its answer. It says nothing about any report or credential - only about
+ * the caller's own recent activity.
+ */
+class SubmissionRateLimitedException(val retryAfterSeconds: Long) :
+    ReportException("RATE_LIMITED", "too many report submissions from this source")

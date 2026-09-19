@@ -80,6 +80,17 @@ orszem:
       retry-after: ${ORSZEM_RATE_LIMIT_RETRY_AFTER:1m}
       maximum-tracked-keys: ${ORSZEM_RATE_LIMIT_MAX_KEYS:100000}
 
+  # --- Anonymous Public report submission (decision B6, ADR 0010) ------------
+  # A token bucket per source (IPv4 address / IPv6 /64): a burst of 10 reports, then one more
+  # every 20 seconds (about 3 a minute). A replay of an already accepted clientSubmissionId is
+  # never throttled. In-memory and bounded: correct for the single-instance deployment. Running
+  # more than one backend instance needs a shared design first (ADR 0010).
+  public-submission-rate-limit:
+    enabled: ${ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_ENABLED:true}
+    burst: ${ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_BURST:10}
+    refill-period: ${ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_REFILL_PERIOD:20s}
+    maximum-tracked-keys: ${ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_MAX_KEYS:100000}
+
 logging:
   level:
     root: INFO

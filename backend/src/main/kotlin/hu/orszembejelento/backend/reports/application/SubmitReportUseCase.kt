@@ -19,6 +19,7 @@ import hu.orszembejelento.backend.reports.domain.RoutingSnapshotStatus
 import hu.orszembejelento.backend.reports.domain.TrainIdentifierTooLongException
 import hu.orszembejelento.backend.reports.infrastructure.JdbcEventCatalogRepository
 import hu.orszembejelento.backend.reports.infrastructure.JdbcReportRepository
+import hu.orszembejelento.backend.reports.infrastructure.PublicSubmissionRateLimiter
 import hu.orszembejelento.backend.routing.application.RoutingService
 import hu.orszembejelento.backend.routing.domain.RoutingOutcome
 import java.time.Clock
@@ -63,6 +64,15 @@ sealed class SubmitReportOutcome {
  *    settlement/event-type/railway-line identities, acquire the shared reference-state
  *    lock, route, and insert - all in the one transaction this method runs in.
  *
+ * 3a. The abuse limit (decision B6, ADR 0010) is applied **between steps 2 and 3**, and only
+ *    there. A request whose `clientSubmissionId` already exists - an identical replay or a
+ *    mismatching 409 - has already returned in step 2 and never touches the limiter, so a
+ *    legitimate retry of an accepted report can never be throttled, however exhausted its
+ *    source is. Only a request that would create something spends a token. The token is given
+ *    back if a concurrent identical submission wins the insert and this call turns into a
+ *    replay. A throttled caller still costs one indexed lookup; that is the price of never
+ *    blocking a replay.
+ *
  * Concurrency: [JdbcReportRepository.tryInsert] relies on the `UNIQUE` index on
  * `client_submission_id` via `ON CONFLICT DO NOTHING`, not an application-level
  * check-then-insert. Two concurrent identical submissions converge on the same row (one
@@ -78,11 +88,16 @@ class SubmitReportUseCase(
     private val referenceRepository: JdbcReferenceRepository,
     private val routingService: RoutingService,
     private val properties: ReportSubmissionProperties,
+    private val rateLimiter: PublicSubmissionRateLimiter,
     private val clock: Clock,
 ) {
 
     @Transactional
-    fun submit(command: SubmitReportCommand, suppliedCredentialHeader: String?): SubmitReportOutcome {
+    fun submit(
+        command: SubmitReportCommand,
+        suppliedCredentialHeader: String?,
+        sourceAddress: String? = null,
+    ): SubmitReportOutcome {
         val credential = PublicReportAccessCredential.parseOrNull(suppliedCredentialHeader)
             ?: throw InvalidReportAccessCredentialException()
 
@@ -95,6 +110,11 @@ class SubmitReportUseCase(
 
         // Fresh-creation path only below. Nothing above this line has touched anything
         // that could conflict with a concurrent reference import.
+        //
+        // The abuse limit sits exactly here: after the replay check above (replays are never
+        // throttled), before any validation or write. Throws SubmissionRateLimitedException.
+        val permit = rateLimiter.acquire(sourceAddress)
+
         if (isMateriallyFuture(normalized.occurredAt)) throw OccurredAtTooFarInFutureException()
 
         val eventType = eventCatalogRepository.findEventTypeByCode(normalized.eventTypeCode)
@@ -142,6 +162,8 @@ class SubmitReportUseCase(
         if (!reportRepository.tryInsert(report)) {
             val winner = reportRepository.findByClientSubmissionId(command.clientSubmissionId)
                 ?: error("insert conflicted but no row exists for ${command.clientSubmissionId}")
+            // This call created nothing: it is a replay (or a 409), so it must not cost a token.
+            permit.refund()
             return replayOrConflict(winner, normalized, credential)
         }
 
