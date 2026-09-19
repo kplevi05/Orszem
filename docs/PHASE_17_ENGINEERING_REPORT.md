@@ -9,8 +9,8 @@ UI changed, so no owner visual approval was needed.
 
 | | |
 |---|---|
-| Őrszem V2.0.0 **software** | **READY.** Every gate below passed on the exact final code. |
-| **Production deployment** | **NOT READY — pending owner gates** (§H). Nothing was deployed. |
+| Őrszem V2.0.0 **software** | **Őrszem V2.0.0 SOFTWARE RELEASED** — annotated tag `v2.0.0` on merge commit `cc4f67443e2f6baf2dcdd15c90449ba5d173de84` (§K). Every gate below passed on the exact final code. |
+| **Production deployment** | **PRODUCTION DEPLOYMENT PENDING OWNER GATES** (§H). Nothing was deployed. |
 | Android release APKs | built, but **unsigned**: not distributable until the owner generates the signing key |
 
 ## A. Git / base / branch
@@ -19,7 +19,7 @@ UI changed, so no owner visual approval was needed.
 |---|---|
 | Phase 16 merge (verified by fetching, not assumed) | PR #20, merge commit `9dfc16a9ab1bb21ed9102e6c91d976389db753e6` on `origin/main` (Phase 16's last commit `c395742` is its ancestor) |
 | Branch | `release/v2.0.0`, created from exactly that commit |
-| Tags | only `demo-v1.1-final` before this phase; **`v2.0.0` is not created yet** (§K) |
+| Tags | only `demo-v1.1-final` before this phase; the annotated tag **`v2.0.0`** was created after the merge (§K) |
 | Untracked owner files | `.claude/`, `dump1.xml`–`dump6.xml` untouched and uncommitted |
 
 Commits (all on top of `9dfc16a`):
@@ -182,10 +182,10 @@ is a build output; whether to serve it publicly is a deployment choice.
 
 ## H. Owner gates — software release vs production deployment
 
-**Software release readiness (V2.0.0): READY.** Code, tests, smoke, security gate and artefacts
-are complete and verified; the version is set.
+**Software release (V2.0.0): RELEASED** as tag `v2.0.0` (§K). Code, tests, smoke, security gate and
+artefacts are complete and verified; the version is set.
 
-**Production deployment readiness: NOT READY.** None of these was performed, and none may be done
+**Production deployment: PENDING OWNER GATES.** None of these was performed, and none may be done
 by this session:
 
 1. Verified V1 `pg_dump -Fc` backup and a verified restore (`docs/deployment/V1_DATABASE_ARCHIVE.md`).
@@ -225,9 +225,11 @@ sign-in; not blindly retried; a V2.0.0 tradeoff.
 
 ## J. CI
 
-Recorded for the exact final HEAD in the pull request and in the conclusion message, because a
-commit cannot contain its own CI result. The post-merge closure update (§K) records the merge
-commit's CI and the tag SHA here.
+All six GitHub Actions checks were green on the Phase 17 release head `842dd52` (before merge) and
+again on the release merge commit `cc4f67443e2f6baf2dcdd15c90449ba5d173de84` on `main`: backend
+`build`, android `build`, web `build`, `validate` (reference-data), `caddy` and
+`backup-restore-scripts`. CI of this closure commit itself is recorded in its own pull request,
+because a commit cannot contain its own CI result.
 
 ## K. RC tag decision and the final tag
 
@@ -236,13 +238,30 @@ all six checks green and it was reviewed and merged as PR #20 (`9dfc16a`). A tag
 name a commit that is about to be superseded by `v2.0.0`; no consumer, workflow or artefact
 depends on an RC tag, and there is no release workflow to feed. It would be ceremony, not evidence.
 
-**Final tag (not yet created):** `v2.0.0`, annotated (matching the existing annotated
-`demo-v1.1-final` convention), created only after the owner confirms the Phase 17 PR is merged and
-after re-verifying the merge commit, its `2.0.0` version state and its CI. No GitHub Release
-mechanism exists and none will be invented.
+**Final tag (created):** `v2.0.0`, annotated (matching the existing annotated `demo-v1.1-final`
+convention). It was created only after the owner confirmed the Phase 17 PR was merged and after
+re-verifying, from a fresh fetch, the merge commit, its `2.0.0` version state, that no other change
+landed between approval and merge, and its CI.
 
-| Closure fields (filled after the tag) | |
+| Closure facts | |
 |---|---|
-| Phase 17 merge commit | _pending owner merge_ |
-| `v2.0.0` tag object / target SHA | _pending_ |
-| CI on the merge commit | _pending_ |
+| Phase 17 merged via | PR #21 |
+| Release merge commit (`main`) | `cc4f67443e2f6baf2dcdd15c90449ba5d173de84` (parents: `9dfc16a` Phase 16 base, `842dd52` approved release head) |
+| Merged tree | identical to the approved head's tree (`0b7701d1…`, 0 files differ); only the merge commit was added |
+| Annotated release tag | `v2.0.0` |
+| Tag object SHA | `da1beeae81ae5fe396d9c53d9a26e20e8e4149d1` |
+| Tag resolves to | `cc4f67443e2f6baf2dcdd15c90449ba5d173de84` |
+| Remote tag verification | succeeded: `git ls-remote` (`v2.0.0` = `da1beea…`, peeled `v2.0.0^{}` = `cc4f674…`), a re-fetch of the tag, and the GitHub API all agree |
+| CI on the release merge commit | all 6 checks green |
+| GitHub Release object | **none created**: the repository has no established Release mechanism (0 existing Releases, no release workflow), and none was invented |
+| Production deployment | **none occurred** |
+
+The tag was pushed once, normally, and has never been moved, recreated or force-updated.
+
+**Őrszem V2.0.0 SOFTWARE RELEASED.**
+
+**PRODUCTION DEPLOYMENT PENDING OWNER GATES** — unchanged from §H: verified V1 backup and restore;
+V1 retirement plan; DNS / HTTPS; V2 production signing key and its secure backup; production
+configuration and secrets; B6 (Public submission rate limiting); B9 (production reference dataset).
+The Android release APKs built from this commit are **unsigned** and are **not**
+production-distributable until the signing key exists.
