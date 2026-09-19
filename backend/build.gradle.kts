@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "hu.orszembejelento"
-version = "2.0.0-dev"
+version = "2.0.0"
 
 repositories {
     mavenCentral()
