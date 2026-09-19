@@ -2,6 +2,7 @@ package hu.orszembejelento.service.auth.data
 
 import hu.orszembejelento.service.auth.domain.AuthErrorKind
 import kotlinx.coroutines.CoroutineScope
+import java.io.IOException
 import kotlinx.serialization.json.Json
 import retrofit2.Response
 
@@ -96,13 +97,22 @@ class AuthRepository(
             return@run AuthOutcome.Failure(AuthErrorKind.NETWORK)
         }
 
-        if (response.isSuccessful) {
-            adopt(response.body()!!)
-        } else {
-            // Rejected outright: expired, revoked, or already consumed. Nothing local can
+        when {
+            response.isSuccessful -> adopt(response.body()!!)
+
+            // Rejected outright: expired, revoked, deactivated user or already consumed. The
+            // backend answers every one of those with 401 SESSION_INVALID. Nothing local can
             // recover it, so drop it and require a sign-in.
-            clearLocalSession()
-            AuthOutcome.SessionEnded
+            response.code() == HTTP_UNAUTHORIZED -> {
+                clearLocalSession()
+                AuthOutcome.SessionEnded
+            }
+
+            // Anything else (429, 5xx from the server or a proxy) says nothing about the
+            // session. The stored token is kept, so a later attempt or restart can still
+            // restore it; a transient outage must not sign the user out.
+            response.code() == HTTP_TOO_MANY_REQUESTS -> AuthOutcome.Failure(AuthErrorKind.RATE_LIMITED)
+            else -> AuthOutcome.Failure(AuthErrorKind.NETWORK)
         }
     }
 
@@ -150,6 +160,11 @@ class AuthRepository(
 
         return when (refresh()) {
             is AuthOutcome.Success -> bearerOrNull()?.let { call(it) }
+            // The refresh could not be completed for a reason unrelated to the session
+            // (outage, rate limit, transport). Surfacing it as an exception keeps the stored
+            // token and lets every caller report a retryable network error, instead of the
+            // `null` below which means "the session is gone" and signs the user out.
+            is AuthOutcome.Failure -> throw IOException("Session refresh is temporarily unavailable")
             else -> null
         }
     }
@@ -213,6 +228,7 @@ class AuthRepository(
 
     private companion object {
         const val HTTP_UNAUTHORIZED = 401
+        const val HTTP_TOO_MANY_REQUESTS = 429
     }
 
     private inline fun call(block: () -> AuthOutcome): AuthOutcome =

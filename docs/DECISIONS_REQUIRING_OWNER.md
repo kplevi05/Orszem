@@ -183,6 +183,31 @@ explicit instruction — this remediation stands on its own regardless of either
 *Affects:* whether the derived data may be recommitted or the repository's visibility
 changed. Those remain the owner's decisions; nothing here assumes either has happened.
 
+### B11. Refresh-token rotation without a grace window (Phase 16, S9)
+
+**Status: DECIDED — accept current behaviour (owner, Phase 16).** A lost or ambiguous refresh
+response may require the user to sign in again. An ambiguous refresh request must never be
+blindly retried. This is an accepted V2.0.0 security/reliability tradeoff, not a release
+blocker. No grace window is planned for V2.0.0; revisiting it would be a new, explicit decision.
+
+Service refresh tokens rotate on every use and a replayed token revokes the whole session
+(reuse detection). Consequently, if the backend processes a refresh but the *response* is
+lost in transit (a dropped connection at exactly the wrong moment), the client still holds
+the old token; its next attempt looks like a replay, the session is revoked, and the user
+must sign in again. The client deliberately never re-sends a refresh on its own (doing so
+would be the replay), and Phase 16 verified exactly that: one request, no automatic retry,
+sign-in required afterwards.
+
+This is the intended security posture, with a usability cost on unreliable mobile networks.
+The usual mitigation is a short grace window in which the *previous* token is still accepted
+once. That weakens reuse detection and changes the session model, so it was **not**
+implemented in a release-candidate phase.
+
+*Decision taken:* accept as is (the cost is one extra sign-in on a rare network fault).
+
+*Affects:* Service session design (`RefreshUseCase`, `auth_sessions`); no data migration is
+implied by accepting the current behaviour.
+
 ---
 
 ## C. Explicitly deferred

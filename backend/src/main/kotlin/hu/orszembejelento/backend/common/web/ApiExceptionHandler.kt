@@ -63,9 +63,13 @@ import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.HttpMediaTypeNotAcceptableException
+import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
@@ -132,6 +136,7 @@ class ApiExceptionHandler {
         MethodArgumentNotValidException::class,
         HttpMessageNotReadableException::class,
         MethodArgumentTypeMismatchException::class,
+        MissingServletRequestParameterException::class,
     )
     fun handleValidation(request: HttpServletRequest) = error(
         request,
@@ -142,7 +147,33 @@ class ApiExceptionHandler {
         // MethodArgumentTypeMismatchException covers a path/query value that fails to
         // convert to its declared type - a malformed {settlementId} UUID, for instance -
         // which would otherwise fall through to the generic 500 handler below.
+        // MissingServletRequestParameterException is a required query parameter that was
+        // not sent at all: a client mistake, exactly like the malformed value above.
         "The request is invalid.",
+    )
+
+    /**
+     * The request body's Content-Type is missing or is not one the endpoint consumes (for
+     * example a form post, or no Content-Type at all, against a JSON endpoint). A client
+     * mistake, so 415 - not the generic 500 it fell into before, which also wrote an ERROR
+     * stack trace to the log for every such request from an unauthenticated caller. Reuses
+     * VALIDATION_ERROR: the public error-code set is part of the API and is not widened here.
+     */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException::class)
+    fun handleUnsupportedMediaType(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+        ErrorCode.VALIDATION_ERROR,
+        "The request content type is not supported.",
+    )
+
+    /** The caller asked (Accept) for a representation this API never produces; it only speaks JSON. */
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException::class)
+    fun handleNotAcceptable(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.NOT_ACCEPTABLE,
+        ErrorCode.VALIDATION_ERROR,
+        "This resource is only available as application/json.",
     )
 
     /**
@@ -472,6 +503,10 @@ class ApiExceptionHandler {
         extraHeaders: Map<String, String> = emptyMap(),
     ): ResponseEntity<ErrorResponse> {
         val builder = ResponseEntity.status(status)
+            // An error body is always JSON, whatever the caller's Accept header says. Left to
+            // content negotiation, an Accept this API cannot satisfy made the error body itself
+            // unwritable and bounced the request into the container's error dispatch.
+            .contentType(MediaType.APPLICATION_JSON)
             // Error bodies from auth endpoints must not be cached either.
             .header(HttpHeaders.CACHE_CONTROL, "no-store")
         extraHeaders.forEach { (name, value) -> builder.header(name, value) }
