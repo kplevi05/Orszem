@@ -196,6 +196,93 @@ describe('retry', () => {
   })
 })
 
+describe('submit - 429, throttled by the backend (B6)', () => {
+  const throttled = { status: 429, body: undefined, errorBody: { code: 'RATE_LIMITED', message: '', correlationId: 'test' } }
+
+  it('keeps the record PENDING under the same identity and reports RATE_LIMITED', async () => {
+    const api = createFakePublicApi()
+    api.submitResult = throttled
+    const repository = createReportRepository(api)
+
+    const outcome = await repository.submit(draft(), display)
+
+    expect(outcome).toEqual({ kind: 'ambiguous-failure', code: 'RATE_LIMITED' })
+    const stored = await getReport(api.lastSubmitBody!.clientSubmissionId)
+    expect(stored?.submissionState).toBe('PENDING')
+    expect(stored?.lastErrorCode).toBe('RATE_LIMITED')
+    expect(stored?.publicReportId).toBeNull()
+  })
+
+  it('is recognised even when the 429 has no readable body (for example from a proxy)', async () => {
+    const api = createFakePublicApi()
+    api.submitResult = { status: 429, body: undefined, errorBody: undefined }
+    const repository = createReportRepository(api)
+
+    const outcome = await repository.submit(draft(), display)
+
+    expect(outcome).toEqual({ kind: 'ambiguous-failure', code: 'RATE_LIMITED' })
+  })
+
+  it('is never retried automatically - exactly one request, however long we wait', async () => {
+    const api = createFakePublicApi()
+    api.submitResult = throttled
+    const repository = createReportRepository(api)
+
+    await repository.submit(draft(), display)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+
+    expect(api.submitCallCount).toBe(1)
+  })
+
+  it('the manual retry resends the exact same identity, credential and payload, and can succeed', async () => {
+    const api = createFakePublicApi()
+    api.submitResult = throttled
+    const repository = createReportRepository(api)
+    await repository.submit(draft(), display)
+    const firstBody = api.lastSubmitBody
+    const firstCredential = api.lastSubmitCredential
+    const id = firstBody!.clientSubmissionId
+
+    api.submitResult = {
+      status: 201,
+      body: { reportId: crypto.randomUUID(), submittedAt: new Date().toISOString(), initialStatus: 'RECEIVED' },
+      errorBody: undefined,
+    }
+    const outcome = await repository.retry(id)
+
+    expect(outcome.kind).toBe('created')
+    expect(api.lastSubmitBody).toEqual(firstBody)
+    expect(api.lastSubmitCredential).toBe(firstCredential)
+    const stored = await getReport(id)
+    expect(stored?.submissionState).toBe('SUBMITTED')
+    expect(stored?.lastErrorCode).toBeNull()
+  })
+
+  it('a repeated 429 on retry keeps the record PENDING and keeps saying why', async () => {
+    const api = createFakePublicApi()
+    api.submitResult = throttled
+    const repository = createReportRepository(api)
+    await repository.submit(draft(), display)
+    const id = api.lastSubmitBody!.clientSubmissionId
+
+    const outcome = await repository.retry(id)
+
+    expect(outcome).toEqual({ kind: 'ambiguous-failure', code: 'RATE_LIMITED' })
+    expect((await getReport(id))?.submissionState).toBe('PENDING')
+    expect(api.submitCallCount).toBe(2)
+  })
+
+  it('does not disturb the other outcomes: 503 is still reference-unavailable', async () => {
+    const api = createFakePublicApi()
+    api.submitResult = { status: 503, body: undefined, errorBody: { code: 'REFERENCE_DATASET_UNAVAILABLE', message: '', correlationId: 't' } }
+    const repository = createReportRepository(api)
+
+    const outcome = await repository.submit(draft(), display)
+
+    expect(outcome).toEqual({ kind: 'ambiguous-failure', code: 'REFERENCE_DATASET_UNAVAILABLE' })
+  })
+})
+
 describe('status refresh', () => {
   it('a generic 404 leaves the record untouched, per the existence-safe contract (§18)', async () => {
     const api = createFakePublicApi()

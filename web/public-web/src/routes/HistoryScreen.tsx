@@ -34,6 +34,9 @@ export function HistoryScreen() {
         <p className="muted" style={{ margin: 0 }}>
           {strings.historyStorageNotice}
         </p>
+        <p className="muted" style={{ margin: '0.25rem 0 0' }}>
+          {strings.settlementDataSource}
+        </p>
       </div>
 
       {history.length === 0 ? (

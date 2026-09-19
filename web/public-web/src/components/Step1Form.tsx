@@ -51,6 +51,9 @@ export function Step1Form({ state, dispatch }: { readonly state: NewReportState;
             aria-describedby="settlement-results"
           />
         </label>
+        <p className="muted" style={{ margin: '0.25rem 0 0' }}>
+          {strings.settlementDataSource}
+        </p>
         {state.settlementSearching && <p className="muted">…</p>}
         {state.settlementResults.length > 0 && (
           <ul id="settlement-results" className="suggestion-list">

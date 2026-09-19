@@ -116,7 +116,12 @@ export function NewReportScreen() {
       case 'ambiguous-failure':
         dispatch({
           type: 'submitFailed',
-          reason: outcome.code === 'REFERENCE_DATASET_UNAVAILABLE' ? 'REFERENCE_UNAVAILABLE' : 'NETWORK',
+          reason:
+            outcome.code === 'REFERENCE_DATASET_UNAVAILABLE'
+              ? 'REFERENCE_UNAVAILABLE'
+              : outcome.code === 'RATE_LIMITED'
+                ? 'RATE_LIMITED'
+                : 'NETWORK',
         })
         break
       case 'conflict':
@@ -203,6 +208,7 @@ function ErrorBanner({ reason }: { readonly reason: UiErrorReason }) {
     VALIDATION: strings.errorValidation,
     REFERENCE_UNAVAILABLE: strings.errorReferenceUnavailable,
     NETWORK: strings.errorNetwork,
+    RATE_LIMITED: strings.errorRateLimited,
     CONFLICT: strings.errorConflict,
     LOCAL_STORAGE: strings.errorLocalStorage,
     ACCESS_LOST: strings.errorAccessLost,

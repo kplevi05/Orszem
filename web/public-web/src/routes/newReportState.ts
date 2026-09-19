@@ -4,7 +4,15 @@ import { isLineStepResolved, NOT_YET_ANSWERED, type LineAnswer, type RailwayLine
 
 export type ReportStep = 'ALAPADATOK' | 'ESEMENY' | 'SUCCESS'
 
-export type UiErrorReason = 'VALIDATION' | 'REFERENCE_UNAVAILABLE' | 'NETWORK' | 'CONFLICT' | 'LOCAL_STORAGE' | 'ACCESS_LOST' | 'GENERIC'
+export type UiErrorReason =
+  | 'VALIDATION'
+  | 'REFERENCE_UNAVAILABLE'
+  | 'NETWORK'
+  | 'RATE_LIMITED'
+  | 'CONFLICT'
+  | 'LOCAL_STORAGE'
+  | 'ACCESS_LOST'
+  | 'GENERIC'
 
 export interface SuccessInfo {
   readonly publicReportId: string
