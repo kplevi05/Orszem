@@ -53,4 +53,34 @@ class DeletedReportsListComposeTest {
         compose.onNodeWithText("SZ-300003").assertExists() // deleting service id, human-readable
         compose.onAllNodesWithText("DUPLICATE", substring = true).assertCountEquals(0)
     }
+
+    @Test
+    fun the_list_shows_the_KSH_attribution_because_it_lists_settlement_names() {
+        val item = DeletedReportListItemResponse(
+            publicReportId = "11111111-1111-1111-1111-111111111111",
+            occurredAt = "2026-01-01T10:00:00Z",
+            submittedAt = "2026-01-01T10:05:00Z",
+            settlement = ReportSettlementSummary("s1", "Példafalva"),
+            category = ReportCategorySummary("VIOLENCE_DANGER", "Erőszak és közvetlen veszély"),
+            eventType = ReportEventTypeSummary("THREAT", "Fenyegetés"),
+            serviceArea = null,
+            reason = "DUPLICATE",
+            deletedAt = "2026-01-02T00:00:00Z",
+            deletedByServiceId = "SZ-300003",
+            statusBeforeDelete = "NEW",
+            restoreTargetStatus = "NEW",
+            workflowVersion = 1,
+        )
+        val vm = DeletedReportsListViewModel(
+            fetchPage = { page, _, _ ->
+                ApiResult.Success(DeletedReportPageResponse(items = listOf(item), page = page, size = 50, totalElements = 1, totalPages = 1))
+            },
+            onSessionEnded = {},
+        )
+
+        compose.setContent { DeletedReportsListScreen(viewModel = vm, onOpenReport = {}, areaChoices = emptyList()) }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Településadatok forrása: KSH (CC BY 4.0)").assertExists()
+    }
 }

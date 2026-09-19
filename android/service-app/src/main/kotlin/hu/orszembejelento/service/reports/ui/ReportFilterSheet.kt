@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
+import hu.orszembejelento.service.common.ui.SettlementDataSourceNote
 import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.reports.data.CatalogRepository
 import hu.orszembejelento.service.reports.data.ReportCatalogResponse
@@ -152,6 +153,7 @@ fun ReportFilterSheet(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
+            SettlementDataSourceNote(color = MaterialTheme.colorScheme.onSurfaceVariant)
             settlementResults.forEach { (id, name) ->
                 TextButton(onClick = {
                     settlementId = id
