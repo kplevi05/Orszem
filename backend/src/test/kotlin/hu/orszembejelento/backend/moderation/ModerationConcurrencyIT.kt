@@ -137,14 +137,15 @@ class ModerationConcurrencyIT : ModerationTestSupport() {
             check(row.status == "IN_PROGRESS" && row.assignedUserId == target.id)
             check(deleteResult.statusCode() == 409) { deleteResult.body() }
             check(assignmentHistory(report.publicId).size == 2) { "original episode ended REASSIGNED, new one open for target" }
+            check(openAssignmentCount(report.publicId) == 1) { "reassign winning leaves exactly the target's episode open" }
         } else {
             check(deleteResult.statusCode() == 204) { deleteResult.body() }
             check(row.status == "NEW" && row.assignedUserId == null)
             check(reassignResult.statusCode() == 404) { "reassign losing the race must see the deleted report as not-found: ${reassignResult.body()}" }
             check(assignmentHistory(report.publicId).size == 1) { "no lost/duplicated episode" }
             check(assignmentHistory(report.publicId)[0].endReason == "MODERATION_DELETED")
+            check(openAssignmentCount(report.publicId) == 0) { "delete winning must leave no open assignment" }
         }
-        check(openAssignmentCount(report.publicId) == 0)
     }
 
     // ------------------------------------------------------------------- 5. two deletes, same report
