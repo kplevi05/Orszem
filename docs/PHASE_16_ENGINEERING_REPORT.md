@@ -265,7 +265,11 @@ production `versionCode` policy are for the release, not for this phase.
 
 ## N. CI
 
-Recorded at finalization for the exact final HEAD (see the conclusion message).
+All six GitHub Actions checks were green on `7e5a778` (the report commit; the code was final since
+`cf381e5`): backend `build`, android `build`, web `build`, `validate` (reference-data), `caddy` and
+`backup-restore-scripts`. This section is the only later change (docs-only); CI was re-checked on
+that final HEAD and its result is stated in the conclusion message, because a commit cannot
+contain its own CI result.
 
 ## O. Fitness for Phase 17
 
