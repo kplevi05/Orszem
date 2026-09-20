@@ -56,7 +56,7 @@ list). The earlier package said "three minor Service surfaces" (deleted list, Ho
 incomplete and is corrected here: six surfaces lack the line in `v2.0.1`**: it missed the two submission-success screens, and
 the Home previews are two surfaces (Public Android and Public Web).
 
-| Client | Surface | In `v2.0.1` | In the patch candidate |
+| Client | Surface | In `v2.0.1` | In `v2.0.2` (merged) |
 |---|---|---|---|
 | Public Android | New Report step 1; History | shown | unchanged |
 | Public Android | **Home** (last three history cards) | **missing** | added |
@@ -70,7 +70,7 @@ the Home previews are two surfaces (Public Android and Public Web).
 
 No other screen presents settlement names (analytics, audit, area administration and login were checked).
 
-**Smallest compliance patch (owner-accepted 2026-09-19; PR not yet opened by the tooling here, not merged, not tagged; version bump commit `1319360`):** branch `release/v2.0.2`, code commit `8a24b3c` on `main` (`a80f6e5`,
+**Smallest compliance patch (owner-accepted 2026-09-19; **merged to `main` as PR #24, merge commit `20e6b3c`**, tag `v2.0.2` not yet created; version bump commit `1319360`):** branch `release/v2.0.2`, code commit `8a24b3c` on `main` (`a80f6e5`,
 = `v2.0.1`). It reuses the existing `SettlementDataSourceNote` (same approved wording and `https://www.ksh.hu` link) with one
 line per surface: 9 files, +134/−7 including tests. **No version bump** (a release step, not part of this fix), **no tag**.
 

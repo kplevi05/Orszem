@@ -148,7 +148,7 @@ See [`PHASE_3B_DECISION_GATE.md`](PHASE_3B_DECISION_GATE.md) §3.
 and the event taxonomy **CLEARED**; quarantined candidates **DO NOT REUSE**; the railway-line roster and the settlement↔line relations
 stay **PENDING** and need **written KTI VPE confirmation** (the "declare the basis sufficient" option is rejected; the request is drafted in
 [`deployment/VPE_PERMISSION_REQUEST_DRAFT.md`](deployment/VPE_PERMISSION_REQUEST_DRAFT.md), **not sent**). Six client surfaces still lack the KSH
-attribution in `v2.0.1`; a `release/v2.0.2` candidate (untagged) adds it.
+attribution in `v2.0.1`; `v2.0.2` (PR #24, merged to `main` as `20e6b3c`, tag not yet created) adds it.
 
 **Status: NOT CLEARED (owner, V2.0.1 work).** The recovered dataset is backed up outside Git, its working
 manifest is upgraded to the current schema with `reuseStatus: PENDING`, and the importer's refusal was
