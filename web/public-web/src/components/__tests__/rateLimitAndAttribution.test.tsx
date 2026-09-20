@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { HistoryItemCard } from '../HistoryItemCard'
 import { Step1Form } from '../Step1Form'
 import { HistoryScreen } from '../../routes/HistoryScreen'
+import { HomeScreen } from '../../routes/HomeScreen'
+import { SuccessView } from '../SuccessView'
 import { initialNewReportState } from '../../routes/newReportState'
 import { RepositoriesProvider, type Repositories } from '../../repositoryContext'
 import { strings } from '../../strings'
@@ -124,5 +126,56 @@ describe('KSH attribution (CC BY 4.0) beside the settlement data', () => {
     )
     expect(screen.getByText(KSH_TEXT)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: KSH_TEXT })).toHaveAttribute('href', KSH_URL)
+  })
+
+  function repositoriesWith(history: ReportRecord[]): Repositories {
+    const reportRepository = {
+      submit: vi.fn(),
+      retry: vi.fn(),
+      refreshStatus: vi.fn(),
+      refreshAll: vi.fn(),
+      listHistory: vi.fn().mockResolvedValue(history),
+      subscribe: vi.fn().mockReturnValue(() => undefined),
+    } as unknown as Repositories['reportRepository']
+    return {
+      reportRepository,
+      catalogRepository: { catalog: vi.fn() },
+      referenceRepository: { searchSettlements: vi.fn(), railwayLinesOfSettlement: vi.fn() },
+    }
+  }
+
+  it('appears on the submission-success screen, which repeats the settlement name', () => {
+    render(
+      <SuccessView
+        info={{ publicReportId: 'R-1', eventTypeDisplay: 'Verekedés', trainIdentifier: null, settlementName: 'Alfaváros', status: 'RECEIVED' }}
+        onNewReport={vi.fn()}
+        onViewHistory={vi.fn()}
+        onHome={vi.fn()}
+      />,
+    )
+    expect(screen.getByRole('link', { name: KSH_TEXT })).toHaveAttribute('href', KSH_URL)
+  })
+
+  it('appears on the Home screen when its history preview shows a settlement name', async () => {
+    render(
+      <MemoryRouter>
+        <RepositoriesProvider value={repositoriesWith([pending(null)])}>
+          <HomeScreen />
+        </RepositoriesProvider>
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText('Alfaváros')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: KSH_TEXT })).toHaveAttribute('href', KSH_URL)
+  })
+
+  it('is not shown on the Home screen when no settlement name is displayed', () => {
+    render(
+      <MemoryRouter>
+        <RepositoriesProvider value={repositoriesWith([])}>
+          <HomeScreen />
+        </RepositoriesProvider>
+      </MemoryRouter>,
+    )
+    expect(screen.queryByText(KSH_TEXT)).not.toBeInTheDocument()
   })
 })

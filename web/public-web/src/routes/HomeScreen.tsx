@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { strings } from '../strings'
 import { useReportHistory } from '../hooks/useReportHistory'
 import { HistoryItemCard } from '../components/HistoryItemCard'
+import { SettlementDataSourceNote } from '../components/SettlementDataSourceNote'
 
 export function HomeScreen() {
   const navigate = useNavigate()
@@ -41,13 +42,16 @@ export function HomeScreen() {
       {recent.length === 0 ? (
         <p className="muted">{strings.homeNoHistory}</p>
       ) : (
-        <ul className="history-list">
-          {recent.map((item) => (
-            <li key={item.clientSubmissionId}>
-              <HistoryItemCard record={item} onRetry={() => undefined} onRefresh={() => undefined} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="history-list">
+            {recent.map((item) => (
+              <li key={item.clientSubmissionId}>
+                <HistoryItemCard record={item} onRetry={() => undefined} onRefresh={() => undefined} />
+              </li>
+            ))}
+          </ul>
+          <SettlementDataSourceNote style={{ margin: '0.25rem 0 0' }} />
+        </>
       )}
     </section>
   )

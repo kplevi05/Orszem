@@ -10,7 +10,7 @@ controlled deployment. It does not repeat the phase reports; it links to them.
 | `origin/main` when this was written | `ab984bb90adb55ac203a57a6895679b0b6fb3b68` (Phase 17 closure docs merged, PR #22). Only documentation changed after the tag. |
 | Production hosts (unchanged) | `https://orszembejelento.hu`, `https://api.orszembejelento.hu`; `www` redirects to the apex |
 | Deployment rule | Nothing is deployed, tagged, merged or changed on production infrastructure without a separate, explicit owner instruction |
-| **V2.0.1 patch candidate** | Branch `release/v2.0.1`: B6 rate limit, the Public 429 message and the KSH attribution (owner-approved). **Not tagged, not released.** `v2.0.0` does **not** contain these; production must deploy `2.0.1` (or later), not `2.0.0`. See §1a |
+| **V2.0.1 patch candidate** | Branch `release/v2.0.1`: B6 rate limit, the Public 429 message and the KSH attribution (owner-approved). **Not tagged, not released.** `v2.0.0` does **not** contain these; production must deploy **`2.0.2`** (the KSH-attribution compliance patch, `release/v2.0.2`, once the owner has merged and tagged it), not `2.0.1` or `2.0.0`. See §1a |
 
 ## 1. Gate summary
 
@@ -508,7 +508,7 @@ not a guarantee. Keep the existing VM and public IP; nothing found requires new 
 | 2 | **Verified V1 backup** | ✅ Owner | §5.1–§5.4 passed and recorded |
 | 3 | **V1 write/service-access shutdown** | ✅ Owner | Freeze writes: `docker compose … stop api` (keeps the database), then take the **final dump** (§5.4) and verify it. Only then `docker compose … down` (**no `-v`**: volumes kept). This frees 80/443. `V1_DECOMMISSION.md` Option 1 |
 | 4 | **Create the V2 database and role** | ✅ Owner | `SERVER_RUNBOOK.md` §2; password from a password manager; confirm loopback-only |
-| 5 | **Install the backend artefact and config** | ✅ Owner | Build the JAR from the approved **`v2.0.1`** tag (never `v2.0.0`, which lacks the rate limit) (`./gradlew clean bootJar`), record its SHA-256, copy it up, install as `orszem`. Create `/etc/orszem/backend.env` (mode 640) from the template; run `scripts/orszem-preflight.sh` |
+| 5 | **Install the backend artefact and config** | ✅ Owner | Build the JAR from the approved **`v2.0.2`** tag (never `v2.0.0`, which lacks the rate limit, nor `v2.0.1`, which lacks the KSH attribution on six screens) (`./gradlew clean bootJar`), record its SHA-256, copy it up, install as `orszem`. Create `/etc/orszem/backend.env` (mode 640) from the template; run `scripts/orszem-preflight.sh` |
 | 6 | **Start the backend; run migrations** | ✅ Owner | `systemctl enable --now orszem-backend`. Flyway applies **V001–V006** to the empty DB. Check `journalctl -u orszem-backend` for a clean start, and `curl http://127.0.0.1:8081/actuator/health` → `UP`. Confirm the startup log has **no** generated-password line |
 | 7 | **First administrator, then reference import** | ✅ Owner | `scripts/orszem-admin create-super-admin` (store the printed credential securely; it is one-time). Then `reference-validate`, `reference-diff`, `reference-import` of the **approved production dataset** (only if `CLEARED`, §3) |
 | 8 | **Deploy the Public Web build** | ✅ Owner | `npm ci && npm run build` from the approved tag; rsync `dist/` (excluding `*.map`) to `/home/opc/apps/orszem-v2/web` |
