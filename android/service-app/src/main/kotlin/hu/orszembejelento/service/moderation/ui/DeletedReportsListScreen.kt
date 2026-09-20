@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.common.ui.ErrorState
 import hu.orszembejelento.service.common.ui.FullScreenLoading
+import hu.orszembejelento.service.common.ui.SettlementDataSourceNote
 import hu.orszembejelento.service.common.ui.apiErrorMessage
 import hu.orszembejelento.service.moderation.data.DeletedReportFilter
 import hu.orszembejelento.service.reports.ui.AreaChoice
@@ -56,6 +57,7 @@ fun DeletedReportsListScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
             Text(stringResource(R.string.deleted_reports_title), style = MaterialTheme.typography.headlineSmall)
+            SettlementDataSourceNote(color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },

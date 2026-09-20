@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import hu.orszembejelento.app.R
 import hu.orszembejelento.app.report.domain.PublicReportStatus
 import hu.orszembejelento.app.ui.PublicPalette
+import hu.orszembejelento.app.ui.components.SettlementDataSourceNote
 import hu.orszembejelento.app.ui.components.SoftCard
 import hu.orszembejelento.app.ui.components.SuccessCheckBadge
 
@@ -54,6 +55,7 @@ fun SuccessContent(
                 info.trainIdentifier?.let { SuccessDetailLine(stringResource(R.string.success_train, it)) }
                 SuccessDetailLine(stringResource(R.string.success_settlement, info.settlementName))
                 SuccessDetailLine(stringResource(R.string.success_status, stringResource(R.string.status_received)))
+                SettlementDataSourceNote(color = PublicPalette.TextMuted)
             }
         }
 
