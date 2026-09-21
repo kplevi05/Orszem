@@ -79,9 +79,9 @@ service user left on its one-time temporary credential. Credentials are in `C:\U
 1. **Production Android APKs: done, see §8.** The V2 release key exists (`C:\Users\ottva\.orszem\signing\orszem-v2-release.jks`, alias `orszem-v2`, certificate SHA-256
    `E6:2A:DE:23:9E:02:65:F5:DD:C1:5E:30:18:13:5A:D0:A5:93:0D:95:0C:BF:73:90:B5:5D:13:15:D7:B3:03:CF`, as printed by the owner; this fingerprint is public).
    Building needs a local, gitignored `keystore.properties`; the passwords stay with the owner.
-2. **Owner GO** before touching `orszembejelento.hu`, `www` or `api`. Today the apex and `www` resolve to `91.227.139.235` (purpose unverified, not touched)
-   and `api` has no record; the target VM is `129.159.31.175`.
-3. The V2 certificate is for the interim host only. Certificates for the final hosts need DNS to resolve to the VM first.
+2. **Owner GO** before touching `orszembejelento.hu` or `www`. Today they resolve to `91.227.139.235` (purpose unverified, not touched); `api` was pointed at the VM
+   by the owner and is live (§8). The target VM is `129.159.31.175`.
+3. Certificates for the apex and `www` need DNS to resolve to the VM first (the `api` and interim-host certificates exist).
 4. Not exercised: a reboot of the VM (it would interrupt V1 briefly). Evidence instead: `docker` enabled at boot, every container `unless-stopped`, the V2
    upstream published on the always-present `docker0` gateway (no dependency on V1's network), and a full V2 `down`/`up` with the volume kept.
 
