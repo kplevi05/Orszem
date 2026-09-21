@@ -1,0 +1,73 @@
+# Őrszem V2 — RUNNABLE EVALUATION stack (not production).
+#
+# PostgreSQL + the V2 backend JAR + Caddy serving the built Public Web, in one isolated Compose project.
+# Nothing here touches the V1 pilot or any real server: it binds to 127.0.0.1 only, uses its own network,
+# volume and container names, and holds only synthetic data. Driven by deploy/eval/eval.sh.
+#
+# Not for production: plain HTTP on loopback, a Compose-managed database, no backups schedule.
+name: orszem-eval
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: orszem-eval-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: orszem_eval
+      POSTGRES_USER: orszem_eval
+      POSTGRES_PASSWORD: ${ORSZEM_EVAL_DB_PASSWORD:?run deploy/eval/eval.sh init}
+    volumes:
+      - orszem_eval_pgdata:/var/lib/postgresql/data
+    ports:
+      # Loopback only, for the maintenance CLI and the backup drill on this machine.
+      - "127.0.0.1:${ORSZEM_EVAL_DB_PORT:-55432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orszem_eval -d orszem_eval"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  backend:
+    image: eclipse-temurin:21-jre
+    container_name: orszem-eval-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /app
+    command: ["java", "-jar", "/app/backend.jar"]
+    environment:
+      ORSZEM_DB_URL: jdbc:postgresql://db:5432/orszem_eval
+      ORSZEM_DB_USERNAME: orszem_eval
+      ORSZEM_DB_PASSWORD: ${ORSZEM_EVAL_DB_PASSWORD}
+      # Reachable only from Caddy on the Compose network; nothing publishes this port.
+      ORSZEM_BIND_ADDRESS: 0.0.0.0
+      ORSZEM_PORT: "8081"
+      JAVA_TOOL_OPTIONS: -Duser.timezone=UTC
+      # Caddy's address on the Compose network: the only peer whose X-Forwarded-For is believed.
+      ORSZEM_TRUSTED_PROXIES: 172.29.80.0/24
+    volumes:
+      - ${ORSZEM_EVAL_RUN}/backend.jar:/app/backend.jar:ro
+
+  caddy:
+    image: caddy:2
+    container_name: orszem-eval-caddy
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:${ORSZEM_EVAL_HTTP_PORT:-18080}:80"
+    volumes:
+      - ./Caddyfile.eval:/etc/caddy/Caddyfile:ro
+      - ${ORSZEM_EVAL_RUN}/web:/srv/web:ro
+
+volumes:
+  orszem_eval_pgdata:
+    name: orszem_eval_pgdata
+
+networks:
+  default:
+    name: orszem_eval_net
+    ipam:
+      config:
+        - subnet: 172.29.80.0/24

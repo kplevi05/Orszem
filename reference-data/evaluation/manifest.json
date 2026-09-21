@@ -1,0 +1,32 @@
+{
+  "datasetVersion": "EVAL-2",
+  "generatedAt": "2026-09-21T00:00:00Z",
+  "verificationStatus": "VERIFIED",
+  "coverageStatus": "PARTIAL",
+  "reuseStatus": "CLEARED",
+  "sources": {
+    "EVALUATION": {
+      "source": "Entirely fictional - invented for this repository's runnable evaluation, not derived from any real source or dataset.",
+      "retrievedAt": "2026-09-21",
+      "sourceVersionOrDate": "n/a - fictional",
+      "licence": "N/A (fictional data, not a real dataset)",
+      "used": "runnable evaluation environment only"
+    }
+  },
+  "canonicalFiles": {
+    "settlements.csv": "c5d1f108aff999a6e627f68e8bdcfc9f8893e0677dd87bf00225dc9011923627",
+    "railway-lines.csv": "5b24a76141a2fd42f078c3dc790f97cf7773939e5c2d1c603452472a26d5e405",
+    "settlement-railway-lines.csv": "bc54b9c55cfd03d7c0cdfb7a826abca56a48272cfd09a45c815eeb199af4144e"
+  },
+  "counts": {
+    "settlements": 5,
+    "railwayLines": 3,
+    "settlementRailwayLineMappings": 5
+  },
+  "coverage": {
+    "settlements": "COMPLETE",
+    "railwayLines": "PARTIAL",
+    "settlementRailwayLines": "PARTIAL",
+    "settlementsWithVerifiedRelations": 4
+  }
+}

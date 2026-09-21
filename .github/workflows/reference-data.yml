@@ -34,3 +34,6 @@ jobs:
       # being reachable, and without redistributing anything derived from them.
       - name: Validate example reference dataset
         run: node reference-data/tools/validate-canonical.mjs reference-data/example/manifest.json
+
+      - name: Validate evaluation reference dataset (fictional, PARTIAL)
+        run: node reference-data/tools/validate-canonical.mjs reference-data/evaluation/manifest.json
