@@ -1,0 +1,36 @@
+# PREPARED, NOT APPLIED. For the canonical cutover only, and only AFTER the two A records have been replaced with 129.159.31.175
+# and resolve publicly (docs/deployment/CANONICAL_CUTOVER_PLAN.md). Applying it earlier would make Caddy try (and fail) to obtain
+# certificates for names that still point at another host.
+#
+# Same policy as the apex and www hosts in deploy/caddy/Caddyfile. The V2 edge behind 172.17.0.1:18081 serves the Public Web
+# (with its CSP) and /api/*, and answers 404 for actuator, the OpenAPI document and Swagger UI.
+orszembejelento.hu {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy 172.17.0.1:18081
+	# Never log the anonymous report credential (Authorization is redacted by Caddy's default).
+	log {
+		output stdout
+		format filter {
+			wrap console
+			fields {
+				request>headers>Authorization delete
+				request>headers>X-Orszem-Report-Access delete
+			}
+		}
+	}
+}
+
+www.orszembejelento.hu {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+	redir https://orszembejelento.hu{uri} permanent
+}

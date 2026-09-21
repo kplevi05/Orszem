@@ -124,10 +124,13 @@ browser. Scripted API suite `VERIFY` 17/17 against `api.orszembejelento.hu` afte
 `C:\Users\ottva\.orszem\backups\v2\`.
 
 **Finding, fixed.** The first version of the two V2/api site blocks in V1's Caddy logged the `X-Orszem-Report-Access` request header (Caddy redacts
-`Authorization` by default, not this one). The blocks now delete it from the log (`format filter`), verified with a marker value. **Residual:** the V1 Caddy container's
-Docker log still holds about 42 earlier lines with report credentials of *synthetic* test reports. V1's log was not truncated (it is V1's data); it can be cleared
-when V1's Caddy is replaced at cutover. The V2 edge, backend and database logs are clean.
+`Authorization` by default, not this one). The blocks now delete it from the log (`format filter`), verified with a marker value. **Residual (test-only):** the V1 Caddy container's
+Docker log still holds about 42 earlier lines with report credentials of *synthetic* test reports. V1's log is not truncated (it is V1's data); the lines are
+to be removed when V1 is finally retired. The V2 edge, backend and database logs are clean.
 
 **Still owner gates:** GO for the apex/`www` cutover (replace, do not add, the two `A` records; lower their TTL to 300 first), CI and merge of the
 `deploy/live-v2` and `eval/runnable-environment` branches, the second independent backup of the V2 keystore (not verifiable from here), and the deferred
 external permissions (KTI/VPE, GYSEV: PREPARED / NOT SENT / SEND LATER).
+
+**Apex and `www`.** The plan, the validated (not applied) Caddy configuration `deploy/live/v1-caddy-apex-www-site.caddy` and the finding that `91.227.139.235` is a Rackhost
+domain-parking server are in [CANONICAL_CUTOVER_PLAN.md](CANONICAL_CUTOVER_PLAN.md). Still waiting for the owner's explicit GO.
