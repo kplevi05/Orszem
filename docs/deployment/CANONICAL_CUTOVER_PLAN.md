@@ -35,7 +35,7 @@ No `AAAA`, `CNAME`, `TXT`, `CAA` or `MX` exists for these names; add none.
 records with `129.159.31.175`. Steps (a) and (b) can be one edit if a slower propagation (up to 1 h at resolvers that cached the old answer) is acceptable.
 
 **Verify propagation.** Query `ns1`–`ns4.dns24.hu` directly until all return only `129.159.31.175` for both names, then the public resolvers 1.1.1.1, 8.8.8.8,
-9.9.9.9 and 208.67.222.222 (same method as for `api`; the check script is `dnschk` in the session notes: `dns.Resolver` with `setServers`, `resolve4(..., {ttl:true})`).
+9.9.9.9 and 208.67.222.222 (same method as for `api`: ask each server directly, with the TTL, and compare with the expected address).
 Also confirm exactly one `A` record per name and that the `api` record did not change.
 
 ## 3. Caddy change (after propagation only)
