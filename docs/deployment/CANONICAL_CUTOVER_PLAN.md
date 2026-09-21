@@ -1,6 +1,6 @@
 # Canonical cutover plan: `orszembejelento.hu` and `www` → V2
 
-**Status: PLAN ONLY. Not executed. Waiting for the owner's explicit GO.** Nothing in this document has been applied. V1 stays running and is not retired by this
+**Status: EXECUTED on 2026-09-21 after the owner's explicit GO; results in [LIVE_DEPLOYMENT_V2.md](LIVE_DEPLOYMENT_V2.md) §9.** The text below is the plan as it was executed. V1 stays running and was not retired.
 plan. The API host `api.orszembejelento.hu` is already live ([LIVE_DEPLOYMENT_V2.md](LIVE_DEPLOYMENT_V2.md) §8), and the production Android APKs already
 point at it, so **the apps need no rebuild** for this cutover.
 

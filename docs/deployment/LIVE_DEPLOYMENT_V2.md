@@ -1,6 +1,6 @@
 # V2 live deployment record (Oracle VM `129.159.31.175`)
 
-**Status (2026-09-21): V2 is RUNNING on the owner's VM alongside V1. `https://api.orszembejelento.hu/` is live, the production Android APKs are built with the V2 key and were accepted against it (§8). It is NOT yet the canonical Web system:** the apex and `www` are unchanged and still resolve to `91.227.139.235` (not touched). The canonical cutover needs the owner's separate explicit GO. Nothing here is a production-readiness claim.
+**Status (2026-09-21): V2 is LIVE on the owner's VM and canonical: `https://orszembejelento.hu`, `https://www.orszembejelento.hu` (301 to the apex) and `https://api.orszembejelento.hu` all resolve to `129.159.31.175` and are served by V2 (§8, §9). V1 still runs beside it, untouched.** The reference data is a fictional placeholder until the external permissions are cleared. Nothing here is a production-readiness claim beyond the checks recorded.
 
 Deployed release: tag **`v2.0.2`** (`20e6b3c5e860e9756be13636ef5e2a830df724e5`); backend JAR sha256 `5d5a073ebf900dc4fea3cdd86c7c9021e4b9be1e97f250466c8d2763ec51cfa2`,
 built from that tag. Public Web is the same tag's production build (source maps removed on the server).
@@ -134,3 +134,29 @@ external permissions (KTI/VPE, GYSEV: PREPARED / NOT SENT / SEND LATER).
 
 **Apex and `www`.** The plan, the validated (not applied) Caddy configuration `deploy/live/v1-caddy-apex-www-site.caddy` and the finding that `91.227.139.235` is a Rackhost
 domain-parking server are in [CANONICAL_CUTOVER_PLAN.md](CANONICAL_CUTOVER_PLAN.md). Still waiting for the owner's explicit GO.
+
+## 9. Canonical cutover (2026-09-21)
+
+Executed after the owner's explicit GO and after the owner replaced the two `A` records. **`orszembejelento.hu`, `www.orszembejelento.hu` and `api.orszembejelento.hu` all resolve to `129.159.31.175`
+(TTL 300); the apex and `www` were confirmed on `ns1`–`ns4.dns24.hu` before anything was applied.** V1 was not retired and its data was not touched.
+
+- **Caddy.** `deploy/live/v1-caddy-apex-www-site.caddy` was applied exactly as validated (backup `/home/opc/backups/v1/Caddyfile.pre-cutover.20260921T175348Z`), and Let's Encrypt issued
+  both certificates within seconds (apex: CN=YE2, `www`: CN=YE1, both valid to 2026-12-20, TLS 1.3, chain verified).
+- **Checks from outside.** Apex 200 with the Public Web and the same CSP/HSTS/nosniff headers; `/api/v1/meta` 200; `/actuator/health`, `/v3/api-docs`, `/swagger-ui/…` 404; `https://www…/<path>?<query>`
+  → **301** to the same path on the apex; `http://` (apex, `www`, `api`) → 308 to `https://`; `api` unchanged (200, non-API paths 404). Some public resolvers still served the old Rackhost
+  address for a while (the previous TTL was 3600); the old address only ever showed the parking page.
+- **Web smoke (real browser, `https://www.orszembejelento.hu/uj-bejelentes` → apex).** Settlement, line choice, category, event, submit (RECEIVED); History showed *Beérkezett* → *Feldolgozás
+  alatt* (after a claim) → *Lezárva* (after close).
+- **Android (production APKs, unchanged `api` host).** Service app: session restored after a force-stop, queue refresh; Public app: history persisted (*Lezárva*). The full workflow on both apps was
+  accepted earlier (§8) and nothing changed for them.
+- **Rate limit through the apex.** 10 × 201 then 3 × 429 (`Retry-After: 20`), a spoofed `X-Forwarded-For` does not bypass it. The suite's R3 assertion printed 20 stored instead of 10 only because
+  it counts every report tagged `EVAL-RATE-`, including the 10 from the earlier run through `api`; per run the database holds exactly 10 (15:54 and 18:00 groups).
+- **Ports.** From outside only 22, 80 and 443 are open; 5432, 8080, 8081, 18081 and 2019 are closed. V2 listens only inside the host (`172.17.0.1:18081`).
+- **Logs.** V1's Caddy log for the V2 hosts since the cutover: 292 lines, 0 with a report credential (marker test on the apex and `www` also 0), 0 with a 5xx status. V2 edge, backend and
+  database logs: no 5xx, no stack traces, no secret-shaped strings; the only WARNs are the two SpringDoc notices (the endpoints are blocked at the edge) and the limiter's count-only notice.
+- **V1 rollback artefacts intact.** `orszem_v1_20260921T153254Z.dump` verifies OK; V1 database 128 reports, 1 user; V1 healthy.
+- **Backup after the cutover.** `/home/opc/backups/v2/orszem_v2_20260921T180105Z.dump`, 82,834 bytes, sha256 `de1e0f2677dc5e95407cc5fcc746f51e8de8ae1c6c19b622f02fa656da5c9311`, disposable restore identical
+  for every table; copy in `C:\Users\ottva\.orszem\backups\v2\`.
+
+Rollback is unchanged ([CANONICAL_CUTOVER_PLAN.md](CANONICAL_CUTOVER_PLAN.md) §5). Still open: the reference data is the fictional placeholder (§4), the KTI/VPE and GYSEV requests are PREPARED / NOT SENT / SEND LATER, the
+~42 historical test-only lines in V1's Caddy log are removed when V1 is retired, and V1 itself is still running.
