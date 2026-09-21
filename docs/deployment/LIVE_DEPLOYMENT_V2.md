@@ -8,7 +8,7 @@ built from that tag. Public Web is the same tag's production build (source maps 
 ## 1. Topology
 
 ```
-Internet -> V1's Caddy (80/443, unchanged owner of the ports) --site v2.129-159-31-175.sslip.io-->
+Internet -> V1's Caddy (80/443, still the owner of the ports) --sites orszembejelento.hu, www (301 to the apex), api.orszembejelento.hu, v2.129-159-31-175.sslip.io-->
             orszem-v2-edge  (Caddy; Public Web + /api; published only on 172.17.0.1:18081, a host-internal address)
             -> orszem-v2-backend (Spring Boot 4, no published port) -> orszem-v2-db (PostgreSQL 16, no published port)
 ```
@@ -23,18 +23,20 @@ Internet -> V1's Caddy (80/443, unchanged owner of the ports) --site v2.129-159-
 | Restart | `unless-stopped` | `unless-stopped`; Docker is enabled at boot |
 | Config / secrets | `/home/opc/apps/orszem/.env` | `/home/opc/apps/orszem-v2/.env`, mode 600, holds only the database password (generated on the VM with `openssl rand`, never printed) |
 
-Files in this repository: `deploy/live/docker-compose.yml`, `Caddyfile.edge`, `v1-caddy-v2-site.caddy`, `admin.sh`, `backup.sh`.
+Files in this repository (`deploy/live/`): `docker-compose.yml`, `Caddyfile.edge`, `admin.sh`, `backup.sh`, and the four site blocks added to V1's Caddyfile: `v1-caddy-v2-site.caddy` (interim host),
+`v1-caddy-api-site.caddy` (`api`), `v1-caddy-apex-www-site.caddy` (apex and `www`).
 
-**Interim public URL: `https://v2.129-159-31-175.sslip.io/`** (Let's Encrypt certificate obtained by V1's Caddy; sslip.io resolves the name to the VM
-without any DNS change). It serves the Public Web at `/` and the API at `/api/v1`. The final hosts (`orszembejelento.hu`, `www` → apex,
-`api.orszembejelento.hu`) are prepared in `deploy/caddy/Caddyfile` and are **not** live: see §6.
+**Canonical hosts (live since the cutover, §9):** `https://orszembejelento.hu` (Public Web and `/api/v1`), `https://www.orszembejelento.hu` (301 to the apex) and
+`https://api.orszembejelento.hu` (only `/api/*`, everything else 404). All three resolve to `129.159.31.175`. The interim host `https://v2.129-159-31-175.sslip.io/`
+(Let's Encrypt certificate via V1's Caddy; sslip.io needs no DNS change) still works and serves the same edge; it was the access path before DNS moved.
 
-## 2. What was changed on the V1 side (the only V1 change)
+## 2. What was changed on the V1 side (the only V1 change: its Caddy configuration)
 
 Made only after the V1 backup gate (§3) passed. **V1's data, containers, images, volumes and compose file were not touched.**
 
-1. One site block (`v2.129-159-31-175.sslip.io`, `deploy/live/v1-caddy-v2-site.caddy`) was appended to V1's `infra/caddy/Caddyfile`. The V1 part
-   of the file is byte-identical to the pre-V2 backup (`/home/opc/backups/v1/Caddyfile.pre-v2.*`). The V1 checkout is therefore `git`-dirty.
+1. Site blocks were appended to V1's `infra/caddy/Caddyfile`, in this order: the interim host (`v1-caddy-v2-site.caddy`), `api.orszembejelento.hu` (§8) and, at the cutover,
+   `orszembejelento.hu` and `www` (§9). The V1 part of the file stays byte-identical to the pre-V2 backup (`/home/opc/backups/v1/Caddyfile.pre-v2.*`); every step has its own
+   backup (`pre-api`, `pre-logfix`, `pre-cutover`). The V1 checkout is therefore `git`-dirty.
 2. **Finding: V1's Caddy container has a stale bind mount.** V1's Caddyfile was replaced on the host on Sep 1, after the container started, so
    the container has held a dangling mount ever since and runs from the configuration it loaded then. The new block was therefore loaded into the running
    Caddy through its admin interface from a copy (`/tmp/Caddyfile.live` inside the container). A *restart* of `orszem-caddy-1` re-binds the current host
@@ -74,20 +76,23 @@ service user left on its one-time temporary credential. Credentials are in `C:\U
 | V2 data damaged | `backup.sh drill` proves the latest dump; restore with `pg_restore` into a fresh `orszem_v2` |
 | After DNS cutover | put the old `A` records back (TTL 300) and re-enable V1's site; V1 keeps its data because it is never deleted |
 
-## 6. Not done yet (owner gates)
+## 6. Open items (none blocks the live system)
 
 1. **Production Android APKs: done, see §8.** The V2 release key exists (`C:\Users\ottva\.orszem\signing\orszem-v2-release.jks`, alias `orszem-v2`, certificate SHA-256
    `E6:2A:DE:23:9E:02:65:F5:DD:C1:5E:30:18:13:5A:D0:A5:93:0D:95:0C:BF:73:90:B5:5D:13:15:D7:B3:03:CF`, as printed by the owner; this fingerprint is public).
    Building needs a local, gitignored `keystore.properties`; the passwords stay with the owner.
-2. **Owner GO** before touching `orszembejelento.hu` or `www`. Today they resolve to `91.227.139.235` (purpose unverified, not touched); `api` was pointed at the VM
-   by the owner and is live (§8). The target VM is `129.159.31.175`.
-3. Certificates for the apex and `www` need DNS to resolve to the VM first (the `api` and interim-host certificates exist).
+2. ~~Canonical DNS cutover~~ **Done, see §9.** The apex and `www` used to point at `91.227.139.235`, a Rackhost domain-parking server (finding in
+   [CANONICAL_CUTOVER_PLAN.md](CANONICAL_CUTOVER_PLAN.md) §1); nothing was run on it and it was never modified.
+3. ~~Certificates for the apex and `www`~~ **Issued at the cutover (§9)**, together with the `api` and interim-host certificates; Caddy renews them.
 4. Not exercised: a reboot of the VM (it would interrupt V1 briefly). Evidence instead: `docker` enabled at boot, every container `unless-stopped`, the V2
    upstream published on the always-present `docker0` gateway (no dependency on V1's network), and a full V2 `down`/`up` with the volume kept.
+5. V1 is still running and is **not retired**; its rollback dump and config backups are intact. About 42 historical, test-only lines in V1's Caddy log are to be removed when V1 is retired.
+6. The V2 reference data is the fictional placeholder (§4) until the KTI/VPE and GYSEV permissions (PREPARED / NOT SENT / SEND LATER) are cleared; the PENDING dataset is unused.
+7. A second, independent backup of the V2 signing key cannot be verified from here (owner's responsibility).
 
-## 7. Verification so far (all from outside the server, over HTTPS, no mocks)
+## 7. Verification before the cutover (interim host, from outside the server, over HTTPS, no mocks)
 
-Acceptance suite `deploy/eval/acceptance-api.mjs` (evaluation branch): phase A 33/33, phase B 10/10, rate limit 3/3, verify after a backend restart and after
+Acceptance suite `deploy/eval/acceptance-api.mjs`: phase A 33/33, phase B 10/10, rate limit 3/3, verify after a backend restart and after
 a full V2 down/up 17/17 each; sessions survive. Real V2 backup and disposable restore: 18 tables identical (`backup.sh`). Ports 5432, 8080, 8081, 18081 and
 2019 are closed from outside; 22, 80 and 443 are open. Actuator, OpenAPI and Swagger return 404 at the edge. A spoofed `X-Forwarded-For` does not bypass the
 submission limit. No secret-shaped strings in the V2 logs.

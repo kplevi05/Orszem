@@ -40,7 +40,7 @@ Also confirm exactly one `A` record per name and that the `api` record did not c
 
 ## 3. Caddy change (after propagation only)
 
-`deploy/live/v1-caddy-apex-www-site.caddy` (prepared, **validated, not applied**): the apex proxies to the V2 edge on `172.17.0.1:18081` (Public Web, `/api/*`;
+`deploy/live/v1-caddy-apex-www-site.caddy` (prepared and validated beforehand; **applied at the cutover on 2026-09-21**): the apex proxies to the V2 edge on `172.17.0.1:18081` (Public Web, `/api/*`;
 actuator, OpenAPI and Swagger stay 404); `www` redirects permanently to the apex; both send HSTS (`includeSubDomains`); the apex access log deletes the
 `Authorization` and `X-Orszem-Report-Access` headers. It was validated (a) on its own and (b) appended to V1's *current* Caddyfile in a throwaway container on
 the VM. Site addresses in that candidate: V1's own host, `v2.129-159-31-175.sslip.io`, `api.orszembejelento.hu`, `orszembejelento.hu`, `www.orszembejelento.hu`.
