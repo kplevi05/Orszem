@@ -1,0 +1,99 @@
+# Őrszem V2 — LIVE stack on the owner's Oracle VM, alongside the still-running V1 (project `orszem`).
+#
+#   Internet -> V1's Caddy :80/:443 (owns the ports until cutover; one extra site block)
+#            -> orszem-v2-edge (Caddy: Public Web + /api; published ONLY on the docker0 gateway 172.17.0.1:18081,
+#               an address that exists only inside the host, never on a public interface)
+#            -> orszem-v2-backend (Spring Boot, no published port)
+#            -> orszem-v2-db (PostgreSQL 16, no published port)
+#
+# Nothing here shares a database, network, volume, container name, port or config file with V1, and
+# nothing is published on a public interface. Secrets live only in /home/opc/apps/orszem-v2/.env (mode 600, never committed).
+# Deployed from the immutable tag v2.0.2 (see docs/deployment/LIVE_DEPLOYMENT_V2.md).
+name: orszem-v2
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: orszem-v2-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: orszem_v2
+      POSTGRES_USER: orszem_v2
+      POSTGRES_PASSWORD: ${ORSZEM_V2_DB_PASSWORD:?missing in .env}
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - orszem_v2_pgdata:/var/lib/postgresql/data
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=40", "-c", "effective_cache_size=384MB"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orszem_v2 -d orszem_v2"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    deploy: { resources: { limits: { memory: 512m } } }
+    logging: *logging
+
+  backend:
+    image: eclipse-temurin:21-jre
+    container_name: orszem-v2-backend
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    working_dir: /app
+    command: ["java", "-jar", "/app/backend.jar"]
+    environment:
+      ORSZEM_DB_URL: jdbc:postgresql://db:5432/orszem_v2
+      ORSZEM_DB_USERNAME: orszem_v2
+      ORSZEM_DB_PASSWORD: ${ORSZEM_V2_DB_PASSWORD}
+      ORSZEM_BIND_ADDRESS: 0.0.0.0
+      ORSZEM_PORT: "8081"
+      # 1 OCPU / 6 GB VM shared with V1: keep the JVM small.
+      JAVA_TOOL_OPTIONS: -Duser.timezone=UTC -Xms128m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+UseSerialGC
+      # Only the edge and V1's Caddy live on this network; X-Forwarded-For is believed from it and nowhere else.
+      ORSZEM_TRUSTED_PROXIES: 172.29.90.0/24
+      # Explicit, so the running configuration can be read back (ADR 0010 approved values).
+      ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_ENABLED: "true"
+      ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_BURST: "10"
+      ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_REFILL_PERIOD: 20s
+      ORSZEM_RATE_LIMIT_ENABLED: "true"
+    volumes:
+      - ./run/backend.jar:/app/backend.jar:ro
+    healthcheck:
+      # bash (not /bin/sh): /dev/tcp is a bashism, and the image ships neither curl nor wget.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8081 && printf 'GET /actuator/health HTTP/1.0\r\n\r\n' >&3 && grep -q '\"status\":\"UP\"' <&3"]
+      interval: 20s
+      timeout: 8s
+      retries: 10
+      start_period: 60s
+    deploy: { resources: { limits: { memory: 900m } } }
+    logging: *logging
+
+  edge:
+    image: caddy:2
+    container_name: orszem-v2-edge
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "172.17.0.1:18081:80"
+    volumes:
+      - ./Caddyfile.edge:/etc/caddy/Caddyfile:ro
+      - ./run/web:/srv/web:ro
+    deploy: { resources: { limits: { memory: 128m } } }
+    logging: *logging
+
+volumes:
+  orszem_v2_pgdata:
+    name: orszem_v2_pgdata
+
+networks:
+  default:
+    name: orszem_v2_net
+    ipam:
+      config:
+        - subnet: 172.29.90.0/24

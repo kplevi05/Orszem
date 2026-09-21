@@ -1,0 +1,17 @@
+# ADDED to V1's Caddyfile (/home/opc/apps/orszem/infra/caddy/Caddyfile) so the one Caddy that owns 80/443 also serves V2.
+# Everything outside this block is V1's own and is left as it was. Certificates are obtained automatically (HTTP-01).
+# The interim hostname needs no DNS change: sslip.io resolves any <label>.<a-b-c-d>.sslip.io to a.b.c.d.
+# The upstream is the V2 edge published on the docker0 gateway (172.17.0.1:18081, private to the host), so no network
+# attachment on V1's containers is needed and nothing depends on V1's Compose network.
+v2.129-159-31-175.sslip.io {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy 172.17.0.1:18081
+	log {
+		output stdout
+		format console
+	}
+}

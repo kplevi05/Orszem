@@ -1,0 +1,64 @@
+# V2 internal edge. Plain HTTP on the private orszem_v2_net network only: TLS is terminated by the Caddy that owns
+# 80/443 (V1's, until cutover). Same routing policy as deploy/caddy/Caddyfile: the Public Web is static and calls the
+# API same-origin at /api/*; actuator, the OpenAPI document and Swagger UI are never routed.
+{
+	auto_https off
+	admin off
+	servers {
+		# The only peers that can reach this listener are the Caddy in front of us (V1's, on a docker bridge) and the
+		# host's docker gateways: private ranges, unreachable from the Internet. Their forwarded client address is believed.
+		trusted_proxies static 172.17.0.0/16 172.18.0.0/16 172.29.90.0/24
+	}
+}
+
+:80 {
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+	encode zstd gzip
+
+	handle /actuator* {
+		respond 404
+	}
+	handle /v3/api-docs* {
+		respond 404
+	}
+	handle /swagger-ui* {
+		respond 404
+	}
+	handle /webjars* {
+		respond 404
+	}
+
+	handle /api/* {
+		reverse_proxy backend:8081 {
+			# The real client address as seen by the outermost Caddy, never a client-supplied chain.
+			header_up X-Forwarded-For {client_ip}
+		}
+	}
+
+	handle {
+		header {
+			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+			Permissions-Policy "geolocation=(), camera=(), microphone=()"
+		}
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format filter {
+			wrap console
+			fields {
+				request>headers>Authorization delete
+				request>headers>X-Orszem-Report-Access delete
+			}
+		}
+	}
+}
