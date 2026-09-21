@@ -108,20 +108,27 @@ Both networks come from the **same** VPE-published regulatory document, so they 
 covered from one consistent, current source rather than from two sources of differing
 quality.
 
-| | Lines seen | With ≥1 relation | Relations | Settlements |
+| | Lines with ≥1 quarantined row | With ≥1 relation | Relations | Settlements |
 |---|---|---|---|---|
-| Lines in the GYSEV annex (5.2-5) | 32 | 27 | 278 | 249 |
-| — of those, GYSEV-only (absent from the MÁV annex) | 20 | — | 87 | 83 |
-| Lines in the MÁV annex (5.2-4) | 207 | — | — | — |
-| Line codes appearing in **both** annexes | 12 | — | — | — |
+| GYSEV annex (5.2-5) | 32 | 27 | 278 | 249 |
+| — of those, GYSEV-only (no quarantined row from the MÁV annex) | 20 | — | 87 | 83 |
+| MÁV annex (5.2-4) | 207 | — | — | — |
+| Line codes with a quarantined row from **both** annexes | 12 | — | — | — |
+
+> **Correction (2026-09-19).** The first column originally read "Lines seen" and was read as the number of lines in each
+> annex. It is not: 207, 32 and 12 (union **227**) are the lines that have **at least one quarantined row** from that annex,
+> recomputed from the recovered dataset. The roster has **231** lines; the other **4** lines were fully resolved (every service
+> point matched exactly, 7 relations) and therefore have no quarantined row. 227 + 4 = 231. The true number of lines per annex is not
+> recorded, and the GYSEV relation/settlement figures in the other columns cannot be re-verified from the recovered files (canonical
+> files carry no per-annex label). See `deployment/B9B_REFERENCE_DATA_QUALITY_PLAN.md` §2.1.
 
 The 12 shared codes are the sections where the two networks meet. They are single rows in
 `railway-lines.csv`, which is correct — a line code is a line code regardless of which
 undertaking's annex lists it.
 
-**Assessment: GYSEV is not under-covered relative to MÁV.** 84 % of GYSEV-annex lines
-carry at least one verified relation, against 64 % across all lines. That is the expected
-result of a smaller, denser, more consistently named network.
+**Assessment (as originally written; see the correction above): GYSEV is not under-covered relative to MÁV.** 84 % of the
+32 GYSEV lines carry at least one verified relation, against 64 % across all lines. That is the expected
+result of a smaller, denser, more consistently named network. The 84 % is not independently re-verifiable.
 
 ---
 

@@ -1,5 +1,9 @@
 # Reference data — reuse and provenance memo (decision B9)
 
+> **Superseded in part (2026-09-19):** the owner's decisions and the split into B9-A / B9-B are in
+> [B9_DECISION_PACKAGE.md](B9_DECISION_PACKAGE.md). Option B below is rejected; written VPE confirmation is required for the
+> railway components. This memo is otherwise unchanged.
+
 **Status: `reuseStatus: PENDING`. Production import is blocked, and stays blocked, until the owner
 decides.** This memo records what evidence exists for each source, what it does and does not
 support, and exactly what the owner must decide. It is an engineering record, **not legal advice**;
