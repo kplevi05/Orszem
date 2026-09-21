@@ -1,0 +1,24 @@
+# PREPARED, NOT APPLIED. To be appended to V1's Caddyfile only after DNS for api.orszembejelento.hu resolves to 129.159.31.175
+# (docs/deployment/LIVE_DEPLOYMENT_V2.md §6). Same policy as the api host in deploy/caddy/Caddyfile: only /api/* is routed, everything
+# else is a plain 404. The V2 edge already answers 404 for actuator, the OpenAPI document and Swagger UI.
+api.orszembejelento.hu {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+	handle /api/* {
+		reverse_proxy 172.17.0.1:18081
+	}
+	handle {
+		respond 404
+	}
+	log {
+		output stdout
+		format console
+	}
+}
