@@ -17,8 +17,15 @@ api.orszembejelento.hu {
 	handle {
 		respond 404
 	}
+	# Never log the anonymous report credential (Authorization is redacted by Caddy's default).
 	log {
 		output stdout
-		format console
+		format filter {
+			wrap console
+			fields {
+				request>headers>Authorization delete
+				request>headers>X-Orszem-Report-Access delete
+			}
+		}
 	}
 }
