@@ -1,6 +1,6 @@
 # Canonical cutover plan: `orszembejelento.hu` and `www` → V2
 
-**Status: PLAN ONLY. Not executed. Waiting for the owner's explicit GO.** Nothing in this document has been applied. V1 stays running and is not retired by this
+**Status: EXECUTED on 2026-09-21 after the owner's explicit GO; results in [LIVE_DEPLOYMENT_V2.md](LIVE_DEPLOYMENT_V2.md) §9.** The text below is the plan as it was executed. V1 stays running and was not retired.
 plan. The API host `api.orszembejelento.hu` is already live ([LIVE_DEPLOYMENT_V2.md](LIVE_DEPLOYMENT_V2.md) §8), and the production Android APKs already
 point at it, so **the apps need no rebuild** for this cutover.
 
@@ -40,7 +40,7 @@ Also confirm exactly one `A` record per name and that the `api` record did not c
 
 ## 3. Caddy change (after propagation only)
 
-`deploy/live/v1-caddy-apex-www-site.caddy` (prepared, **validated, not applied**): the apex proxies to the V2 edge on `172.17.0.1:18081` (Public Web, `/api/*`;
+`deploy/live/v1-caddy-apex-www-site.caddy` (prepared and validated beforehand; **applied at the cutover on 2026-09-21**): the apex proxies to the V2 edge on `172.17.0.1:18081` (Public Web, `/api/*`;
 actuator, OpenAPI and Swagger stay 404); `www` redirects permanently to the apex; both send HSTS (`includeSubDomains`); the apex access log deletes the
 `Authorization` and `X-Orszem-Report-Access` headers. It was validated (a) on its own and (b) appended to V1's *current* Caddyfile in a throwaway container on
 the VM. Site addresses in that candidate: V1's own host, `v2.129-159-31-175.sslip.io`, `api.orszembejelento.hu`, `orszembejelento.hu`, `www.orszembejelento.hu`.

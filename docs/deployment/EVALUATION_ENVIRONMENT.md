@@ -5,6 +5,9 @@ and evaluation Android builds of both apps, running on the development workstati
 data**. The VPE/GYSEV-derived railway dataset stays `PENDING` and is not used
 ([EXTERNAL_PERMISSIONS_DEFERRED.md](EXTERNAL_PERMISSIONS_DEFERRED.md)). `v2.0.2` is deployed unmodified.
 
+> **Note (2026-09-21).** This page describes the local evaluation stack only. The live system on the owner's VM is documented in [LIVE_DEPLOYMENT_V2.md](LIVE_DEPLOYMENT_V2.md); the
+> SSH situation described in §1 was true when this was written and no longer is.
+
 ## 1. Why it runs locally and not on the V1 VM
 
 The workstation holds **no SSH key** for the Oracle VM (`~/.ssh` contains only `known_hosts`), and the runbook has never been

@@ -4,6 +4,10 @@
 production. It is the checklist and runbook that closes the remaining gates and then drives a
 controlled deployment. It does not repeat the phase reports; it links to them.
 
+> **Superseded status (2026-09-21).** The status line above is the original, pre-deployment one. `v2.0.2` has since been deployed to the owner's VM and made canonical
+> (`orszembejelento.hu`, `www`, `api`), by a different route than the host-level sequence in §7: Docker Compose beside V1, with V1's Caddy in front until V1 is retired. The
+> record of what was done, verified and left open is [deployment/LIVE_DEPLOYMENT_V2.md](deployment/LIVE_DEPLOYMENT_V2.md); this document stays as the original checklist and runbook.
+
 | | |
 |---|---|
 | Software release | `v2.0.0`, annotated tag `da1beeae81ae5fe396d9c53d9a26e20e8e4149d1` → `cc4f67443e2f6baf2dcdd15c90449ba5d173de84`. **Immutable.** |
