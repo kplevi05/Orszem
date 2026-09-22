@@ -379,3 +379,66 @@ green (§13).
   accounts and the already-cleared KSH settlement data.
 - **Owner visual-review status: not applicable / not required** — see §11's explanation. No
   PR will be opened until the owner has read this report, per the task's own instruction.
+
+
+## 13. Continuation review and production-readiness preparation (2026-09-22)
+
+The owner delegated continuation of this phase for the purpose of getting a usable nationwide
+version ready the same day. A second review was performed against the pushed branch and the
+current live-deployment configuration before opening a PR.
+
+### Review findings
+
+- The feature branch remained based directly on the already-approved post-PR-#28 `main`
+  (`70fb9773d6aa24d5fa6f3325bc933102835c6754`) with no unrelated history mixed in.
+- The server-side routing behavior required by this phase was confirmed to pre-exist exactly
+  as described in §2: no client or routing-service rewrite was needed.
+- The new authorization carve-out was re-reviewed across policy, queue SQL, claim, return,
+  close, reassign and Phase-6 assignment guards. No routed-report area authorization was
+  widened.
+- Deactivation and SERVICE_USER→MODERATOR promotion still reject any user with an open
+  assignment, including an UNCLASSIFIED one. Area/global-scope narrowing correctly ignores
+  an UNCLASSIFIED assignment because that assignment never depended on area scope.
+- A temporary-policy cutover caveat was made explicit in the rollout plan: do not disable the
+  fallback while ordinary SERVICE_USER accounts still hold open UNCLASSIFIED assignments,
+  because the strict policy intentionally removes their visibility again.
+
+### Corrections made during continuation review
+
+1. **KSH provenance date corrected.** The new manifest initially recorded
+   `retrievedAt: 2026-09-22`, which was the date the importable manifest was assembled, not
+   the date the already-cleared KSH settlement file entered the repository. Git provenance
+   shows `reference-data/cleared/settlements.csv` was committed on 2026-09-07 from the
+   KSH Helységnévtár source. The manifest now preserves that original retrieval date instead
+   of silently re-dating the source.
+2. **API documentation brought in line with runtime behavior.** The Service workflow
+   controller's OpenAPI descriptions still stated that SERVICE_USER never sees UNCLASSIFIED
+   and that UNCLASSIFIED reassign always fails. Those descriptions now explicitly describe
+   the temporary flag-gated nationwide behavior.
+3. **Live deployment configuration prepared, not applied.** The checked-in
+   `deploy/live/docker-compose.yml` now explicitly sets
+   `ORSZEM_UNCLASSIFIED_SERVICE_USER_ACCESS_ENABLED=true` for the temporary live fallback;
+   the generic environment example documents the switch with a default of false. Nothing in
+   production was changed by these repository edits.
+4. **Production rollout runbook added.**
+   `docs/deployment/NATIONWIDE_KSH_FALLBACK_ROLLOUT.md` records the exact backup/restore
+   gate, dataset validate/diff/import steps, backend-only rollout, smoke checks, cutover rule
+   and rollback path for the currently-live Docker deployment.
+
+### Usable-version implication
+
+No new Public Android, Service Android or Public Web source code is required for the
+nationwide fallback itself. The already-shipped clients use the generic settlement-search
+API and already submit a selected canonical settlement with `railwayLineId = null` when
+there are zero verified candidates. Therefore the production-enabling work for this phase is
+limited to:
+
+1. merge the reviewed branch;
+2. deploy the merged backend artifact;
+3. import only `reference-data/cleared/` into V2 after validate+diff;
+4. run the backend with the explicit temporary fallback switch enabled.
+
+The existing production APKs can then use the complete KSH settlement catalogue without a
+new signed APK solely for this feature. The separate physical-device UI hotfix already merged
+in PR #28 is independent of this data/workflow fallback and can be packaged in the next
+client release when the owner chooses.
