@@ -7,7 +7,7 @@
   "sources": {
     "KSH": {
       "source": "KSH Helységnévtár (Hungarian Central Statistical Office settlement registry)",
-      "retrievedAt": "2026-09-22",
+      "retrievedAt": "2026-09-07",
       "sourceVersionOrDate": "state 2025-01-01",
       "licence": "CC BY 4.0, attribution required - see reference-data/LICENSES/",
       "used": "the complete cleared settlement roster (id/KSH code/name/county) - no railway-line or settlement-line relation data of any kind"
