@@ -5,6 +5,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.moderation.data.DeletedReportDetailResponse
 import hu.orszembejelento.service.moderation.data.DeletedReportFilter
@@ -87,7 +88,11 @@ class DeletedReportDetailComposeTest {
         compose.setContent { DeletedReportDetailScreen(role = "SUPER_ADMIN", viewModel = vm, onBack = {}, onRestored = { restoredCalls++ }) }
         compose.waitForIdle()
 
-        compose.onNodeWithText("Bejelentés visszaállítása").performClick()
+        // Field-test fix (§1): the field list now stacks each label above its value, which
+        // makes this screen legitimately taller than before - the restore button can be
+        // scrolled out of the viewport on a real device now, exactly like a real user would
+        // have to scroll to reach it.
+        compose.onNodeWithText("Bejelentés visszaállítása").performScrollTo().performClick()
         compose.waitForIdle()
 
         // The exact IN_PROGRESS-specific copy (brief §48-49), never the NEW/ARCHIVED variant.

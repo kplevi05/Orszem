@@ -174,11 +174,19 @@ private fun ModerationSection(detail: DeletedReportDetailResponse) {
     }
 }
 
+/**
+ * Field-test fix: label and value used to sit side by side in one [Row] with
+ * [Arrangement.SpaceBetween] and no width constraint on either [Text] - a long value (a real
+ * ServiceArea name) could then overlap the label instead of wrapping, at a narrow width and/or
+ * a large font scale. Label above value, stacked in a [Column], both spanning the row's full
+ * width: correct at any width or font scale by construction - never a truncated or
+ * abbreviated value.
+ */
 @Composable
 private fun DetailRow(label: String, value: String) {
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
+        Text(value, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 2.dp))
     }
     HorizontalDivider()
 }
