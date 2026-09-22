@@ -45,3 +45,14 @@ jobs:
       # GYSEV-derived content is present.
       - name: Validate cleared KSH settlements reference dataset
         run: node reference-data/tools/validate-canonical.mjs reference-data/cleared/manifest.json
+
+      - name: Set up Python for operational territory proposal
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Test operational territory proposal and clearance gates
+        run: python3 -m unittest discover -s scripts/tests -v
+
+      - name: Verify committed territory proposal matches cleared sources
+        run: python3 scripts/build-territory-plan.py --check
