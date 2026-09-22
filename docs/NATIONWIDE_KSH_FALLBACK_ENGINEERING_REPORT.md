@@ -315,6 +315,21 @@ complete catalogue: proved by code inspection (§2) that both clients call the s
 unmodified search endpoint with no client-side dataset assumption, plus the same live
 `?query=Tata` proof (§8, step 3) exercising the identical backend code path both clients call.
 
+**One fixture flakiness caught by CI (not the local run), fixed:**
+`ReportWorkflowTestSupport.givenRoutedArea()`'s random line-code generator was the one
+outlier in the suite still drawing from a 4-digit range (1,000-9,999 — 9,000 values), while
+every other random-line-code generator already in this codebase (`AreaAdminAuditIT`,
+`AreaAdminConcurrencyIT`, `RailwayLineAdminIT`) draws from 100,000-999,999 (900,000 values).
+This branch's own new tests are heavy callers of `givenRoutedArea` (directly, and via
+`givenRoutedReport`/`givenUnclassifiedReport`), which was enough additional load on the
+narrow range for a `ux_railway_lines_line_code` collision to actually occur on the first CI
+run (`ModerationDeleteIT` — an unrelated test, hit only because it happened to run later in
+the same shared-database JVM). Pre-existing fixture fragility, not a defect in this phase's
+policy/query changes — but this phase's own tests are what pushed it over the edge, so fixed
+here (widened to match the range already established elsewhere) rather than left for the next
+unlucky run. Re-ran the full backend suite locally after the fix and pushed; CI re-verified
+green (§13).
+
 **Full repository regression, this same final HEAD:**
 
 | Suite | Command | Result |
