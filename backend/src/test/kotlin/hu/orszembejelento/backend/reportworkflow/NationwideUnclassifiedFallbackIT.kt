@@ -14,8 +14,8 @@ import org.springframework.test.context.TestPropertySource
  * working set over UNCLASSIFIED reports, nationwide and regardless of area grants, only
  * while this flag is on. [ReportWorkflowVisibilityIT] and [ReportWorkflowPolicyTest] already
  * prove the flag's `false` default preserves the strict prior behaviour byte-for-byte; this
- * class only ever asserts the *additional* surface the flag opens (plus one disabled-state
- * control test, for a belt-and-braces regression check under the identical HTTP stack).
+ * class asserts the *additional* surface the flag opens plus a routed-report non-regression
+ * control while the flag is enabled.
  */
 @Import(AbstractAuthIntegrationTest.Containers::class)
 @TestPropertySource(properties = ["orszem.workflow.unclassified-service-user-access-enabled=true"])
@@ -177,7 +177,7 @@ class NationwideUnclassifiedFallbackIT : ReportWorkflowTestSupport() {
         check(errorCode(response) == "INVALID_ASSIGNEE")
     }
 
-    // ------------------------------------------------------------------------ disabled-state control
+    // --------------------------------------------------------------- routed-report non-regression control
 
     @Test
     fun `routed-report authorization is completely unaffected by the flag - a territorial SERVICE_USER still cannot see another area's report`() {
