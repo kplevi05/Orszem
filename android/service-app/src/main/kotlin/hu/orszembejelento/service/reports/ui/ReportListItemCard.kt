@@ -3,6 +3,8 @@ package hu.orszembejelento.service.reports.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,7 +30,18 @@ import hu.orszembejelento.service.reports.domain.statusLabelRes
 /**
  * One report card - event type first, then settlement/line, then a compact meta row (brief
  * §18/§27). Deliberately does not try to show everything; the detail screen has the rest.
+ *
+ * Field-test fix: the submitted-at/category/area meta line used to be a plain, non-wrapping
+ * [Row], which shifted or clipped the row once a [hu.orszembejelento.service.reports.data.ReportAreaSummary]
+ * name was long enough (a real production ServiceArea name, e.g. "Debrecen–Miskolc" or a
+ * "[FIKTÍV] …" placeholder, next to a narrow ~320dp screen and/or a large font scale) - it
+ * never truncates or abbreviates the canonical name, so the layout has to give. Mirrors
+ * [hu.orszembejelento.service.moderation.ui.DeletedReportListItemCard]'s existing, already
+ * width-safe shape exactly: the submitted-at/category chips wrap in a [FlowRow], and the area
+ * name gets its own full-width row underneath so it wraps as ordinary multi-line text instead
+ * of being squeezed into whatever the chips above left over.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ReportListItemCard(item: ReportListItemResponse, onClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
@@ -55,24 +68,27 @@ fun ReportListItemCard(item: ReportListItemResponse, onClick: () -> Unit) {
                     StatusBadge(R.string.status_unclassified, statusColor("NEW"))
                 }
             }
-            Row(
-                modifier = Modifier.padding(top = 8.dp),
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 MetaChip(formatInstant(item.submittedAt))
                 MetaChip(item.category.displayName)
-                item.serviceArea?.let { MetaChip(it.name) }
+            }
+            item.serviceArea?.let {
+                MetaChip(text = it.name, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
             }
         }
     }
 }
 
 @Composable
-private fun MetaChip(text: String) {
+private fun MetaChip(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
     )
 }
 

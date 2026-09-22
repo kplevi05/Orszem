@@ -4,10 +4,13 @@ import hu.orszembejelento.service.analytics.data.AnalyticsAreaOptionResponse
 import hu.orszembejelento.service.analytics.data.AnalyticsAreaOptionsResponse
 import hu.orszembejelento.service.analytics.data.AnalyticsFilter
 import hu.orszembejelento.service.analytics.data.AnalyticsPeriod
+import hu.orszembejelento.service.analytics.data.AnalyticsRepository
 import hu.orszembejelento.service.analytics.ui.AnalyticsViewModel
 import hu.orszembejelento.service.common.data.ApiResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -116,6 +119,38 @@ class AnalyticsViewModelTest {
         val vm = AnalyticsViewModel(fake, onSessionEnded = {})
         assertEquals(false, vm.state.value.areaOptions?.canViewUnclassified)
         assertEquals(1, vm.state.value.areaOptions?.areas?.size)
+    }
+
+    /** Field-test fix (§4): see `ReportQueueViewModelTest`'s equivalent test for the full rationale. */
+    @Test
+    fun `refresh cancels an in-flight refresh so a slower stale response can never overwrite the fresher one`() {
+        val dispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(dispatcher)
+        try {
+            var summaryCalls = 0
+            val repo = object : AnalyticsRepository {
+                override suspend fun summary(filter: AnalyticsFilter): ApiResult<hu.orszembejelento.service.analytics.data.AnalyticsSummaryResponse> {
+                    summaryCalls++
+                    return if (summaryCalls == 1) {
+                        delay(1_000)
+                        ApiResult.Success(FakeAnalyticsRepository.defaultSummary(total = 1))
+                    } else {
+                        delay(10)
+                        ApiResult.Success(FakeAnalyticsRepository.defaultSummary(total = 2))
+                    }
+                }
+                override suspend fun areaOptions(): ApiResult<AnalyticsAreaOptionsResponse> =
+                    ApiResult.Success(AnalyticsAreaOptionsResponse(emptyList(), false))
+            }
+            val vm = AnalyticsViewModel(repo, onSessionEnded = {})
+            dispatcher.scheduler.runCurrent() // let init{}'s own call #1 actually start (past areaOptions() and into summary()'s delay) first
+            vm.refresh() // fired while that first call is still genuinely in flight
+            dispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(2, vm.state.value.summary?.totalReports)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 
     @Test

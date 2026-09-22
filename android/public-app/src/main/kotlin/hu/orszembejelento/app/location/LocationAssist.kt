@@ -26,8 +26,14 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  * caller's in-flight state; they are never returned in a form that could be logged,
  * persisted, or attached to a report (§27 - this class exposes no coordinate getter at
  * all, deliberately, so a caller cannot even accidentally reach for one).
+ *
+ * `open` (field-test fix, §3/§6): [locationServicesEnabled] and [currentLocation] are the
+ * only seam a JVM unit test has for simulating a real, never-resolving GPS fix - the
+ * platform APIs underneath cannot be made to hang on demand from a mocked [Context]. A test
+ * subclass overrides these two members only; every other caller still gets the real
+ * platform-backed implementation unchanged.
  */
-class LocationAssist(private val context: Context) {
+open class LocationAssist(private val context: Context) {
 
     private val geocoderExecutor = Executors.newSingleThreadExecutor()
 
@@ -36,7 +42,7 @@ class LocationAssist(private val context: Context) {
      * all. False here is what triggers the exact GPS-off dialog defined by the product
      * copy in §31 - this class does not own that dialog, only this check.
      */
-    fun locationServicesEnabled(): Boolean {
+    open fun locationServicesEnabled(): Boolean {
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return false
         return runCatching {
             manager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
@@ -56,7 +62,7 @@ class LocationAssist(private val context: Context) {
      * a single location-update request and takes the first result - never the deprecated
      * blocking `getLastKnownLocation`-only path, and never on the main thread either way.
      */
-    suspend fun currentLocation(): Location? {
+    open suspend fun currentLocation(): Location? {
         val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         if (!hasFine && !hasCoarse) return null

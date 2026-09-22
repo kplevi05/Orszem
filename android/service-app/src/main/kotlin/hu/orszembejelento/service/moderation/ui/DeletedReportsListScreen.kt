@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -15,7 +16,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,13 +38,21 @@ import hu.orszembejelento.service.moderation.data.DeletedReportFilter
 import hu.orszembejelento.service.reports.ui.AreaChoice
 import kotlinx.coroutines.delay
 
-/** `Törölt bejelentések` (brief §18/§44-45) — the shared deleted-report list, reachable from both Moderáció and Adminisztráció. */
+/**
+ * `Törölt bejelentések` (brief §18/§44-45) — the shared deleted-report list, reachable from both
+ * Moderáció and Adminisztráció.
+ *
+ * Field-test fix (§5): an explicit in-app back arrow in its own [TopAppBar], on top of the
+ * system Back this already honoured — calls the same [onBack] the caller wires to
+ * `popBackStack()`, never a second, parallel way back.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeletedReportsListScreen(
     viewModel: DeletedReportsListViewModel,
     onOpenReport: (String) -> Unit,
     areaChoices: List<AreaChoice>,
+    onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     var searchText by remember { mutableStateOf(state.filter.query.orEmpty()) }
@@ -54,54 +65,66 @@ fun DeletedReportsListScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
-            Text(stringResource(R.string.deleted_reports_title), style = MaterialTheme.typography.headlineSmall)
-            SettlementDataSourceNote(color = MaterialTheme.colorScheme.onSurfaceVariant)
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                placeholder = { Text(stringResource(R.string.search_hint_reports)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.content_description_search)) },
-                trailingIcon = {
-                    androidx.compose.foundation.layout.Row {
-                        IconButton(onClick = { showFilters = true }) {
-                            BadgedBox(badge = {
-                                if (state.filter.activeFacetCount > 0) Badge { Text(state.filter.activeFacetCount.toString()) }
-                            }) {
-                                Icon(Icons.Filled.FilterList, contentDescription = stringResource(R.string.action_filters))
-                            }
-                        }
-                        IconButton(onClick = { viewModel.refresh() }) {
-                            Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_refresh))
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.deleted_reports_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back))
                     }
                 },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
-        }
+        },
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
+                SettlementDataSourceNote(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    placeholder = { Text(stringResource(R.string.search_hint_reports)) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.content_description_search)) },
+                    trailingIcon = {
+                        androidx.compose.foundation.layout.Row {
+                            IconButton(onClick = { showFilters = true }) {
+                                BadgedBox(badge = {
+                                    if (state.filter.activeFacetCount > 0) Badge { Text(state.filter.activeFacetCount.toString()) }
+                                }) {
+                                    Icon(Icons.Filled.FilterList, contentDescription = stringResource(R.string.action_filters))
+                                }
+                            }
+                            IconButton(onClick = { viewModel.refresh() }) {
+                                Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_refresh))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+            }
 
-        if (showFilters) {
-            DeletedReportFilterSheet(
-                current = state.filter,
-                areaChoices = areaChoices,
-                onApply = { newFilter -> showFilters = false; viewModel.updateFilter(newFilter) },
-                onDismiss = { showFilters = false },
-            )
-        }
+            if (showFilters) {
+                DeletedReportFilterSheet(
+                    current = state.filter,
+                    areaChoices = areaChoices,
+                    onApply = { newFilter -> showFilters = false; viewModel.updateFilter(newFilter) },
+                    onDismiss = { showFilters = false },
+                )
+            }
 
-        when {
-            state.loading -> FullScreenLoading()
-            state.error != null -> ErrorState(message = apiErrorMessage(state.error!!), onRetry = viewModel::refresh)
-            state.items.isEmpty() -> hu.orszembejelento.service.common.ui.EmptyState(stringResource(R.string.deleted_reports_empty))
-            else -> DeletedReportList(
-                items = state.items,
-                canLoadMore = state.canLoadMore,
-                loadingMore = state.loadingMore,
-                onItemClick = onOpenReport,
-                onLoadMore = viewModel::loadMore,
-            )
+            when {
+                state.loading -> FullScreenLoading()
+                state.error != null -> ErrorState(message = apiErrorMessage(state.error!!), onRetry = viewModel::refresh)
+                state.items.isEmpty() -> hu.orszembejelento.service.common.ui.EmptyState(stringResource(R.string.deleted_reports_empty))
+                else -> DeletedReportList(
+                    items = state.items,
+                    canLoadMore = state.canLoadMore,
+                    loadingMore = state.loadingMore,
+                    onItemClick = onOpenReport,
+                    onLoadMore = viewModel::loadMore,
+                )
+            }
         }
     }
 }

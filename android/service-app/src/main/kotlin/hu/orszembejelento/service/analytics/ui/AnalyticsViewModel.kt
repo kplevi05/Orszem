@@ -7,6 +7,7 @@ import hu.orszembejelento.service.analytics.data.AnalyticsFilter
 import hu.orszembejelento.service.analytics.data.AnalyticsRepository
 import hu.orszembejelento.service.analytics.data.AnalyticsSummaryResponse
 import hu.orszembejelento.service.common.data.ApiResult
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,10 +16,12 @@ import kotlinx.coroutines.launch
 
 /**
  * `Statisztika` (Phase 11 brief §33-51) - a real, role-scoped analytics dashboard. Read-only:
- * a failed load may be retried explicitly (brief §49), and the screen never auto-refreshes or
- * polls in the background. Filters are local UI preference, not authorization (brief §48) -
- * the backend independently re-validates every one of them on every request regardless of
- * what this ViewModel remembers.
+ * a failed load may be retried explicitly (brief §49), and this ViewModel never polls in the
+ * background - it reloads on a real user action only: opening the tab, an explicit pull/retry,
+ * an explicit filter change, or (field-test fix, §4) navigating back to this tab
+ * (hu.orszembejelento.service.common.ui.RefreshOnResume). Filters are local UI preference, not
+ * authorization (brief §48) - the backend independently re-validates every one of them on
+ * every request regardless of what this ViewModel remembers.
  *
  * Session-scoped, not Activity-scoped, exactly like [hu.orszembejelento.service.servicearea.ui.ServiceAreaAdminListViewModel] -
  * [hu.orszembejelento.service.nav.ServiceNavHost] constructs this against its own
@@ -42,13 +45,19 @@ class AnalyticsViewModel(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    // Cancel any refresh already in flight before starting a new one, so a slower, stale
+    // response can never overwrite a fresher one - matters more now that a resumed navigation
+    // can trigger a refresh close to the ViewModel's own init-time load (§4).
+    private var refreshJob: Job? = null
+
     init {
         refresh()
     }
 
-    /** The screen's only reload path (brief §35/§49) - opening it fresh, an explicit pull, or an explicit filter change. */
+    /** The screen's reload path (brief §35/§49, §4) - opening it fresh, an explicit pull, an explicit filter change, or returning to this tab. */
     fun refresh() {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
 
             val areasResult = repository.areaOptions()

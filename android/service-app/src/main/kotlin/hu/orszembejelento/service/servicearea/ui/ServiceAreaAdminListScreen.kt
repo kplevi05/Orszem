@@ -11,16 +11,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,11 +51,13 @@ import kotlinx.coroutines.delay
  * status, mapped-line count, open-report blocker count when >0), and the create action - never
  * a raw `adminVersion` shown anywhere (brief §46/§67).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceAreaAdminListScreen(
     viewModel: ServiceAreaAdminListViewModel,
     onOpenArea: (String) -> Unit,
     onCreateArea: () -> Unit,
+    onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     var searchText by remember { mutableStateOf(state.filter.query.orEmpty()) }
@@ -63,7 +69,19 @@ fun ServiceAreaAdminListScreen(
         }
     }
 
+    // Field-test fix (§5): an explicit in-app back arrow, on top of the system Back this
+    // already honoured - same `onBack` the caller already wires to `popBackStack()`.
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.areas_admin_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back))
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onCreateArea) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_create_area))
@@ -72,7 +90,6 @@ fun ServiceAreaAdminListScreen(
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
-                Text(stringResource(R.string.areas_admin_title), style = MaterialTheme.typography.headlineSmall)
                 OutlinedTextField(
                     value = searchText,
                     onValueChange = { searchText = it },

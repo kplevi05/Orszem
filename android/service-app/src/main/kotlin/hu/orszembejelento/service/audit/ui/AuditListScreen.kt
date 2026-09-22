@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -21,8 +22,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,10 +56,14 @@ private const val MIN_QUERY_LENGTH = 2
  * `Változási előzmények` (Phase 12 brief §47-53) - SUPER_ADMIN only, reached from the
  * Adminisztráció hub. Read-only: search, filter, paginate, open a detail - never an edit,
  * delete, restore or "undo" control anywhere on this screen (brief §43).
+ *
+ * Field-test fix (§5): an explicit in-app back arrow in its own [TopAppBar], on top of the
+ * system Back this already honoured - calls the same [onBack] the caller wires to
+ * `popBackStack()`, never a second, parallel way back.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AuditListScreen(viewModel: AuditListViewModel, onOpenEvent: (String) -> Unit) {
+fun AuditListScreen(viewModel: AuditListViewModel, onOpenEvent: (String) -> Unit, onBack: () -> Unit) {
     val state by viewModel.state.collectAsState()
     var searchText by remember { mutableStateOf(state.filter.query.orEmpty()) }
     var showFilters by remember { mutableStateOf(false) }
@@ -72,77 +79,89 @@ fun AuditListScreen(viewModel: AuditListViewModel, onOpenEvent: (String) -> Unit
         if (newQuery != state.filter.query) viewModel.updateFilter(state.filter.copy(query = newQuery))
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
-            Text(stringResource(R.string.audit_admin_title), style = MaterialTheme.typography.headlineSmall)
-            Text(
-                stringResource(R.string.audit_subtitle),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                placeholder = { Text(stringResource(R.string.audit_search_placeholder)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.content_description_search)) },
-                trailingIcon = {
-                    Row {
-                        IconButton(onClick = { showFilters = true }) {
-                            BadgedBox(badge = {
-                                if (state.filter.activeFacetCount > 0) Badge { Text(state.filter.activeFacetCount.toString()) }
-                            }) {
-                                Icon(Icons.Filled.FilterList, contentDescription = stringResource(R.string.action_filters))
-                            }
-                        }
-                        IconButton(onClick = viewModel::refresh, enabled = !state.loading) {
-                            Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_refresh))
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.audit_admin_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back))
                     }
                 },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
-        }
-
-        when {
-            state.loading && state.items.isEmpty() && state.error == null -> FullScreenLoading()
-            state.error != null && state.items.isEmpty() ->
-                ErrorState(
-                    message = stringResource(R.string.audit_load_error),
-                    onRetry = viewModel::refresh,
-                    retryLabel = stringResource(R.string.analytics_retry),
+        },
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
+                Text(
+                    stringResource(R.string.audit_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            state.items.isEmpty() -> EmptyState(stringResource(R.string.audit_empty))
-            else -> Column(modifier = Modifier.fillMaxSize()) {
-                if (state.error != null) {
-                    AuditErrorBanner(
-                        message = apiErrorMessage(state.error!!),
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    placeholder = { Text(stringResource(R.string.audit_search_placeholder)) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.content_description_search)) },
+                    trailingIcon = {
+                        Row {
+                            IconButton(onClick = { showFilters = true }) {
+                                BadgedBox(badge = {
+                                    if (state.filter.activeFacetCount > 0) Badge { Text(state.filter.activeFacetCount.toString()) }
+                                }) {
+                                    Icon(Icons.Filled.FilterList, contentDescription = stringResource(R.string.action_filters))
+                                }
+                            }
+                            IconButton(onClick = viewModel::refresh, enabled = !state.loading) {
+                                Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_refresh))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+            }
+
+            when {
+                state.loading && state.items.isEmpty() && state.error == null -> FullScreenLoading()
+                state.error != null && state.items.isEmpty() ->
+                    ErrorState(
+                        message = stringResource(R.string.audit_load_error),
                         onRetry = viewModel::refresh,
-                        retryEnabled = !state.loading,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                        retryLabel = stringResource(R.string.analytics_retry),
                     )
-                }
-                LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-                    items(state.items, key = { it.auditEventId }) { item ->
-                        AuditListItemCard(item, onClick = { onOpenEvent(item.auditEventId) })
+                state.items.isEmpty() -> EmptyState(stringResource(R.string.audit_empty))
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    if (state.error != null) {
+                        AuditErrorBanner(
+                            message = apiErrorMessage(state.error!!),
+                            onRetry = viewModel::refresh,
+                            retryEnabled = !state.loading,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                        )
                     }
-                    item {
-                        if (state.canLoadMore) {
-                            LoadMoreButton(loading = state.loadingMore, onClick = viewModel::loadMore)
+                    LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
+                        items(state.items, key = { it.auditEventId }) { item ->
+                            AuditListItemCard(item, onClick = { onOpenEvent(item.auditEventId) })
+                        }
+                        item {
+                            if (state.canLoadMore) {
+                                LoadMoreButton(loading = state.loadingMore, onClick = viewModel::loadMore)
+                            }
                         }
                     }
                 }
             }
         }
-    }
 
-    if (showFilters) {
-        AuditFilterSheet(
-            current = state.filter,
-            options = state.options,
-            onApply = { filter -> showFilters = false; viewModel.updateFilter(filter) },
-            onDismiss = { showFilters = false },
-        )
+        if (showFilters) {
+            AuditFilterSheet(
+                current = state.filter,
+                options = state.options,
+                onApply = { filter -> showFilters = false; viewModel.updateFilter(filter) },
+                onDismiss = { showFilters = false },
+            )
+        }
     }
 }
 

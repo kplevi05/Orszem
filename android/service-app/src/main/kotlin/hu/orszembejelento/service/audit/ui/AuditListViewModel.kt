@@ -7,6 +7,7 @@ import hu.orszembejelento.service.audit.data.AuditListItemResponse
 import hu.orszembejelento.service.audit.data.AuditOptionsResponse
 import hu.orszembejelento.service.audit.data.AuditRepository
 import hu.orszembejelento.service.common.data.ApiResult
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,13 +46,20 @@ class AuditListViewModel(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    // Field-test fix (§4): also refreshed on navigating back to this screen now
+    // (hu.orszembejelento.service.common.ui.RefreshOnResume) - cancel any refresh already in
+    // flight before starting a new one, so a slower, stale response can never overwrite a
+    // fresher one.
+    private var refreshJob: Job? = null
+
     init {
         refresh()
     }
 
     /** The screen's only reload path (brief §59) - opening it fresh, an explicit pull/retry, or an explicit filter change. Also (re)loads the filter-sheet options. */
     fun refresh() {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
 
             val optionsResult = repository.options()

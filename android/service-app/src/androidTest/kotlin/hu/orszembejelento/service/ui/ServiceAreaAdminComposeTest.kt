@@ -118,7 +118,7 @@ class ServiceAreaAdminComposeTest {
             ),
         )
         val vm = ServiceAreaAdminListViewModel(fake, onSessionEnded = {})
-        compose.setContent { ServiceAreaAdminListScreen(viewModel = vm, onOpenArea = {}, onCreateArea = {}) }
+        compose.setContent { ServiceAreaAdminListScreen(viewModel = vm, onOpenArea = {}, onCreateArea = {}, onBack = {}) }
         compose.waitForIdle()
 
         compose.onNodeWithText("Nyugat-dunantuli terulet").assertExists()

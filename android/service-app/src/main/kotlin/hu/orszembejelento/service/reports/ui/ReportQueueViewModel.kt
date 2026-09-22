@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.reports.data.ReportFilter
 import hu.orszembejelento.service.reports.data.ReportListItemResponse
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,12 +42,21 @@ class ReportQueueViewModel(
     private val _state = MutableStateFlow(UiState(filter = initialFilter))
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    // Field-test fix (§4): the screen now also refreshes whenever the user navigates back to
+    // it (hu.orszembejelento.service.common.ui.RefreshOnResume), on top of the existing
+    // init-time load and explicit pull/filter refreshes - so two refreshes can now land close
+    // together. Cancelling any refresh already in flight before starting a new one is what
+    // prevents two concurrent page-0 loads from racing (a stale response arriving after a
+    // fresher one would otherwise silently win).
+    private var refreshJob: Job? = null
+
     init {
         refresh()
     }
 
     fun refresh() {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             load(page = 0, replace = true)
         }

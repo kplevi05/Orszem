@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import hu.orszembejelento.app.R
 import hu.orszembejelento.app.report.data.SettlementOption
 import hu.orszembejelento.app.report.domain.LineAnswer
@@ -82,6 +83,22 @@ fun Step1Content(state: NewReportUiState, viewModel: NewReportViewModel, onLocat
     }
 }
 
+/**
+ * Field-test fix: the suggestion popup used to be a default, *focusable* [DropdownMenu] - on a
+ * physical device, opening or re-laying-out a focusable popup window steals window focus from
+ * the anchor [OutlinedTextField] for an instant, which is exactly what makes the software
+ * keyboard disappear (the IME follows window focus, not Compose's own focus model). Every
+ * arriving/changing search result re-showed the popup, so the keyboard could be dismissed on
+ * literally every keystroke. `PopupProperties(focusable = false)` is the standard fix for an
+ * autocomplete-style dropdown: the suggestion list never takes window focus, so updating it can
+ * never move focus away from the field or close the keyboard. Editing the text after a
+ * selection already clears [NewReportUiState.selectedSettlement] and keeps searching
+ * ([hu.orszembejelento.app.ui.newreport.NewReportViewModel.onSettlementQueryChanged]) - that
+ * part only needed the popup to stop interfering with focus, not a ViewModel change. Unselected
+ * free text can never pass validation either way: [NewReportUiState.step1Valid] requires a
+ * non-null `selectedSettlement`, so leaving the field on typed-but-unselected text simply keeps
+ * Step 1 incomplete.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettlementField(state: NewReportUiState, viewModel: NewReportViewModel, modifier: Modifier = Modifier) {
@@ -103,7 +120,11 @@ private fun SettlementField(state: NewReportUiState, viewModel: NewReportViewMod
             singleLine = true,
             modifier = Modifier.fillMaxWidth().menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable),
         )
-        DropdownMenu(expanded = expanded && state.settlementResults.isNotEmpty(), onDismissRequest = { expanded = false }) {
+        DropdownMenu(
+            expanded = expanded && state.settlementResults.isNotEmpty(),
+            onDismissRequest = { expanded = false },
+            properties = PopupProperties(focusable = false),
+        ) {
             state.settlementResults.forEach { settlement: SettlementOption ->
                 DropdownMenuItem(
                     text = { Text(settlement.name + (settlement.countyName?.let { " ($it)" } ?: "")) },
@@ -122,6 +143,7 @@ private fun LocateStatusMessage(status: LocateStatus) {
     val textRes = when (status) {
         LocateStatus.LOCATING -> R.string.locate_me_searching
         LocateStatus.FAILED -> R.string.locate_me_failed
+        LocateStatus.TIMEOUT -> R.string.locate_me_timeout
         LocateStatus.PERMISSION_DENIED -> R.string.locate_me_permission_denied
         LocateStatus.PERMISSION_PERMANENTLY_DENIED -> R.string.locate_me_permission_permanently_denied
         LocateStatus.GEOCODER_UNAVAILABLE -> R.string.locate_me_geocoder_unavailable
