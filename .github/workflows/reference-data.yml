@@ -37,3 +37,11 @@ jobs:
 
       - name: Validate evaluation reference dataset (fictional, PARTIAL)
         run: node reference-data/tools/validate-canonical.mjs reference-data/evaluation/manifest.json
+
+      # Nationwide KSH Settlement Fallback phase: the complete cleared KSH settlement
+      # catalogue (reuseStatus: CLEARED, CC BY 4.0 - reference-data/README.md), with zero
+      # railway-line or settlement-line relation data of any kind. Real, not fictional, but
+      # safe to validate here for exactly the same reason it is safe to commit: no VPE/KTI/
+      # GYSEV-derived content is present.
+      - name: Validate cleared KSH settlements reference dataset
+        run: node reference-data/tools/validate-canonical.mjs reference-data/cleared/manifest.json

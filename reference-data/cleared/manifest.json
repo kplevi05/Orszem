@@ -1,0 +1,32 @@
+{
+  "datasetVersion": "KSH-SETTLEMENTS-1",
+  "generatedAt": "2026-09-22T00:00:00Z",
+  "verificationStatus": "VERIFIED",
+  "coverageStatus": "PARTIAL",
+  "reuseStatus": "CLEARED",
+  "sources": {
+    "KSH": {
+      "source": "KSH Helységnévtár (Hungarian Central Statistical Office settlement registry)",
+      "retrievedAt": "2026-09-22",
+      "sourceVersionOrDate": "state 2025-01-01",
+      "licence": "CC BY 4.0, attribution required - see reference-data/LICENSES/",
+      "used": "the complete cleared settlement roster (id/KSH code/name/county) - no railway-line or settlement-line relation data of any kind"
+    }
+  },
+  "canonicalFiles": {
+    "settlements.csv": "70b34b3a94bcc42806996c40189a3877a536e29e7d7b2e668dd41fa6f32359cd",
+    "railway-lines.csv": "a697f3346ad37e3eb5a3856ea4ac9288b2a05a552552cb0ae0153a78ee64e8a3",
+    "settlement-railway-lines.csv": "2a1fa4115d445ceae5e61e7b879f17b6bf14bc9f4cf07f8b88bbe9cce1a37ffc"
+  },
+  "counts": {
+    "settlements": 3178,
+    "railwayLines": 0,
+    "settlementRailwayLineMappings": 0
+  },
+  "coverage": {
+    "settlements": "COMPLETE",
+    "railwayLines": "PARTIAL",
+    "settlementRailwayLines": "PARTIAL",
+    "settlementsWithVerifiedRelations": 0
+  }
+}
