@@ -1,9 +1,9 @@
 # V2 physical-device field-test fixes — engineering report
 
-**Status: candidate, not merged, not deployed.** `v2.0.0` and the live `2.0.2` build are
-unchanged. Base: `origin/main` = `480f220fdc568eb61bbc8396d9a4f70037e88955`. Branch:
-`fix/v2-field-test-issues`. No database migration, no production data, DNS, credential,
-reference-data or deployment-configuration change.
+**Status: owner-approved after visual review, PR open for merge review — not merged, not
+deployed.** `v2.0.0` and the live `2.0.2` build are unchanged. Base: `origin/main` =
+`480f220fdc568eb61bbc8396d9a4f70037e88955`. Branch: `fix/v2-field-test-issues`. No database
+migration, no production data, DNS, credential, reference-data or deployment-configuration change.
 
 Scope: the six physical-device field-test issues in the task brief, and only those — Service
 Android narrow-width layout, Public Android settlement autocomplete focus/keyboard, GPS timeout,
@@ -177,7 +177,33 @@ build):**
 - `DeletedReportDetailComposeTest`'s scroll-to-click fix, above (§1) — a genuine consequence of the
   layout fix, verified against clean `origin/main` before changing the test.
 
-## 3. Results (final HEAD, this branch)
+## 3. Owner visual review (screenshots)
+
+Screenshots were captured from the real emulator against an isolated local `deploy/eval` stack
+(synthetic data only — no production database, credential or DNS touched) and reviewed directly
+by the owner, both on-screen on the emulator and as attached image files, covering:
+
+- §1/§2 narrow-width report list and detail layout, and the long-ServiceArea-name wrap, reviewed
+  directly on the emulator at 320dp-equivalent width and 1.3x font scale.
+- §2 the settlement autocomplete popup open over a real KSH-sourced settlement while the software
+  keyboard stayed visible.
+- §3 the GPS locate button's in-progress ("Helymeghatározás folyamatban…") and resulting
+  retryable-error states (the emulator's simulated location provider resolves natively in well
+  under a second when no fix is ever injected, so the literal 15-second-timeout wording could not
+  be forced live in this environment; the 15-second boundary itself is what
+  `NewReportViewModelLocateTest` verifies deterministically in virtual time — see §6. The owner
+  accepted the in-progress/error screenshots plus that test as sufficient).
+- §5 all four new in-app back arrows (Users, Service Areas, Audit, Deleted Reports), each tapped
+  and confirmed to return to the Adminisztráció hub with no duplicate destination.
+
+**Outcome: owner visual review complete and APPROVED.** No blocking visual regression was found on
+any screen; no further UI change was made as a result of this review. One rendering artifact was
+investigated during the session (garbled text after changing the emulator's `wm size` under an
+already-running activity) and traced to a stale-composited-buffer glitch from the live resize
+itself — absent from the accessibility tree, gone after a clean relaunch, root-caused as a testing-
+methodology artifact rather than an app defect, and not seen again.
+
+## 4. Results (final HEAD, this branch)
 
 | Suite | Command | Result |
 |---|---|---|
@@ -196,7 +222,7 @@ isolation and passed cleanly on a second full-suite run. No file under `auth/` w
 branch (confirmed via `git diff` scoping); this is a pre-existing timing-sensitive test, not a
 regression.
 
-## 4. Limitations / owner items
+## 5. Limitations / owner items
 
 - No version bump was made (`versionName`/`versionCode` unchanged at `2.0.2`/`3` for both apps).
   Whether this lands as `2.0.3` or folds into a later release is an owner call, not made here.
@@ -208,6 +234,7 @@ regression.
   locally (no local `caddy` binary, and `deploy/` was not touched this phase) — left to the
   `deploy-config` GitHub Actions workflow on push.
 
-## 5. Not done (out of scope by the task's own instruction)
+## 6. Not done (out of scope by the task's own instruction)
 
-No deploy, no merge, no tag. The branch is pushed for owner review only.
+No deploy, no merge, no tag. A pull request from `fix/v2-field-test-issues` to `main` is opened for
+merge review after owner visual approval (§3); it is not merged by this session.
