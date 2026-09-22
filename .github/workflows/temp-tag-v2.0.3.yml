@@ -1,0 +1,49 @@
+name: temp-tag-v2.0.3
+
+on:
+  push:
+    branches:
+      - ops/ssh-bootstrap-temp
+    paths:
+      - .github/workflows/temp-tag-v2.0.3.yml
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: c899ae3f77603e0293fa062594fdf8477d082d38
+          fetch-depth: 0
+      - name: Create immutable annotated v2.0.3 tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "c899ae3f77603e0293fa062594fdf8477d082d38"
+          if git ls-remote --exit-code --tags origin refs/tags/v2.0.3 >/dev/null 2>&1; then
+            echo "v2.0.3 already exists; refusing to move it."
+            exit 2
+          fi
+          git config user.name "kplevi05"
+          git config user.email "136925919+kplevi05@users.noreply.github.com"
+          git tag -a v2.0.3 c899ae3f77603e0293fa062594fdf8477d082d38 -F - <<'MSG'
+          Őrszem V2.0.3
+
+          Nationwide KSH settlement fallback and physical-device field-test fixes.
+
+          Includes:
+          - complete cleared KSH settlement catalogue (3,178 settlements);
+          - settlement-only report submission when no verified RailwayLine relation is available;
+          - configurable nationwide SERVICE_USER access to UNCLASSIFIED reports during the temporary fallback period;
+          - physical-device fixes from PR #28 (narrow-width Service layout, settlement autocomplete keyboard focus, GPS timeout, lifecycle refresh, nested administration back navigation);
+          - backend, Public Android, Service Android and Public Web versions 2.0.3.
+
+          API contract remains v1. PENDING VPE/KTI/GYSEV railway data is not included.
+
+          Release commit: c899ae3f77603e0293fa062594fdf8477d082d38 (merge of PR #30).
+          Production backend/data rollout completed against this exact release commit after verified backup/restore drill and reference-data diff review.
+          MSG
+          git push origin refs/tags/v2.0.3
