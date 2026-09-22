@@ -51,7 +51,13 @@ abstract class ReportWorkflowTestSupport : PublicReportTestSupport() {
     protected fun givenRoutedArea(areaName: String = "Terulet-${UUID.randomUUID()}", areaStatus: String = "ACTIVE"): RoutedFixture {
         ensureCurrentReferenceState()
         val settlementId = insertSettlement("%05d".format((10000..99999).random()))
-        val lineId = insertLine("L${(1000..9999).random()}")
+        // A 4-digit range (9,000 values) was observed colliding under `ux_railway_lines_line_code`
+        // in a full CI run with enough callers of this fixture (the birthday-paradox collision
+        // probability at ~a few hundred draws from 9,000 values is not negligible). Widened to
+        // 6 digits (900,000 values) to match every other random line-code generator already in
+        // this test suite (AreaAdminAuditIT, AreaAdminConcurrencyIT, RailwayLineAdminIT) - this
+        // was the one outlier still using the narrow range.
+        val lineId = insertLine("L${(100_000..999_999).random()}")
         insertRelation(settlementId, lineId)
         val areaId = insertArea(areaName, areaStatus)
         assignLineToArea(areaId, lineId)
