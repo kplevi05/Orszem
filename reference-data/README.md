@@ -48,6 +48,28 @@ Three axes are tracked independently, because they answer three different questi
 | Settlements with a verified relation | 824 (25.9%) |
 | Quarantined candidates (`NEEDS_REVIEW`) | 1,122 |
 
+## Importable canonical dataset, `KSH-SETTLEMENTS-1` — Nationwide KSH Settlement Fallback phase
+
+`reference-data/cleared/` is now itself a complete, importable canonical dataset (manifest,
+checksums, and all three CSVs — `cleared/settlements.csv` plus two intentionally empty,
+header-only `railway-lines.csv`/`settlement-railway-lines.csv`), not just the loose
+settlement roster it held before. It carries the full cleared KSH settlement catalogue
+(3,178 rows, unchanged from `cleared/settlements.csv` above) and **zero railway-line or
+settlement-line relation data of any kind** — `verificationStatus: VERIFIED`,
+`reuseStatus: CLEARED`, `coverageStatus: PARTIAL` overall (`settlements: COMPLETE`;
+`railwayLines`/`settlementRailwayLines: PARTIAL`, honestly reflecting "not imported yet",
+never "verified to be zero" — see [ADR 0006](../docs/architecture/adr/0006-reference-import-gates-and-partial-coverage-routing.md)).
+Importing it only ever adds/updates settlements and marks any settlement absent from it
+inactive; it never touches an existing railway line or relation, because `PARTIAL` coverage
+on those two components tells the importer to preserve whatever is already there untouched.
+
+This exists so Public reporting is usable nationwide (every real KSH settlement searchable
+and selectable) while the VPE/KTI/GYSEV-derived railway-line dataset remains `PENDING` —
+see `docs/NATIONWIDE_KSH_FALLBACK_ENGINEERING_REPORT.md` for the full routing/authorization
+design this dataset supports. Validated in CI alongside `example/` and `evaluation/`
+(`.github/workflows/reference-data.yml`) — safe to validate publicly for the same reason it
+is safe to commit: no VPE/KTI/GYSEV-derived content is present in it at all.
+
 ## Why the real dataset is not committed here
 
 VPE has published no explicit reuse licence for the HÜSZ annexes the railway-line and

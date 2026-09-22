@@ -19,7 +19,10 @@ class ReportScopeResolver(private val serviceAreas: JdbcServiceAreaRepository) {
 
     fun resolve(report: Report, snapshot: ReportRoutingSnapshot): ReportScope =
         if (snapshot.routingStatus == RoutingSnapshotStatus.UNCLASSIFIED) {
-            ReportScope.unclassified(report.status)
+            // Real, not always null, since the Nationwide KSH Settlement Fallback phase - a
+            // SERVICE_USER can hold an open claim on an UNCLASSIFIED report. See
+            // ReportScope.unclassified's own KDoc for why passing this through matters.
+            ReportScope.unclassified(report.status, report.assignedUserId)
         } else {
             val areaId = requireNotNull(snapshot.serviceAreaId) { "a ROUTED snapshot always names a service area" }
             val area = serviceAreas.findById(areaId)

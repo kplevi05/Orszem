@@ -4,6 +4,7 @@ import hu.orszembejelento.backend.common.config.ApiProperties
 import hu.orszembejelento.backend.common.config.AuthProperties
 import hu.orszembejelento.backend.common.config.PublicSubmissionRateLimitProperties
 import hu.orszembejelento.backend.common.config.ReportSubmissionProperties
+import hu.orszembejelento.backend.common.config.WorkflowFallbackProperties
 import hu.orszembejelento.backend.maintenance.MaintenanceProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -22,6 +23,7 @@ import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoCon
     MaintenanceProperties::class,
     PublicSubmissionRateLimitProperties::class,
     ReportSubmissionProperties::class,
+    WorkflowFallbackProperties::class,
 )
 class BackendApplication
 

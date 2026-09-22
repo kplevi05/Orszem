@@ -61,6 +61,10 @@ services:
       ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_BURST: "10"
       ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_REFILL_PERIOD: 20s
       ORSZEM_RATE_LIMIT_ENABLED: "true"
+      # Temporary nationwide KSH fallback: while cleared railway-line routing data is unavailable,
+      # ordinary ACTIVE SERVICE_USER accounts may work UNCLASSIFIED reports nationwide.
+      # Remove/set false once real cleared routing coverage is deployed and the owner approves the cutover.
+      ORSZEM_UNCLASSIFIED_SERVICE_USER_ACCESS_ENABLED: "true"
     volumes:
       - ./run/backend.jar:/app/backend.jar:ro
     healthcheck:

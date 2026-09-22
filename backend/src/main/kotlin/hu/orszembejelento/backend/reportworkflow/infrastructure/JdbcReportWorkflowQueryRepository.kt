@@ -1,5 +1,6 @@
 package hu.orszembejelento.backend.reportworkflow.infrastructure
 
+import hu.orszembejelento.backend.common.config.WorkflowFallbackProperties
 import hu.orszembejelento.backend.identity.domain.UserRole
 import hu.orszembejelento.backend.reference.domain.ServiceAreaStatus
 import hu.orszembejelento.backend.reports.domain.ReportStatus
@@ -74,7 +75,10 @@ data class ReportWorkflowPage(val items: List<ReportWorkflowRow>, val totalEleme
  * list rules.
  */
 @Repository
-class JdbcReportWorkflowQueryRepository(private val jdbc: JdbcClient) {
+class JdbcReportWorkflowQueryRepository(
+    private val jdbc: JdbcClient,
+    private val workflowFallbackProperties: WorkflowFallbackProperties,
+) {
 
     /**
      * Phase 9: excludes a currently moderation-deleted report exactly like every queue below
@@ -196,21 +200,38 @@ class JdbcReportWorkflowQueryRepository(private val jdbc: JdbcClient) {
      * a territorial MODERATOR or a non-global SERVICE_USER only their own current active
      * areas, never UNCLASSIFIED either. (Ownership, for IN_PROGRESS, is applied separately by
      * the caller — see [findInProgressQueue].)
+     *
+     * **Nationwide KSH Settlement Fallback, when [WorkflowFallbackProperties.unclassifiedServiceUserAccessEnabled]:**
+     * every SERVICE_USER branch (global or territorial alike) additionally admits any
+     * `rs.routing_status = 'UNCLASSIFIED'` row — nationwide, regardless of area grants,
+     * mirroring [hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy.canViewReport]'s
+     * matching carve-out exactly. For the IN_PROGRESS queue this still only ever surfaces the
+     * caller's *own* claim, because [findInProgressQueue]'s separate ownership clause is
+     * ANDed against whichever branch of this OR matched — an UNCLASSIFIED row included here
+     * is filtered right back down to `assigned_user_id = :selfId` there. With the flag
+     * disabled (the default), this method is byte-for-byte the pre-existing SQL.
      */
     private fun visibilityClause(actor: ReportWorkflowActor): Pair<String, Map<String, Any>>? {
         if (actor.role == UserRole.SUPER_ADMIN) return null
         if (actor.role == UserRole.MODERATOR && actor.globalAreaAccess) return null
 
+        val unclassifiedFallback = actor.role == UserRole.SERVICE_USER && workflowFallbackProperties.unclassifiedServiceUserAccessEnabled
+        val unclassifiedClause = "rs.routing_status = 'UNCLASSIFIED'"
+
         if (actor.role == UserRole.SERVICE_USER && actor.globalAreaAccess) {
-            // Any active normal area, no ownership restriction - but still never UNCLASSIFIED.
-            return "rs.routing_status = 'ROUTED' AND sa.status = 'ACTIVE'" to emptyMap()
+            // Any active normal area, no ownership restriction - but still never UNCLASSIFIED,
+            // unless the nationwide fallback is enabled.
+            val routed = "rs.routing_status = 'ROUTED' AND sa.status = 'ACTIVE'"
+            val clause = if (unclassifiedFallback) "(($routed) OR $unclassifiedClause)" else routed
+            return clause to emptyMap()
         }
 
         // A territorial MODERATOR and a non-global SERVICE_USER: routed, area ACTIVE, area in
         // own scope. Never a genuinely empty IN-list without a sentinel - see
         // JdbcUserManagementRepository's identical note for why.
         val ids = actor.ownActiveAreaIds.ifEmpty { setOf(NEVER_MATCHES) }
-        val clause = "rs.routing_status = 'ROUTED' AND sa.status = 'ACTIVE' AND rs.service_area_id IN (:ownAreaIds)"
+        val routed = "rs.routing_status = 'ROUTED' AND sa.status = 'ACTIVE' AND rs.service_area_id IN (:ownAreaIds)"
+        val clause = if (unclassifiedFallback) "(($routed) OR $unclassifiedClause)" else routed
         return clause to mapOf("ownAreaIds" to ids)
     }
 

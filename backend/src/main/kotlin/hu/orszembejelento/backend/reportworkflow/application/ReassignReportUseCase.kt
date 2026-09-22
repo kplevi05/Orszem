@@ -59,8 +59,11 @@ class ReassignReportUseCase(
 
         // Checked before status, deliberately (brief §40): a global MODERATOR/SUPER_ADMIN
         // can see an UNCLASSIFIED report and must get this specific conflict, not the more
-        // generic state-changed one a NEW/ARCHIVED status would otherwise produce.
-        if (!scope.routed) throw ReportUnclassifiedCannotAssignException()
+        // generic state-changed one a NEW/ARCHIVED status would otherwise produce - unless
+        // the Nationwide KSH Settlement Fallback's policy flag is enabled, in which case an
+        // UNCLASSIFIED report is exactly as reassignable as a routed one (brief item 6);
+        // `canAssignTarget` still runs below and is what actually validates the target.
+        if (!policy.canAssignAtAll(scope)) throw ReportUnclassifiedCannotAssignException()
 
         when (locked.status) {
             ReportStatus.ARCHIVED -> throw ReportAlreadyArchivedException()

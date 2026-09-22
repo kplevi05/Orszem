@@ -48,8 +48,19 @@ data class ReportScope(
     val assignedUserId: UUID?,
 ) {
     companion object {
-        fun unclassified(status: ReportStatus) =
-            ReportScope(status, routed = false, serviceAreaId = null, serviceAreaActive = false, assignedUserId = null)
+        /**
+         * [assignedUserId] defaults to null because an UNCLASSIFIED report was, before the
+         * Nationwide KSH Settlement Fallback phase, never assignable at all - every existing
+         * caller that predates that phase is passing a report that is genuinely unassigned.
+         * A caller resolving a *current* UNCLASSIFIED report now must pass the report's real
+         * `assigned_user_id` (see [ReportScopeResolver.resolve][hu.orszembejelento.backend.reportworkflow.application.ReportScopeResolver.resolve]
+         * and `ReportWorkflowRow.toScope`) - defaulting it to null unconditionally here would
+         * make [ReportWorkflowPolicy.canViewReport]'s own-IN_PROGRESS-claim check
+         * (`assignedUserId == actor.userId`) impossible to ever satisfy, hiding a SERVICE_USER's
+         * own freshly claimed UNCLASSIFIED report from themselves.
+         */
+        fun unclassified(status: ReportStatus, assignedUserId: UUID? = null) =
+            ReportScope(status, routed = false, serviceAreaId = null, serviceAreaActive = false, assignedUserId = assignedUserId)
 
         fun routed(status: ReportStatus, serviceAreaId: UUID, serviceAreaActive: Boolean, assignedUserId: UUID?) =
             ReportScope(status, routed = true, serviceAreaId = serviceAreaId, serviceAreaActive = serviceAreaActive, assignedUserId = assignedUserId)
@@ -84,11 +95,22 @@ data class ReportAssignment(
 /**
  * The area-authority-relevant facts about one of a user's current open assignment episodes
  * — a narrow read model purpose-built for [AssignmentEligibilityGuard], not the full
- * [ReportAssignment]. UNCLASSIFIED reports can never be assigned (brief §40/§68), so
- * [serviceAreaId] is always a real area for a genuinely open episode.
+ * [ReportAssignment].
+ *
+ * Before the Nationwide KSH Settlement Fallback phase, [serviceAreaId] was always a real
+ * area for a genuinely open episode, because an UNCLASSIFIED report could never be assigned
+ * at all (brief §40/§68). That invariant no longer holds unconditionally: with
+ * [hu.orszembejelento.backend.common.config.WorkflowFallbackProperties.unclassifiedServiceUserAccessEnabled]
+ * on, a SERVICE_USER can hold an open claim on an UNCLASSIFIED report, whose routing
+ * snapshot has no `service_area_id` at all — so this is now null exactly for that case.
+ * [AssignmentEligibilityGuard] treats a null area as never "outside scope": an UNCLASSIFIED
+ * claim's continued validity is never governed by area grants in the first place (it is
+ * governed by the actor still being an ACTIVE SERVICE_USER and the fallback flag, neither of
+ * which this narrowing-mutation guard is about), so a Phase 6 area/global-access revoke must
+ * never be blocked or otherwise altered by one.
  */
 data class OpenAssignmentAreaSnapshot(
     val reportId: UUID,
-    val serviceAreaId: UUID,
+    val serviceAreaId: UUID?,
     val serviceAreaActive: Boolean,
 )
