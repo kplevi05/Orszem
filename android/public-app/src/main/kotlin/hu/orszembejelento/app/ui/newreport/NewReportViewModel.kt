@@ -24,16 +24,26 @@ import hu.orszembejelento.app.report.domain.resolvedRailwayLineId
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /** Minimum query length the backend accepts - mirrors `SettlementQueryTooShortException`. */
 private const val MIN_SETTLEMENT_QUERY_LENGTH = 2
 private const val SETTLEMENT_SEARCH_DEBOUNCE_MS = 300L
+
+/**
+ * Field-test fix: a GPS fix that never arrives (a real, observed device state - not every
+ * device/provider combination ever calls back) used to leave [LocateStatus.LOCATING] spinning
+ * forever, with no way out except force-closing the app. Bounded to 15 seconds, matching the
+ * brief.
+ */
+private const val LOCATE_TIMEOUT_MS = 15_000L
 
 /**
  * Owns the whole two-step report flow (Phase 5 brief §4, §40-45).
@@ -143,9 +153,24 @@ class NewReportViewModel(
         locateJob?.cancel()
         _state.update { it.copy(locateStatus = LocateStatus.LOCATING) }
         locateJob = viewModelScope.launch {
-            val location: Location? = locationAssist.currentLocation()
+            // withTimeout cancels the coroutine on expiry, which propagates into
+            // LocationAssist's suspendCancellableCoroutine and its invokeOnCancellation
+            // handler - the in-flight platform location request is genuinely cancelled, not
+            // merely ignored, and the loading indicator always stops one way or another.
+            // TimeoutCancellationException (thrown only by the timeout itself, never by an
+            // ordinary job.cancel() elsewhere) is what lets FAILED and TIMEOUT be told apart.
+            var timedOut = false
+            val location: Location? = try {
+                withTimeout(LOCATE_TIMEOUT_MS) { locationAssist.currentLocation() }
+            } catch (timeout: TimeoutCancellationException) {
+                timedOut = true
+                null
+            }
             if (location == null) {
-                _state.update { it.copy(locateStatus = LocateStatus.FAILED) }
+                // Either way, manual settlement search stays fully available - Step1Content
+                // renders the settlement field unconditionally - and both are retried the same
+                // way: tapping "Helyzet meghatározása" again.
+                _state.update { it.copy(locateStatus = if (timedOut) LocateStatus.TIMEOUT else LocateStatus.FAILED) }
                 return@launch
             }
             val hint = locationAssist.reverseGeocodeHint(location)

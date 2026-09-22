@@ -30,6 +30,7 @@
     <string name="action_locate_me">Helyzet meghatározása</string>
     <string name="locate_me_searching">Helymeghatározás folyamatban…</string>
     <string name="locate_me_failed">A helyzet meghatározása nem sikerült. Kérjük, keresse meg a települést kézzel.</string>
+    <string name="locate_me_timeout">A helymeghatározás túl sokáig tartott. Próbálja újra, vagy keresse meg a települést kézzel.</string>
     <string name="locate_me_permission_denied">A helymeghatározáshoz engedély szükséges.</string>
     <string name="locate_me_permission_permanently_denied">A helymeghatározás engedélye tartósan elutasítva. Engedélyezze a rendszerbeállításokban, vagy keresse meg a települést kézzel.</string>
     <string name="locate_me_geocoder_unavailable">A készülék nem támogatja a helyszín alapján történő település-keresést. Kérjük, keresse meg kézzel.</string>
