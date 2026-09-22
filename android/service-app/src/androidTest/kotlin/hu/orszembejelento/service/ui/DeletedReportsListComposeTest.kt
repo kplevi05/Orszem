@@ -45,7 +45,7 @@ class DeletedReportsListComposeTest {
             onSessionEnded = {},
         )
 
-        compose.setContent { DeletedReportsListScreen(viewModel = vm, onOpenReport = {}, areaChoices = emptyList()) }
+        compose.setContent { DeletedReportsListScreen(viewModel = vm, onOpenReport = {}, areaChoices = emptyList(), onBack = {}) }
         compose.waitForIdle()
 
         compose.onNodeWithText("Duplikált bejelentés").assertExists() // localized reason, not "DUPLICATE"
@@ -78,7 +78,7 @@ class DeletedReportsListComposeTest {
             onSessionEnded = {},
         )
 
-        compose.setContent { DeletedReportsListScreen(viewModel = vm, onOpenReport = {}, areaChoices = emptyList()) }
+        compose.setContent { DeletedReportsListScreen(viewModel = vm, onOpenReport = {}, areaChoices = emptyList(), onBack = {}) }
         compose.waitForIdle()
 
         compose.onNodeWithText("Településadatok forrása: KSH (CC BY 4.0)").assertExists()

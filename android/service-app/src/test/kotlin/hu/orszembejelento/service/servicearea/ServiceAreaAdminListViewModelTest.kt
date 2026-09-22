@@ -4,9 +4,16 @@ import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminListFilter
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminListItemResponse
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminListPageResponse
+import hu.orszembejelento.service.servicearea.data.AreaAdminRepository
+import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListFilter
+import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListPageResponse
+import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminDetailResponse
+import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminResponse
 import hu.orszembejelento.service.servicearea.ui.ServiceAreaAdminListViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -74,5 +81,43 @@ class ServiceAreaAdminListViewModelTest {
         val fake = FakeAreaAdminRepository(listAreasResult = ApiResult.SessionEnded)
         ServiceAreaAdminListViewModel(fake, onSessionEnded = { sessionEndedCalls++ })
         assertEquals(1, sessionEndedCalls)
+    }
+
+    /** Field-test fix (§4): see `ReportQueueViewModelTest`'s equivalent test for the full rationale. */
+    @Test
+    fun `refresh cancels an in-flight refresh so a slower stale response can never overwrite the fresher one`() {
+        val dispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(dispatcher)
+        try {
+            var calls = 0
+            val repo = object : AreaAdminRepository {
+                override suspend fun listAreas(page: Int, size: Int, filter: ServiceAreaAdminListFilter): ApiResult<ServiceAreaAdminListPageResponse> {
+                    calls++
+                    return if (calls == 1) {
+                        delay(1_000)
+                        ApiResult.Success(ServiceAreaAdminListPageResponse(listOf(item("stale")), 0, 1, 1, 1))
+                    } else {
+                        delay(10)
+                        ApiResult.Success(ServiceAreaAdminListPageResponse(listOf(item("fresh")), 0, 1, 1, 1))
+                    }
+                }
+                override suspend fun areaDetail(areaId: String): ApiResult<ServiceAreaAdminDetailResponse> = error("not used")
+                override suspend fun createArea(name: String): ApiResult<ServiceAreaAdminResponse> = error("not used")
+                override suspend fun renameArea(areaId: String, expectedVersion: Long, name: String): ApiResult<ServiceAreaAdminResponse> = error("not used")
+                override suspend fun activateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse> = error("not used")
+                override suspend fun deactivateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse> = error("not used")
+                override suspend fun listRailwayLines(page: Int, size: Int, filter: RailwayLineAdminListFilter): ApiResult<RailwayLineAdminListPageResponse> = error("not used")
+                override suspend fun assignRailwayLine(railwayLineId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit> = error("not used")
+                override suspend fun unassignRailwayLine(railwayLineId: String, expectedCurrentServiceAreaId: String): ApiResult<Unit> = error("not used")
+            }
+            val vm = ServiceAreaAdminListViewModel(repo, onSessionEnded = {})
+            dispatcher.scheduler.runCurrent() // let init{}'s own call #1 actually start (into its delay) first
+            vm.refresh() // fired while that first call is still genuinely in flight
+            dispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(listOf("fresh"), vm.state.value.items.map { it.id })
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 }

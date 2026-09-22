@@ -11,14 +11,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -38,12 +42,20 @@ import hu.orszembejelento.service.common.ui.apiErrorMessage
 import hu.orszembejelento.service.usermanagement.data.ManagedUserResponse
 import kotlinx.coroutines.delay
 
-/** `Felhasználók` (brief §51-52) - entry lives inside Moderáció/Adminisztráció, never reachable by SERVICE_USER. */
+/**
+ * `Felhasználók` (brief §51-52) - entry lives inside Moderáció/Adminisztráció, never reachable
+ * by SERVICE_USER. Field-test fix (§5): this nested screen used to rely on the system Back
+ * gesture/button alone; it now also carries an explicit in-app back arrow in its own
+ * [TopAppBar], calling the same [onBack] the caller already uses for `popBackStack()`
+ * elsewhere - never a second, parallel way back that could diverge from the real back stack.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsersScreen(
     viewModel: UsersListViewModel,
     onOpenUser: (String) -> Unit,
     onCreateUser: () -> Unit,
+    onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
     var searchText by remember { mutableStateOf(state.query) }
@@ -53,41 +65,48 @@ fun UsersScreen(
         if (searchText != state.query) viewModel.updateQuery(searchText)
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.users_title), style = MaterialTheme.typography.headlineSmall)
-            IconButton(onClick = onCreateUser) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_create_user))
-            }
-        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.users_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back))
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onCreateUser) {
+                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.action_create_user))
+                    }
+                },
+            )
+        },
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                placeholder = { Text(stringResource(R.string.search_hint_users)) },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.content_description_search)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+            )
 
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            placeholder = { Text(stringResource(R.string.search_hint_users)) },
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.content_description_search)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-        )
-
-        when {
-            state.loading -> FullScreenLoading()
-            state.error != null -> ErrorState(message = apiErrorMessage(state.error!!), onRetry = viewModel::refresh)
-            state.items.isEmpty() -> EmptyState(stringResource(R.string.error_user_not_found))
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
-                contentPadding = PaddingValues(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(state.items, key = { it.serviceId }) { user ->
-                    ManagedUserRow(user = user, onClick = { onOpenUser(user.serviceId) })
-                }
-                if (state.canLoadMore) {
-                    item { LoadMoreButton(loading = state.loadingMore, onClick = viewModel::loadMore) }
+            when {
+                state.loading -> FullScreenLoading()
+                state.error != null -> ErrorState(message = apiErrorMessage(state.error!!), onRetry = viewModel::refresh)
+                state.items.isEmpty() -> EmptyState(stringResource(R.string.error_user_not_found))
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(state.items, key = { it.serviceId }) { user ->
+                        ManagedUserRow(user = user, onClick = { onOpenUser(user.serviceId) })
+                    }
+                    if (state.canLoadMore) {
+                        item { LoadMoreButton(loading = state.loadingMore, onClick = viewModel::loadMore) }
+                    }
                 }
             }
         }

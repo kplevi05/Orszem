@@ -3,9 +3,15 @@ package hu.orszembejelento.service.audit
 import hu.orszembejelento.service.audit.data.AuditFilter
 import hu.orszembejelento.service.audit.data.AuditPeriod
 import hu.orszembejelento.service.audit.ui.AuditListViewModel
+import hu.orszembejelento.service.audit.data.AuditEventDetailResponse
+import hu.orszembejelento.service.audit.data.AuditListPageResponse
+import hu.orszembejelento.service.audit.data.AuditOptionsResponse
+import hu.orszembejelento.service.audit.data.AuditRepository
 import hu.orszembejelento.service.common.data.ApiResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -132,6 +138,38 @@ class AuditListViewModelTest {
 
         vm.loadMore()
         assertEquals(1, fake.eventsCalls) // still just the initial load
+    }
+
+    /** Field-test fix (§4): see `ReportQueueViewModelTest`'s equivalent test for the full rationale. */
+    @Test
+    fun `refresh cancels an in-flight refresh so a slower stale response can never overwrite the fresher one`() {
+        val dispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(dispatcher)
+        try {
+            var eventsCalls = 0
+            val repo = object : AuditRepository {
+                override suspend fun events(filter: AuditFilter, page: Int, size: Int): ApiResult<AuditListPageResponse> {
+                    eventsCalls++
+                    return if (eventsCalls == 1) {
+                        delay(1_000)
+                        ApiResult.Success(FakeAuditRepository.defaultPage(items = listOf(FakeAuditRepository.item("stale"))))
+                    } else {
+                        delay(10)
+                        ApiResult.Success(FakeAuditRepository.defaultPage(items = listOf(FakeAuditRepository.item("fresh"))))
+                    }
+                }
+                override suspend fun detail(auditEventId: String): ApiResult<AuditEventDetailResponse> = error("not used")
+                override suspend fun options(): ApiResult<AuditOptionsResponse> = ApiResult.Success(AuditOptionsResponse(emptyList(), emptyList()))
+            }
+            val vm = AuditListViewModel(repo, onSessionEnded = {})
+            dispatcher.scheduler.runCurrent() // let init{}'s own call #1 actually start (past options() and into events()'s delay) first
+            vm.refresh() // fired while that first call is still genuinely in flight
+            dispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(listOf("fresh"), vm.state.value.items.map { it.auditEventId })
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 
     @Test

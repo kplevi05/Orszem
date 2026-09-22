@@ -6,6 +6,7 @@ import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.servicearea.data.AreaAdminRepository
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminListFilter
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminListItemResponse
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,12 +40,19 @@ class ServiceAreaAdminListViewModel(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    // Field-test fix (§4): also refreshed on navigating back to this screen now
+    // (hu.orszembejelento.service.common.ui.RefreshOnResume) - cancel any refresh already in
+    // flight before starting a new one, so a slower, stale response can never overwrite a
+    // fresher one.
+    private var refreshJob: Job? = null
+
     init {
         refresh()
     }
 
     fun refresh() {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             load(page = 0, replace = true)
         }

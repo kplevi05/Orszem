@@ -11,6 +11,8 @@ import hu.orszembejelento.service.reports.data.ReportSettlementSummary
 import hu.orszembejelento.service.reports.ui.ReportQueueViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -120,5 +122,47 @@ class ReportQueueViewModelTest {
         viewModel.updateFilter(ReportFilter(query = "IC 924"))
         assertEquals("IC 924", seenFilters.last().query)
         assertEquals(0, viewModel.state.value.page)
+    }
+
+    // ------------------------------------------------------------- field-test fix (§4): no race
+
+    /**
+     * Field-test fix (§4): [ReportQueueViewModel.refresh] must cancel any refresh already in
+     * flight before starting a new one - otherwise a screen refreshed on navigation-resume
+     * while its own initial load is still in flight could let the older, slower response win
+     * and overwrite the fresher one. A dedicated [StandardTestDispatcher] here (rather than the
+     * class's [UnconfinedTestDispatcher]) is what makes the first call genuinely still
+     * in-flight when the second one starts.
+     */
+    @Test
+    fun `refresh cancels an in-flight refresh so a slower stale response can never overwrite the fresher one`() {
+        val dispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(dispatcher)
+        try {
+            var calls = 0
+            val viewModel = ReportQueueViewModel(
+                fetchPage = { page, _, _ ->
+                    calls++
+                    if (calls == 1) {
+                        delay(1_000) // the stale, slow first call (e.g. the screen's own init load)
+                        ApiResult.Success(ReportQueuePageResponse(items = listOf(item("stale")), page = page, size = 1, totalElements = 1, totalPages = 1))
+                    } else {
+                        delay(10) // the fresh, fast second call (e.g. a resume-triggered refresh)
+                        ApiResult.Success(ReportQueuePageResponse(items = listOf(item("fresh")), page = page, size = 1, totalElements = 1, totalPages = 1))
+                    }
+                },
+                onSessionEnded = {},
+            )
+            // Let the constructor's own init{}-triggered call #1 actually start (past its
+            // own `calls++` and into its delay) before cancelling it - otherwise it never
+            // truly raced anything.
+            dispatcher.scheduler.runCurrent()
+            viewModel.refresh()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(listOf("fresh"), viewModel.state.value.items.map { it.publicReportId })
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 }

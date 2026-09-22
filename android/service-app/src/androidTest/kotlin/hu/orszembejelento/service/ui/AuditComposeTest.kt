@@ -107,9 +107,9 @@ class AuditComposeTest {
         )
     }
 
-    private fun setListContentWith(repo: FakeAuditRepo, onOpenEvent: (String) -> Unit = {}): AuditListViewModel {
+    private fun setListContentWith(repo: FakeAuditRepo, onOpenEvent: (String) -> Unit = {}, onBack: () -> Unit = {}): AuditListViewModel {
         val vm = AuditListViewModel(repo, onSessionEnded = {})
-        compose.setContent { AuditListScreen(viewModel = vm, onOpenEvent = onOpenEvent) }
+        compose.setContent { AuditListScreen(viewModel = vm, onOpenEvent = onOpenEvent, onBack = onBack) }
         return vm
     }
 

@@ -10,6 +10,8 @@ import hu.orszembejelento.service.reports.data.ReportEventTypeSummary
 import hu.orszembejelento.service.reports.data.ReportSettlementSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -110,5 +112,35 @@ class DeletedReportsListViewModelTest {
         )
         assertEquals(1, sessionEndedCalls)
         assertEquals(null, viewModel.state.value.error)
+    }
+
+    /** Field-test fix (§4): see `ReportQueueViewModelTest`'s equivalent test for the full rationale. */
+    @Test
+    fun `refresh cancels an in-flight refresh so a slower stale response can never overwrite the fresher one`() {
+        val dispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(dispatcher)
+        try {
+            var calls = 0
+            val viewModel = DeletedReportsListViewModel(
+                fetchPage = { page, _, _ ->
+                    calls++
+                    if (calls == 1) {
+                        delay(1_000)
+                        ApiResult.Success(DeletedReportPageResponse(items = listOf(item("stale")), page = page, size = 1, totalElements = 1, totalPages = 1))
+                    } else {
+                        delay(10)
+                        ApiResult.Success(DeletedReportPageResponse(items = listOf(item("fresh")), page = page, size = 1, totalElements = 1, totalPages = 1))
+                    }
+                },
+                onSessionEnded = {},
+            )
+            dispatcher.scheduler.runCurrent() // let init{}'s own call #1 actually start (into its delay) first
+            viewModel.refresh() // fired while that first call is still genuinely in flight
+            dispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(listOf("fresh"), viewModel.state.value.items.map { it.publicReportId })
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 }

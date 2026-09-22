@@ -64,6 +64,7 @@ import hu.orszembejelento.service.audit.ui.AuditListViewModel
 import hu.orszembejelento.service.auth.domain.AuthState
 import hu.orszembejelento.service.auth.ui.AccountScreen
 import hu.orszembejelento.service.auth.ui.AuthViewModel
+import hu.orszembejelento.service.common.ui.RefreshOnResume
 import hu.orszembejelento.service.hub.ui.AdminHubScreen
 import hu.orszembejelento.service.hub.ui.ModerationHubScreen
 import hu.orszembejelento.service.moderation.data.ModerationRepository
@@ -397,6 +398,14 @@ fun ServiceNavHost(
             modifier = Modifier.padding(padding),
         ) {
             composable(Routes.REPORTS) {
+                // Field-test fix (§4): refresh both queues once whenever this destination is
+                // (re)activated - including returning from a report's detail screen via Back -
+                // never a background poll. Each ViewModel's own refreshJob guard (§4) makes an
+                // extra call here safe even right after this destination's own first composition.
+                RefreshOnResume {
+                    newQueueViewModel.refresh()
+                    inProgressQueueViewModel.refresh()
+                }
                 ReportsScreen(
                     role = role,
                     newViewModel = newQueueViewModel,
@@ -443,6 +452,8 @@ fun ServiceNavHost(
                 )
             }
             composable(Routes.ARCHIVE) {
+                // Field-test fix (§4): see the REPORTS destination above for the rationale.
+                RefreshOnResume { archiveQueueViewModel.refresh() }
                 ArchiveScreen(
                     viewModel = archiveQueueViewModel,
                     onOpenReport = { navController.navigate(Routes.reportDetail(it)) },
@@ -451,7 +462,11 @@ fun ServiceNavHost(
                     onAreaFilterChanged = onAreaFilterChanged,
                 )
             }
-            composable(Routes.STATS) { AnalyticsScreen(viewModel = analyticsViewModel, catalogRepository = catalogRepository) }
+            composable(Routes.STATS) {
+                // Field-test fix (§4): see the REPORTS destination above for the rationale.
+                RefreshOnResume { analyticsViewModel.refresh() }
+                AnalyticsScreen(viewModel = analyticsViewModel, catalogRepository = catalogRepository)
+            }
             composable(Routes.PROFILE) {
                 AccountScreen(
                     serviceId = serviceId,
@@ -484,9 +499,12 @@ fun ServiceNavHost(
                 )
             }
             composable(Routes.AUDIT) {
+                // Field-test fix (§4): see the REPORTS destination above for the rationale.
+                RefreshOnResume { auditListViewModel.refresh() }
                 AuditListScreen(
                     viewModel = auditListViewModel,
                     onOpenEvent = { navController.navigate(Routes.auditDetail(it)) },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable(
@@ -502,10 +520,13 @@ fun ServiceNavHost(
             }
             composable(Routes.DELETED_REPORTS) {
                 val listViewModel = deletedListViewModel ?: return@composable
+                // Field-test fix (§4): see the REPORTS destination above for the rationale.
+                RefreshOnResume { listViewModel.refresh() }
                 DeletedReportsListScreen(
                     viewModel = listViewModel,
                     onOpenReport = { navController.navigate(Routes.deletedReportDetail(it)) },
                     areaChoices = areaChoices,
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable(
@@ -534,10 +555,13 @@ fun ServiceNavHost(
             }
             composable(Routes.SERVICE_AREAS) {
                 val listViewModel = serviceAreaListViewModel ?: return@composable
+                // Field-test fix (§4): see the REPORTS destination above for the rationale.
+                RefreshOnResume { listViewModel.refresh() }
                 ServiceAreaAdminListScreen(
                     viewModel = listViewModel,
                     onOpenArea = { navController.navigate(Routes.serviceAreaDetail(it)) },
                     onCreateArea = { navController.navigate(Routes.CREATE_SERVICE_AREA) },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable(Routes.CREATE_SERVICE_AREA) {
@@ -635,10 +659,13 @@ fun ServiceNavHost(
                     key = "users-list",
                     factory = viewModelFactory { UsersListViewModel(userManagementRepository, onSessionEnded) },
                 )
+                // Field-test fix (§4): see the REPORTS destination above for the rationale.
+                RefreshOnResume { usersViewModel.refresh() }
                 UsersScreen(
                     viewModel = usersViewModel,
                     onOpenUser = { navController.navigate(Routes.userDetail(it)) },
                     onCreateUser = { navController.navigate(Routes.CREATE_USER) },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable(
