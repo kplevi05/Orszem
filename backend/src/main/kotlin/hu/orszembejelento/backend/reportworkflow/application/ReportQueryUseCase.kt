@@ -129,7 +129,9 @@ class ReportQueryUseCase(
 /** Converts a fully-resolved read-model row into the narrow fact set [ReportWorkflowPolicy] needs. */
 internal fun ReportWorkflowRow.toScope(): ReportScope =
     if (routingStatus == RoutingSnapshotStatus.UNCLASSIFIED) {
-        ReportScope.unclassified(status)
+        // Real, not always null - see ReportScope.unclassified's KDoc (Nationwide KSH
+        // Settlement Fallback phase: a SERVICE_USER can hold an open claim on one of these).
+        ReportScope.unclassified(status, assignedUserId)
     } else {
         ReportScope.routed(
             status = status,

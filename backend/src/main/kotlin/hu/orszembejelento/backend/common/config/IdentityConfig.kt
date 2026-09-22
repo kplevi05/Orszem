@@ -53,8 +53,12 @@ class IdentityConfig {
     @Bean
     fun reportWorkflowPolicy(
         areaScopePolicy: hu.orszembejelento.backend.scope.domain.AreaScopePolicy,
+        workflowFallbackProperties: WorkflowFallbackProperties,
     ): hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy =
-        hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy(areaScopePolicy)
+        hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy(
+            areaScopePolicy,
+            workflowFallbackProperties.unclassifiedServiceUserAccessEnabled,
+        )
 
     /** Cross-phase invariant review addendum — see `docs/PHASE_7_ENGINEERING_REPORT.md` §R. */
     @Bean

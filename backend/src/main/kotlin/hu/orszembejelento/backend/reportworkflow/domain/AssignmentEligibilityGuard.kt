@@ -28,9 +28,16 @@ class AssignmentEligibilityGuard(private val areaScopePolicy: AreaScopePolicy = 
      * True if at least one of [openAssignments] would no longer be authorised for
      * [postMutationActor] — the caller's signal to reject the mutation that would produce
      * that actor, rather than silently orphan the assignment.
+     *
+     * An assignment with a null [OpenAssignmentAreaSnapshot.serviceAreaId] — an open claim
+     * on an UNCLASSIFIED report, only possible under the Nationwide KSH Settlement Fallback
+     * policy — is never "outside scope" here: it was never inside an *area* scope to begin
+     * with, so an area/global-access-narrowing mutation this guard exists to check can never
+     * be the thing that invalidates it.
      */
     fun anyAssignmentOutsideScope(openAssignments: List<OpenAssignmentAreaSnapshot>, postMutationActor: AreaActor): Boolean =
         openAssignments.any { assignment ->
-            !areaScopePolicy.canAccessArea(postMutationActor, AreaSnapshot(assignment.serviceAreaId, assignment.serviceAreaActive))
+            val areaId = assignment.serviceAreaId ?: return@any false
+            !areaScopePolicy.canAccessArea(postMutationActor, AreaSnapshot(areaId, assignment.serviceAreaActive))
         }
 }

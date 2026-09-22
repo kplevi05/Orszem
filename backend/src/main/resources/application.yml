@@ -91,6 +91,17 @@ orszem:
     refill-period: ${ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_REFILL_PERIOD:20s}
     maximum-tracked-keys: ${ORSZEM_PUBLIC_SUBMISSION_RATE_LIMIT_MAX_KEYS:100000}
 
+  # --- Temporary nationwide UNCLASSIFIED operational fallback -----------------
+  # While the legally cleared VPE/KTI/GYSEV railway-line dataset is PENDING, an UNCLASSIFIED
+  # report already routes and is already visible to a global MODERATOR/SUPER_ADMIN regardless
+  # (unconditional, not gated by this flag). This flag additionally opens NEW/IN_PROGRESS
+  # UNCLASSIFIED visibility and claim/return/close to every ACTIVE SERVICE_USER nationwide, so
+  # KSH-only reports stay operationally actionable. Defaults to false: enabling it is a
+  # deliberate, switchable owner decision, never implied by merging this code. Flip with no
+  # client release required.
+  workflow:
+    unclassified-service-user-access-enabled: ${ORSZEM_UNCLASSIFIED_SERVICE_USER_ACCESS_ENABLED:false}
+
 logging:
   level:
     root: INFO
