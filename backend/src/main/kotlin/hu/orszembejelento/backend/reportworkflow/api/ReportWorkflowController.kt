@@ -56,8 +56,9 @@ class ReportWorkflowController(
         summary = "The NEW report queue",
         description = "RECENT (submitted within the last 168 hours, newest first) before OLDER " +
             "(submitted earlier, oldest first); `ageBucket` names which, the backend never renders " +
-            "a divider. Scope-aware: a SERVICE_USER never sees UNCLASSIFIED; a territorial MODERATOR " +
-            "never sees UNCLASSIFIED; a global MODERATOR or SUPER_ADMIN sees everything in scope.",
+            "a divider. Scope-aware: a territorial MODERATOR never sees UNCLASSIFIED; a global MODERATOR " +
+            "or SUPER_ADMIN sees everything in scope. While the temporary nationwide fallback is enabled, " +
+            "ACTIVE SERVICE_USER accounts additionally see NEW UNCLASSIFIED reports nationwide.",
     )
     fun newQueue(
         @AuthenticationPrincipal principal: AuthenticatedActor,
@@ -181,9 +182,10 @@ class ReportWorkflowController(
     @PostMapping("/{publicReportId}/reassign")
     @Operation(
         summary = "Reassign an IN_PROGRESS report to a different SERVICE_USER",
-        description = "MODERATOR/SUPER_ADMIN only. The target must be ACTIVE, SERVICE_USER, and currently have " +
-            "area access to this report's ServiceArea. 409 REPORT_UNCLASSIFIED_CANNOT_ASSIGN for an UNCLASSIFIED " +
-            "report. Reassigning to the current assignee is an idempotent no-op.",
+        description = "MODERATOR/SUPER_ADMIN only. For a routed report, the target must be ACTIVE, SERVICE_USER, " +
+            "and currently have area access to the report's ServiceArea. For an UNCLASSIFIED report, reassignment " +
+            "is allowed to any ACTIVE SERVICE_USER only while the temporary nationwide fallback is enabled; " +
+            "otherwise it returns 409 REPORT_UNCLASSIFIED_CANNOT_ASSIGN. Reassigning to the current assignee is an idempotent no-op.",
     )
     fun reassign(
         @AuthenticationPrincipal principal: AuthenticatedActor,
