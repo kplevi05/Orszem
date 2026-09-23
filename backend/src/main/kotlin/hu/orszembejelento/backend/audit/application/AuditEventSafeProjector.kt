@@ -85,6 +85,7 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             AuditEventType.RAILWAY_LINE_SERVICE_AREA_ASSIGNED,
             AuditEventType.RAILWAY_LINE_SERVICE_AREA_MOVED,
             AuditEventType.RAILWAY_LINE_SERVICE_AREA_UNASSIGNED,
+            AuditEventType.SETTLEMENT_LINE_SERVICE_AREA_CHANGED,
             -> setOfNotNull(uuidOrNull(node.path("fromAreaId").asString(null)), uuidOrNull(node.path("toAreaId").asString(null)))
             else -> emptySet()
         }
@@ -190,6 +191,10 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
                 stringDetail(AuditDetailCode.RESULTING_STATUS, node.path("resultingWorkflowStatus").asString(null)),
             )
 
+            AuditEventType.SETTLEMENT_LINE_SERVICE_AREA_CHANGED -> listOfNotNull(
+                singleAreaDetail(AuditDetailCode.FROM_AREA, node, "fromAreaId", areaNames),
+                singleAreaDetail(AuditDetailCode.TO_AREA, node, "toAreaId", areaNames),
+            )
             AuditEventType.SERVICE_AREA_CREATED -> emptyList()
             AuditEventType.SERVICE_AREA_RENAMED -> listOfNotNull(
                 stringDetail(AuditDetailCode.OLD_NAME, node.path("oldName").asString(null)),

@@ -44,6 +44,7 @@ class AreaAdminQueryUseCase(
             mappedRailwayLines = mappedLines,
             mappedRailwayLineCount = mappedLines.size,
             openOperationalReportCount = serviceAreas.countOpenOperationalReports(area.id),
+            mappedSettlementLineCount = serviceAreas.countSettlementLineMappings(area.id),
         )
     }
 

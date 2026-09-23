@@ -53,6 +53,11 @@ class AssignRailwayLineUseCase(
 
         val line = referenceRepository.lockRailwayLineById(railwayLineId) ?: throw RailwayLineAdminNotFoundException()
         if (!line.active) throw RailwayLineAdminInactiveException()
+        if (serviceAreas.hasSettlementLineMappings(line.id)) {
+            throw hu.orszembejelento.backend.areaadmin.domain.SettlementLineConfigurationException(
+                hu.orszembejelento.backend.areaadmin.domain.SettlementLineConfigurationProblem.MIXED_ROUTING_MODES,
+            )
+        }
 
         val currentAreaId = serviceAreas.findAreaOfRailwayLine(railwayLineId)?.id
         if (currentAreaId != expectedCurrentServiceAreaId) throw RailwayLineAssignmentChangedException()

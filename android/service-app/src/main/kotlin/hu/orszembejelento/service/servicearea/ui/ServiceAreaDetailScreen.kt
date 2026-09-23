@@ -213,7 +213,7 @@ private fun LifecycleSection(
 ) {
     Column {
         if (detail.active) {
-            val blockedByLines = detail.mappedRailwayLineCount > 0
+            val blockedByLines = detail.mappedRailwayLineCount > 0 || detail.mappedSettlementLineCount > 0
             val blockedByReports = detail.openOperationalReportCount > 0
             val eligible = !blockedByLines && !blockedByReports
             if (blockedByLines) {

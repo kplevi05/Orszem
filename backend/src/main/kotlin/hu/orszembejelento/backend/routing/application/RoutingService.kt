@@ -93,7 +93,7 @@ class RoutingService(
             }
         }
 
-        return resolveLineToArea(resolvedLine, current.datasetVersion)
+        return resolveLineToArea(settlementId, resolvedLine, current.datasetVersion)
     }
 
     /** Null when the line does not exist, or exists but has no verified relation to the settlement. */
@@ -137,12 +137,18 @@ class RoutingService(
         }
     }
 
-    private fun resolveLineToArea(line: RailwayLine, datasetVersion: String): RoutingOutcome {
+    private fun resolveLineToArea(settlementId: UUID, line: RailwayLine, datasetVersion: String): RoutingOutcome {
         if (!line.active) {
             return RoutingOutcome.Unclassified(UnclassifiedReason.RAILWAY_LINE_INACTIVE, datasetVersion, line.id)
         }
 
-        val area = serviceAreaRepository.findAreaOfRailwayLine(line.id)
+        // A line cannot mix legacy and pair configuration through supported admin writes.
+        // Missing pair coverage must stay unclassified, never fall back to another pair.
+        val area = (if (serviceAreaRepository.hasSettlementLineMappings(line.id)) {
+            serviceAreaRepository.findAreaOfSettlementLine(settlementId, line.id)
+        } else {
+            serviceAreaRepository.findAreaOfRailwayLine(line.id)
+        })
             ?: return RoutingOutcome.Unclassified(UnclassifiedReason.RAILWAY_LINE_UNASSIGNED, datasetVersion, line.id)
 
         if (!area.isActive) {

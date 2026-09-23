@@ -456,6 +456,18 @@ class ApiExceptionHandler {
         "This railway line is already assigned to that service area.",
     )
 
+    @ExceptionHandler(hu.orszembejelento.backend.areaadmin.domain.SettlementLineConfigurationException::class)
+    fun handleSettlementLineConfiguration(
+        ex: hu.orszembejelento.backend.areaadmin.domain.SettlementLineConfigurationException,
+        request: HttpServletRequest,
+    ) = error(
+        request,
+        if (ex.problem == hu.orszembejelento.backend.areaadmin.domain.SettlementLineConfigurationProblem.INVALID_BATCH)
+            HttpStatus.BAD_REQUEST else HttpStatus.CONFLICT,
+        ErrorCode.valueOf("SETTLEMENT_LINE_${ex.problem.name}"),
+        "The settlement-line configuration request cannot be applied. Refresh and review the configuration.",
+    )
+
     // ------------------------------------------------------------------ Phase 11 - analytics
 
     @ExceptionHandler(AnalyticsAreaNotAvailableException::class)

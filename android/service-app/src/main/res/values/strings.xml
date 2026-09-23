@@ -437,6 +437,7 @@
     <string name="audit_event_railway_line_assigned">Vasútvonal hozzárendelve</string>
     <string name="audit_event_railway_line_moved">Vasútvonal áthelyezve</string>
     <string name="audit_event_railway_line_unassigned">Vasútvonal hozzárendelése megszüntetve</string>
+    <string name="audit_event_settlement_line_area_changed">Település és vasútvonal szolgálati területe módosítva</string>
 
     <!-- Target-type labels, for the ACTUAL current AuditTargetType set only. -->
     <string name="audit_target_type_user">Felhasználó</string>

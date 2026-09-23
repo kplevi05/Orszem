@@ -298,12 +298,22 @@ class JdbcReferenceRepository(private val jdbc: JdbcClient) {
             SELECT l.line_code
               FROM railway_lines l
               JOIN service_area_railway_lines m ON m.railway_line_id = l.id
+            UNION
+            SELECT l.line_code FROM railway_lines l
+              JOIN service_area_settlement_lines m ON m.railway_line_id = l.id
             """.trimIndent(),
         )
             .query(String::class.java)
             .list()
             .filterNotNull()
             .toSet()
+
+    fun operationalSettlementLineKeys(): Set<Pair<String, String>> =
+        jdbc.sql("""
+            SELECT s.ksh_code, l.line_code FROM service_area_settlement_lines m
+            JOIN settlements s ON s.id = m.settlement_id
+            JOIN railway_lines l ON l.id = m.railway_line_id
+        """.trimIndent()).query { rs, _ -> rs.getString("ksh_code") to rs.getString("line_code") }.list().toSet()
 
     // --------------------------------------------------------------- relations
 

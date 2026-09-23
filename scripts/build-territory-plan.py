@@ -47,12 +47,16 @@ def csv_bytes(header, rows):
     return out.getvalue().encode()
 
 
-def load_dataset(directory):
+def load_dataset(directory, allow_unverified_review=False):
     """Reject unclear metadata before opening CSVs; validate exact source bytes."""
     manifest_bytes = (directory / "manifest.json").read_bytes()
     manifest = json.loads(manifest_bytes)
     require(manifest.get("reuseStatus") == "CLEARED", "Dataset is not CLEARED; source rows were not read")
-    require(manifest.get("verificationStatus") == "VERIFIED", "Dataset is not VERIFIED; source rows were not read")
+    verification = manifest.get("verificationStatus")
+    require(
+        verification == "VERIFIED" or (allow_unverified_review and verification == "UNVERIFIED"),
+        "Dataset is not VERIFIED; source rows were not read",
+    )
     require(bool(manifest.get("datasetVersion")), "Missing datasetVersion")
     for name in ["settlements", "railwayLines", "settlementRailwayLines"]:
         require(manifest.get("coverage", {}).get(name) in ("COMPLETE", "PARTIAL"), f"Missing coverage: {name}")
@@ -99,8 +103,8 @@ def load_dataset(directory):
     return manifest, manifest_bytes, settlement_map, line_map, seen
 
 
-def build_plan(directory, policy_path):
-    manifest, manifest_raw, settlements, lines, relations = load_dataset(directory)
+def build_plan(directory, policy_path, allow_unverified_review=False):
+    manifest, manifest_raw, settlements, lines, relations = load_dataset(directory, allow_unverified_review)
     policy_raw = policy_path.read_bytes()
     policy = json.loads(policy_raw)
     require(policy.get("schemaVersion") == 1 and policy.get("kind") == "CUSTOM_OPERATIONAL_TERRITORIES", "Unknown policy schema")
@@ -148,9 +152,10 @@ def build_plan(directory, policy_path):
     summary = {
         "schemaVersion": 1,
         "policyVersion": policy["policyVersion"],
-        "status": "OFFLINE_PROPOSAL_NOT_IMPORTED",
+        "status": "OFFLINE_PROPOSAL_NOT_IMPORTED" if manifest["verificationStatus"] == "VERIFIED" else "OFFLINE_UNVERIFIED_SOURCE_REVIEW",
         "officialRailwayJurisdiction": False,
         "sourceDatasetVersion": manifest["datasetVersion"],
+        "sourceVerificationStatus": manifest["verificationStatus"],
         "sourceManifestSha256": digest(manifest_raw),
         "sourceFiles": manifest["canonicalFiles"],
         "sourceCoverage": manifest["coverage"],
@@ -160,7 +165,11 @@ def build_plan(directory, policy_path):
         "counts": {"areas": len(area_names), "settlements": len(assignments), "railwayLines": len(lines), "settlementLineAreaMappings": len(pairs), "settlementsWithoutVerifiedRailwayRelation": len(settlements) - len(covered), "linesCrossingAreas": sum(len(a) > 1 for a in line_areas.values())},
         "areas": [{"code": a, "name": area_names[a], "settlementCount": sum(v == a for v in assignments.values())} for a in sorted(area_names)],
         "runtimeCompatible": False,
-        "runtimeBlocker": "Current backend assigns an entire line to one area. This proposal uses settlement+line keys; no database import path is provided.",
+        "runtimeBlocker": (
+            "Source dataset is UNVERIFIED; this output is review-only and must not be imported."
+            if manifest["verificationStatus"] != "VERIFIED"
+            else "No verified railway relations are present in the selected source snapshot."
+        ),
         "files": {name: digest(data) for name, data in output.items()},
     }
     output["summary.json"] = json_bytes(summary)
@@ -173,9 +182,14 @@ def main():
     parser.add_argument("--policy", type=Path, default=ROOT / "operational-data/county-v1/policy.json")
     parser.add_argument("--out", type=Path, default=ROOT / "operational-data/county-v1/generated")
     parser.add_argument("--check", action="store_true", help="Verify byte-for-byte; write nothing")
+    parser.add_argument(
+        "--allow-unverified-review",
+        action="store_true",
+        help="Generate an offline review only; output stays runtime-incompatible and never promotes the source",
+    )
     args = parser.parse_args()
     try:
-        output = build_plan(args.dataset, args.policy)
+        output = build_plan(args.dataset, args.policy, args.allow_unverified_review)
         if args.check:
             for name, data in output.items():
                 target = args.out / name

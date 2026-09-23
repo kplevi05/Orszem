@@ -10,6 +10,11 @@ package hu.orszembejelento.backend.common.web
  * [INVALID_CREDENTIALS] and [SESSION_INVALID].
  */
 enum class ErrorCode {
+    SETTLEMENT_LINE_INVALID_BATCH,
+    SETTLEMENT_LINE_REFERENCE_CHANGED,
+    SETTLEMENT_LINE_REFERENCE_NOT_AVAILABLE,
+    SETTLEMENT_LINE_ASSIGNMENT_CHANGED,
+    SETTLEMENT_LINE_MIXED_ROUTING_MODES,
     /**
      * Returned identically for an unknown service ID, a wrong password and a deactivated
      * account. Telling these apart would let anyone enumerate valid service IDs, or learn

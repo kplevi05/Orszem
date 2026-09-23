@@ -109,47 +109,55 @@
   },
   "counts": {
     "areas": 20,
-    "linesCrossingAreas": 0,
-    "railwayLines": 0,
-    "settlementLineAreaMappings": 0,
+    "linesCrossingAreas": 50,
+    "railwayLines": 121,
+    "settlementLineAreaMappings": 921,
     "settlements": 3178,
-    "settlementsWithoutVerifiedRailwayRelation": 3178
+    "settlementsWithoutVerifiedRailwayRelation": 2375
   },
   "files": {
-    "line-routing-assessment.csv": "200b16a9cf7d9e7956e1a7654981c2ddb7ee364c7f2b7aa5523491f359ea5705",
+    "line-routing-assessment.csv": "99e07575c8249beb725d79561433f2b5614190c91264a90b368b6e2a30163941",
     "service-areas.csv": "224074f6a2352cbd2bada7a200b48e4711697ac46d2b770c3f641e5098dacc51",
-    "settlement-line-service-areas.csv": "f3a6efbe6fff60a6d7790ec491dbb9ef0f73778a5b7d141b51ed9baf06a838a9",
+    "settlement-line-service-areas.csv": "1b10e6c202be9d48fccd4b4aa8a7609542f2079a436b3ca7dedac303e87481fb",
     "settlement-service-areas.csv": "0b41d0d0da3cd7578b5a6cc487aa7d94c4dea05ca35636bf05b90ebacadcd40f",
-    "unresolved-settlements.csv": "2187095efa0f6176634f85ec715d8cb572376804caeaf136e67a4ee58f6e1efd"
+    "unresolved-settlements.csv": "18fe2c777e0f76ad23387831a3869c9cfda333d099e4b5c8d012708057d63b55"
   },
   "officialRailwayJurisdiction": false,
   "policySha256": "d46ea2f34a4725b1f710155892c916a5b108b8d9ed01489438df5f7b71f06f19",
   "policyVersion": "ORSZEM-COUNTY-1",
-  "runtimeBlocker": "No verified railway relations are present in the selected source snapshot.",
+  "runtimeBlocker": "Source dataset is UNVERIFIED; this output is review-only and must not be imported.",
   "runtimeCompatible": false,
   "schemaVersion": 1,
   "sourceCoverage": {
     "railwayLines": "PARTIAL",
     "settlementRailwayLines": "PARTIAL",
     "settlements": "COMPLETE",
-    "settlementsWithVerifiedRelations": 0
+    "settlementsWithVerifiedRelations": 803
   },
-  "sourceDatasetVersion": "KSH-SETTLEMENTS-1",
+  "sourceDatasetVersion": "OSM-HU-RAIL-REVIEW-2026-09-23",
   "sourceFiles": {
-    "railway-lines.csv": "a697f3346ad37e3eb5a3856ea4ac9288b2a05a552552cb0ae0153a78ee64e8a3",
-    "settlement-railway-lines.csv": "2a1fa4115d445ceae5e61e7b879f17b6bf14bc9f4cf07f8b88bbe9cce1a37ffc",
+    "railway-lines.csv": "b671841a9896dfd67a2245091ae88ffced6f54b78e96b3559797db6bc1861cb2",
+    "settlement-railway-lines.csv": "9720c456b8efec044daa560831b27f39d55c2698c0bd1febe7eb40b3689dcbf6",
     "settlements.csv": "70b34b3a94bcc42806996c40189a3877a536e29e7d7b2e668dd41fa6f32359cd"
   },
-  "sourceManifestSha256": "4741dac6acabc8a34b37e754af0f191c70bd762a3682153eb10fdfff2907755d",
+  "sourceManifestSha256": "9992fbf27f5dc08b538436258141f1d0add70f9a7347bbcb25f7c3497f2d8d35",
   "sourceProvenance": {
     "KSH": {
-      "licence": "CC BY 4.0, attribution required - see reference-data/LICENSES/",
+      "licence": "CC BY 4.0",
       "retrievedAt": "2026-09-07",
-      "source": "KSH Helységnévtár (Hungarian Central Statistical Office settlement registry)",
+      "source": "KSH Helységnévtár",
       "sourceVersionOrDate": "state 2025-01-01",
-      "used": "the complete cleared settlement roster (id/KSH code/name/county) - no railway-line or settlement-line relation data of any kind"
+      "used": "settlement identity and county"
+    },
+    "OSM": {
+      "licence": "Open Database License (ODbL) 1.0",
+      "retrievedAt": "2026-09-23",
+      "source": "Geofabrik Hungary extract of OpenStreetMap",
+      "sourceSha256": "0b66459603d0cdbdd284d81296e78659f56207e447aa43d104f27295176604aa",
+      "sourceVersionOrDate": "2026-09-23",
+      "used": "railway line references, station/halt names and proximity evidence"
     }
   },
-  "sourceVerificationStatus": "VERIFIED",
-  "status": "OFFLINE_PROPOSAL_NOT_IMPORTED"
+  "sourceVerificationStatus": "UNVERIFIED",
+  "status": "OFFLINE_UNVERIFIED_SOURCE_REVIEW"
 }

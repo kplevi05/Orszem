@@ -30,6 +30,7 @@ data class ServiceAreaAdminListItemResponse(
     val adminVersion: Long,
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
+    val mappedSettlementLineCount: Int = 0,
 )
 
 @Serializable
@@ -58,6 +59,7 @@ data class ServiceAreaAdminDetailResponse(
     val mappedRailwayLines: List<MappedRailwayLineResponse> = emptyList(),
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
+    val mappedSettlementLineCount: Int = 0,
 )
 
 @Serializable

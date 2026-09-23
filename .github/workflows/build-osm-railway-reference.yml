@@ -1,0 +1,87 @@
+name: build-osm-railway-reference
+
+on:
+  push:
+    branches:
+      - feature/custom-county-territory-plan
+    paths:
+      - .github/workflows/build-osm-railway-reference.yml
+      - scripts/build-osm-railway-reference.py
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: Branch that receives the review snapshot
+        required: true
+        default: feature/custom-county-territory-plan
+      commit_results:
+        description: Commit the UNVERIFIED review snapshot to the target branch
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: osm-railway-reference-${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build-review-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+
+      - name: Install osmium
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends osmium-tool
+
+      - name: Download exact OSM Hungary extract
+        run: |
+          curl --fail --location --retry 3 --output hungary.osm.pbf \
+            https://download.geofabrik.de/europe/hungary-latest.osm.pbf
+          sha256sum hungary.osm.pbf | tee hungary.osm.pbf.sha256
+
+      - name: Extract referenced railway ways and named stations
+        run: |
+          osmium tags-filter hungary.osm.pbf \
+            nwr/railway=station,halt w/railway=rail,narrow_gauge \
+            --output railway-review.osm.pbf --overwrite
+          osmium export railway-review.osm.pbf \
+            --add-unique-id=type_id \
+            --output railway-review.geojson --overwrite
+
+      - name: Build blocked-by-default review snapshot
+        run: |
+          SOURCE_DATE="$(date -u +%Y-%m-%d)"
+          SOURCE_SHA="$(cut -d' ' -f1 hungary.osm.pbf.sha256)"
+          python3 scripts/build-osm-railway-reference.py \
+            --geojson railway-review.geojson \
+            --out reference-data/osm-review \
+            --source-date "$SOURCE_DATE" \
+            --source-sha256 "$SOURCE_SHA" \
+            --maximum-distance-metres 100
+          node reference-data/tools/validate-canonical.mjs reference-data/osm-review/manifest.json
+          test "$(python3 -c 'import json; print(json.load(open("reference-data/osm-review/manifest.json"))["verificationStatus"])')" = UNVERIFIED
+          python3 scripts/build-territory-plan.py \
+            --dataset reference-data/osm-review \
+            --out operational-data/county-v1/osm-review-generated \
+            --allow-unverified-review
+
+      - name: Upload review evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: osm-hungary-railway-review
+          path: reference-data/osm-review/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit review snapshot
+        if: ${{ github.event_name == 'push' || inputs.commit_results }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add reference-data/osm-review operational-data/county-v1/osm-review-generated
+          git commit -m "Add UNVERIFIED OSM railway review snapshot"
+          git push origin "HEAD:${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}"
