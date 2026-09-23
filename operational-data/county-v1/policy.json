@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "ORSZEM-COUNTY-1",
+  "kind": "CUSTOM_OPERATIONAL_TERRITORIES",
+  "description": "Saját Őrszem-beosztás: 19 vármegye és Budapest. Nem hivatalos vasúti illetékesség.",
+  "counties": {
+    "Baranya": "ORSZEM-BARANYA",
+    "Bács-Kiskun": "ORSZEM-BACS-KISKUN",
+    "Békés": "ORSZEM-BEKES",
+    "Borsod-Abaúj-Zemplén": "ORSZEM-BORSOD-ABAUJ-ZEMPLEN",
+    "Csongrád-Csanád": "ORSZEM-CSONGRAD-CSANAD",
+    "Fejér": "ORSZEM-FEJER",
+    "Győr-Moson-Sopron": "ORSZEM-GYOR-MOSON-SOPRON",
+    "Hajdú-Bihar": "ORSZEM-HAJDU-BIHAR",
+    "Heves": "ORSZEM-HEVES",
+    "Jász-Nagykun-Szolnok": "ORSZEM-JASZ-NAGYKUN-SZOLNOK",
+    "Komárom-Esztergom": "ORSZEM-KOMAROM-ESZTERGOM",
+    "Nógrád": "ORSZEM-NOGRAD",
+    "Pest": "ORSZEM-PEST",
+    "Somogy": "ORSZEM-SOMOGY",
+    "Szabolcs-Szatmár-Bereg": "ORSZEM-SZABOLCS-SZATMAR-BEREG",
+    "Tolna": "ORSZEM-TOLNA",
+    "Vas": "ORSZEM-VAS",
+    "Veszprém": "ORSZEM-VESZPREM",
+    "Zala": "ORSZEM-ZALA",
+    "főváros": "ORSZEM-BUDAPEST"
+  },
+  "settlementExceptions": {
+    "13578": {
+      "expectedName": "Budapest",
+      "expectedCounty": "",
+      "areaCode": "ORSZEM-BUDAPEST",
+      "reason": "A KSH törzsben Budapest összesített sorának vármegye mezője üres; ugyanahhoz a saját területhez tartozik, mint a 23 kerület."
+    }
+  }
+}

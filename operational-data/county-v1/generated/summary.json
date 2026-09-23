@@ -1,0 +1,154 @@
+{
+  "areas": [
+    {
+      "code": "ORSZEM-BACS-KISKUN",
+      "name": "Őrszem – Bács-Kiskun",
+      "settlementCount": 119
+    },
+    {
+      "code": "ORSZEM-BARANYA",
+      "name": "Őrszem – Baranya",
+      "settlementCount": 301
+    },
+    {
+      "code": "ORSZEM-BEKES",
+      "name": "Őrszem – Békés",
+      "settlementCount": 75
+    },
+    {
+      "code": "ORSZEM-BORSOD-ABAUJ-ZEMPLEN",
+      "name": "Őrszem – Borsod-Abaúj-Zemplén",
+      "settlementCount": 358
+    },
+    {
+      "code": "ORSZEM-BUDAPEST",
+      "name": "Őrszem – Budapest",
+      "settlementCount": 24
+    },
+    {
+      "code": "ORSZEM-CSONGRAD-CSANAD",
+      "name": "Őrszem – Csongrád-Csanád",
+      "settlementCount": 60
+    },
+    {
+      "code": "ORSZEM-FEJER",
+      "name": "Őrszem – Fejér",
+      "settlementCount": 108
+    },
+    {
+      "code": "ORSZEM-GYOR-MOSON-SOPRON",
+      "name": "Őrszem – Győr-Moson-Sopron",
+      "settlementCount": 183
+    },
+    {
+      "code": "ORSZEM-HAJDU-BIHAR",
+      "name": "Őrszem – Hajdú-Bihar",
+      "settlementCount": 82
+    },
+    {
+      "code": "ORSZEM-HEVES",
+      "name": "Őrszem – Heves",
+      "settlementCount": 121
+    },
+    {
+      "code": "ORSZEM-JASZ-NAGYKUN-SZOLNOK",
+      "name": "Őrszem – Jász-Nagykun-Szolnok",
+      "settlementCount": 78
+    },
+    {
+      "code": "ORSZEM-KOMAROM-ESZTERGOM",
+      "name": "Őrszem – Komárom-Esztergom",
+      "settlementCount": 76
+    },
+    {
+      "code": "ORSZEM-NOGRAD",
+      "name": "Őrszem – Nógrád",
+      "settlementCount": 131
+    },
+    {
+      "code": "ORSZEM-PEST",
+      "name": "Őrszem – Pest",
+      "settlementCount": 187
+    },
+    {
+      "code": "ORSZEM-SOMOGY",
+      "name": "Őrszem – Somogy",
+      "settlementCount": 246
+    },
+    {
+      "code": "ORSZEM-SZABOLCS-SZATMAR-BEREG",
+      "name": "Őrszem – Szabolcs-Szatmár-Bereg",
+      "settlementCount": 229
+    },
+    {
+      "code": "ORSZEM-TOLNA",
+      "name": "Őrszem – Tolna",
+      "settlementCount": 109
+    },
+    {
+      "code": "ORSZEM-VAS",
+      "name": "Őrszem – Vas",
+      "settlementCount": 216
+    },
+    {
+      "code": "ORSZEM-VESZPREM",
+      "name": "Őrszem – Veszprém",
+      "settlementCount": 217
+    },
+    {
+      "code": "ORSZEM-ZALA",
+      "name": "Őrszem – Zala",
+      "settlementCount": 258
+    }
+  ],
+  "attribution": {
+    "licence": "CC BY 4.0",
+    "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "text": "Forrás: KSH Helységnévtár; saját Őrszem területi besorolással kiegészítve.",
+    "url": "https://www.ksh.hu"
+  },
+  "counts": {
+    "areas": 20,
+    "linesCrossingAreas": 0,
+    "railwayLines": 0,
+    "settlementLineAreaMappings": 0,
+    "settlements": 3178,
+    "settlementsWithoutVerifiedRailwayRelation": 3178
+  },
+  "files": {
+    "line-routing-assessment.csv": "200b16a9cf7d9e7956e1a7654981c2ddb7ee364c7f2b7aa5523491f359ea5705",
+    "service-areas.csv": "224074f6a2352cbd2bada7a200b48e4711697ac46d2b770c3f641e5098dacc51",
+    "settlement-line-service-areas.csv": "f3a6efbe6fff60a6d7790ec491dbb9ef0f73778a5b7d141b51ed9baf06a838a9",
+    "settlement-service-areas.csv": "0b41d0d0da3cd7578b5a6cc487aa7d94c4dea05ca35636bf05b90ebacadcd40f",
+    "unresolved-settlements.csv": "2187095efa0f6176634f85ec715d8cb572376804caeaf136e67a4ee58f6e1efd"
+  },
+  "officialRailwayJurisdiction": false,
+  "policySha256": "d46ea2f34a4725b1f710155892c916a5b108b8d9ed01489438df5f7b71f06f19",
+  "policyVersion": "ORSZEM-COUNTY-1",
+  "runtimeBlocker": "Current backend assigns an entire line to one area. This proposal uses settlement+line keys; no database import path is provided.",
+  "runtimeCompatible": false,
+  "schemaVersion": 1,
+  "sourceCoverage": {
+    "railwayLines": "PARTIAL",
+    "settlementRailwayLines": "PARTIAL",
+    "settlements": "COMPLETE",
+    "settlementsWithVerifiedRelations": 0
+  },
+  "sourceDatasetVersion": "KSH-SETTLEMENTS-1",
+  "sourceFiles": {
+    "railway-lines.csv": "a697f3346ad37e3eb5a3856ea4ac9288b2a05a552552cb0ae0153a78ee64e8a3",
+    "settlement-railway-lines.csv": "2a1fa4115d445ceae5e61e7b879f17b6bf14bc9f4cf07f8b88bbe9cce1a37ffc",
+    "settlements.csv": "70b34b3a94bcc42806996c40189a3877a536e29e7d7b2e668dd41fa6f32359cd"
+  },
+  "sourceManifestSha256": "4741dac6acabc8a34b37e754af0f191c70bd762a3682153eb10fdfff2907755d",
+  "sourceProvenance": {
+    "KSH": {
+      "licence": "CC BY 4.0, attribution required - see reference-data/LICENSES/",
+      "retrievedAt": "2026-09-07",
+      "source": "KSH Helységnévtár (Hungarian Central Statistical Office settlement registry)",
+      "sourceVersionOrDate": "state 2025-01-01",
+      "used": "the complete cleared settlement roster (id/KSH code/name/county) - no railway-line or settlement-line relation data of any kind"
+    }
+  },
+  "status": "OFFLINE_PROPOSAL_NOT_IMPORTED"
+}
