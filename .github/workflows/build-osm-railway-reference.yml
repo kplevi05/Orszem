@@ -1,6 +1,12 @@
 name: build-osm-railway-reference
 
 on:
+  push:
+    branches:
+      - feature/custom-county-territory-plan
+    paths:
+      - .github/workflows/build-osm-railway-reference.yml
+      - scripts/build-osm-railway-reference.py
   workflow_dispatch:
     inputs:
       target_branch:
@@ -17,7 +23,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: osm-railway-reference-${{ inputs.target_branch }}
+  group: osm-railway-reference-${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -26,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.target_branch }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
 
       - name: Install osmium
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends osmium-tool
@@ -66,10 +72,10 @@ jobs:
           retention-days: 30
 
       - name: Commit review snapshot
-        if: ${{ inputs.commit_results }}
+        if: ${{ github.event_name == 'push' || inputs.commit_results }}
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add reference-data/osm-review
           git commit -m "Add UNVERIFIED OSM railway review snapshot"
-          git push origin "HEAD:${{ inputs.target_branch }}"
+          git push origin "HEAD:${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}"
