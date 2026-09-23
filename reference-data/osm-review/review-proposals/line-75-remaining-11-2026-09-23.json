@@ -1,0 +1,155 @@
+{
+  "batchId": "line-75-remaining-11-2026-09-23",
+  "generatedAt": "2026-09-23T18:45:00Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "75",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=V%C3%A1c%E2%80%93Balassagyarmat-vas%C3%BAtvonal&oldid=29222283",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Vác–Balassagyarmat railway as MÁV line 75 and explicitly lists every settlement in this batch on its route diagram. Its historical route narrative is supported by print-book citations, and no VPE/HÜSZ source lineage was found during the detailed line-level review.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_CITED_ROUTE_NARRATIVE",
+    "caveat": "The route diagram is explicit; not every individual row carries its own inline footnote. This is disclosed for the human reviewer and is not an automatic blocker under the current approved review policy."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:04358:75",
+      "kshCode": "04358",
+      "settlementName": "Nógrád",
+      "osmObjectIds": [
+        "n7562147853"
+      ],
+      "minimumDistanceMetres": 9.1,
+      "evidenceHash": "3b43288f5f37b24f232ba9f7ed113f5324365eef52ae8384816e0af0a960e4c6",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:06743:75",
+      "kshCode": "06743",
+      "settlementName": "Diósjenő",
+      "osmObjectIds": [
+        "n3609842991"
+      ],
+      "minimumDistanceMetres": 15.8,
+      "evidenceHash": "81f09233c5573cc73516656fe933fa40914fd77c6a8a1332e85291fc473935b8",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:06947:75",
+      "kshCode": "06947",
+      "settlementName": "Szokolya",
+      "osmObjectIds": [
+        "n287638744"
+      ],
+      "minimumDistanceMetres": 2.3,
+      "evidenceHash": "573009b8942a704ba64afc7a710f0b6ed230374ed1f68ca7ed500fe5059ca508",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:08156:75",
+      "kshCode": "08156",
+      "settlementName": "Drégelypalánk",
+      "osmObjectIds": [
+        "n457353120"
+      ],
+      "minimumDistanceMetres": 2,
+      "evidenceHash": "25b40b879b5eae3997e59445ba4233f05451c7fe9af7f55505d8070be2f35582",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:09034:75",
+      "kshCode": "09034",
+      "settlementName": "Berkenye",
+      "osmObjectIds": [
+        "n10223953748"
+      ],
+      "minimumDistanceMetres": 5,
+      "evidenceHash": "dec632cb4cc508a1e2d1105da9e4b5539d2af64ca4fd98f4689fab59d2c6eda5",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:09894:75",
+      "kshCode": "09894",
+      "settlementName": "Borsosberény",
+      "osmObjectIds": [
+        "n9260626856"
+      ],
+      "minimumDistanceMetres": 2.5,
+      "evidenceHash": "862e3a72a3500696bc89132f4ef3957bc5cd10e00d153412df931b7de5286912",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:12511:75",
+      "kshCode": "12511",
+      "settlementName": "Dejtár",
+      "osmObjectIds": [
+        "n506539951"
+      ],
+      "minimumDistanceMetres": 7.1,
+      "evidenceHash": "9c8850307217d4357d6e7b198cd33cba2c0074f36772cb4e6805990c20fc1316",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:13657:75",
+      "kshCode": "13657",
+      "settlementName": "Balassagyarmat",
+      "osmObjectIds": [
+        "n6509897963"
+      ],
+      "minimumDistanceMetres": 65.9,
+      "evidenceHash": "226802476272f2bbd9c70fadd168c64197e94de5fccc1c50175223176d4e4893",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:23986:75",
+      "kshCode": "23986",
+      "settlementName": "Nagyoroszi",
+      "osmObjectIds": [
+        "n1212434956"
+      ],
+      "minimumDistanceMetres": 7.2,
+      "evidenceHash": "0db32ea8e8b9571c06f4685fca9aee059c5e8dfbd4aa936964ce221bf1f1e081",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:24934:75",
+      "kshCode": "24934",
+      "settlementName": "Vác",
+      "osmObjectIds": [
+        "n1687607528"
+      ],
+      "minimumDistanceMetres": 18.9,
+      "evidenceHash": "ba650cd437455819b4356bda805b19fa3cc12df598effbf0c30d8f68f9d56b7d",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:29319:75",
+      "kshCode": "29319",
+      "settlementName": "Ipolyvece",
+      "osmObjectIds": [
+        "n506539916"
+      ],
+      "minimumDistanceMetres": 4,
+      "evidenceHash": "1fce71c25eb49805f4b0d41fa10ffaa61ec3959a803685072d77203d6e4535f2",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 1,
+    "readyForHumanApproval": 11,
+    "totalCandidatesOnLine": 12
+  }
+}
