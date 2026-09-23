@@ -1,0 +1,203 @@
+{
+  "batchId": "line-29-remaining-18-2026-09-23",
+  "generatedAt": "2026-09-23T18:20:00Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "29",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=B%C3%B6rg%C3%B6nd%E2%80%93Szabadbatty%C3%A1n%E2%80%93Tapolca-vas%C3%BAtvonal&oldid=29315834",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Börgönd–Szabadbattyán–Tapolca railway as MÁV line 29 and explicitly lists every settlement in this batch on its route diagram. Its bibliography contains MÁV and independent railway publications; no VPE/HÜSZ source lineage was found during the detailed line-level review.",
+    "sourceStrength": "DIRECT_CHECKED_WIKIPEDIA_ROUTE_AND_LINE_IDENTITY",
+    "caveat": "The individual route-diagram rows are explicit but are not individually footnoted. This is disclosed for the human reviewer and is not an automatic blocker under the current approved review policy."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:04561:29",
+      "kshCode": "04561",
+      "settlementName": "Ábrahámhegy",
+      "osmObjectIds": ["n9480407147"],
+      "minimumDistanceMetres": 7.5,
+      "evidenceHash": "201b38efdb2590a5cc23c12d16a18f0b6187e3eadd377d6b0209c006efe8de53",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:05148:29",
+      "kshCode": "05148",
+      "settlementName": "Balatonkenese",
+      "osmObjectIds": ["n80221206"],
+      "minimumDistanceMetres": 3.2,
+      "evidenceHash": "1890ed8a05f61c95f40107e1d62edbbc8d6c572bd709539631a784d083ccda54",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:05625:29",
+      "kshCode": "05625",
+      "settlementName": "Révfülöp",
+      "osmObjectIds": ["n4955574766"],
+      "minimumDistanceMetres": 15.5,
+      "evidenceHash": "da7936eb3adaef9c8874f449af2f950054fbff3ecd020ab2a5b1019279360c28",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:05838:29",
+      "kshCode": "05838",
+      "settlementName": "Balatonalmádi",
+      "osmObjectIds": ["n9023154312"],
+      "minimumDistanceMetres": 5.7,
+      "evidenceHash": "4381cf90743c5c34eedbc084db5a8890319c7b4894826fae751e8fc26a010b12",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:06114:29",
+      "kshCode": "06114",
+      "settlementName": "Füle",
+      "osmObjectIds": ["n61086251"],
+      "minimumDistanceMetres": 2.7,
+      "evidenceHash": "7bb35b0cd71ce8366fe497d693648adb38118d87df6a264c1eb4a6e1835bf12c",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:07339:29",
+      "kshCode": "07339",
+      "settlementName": "Aszófő",
+      "osmObjectIds": ["n80221159"],
+      "minimumDistanceMetres": 3.7,
+      "evidenceHash": "a70b0c87223d9c3aefc149cf9d0f18a6abbe1ac19094fcb2a188f8c35691d34f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:10092:29",
+      "kshCode": "10092",
+      "settlementName": "Örvényes",
+      "osmObjectIds": ["n80221155"],
+      "minimumDistanceMetres": 5.0,
+      "evidenceHash": "2c36dbfbcad4af71f37e4949f4270127212592a9f18ff70b7fec99170421d0ec",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:15565:29",
+      "kshCode": "15565",
+      "settlementName": "Balatonudvari",
+      "osmObjectIds": ["n80221147"],
+      "minimumDistanceMetres": 4.0,
+      "evidenceHash": "5827f55842a0d39b33549f810049d480dd200c1f0e2c6b177d1665cee9e1d7ce",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:16072:29",
+      "kshCode": "16072",
+      "settlementName": "Csajág",
+      "osmObjectIds": ["n61086286"],
+      "minimumDistanceMetres": 7.7,
+      "evidenceHash": "52ef28530e22c9988c1d4030d9577730a5506ae4feec7a8e307de55a8f2ec0ed",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:17154:29",
+      "kshCode": "17154",
+      "settlementName": "Balatonszepezd",
+      "osmObjectIds": ["n80221117"],
+      "minimumDistanceMetres": 5.1,
+      "evidenceHash": "f1ab41daa14e8f2bbdc8a36ebcabb7739d4e0c98f34732a991bab5281b4c5d60",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:17525:29",
+      "kshCode": "17525",
+      "settlementName": "Polgárdi",
+      "osmObjectIds": ["n61086242"],
+      "minimumDistanceMetres": 18.9,
+      "evidenceHash": "8fa62547f797fabfb2ab10cde94b503d555e5bb7ad035284f768ff133e1b2c2f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:21175:29",
+      "kshCode": "21175",
+      "settlementName": "Balatonfüred",
+      "osmObjectIds": ["n80221174"],
+      "minimumDistanceMetres": 6.6,
+      "evidenceHash": "8e1d2ad0d2ca536f16a6ed5124aca6b38c5b7ca2fc4519cc28a17d9b33a740c7",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:22327:29",
+      "kshCode": "22327",
+      "settlementName": "Badacsonytomaj",
+      "osmObjectIds": ["n80221102"],
+      "minimumDistanceMetres": 13.0,
+      "evidenceHash": "ad7c905870654aa8c4ee7f5f1866da804244ed4748c2ddb9be91e31ba6c12234",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:28705:29",
+      "kshCode": "28705",
+      "settlementName": "Szabadbattyán",
+      "osmObjectIds": ["n2753681384"],
+      "minimumDistanceMetres": 8.1,
+      "evidenceHash": "cd5f1a22db35487ea9431f8a81ed27c3eb6f4099ced75be551e4803991cba6d3",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:29434:29",
+      "kshCode": "29434",
+      "settlementName": "Tapolca",
+      "osmObjectIds": ["n2079502878"],
+      "minimumDistanceMetres": 3.5,
+      "evidenceHash": "0903dc48dd87f8c5118e26c5d3754ecffe0b340e98300cc01cf57bc9aad10e11",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:30526:29",
+      "kshCode": "30526",
+      "settlementName": "Alsóörs",
+      "osmObjectIds": ["n80221191"],
+      "minimumDistanceMetres": 14.0,
+      "evidenceHash": "645f4377c621bcaa2fb47ce9faa53052c774e09b90d4e2a65e1e2aef36a3a764",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:33844:29",
+      "kshCode": "33844",
+      "settlementName": "Balatonrendes",
+      "osmObjectIds": ["n9480407146"],
+      "minimumDistanceMetres": 4.7,
+      "evidenceHash": "2540c2a28b028895e5cc53ac1ca3beb7fe92e4cc29c859bae9b50d174f7d3b32",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:34421:29",
+      "kshCode": "34421",
+      "settlementName": "Balatonakarattya",
+      "osmObjectIds": ["n61086296"],
+      "minimumDistanceMetres": 4.4,
+      "evidenceHash": "9f5fc416b1e9b072c7b99a01b915f88cb377c81954583a59bbc2bcac85463f37",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 2,
+    "readyForHumanApproval": 18,
+    "totalCandidatesOnLine": 20
+  }
+}

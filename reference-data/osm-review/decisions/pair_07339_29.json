@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:07339:29",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "07339",
+  "lineCode": "29",
+  "osmObjectIds": [
+    "n80221159"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Börgönd–Szabadbattyán–Tapolca railway as MÁV line 29 and explicitly lists Aszófő on its route diagram. No VPE/HÜSZ source lineage was found during the line-level review. Owner explicitly approved this candidate as part of the PR #35 approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=B%C3%B6rg%C3%B6nd%E2%80%93Szabadbatty%C3%A1n%E2%80%93Tapolca-vas%C3%BAtvonal&oldid=29315834",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "a70b0c87223d9c3aefc149cf9d0f18a6abbe1ac19094fcb2a188f8c35691d34f",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-23T18:30:06Z"
+}
