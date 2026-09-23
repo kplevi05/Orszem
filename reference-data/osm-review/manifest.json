@@ -1,0 +1,46 @@
+{
+  "canonicalFiles": {
+    "railway-lines.csv": "4b52a33f30fc76a2a280723a19cd1c72e6c6a3a6a8668a46345136a70a7800ca",
+    "settlement-railway-lines.csv": "cb75a9c60894d6b10df94c9c68f71d42de0c7c5b069f315ac3d875ff46c5748e",
+    "settlements.csv": "70b34b3a94bcc42806996c40189a3877a536e29e7d7b2e668dd41fa6f32359cd"
+  },
+  "counts": {
+    "railwayLines": 125,
+    "settlementRailwayLineMappings": 932,
+    "settlements": 3178
+  },
+  "coverage": {
+    "railwayLines": "PARTIAL",
+    "settlementRailwayLines": "PARTIAL",
+    "settlements": "COMPLETE",
+    "settlementsWithVerifiedRelations": 803
+  },
+  "coverageStatus": "PARTIAL",
+  "datasetVersion": "OSM-HU-RAIL-REVIEW-2026-09-23",
+  "generatedAt": "2026-09-23T10:20:37Z",
+  "reuseStatus": "CLEARED",
+  "review": {
+    "acceptedByDeterministicRule": 932,
+    "automaticImportAllowed": false,
+    "maximumDistanceMetres": 250.0,
+    "quarantinedStations": 837
+  },
+  "sources": {
+    "KSH": {
+      "licence": "CC BY 4.0",
+      "retrievedAt": "2026-09-07",
+      "source": "KSH Helységnévtár",
+      "sourceVersionOrDate": "state 2025-01-01",
+      "used": "settlement identity and county"
+    },
+    "OSM": {
+      "licence": "Open Database License (ODbL) 1.0",
+      "retrievedAt": "2026-09-23",
+      "source": "Geofabrik Hungary extract of OpenStreetMap",
+      "sourceSha256": "0b66459603d0cdbdd284d81296e78659f56207e447aa43d104f27295176604aa",
+      "sourceVersionOrDate": "2026-09-23",
+      "used": "railway line references, station/halt names and proximity evidence"
+    }
+  },
+  "verificationStatus": "UNVERIFIED"
+}
