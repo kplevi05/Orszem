@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:18616:70AX",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "18616",
+  "lineCode": "70AX",
+  "osmObjectIds": ["n9480413774"],
+  "decisionTier": "QUARANTINED",
+  "decisionMethod": "HUMAN_REVIEW",
+  "reviewerType": "HUMAN",
+  "humanApproved": false,
+  "reasonCode": "INDEPENDENT_SOURCE_INCONCLUSIVE_LIKELY_INDUSTRIAL_SIDING",
+  "note": "hu.wikipedia.org confirms a real, well-documented industrial rolling-stock repair works (Dunakeszi Járműjavító Kft., the former MÁV Dunakeszi Főműhely, founded 1926) sits directly beside the MÁV Dunakeszi-Gyártelep halt - a location and code shape ('70AX', a lettered suffix off line 70) consistent with an industrial connecting track to that works, exactly the kind of infrastructure review-policy.json excludes from domain scope. However, no source found names '70AX' specifically, so this is plausibility, not confirmation - staying QUARANTINED rather than REJECTED (no source directly contradicts a national-line identity) or INDEPENDENTLY_VERIFIED (no source directly confirms one). Needs either a source that names the code directly, or an on-the-ground/official MÁV infrastructure register check.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/wiki/Dunakeszi_J%C3%A1rm%C5%B1jav%C3%ADt%C3%B3_Kft.",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Publicly published Wikipedia article; consulted to establish what is actually at this location, cited by URL, not reproduced.",
+      "licenceNote": "CC BY-SA 4.0 (Wikipedia's standard licence). Used as a citation for context, not as republished content."
+    }
+  ],
+  "evidenceHash": "d396d1048cdc97f832d4e89905347da7cb6fffbddc80934848bba90e6d15ea8b",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05 (session-assisted)",
+  "decidedAt": "2026-09-23T00:00:00Z"
+}
