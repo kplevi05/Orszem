@@ -67,3 +67,4 @@ web/**/.vite/
 # deployed. The directory's own README is the one exception (tracked, contains no data).
 reference-data/local-research/*
 !reference-data/local-research/README.md
+__pycache__/

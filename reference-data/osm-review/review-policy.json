@@ -1,0 +1,85 @@
+{
+  "policyVersion": "2026-09-23.1",
+  "title": "OSM railway review policy — domain scope, eligibility and quarantine rules",
+  "domainScope": {
+    "decision": "NATIONAL_NETWORK_STATEMENT_INFRASTRUCTURE",
+    "definition": "An Őrszem RailwayLine represents MÁV/GYSEV infrastructure that falls under the Hungarian national network statement (VPE HÜSZ), independent of whether it currently carries passenger or freight traffic.",
+    "excludedByDefinition": [
+      "private infrastructure",
+      "industrial/internal sidings and spurs",
+      "military infrastructure",
+      "service, yard and marshalling infrastructure",
+      "any other non-network-statement track"
+    ],
+    "notExcludedByDefinition": [
+      "freight-only lines that are otherwise part of the national network statement — usage=freight or an absence of passenger service is never, by itself, a reason to exclude a line"
+    ],
+    "rationale": "reference-data/README.md already establishes the VPE HÜSZ network statement (annexes 5.2-4/5.2-5, published under EU Directive 2012/34/EU Art. 27) as this product's canonical definition of the Hungarian railway network. This phase reuses that definition conceptually only — no row-level content, line-code list, settlement relation or comparison result from the PENDING VPE/KTI/GYSEV dataset is used to accept, reject or reconstruct any OSM candidate. The boundary is used only to explain *why* a category of infrastructure is out of scope, never as comparison data.",
+    "recordedBy": "kplevi05",
+    "recordedAt": "2026-09-23"
+  },
+  "candidateEligibility": {
+    "acceptableWayTags": {
+      "railway": ["rail", "narrow_gauge"],
+      "refSources": ["ref", "railway:ref", "ref:hu"],
+      "refPattern": "[1-9][0-9]{0,2}[A-Za-z]{0,2}"
+    },
+    "syntacticValidityIsNotAcceptance": "A line reference matching the pattern above is evidence eligible for review, never by itself grounds to accept a candidate as an active user-selectable RailwayLine.",
+    "automaticallyExcludedRailwayValues": {
+      "values": ["construction", "abandoned", "disused", "proposed"],
+      "handling": "Never contributes an accepted candidate, and never contributes quarantine evidence — this infrastructure is not currently railway infrastructure at all. Enforced twice: by the osmium tags-filter upstream (only railway=rail|narrow_gauge is exported) and again inside build-osm-railway-reference.py, so the property never depends solely on an upstream filter."
+    },
+    "nonOperationalTags": {
+      "service": ["siding", "yard", "spur", "crossover"],
+      "usage": ["industrial", "military"],
+      "handling": "A way carrying any of these tags never contributes an accepted candidate, regardless of its `railway` value or line reference. Its evidence is retained in non-operational-evidence.csv and, when it is a station's *only* nearby evidence, the station is quarantined under reason NON_OPERATIONAL_INFRASTRUCTURE_ONLY. A station with both ordinary and non-operational nearby evidence keeps its ordinary acceptance and still records the non-operational evidence separately — nothing is ever silently dropped."
+    },
+    "missingOrContradictoryTagging": "Defaults to quarantine. A way with an ambiguous, missing, or contradictory service/usage tag combination is treated conservatively (excluded from the accepted set) rather than guessed into either bucket."
+  },
+  "unusualLineCodes": {
+    "definition": "A line code is not classified as 'unusual' by pattern alone — the policy has no separate numeric-range or suffix heuristic beyond the syntactic ref pattern above, because inventing one without a legitimate comparison source would itself be a guess. Instead, a code is flagged for mandatory manual review whenever any of its supporting evidence is NON_OPERATIONAL_INFRASTRUCTURE_ONLY, or when a reviewer's own inspection of its OSM tags/geometry raises a question that the deterministic rule cannot resolve.",
+    "handling": "Quarantine or manual decision required — never automatic acceptance or automatic rejection.",
+    "examplesObservedInThisDataset": [
+      { "lineCode": "153K", "station": "Kalocsa", "reason": "NON_OPERATIONAL_INFRASTRUCTURE_ONLY (service=spur)" },
+      { "lineCode": "20L", "station": "Várpalota", "reason": "NON_OPERATIONAL_INFRASTRUCTURE_ONLY (service=siding, usage=industrial)" }
+    ]
+  },
+  "duplicateEvidenceCollapse": {
+    "rule": "Multiple evidence rows supporting the same accepted (kshCode, lineCode) pair are all retained as corroborating evidence, never collapsed into one row — the deterministic-acceptance rule only needs one qualifying row, but a reviewer benefits from seeing all of them. Byte-identical duplicate rows (same osm_id, ksh_code and line_code) are naturally impossible under this pipeline, since each station object is visited once."
+  },
+  "settlementNameNormalization": {
+    "rule": "Strip a trailing '(vasút)állomás', 'megállóhely' or 'mh.' suffix (case-insensitively) and collapse internal whitespace. No other transliteration, casing change or diacritic normalization is applied.",
+    "matchingRule": "EXACT string equality only, against the KSH settlement name column, after normalization above.",
+    "fuzzyMatchingForbidden": "No similarity score, edit-distance threshold or token-overlap heuristic is used anywhere in this pipeline. A normalized OSM name that does not exactly equal exactly one KSH settlement name is quarantined under NO_UNIQUE_KSH_NAME, unconditionally.",
+    "whyExactMatchingIsSafe": "KSH settlement names are the canonical identity this product already imports (reference-data/cleared/settlements.csv, verificationStatus VERIFIED, CC BY 4.0). An exact match against that canonical roster carries no invented similarity judgement; it either identifies the same administrative settlement or it does not."
+  },
+  "budapestAndDistricts": {
+    "kshShape": "KSH lists Budapest as 23 separate district rows ('Budapest 01. ker.' .. 'Budapest 23. ker.'), never a single 'Budapest' row.",
+    "consequence": "An OSM station literally named 'Budapest' or 'Budapest-<terminus>' (e.g. a major terminus station name) never exactly matches any KSH row under the normalization rule above, so it is always quarantined under NO_UNIQUE_KSH_NAME by default — never guessed into a specific district.",
+    "resolutionPath": "Only a manual decision naming the specific district KSH code may accept a Budapest-area candidate, recorded exactly like any other decision (see decisions/README.md), with a human-readable note stating which district and why."
+  },
+  "borderAndCompositeStationNames": {
+    "rule": "A composite or multi-settlement OSM station name (e.g. 'X-Y határállomás', 'X-Y elágazás') is handled by the same exact-match rule as any other name: if it does not equal exactly one KSH settlement name after normalization, it is quarantined under NO_UNIQUE_KSH_NAME. No splitting, no first-token heuristic, no partial matching is performed."
+  },
+  "evidenceRequiredForAcceptance": {
+    "deterministicRule": "At least one ordinary (non-excluded, non-non-operational) railway way within maximumDistanceMetres of the station's point geometry, sharing a line reference that both the way and a uniquely name-matched KSH settlement can be associated with.",
+    "distanceLimit": {
+      "maximumDistanceMetres": 100.0,
+      "rationale": "Matches the value used to build the currently committed OSM-HU-RAIL-REVIEW-2026-09-23 snapshot; changing it requires updating this policy's version and re-running the deterministic build, never a silent parameter change.",
+      "observedEvidenceDistribution": "median 4.3m; 750/925 within 10m; 888/925 within 25m; 911/925 within 50m; all within the 100m hard limit."
+    },
+    "promotionAlsoRequires": "A deterministically-accepted (kshCode, lineCode) pair is only a CANDIDATE. It may not appear in a promoted, importable dataset without an explicit ACCEPTED decision file (decisions/README.md) whose evidenceHash matches the candidate's current evidenceHash. This is new in this phase — the prior snapshot allowed all deterministically-accepted pairs straight into settlement-railway-lines.csv with no per-pair human decision; automaticImportAllowed being false was the only gate. That gate is preserved and a second, per-candidate gate is added on top (see promote-osm-railway-reference.py)."
+  },
+  "quarantineDefault": {
+    "rule": "Any candidate this policy cannot place into an unambiguous accepted-evidence bucket defaults to quarantine (NO_UNIQUE_KSH_NAME, NO_REFERENCED_LINE_WITHIN_LIMIT or NON_OPERATIONAL_INFRASTRUCTURE_ONLY). There is no code path in build-osm-railway-reference.py that accepts a candidate outside the deterministic rule above."
+  },
+  "staleDecisionProtection": {
+    "rule": "Every candidate in candidates.json carries an evidenceHash computed deterministically from the exact evidence rows that produced it (OSM object ids, distances, tags). A decision file's own recorded evidenceHash must match the candidate's current evidenceHash at promotion time; a mismatch means the underlying source data changed since the decision was made, and the decision is void — the candidate reverts to requiring a fresh manual decision. See promote-osm-railway-reference.py."
+  },
+  "whatStillRequiresExplicitHumanApproval": [
+    "Every accepted (kshCode, lineCode) pair candidate, regardless of how confidently the deterministic rule accepted it — a machine rule proposes, a human decision promotes.",
+    "Every NON_OPERATIONAL_INFRASTRUCTURE_ONLY quarantine entry, if a reviewer believes local evidence actually does justify treating a specific object as network-statement infrastructure (this policy's default is to never auto-accept these; only an explicit ACCEPTED decision, with a documented legitimate source, can override the default).",
+    "Any Budapest-district candidate.",
+    "The overall dataset promotion: verificationStatus may only become VERIFIED, and automaticImportAllowed/runtimeCompatible may only become true, through the promotion command, never through this build script."
+  ]
+}

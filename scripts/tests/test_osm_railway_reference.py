@@ -63,6 +63,70 @@ class OsmRailwayReferenceTest(unittest.TestCase):
         self.assertEqual(manifest["counts"]["railwayLines"], 0)
         self.assertEqual(manifest["counts"]["settlementRailwayLineMappings"], 0)
 
+    def test_siding_only_evidence_is_quarantined_not_accepted(self):
+        siding = self.way(); siding["properties"]["service"] = "siding"
+        out, manifest = self.build([siding, self.station()])
+        self.assertEqual(manifest["counts"]["settlementRailwayLineMappings"], 0)
+        self.assertEqual(manifest["review"]["nonOperationalInfrastructureOnly"], 1)
+        review = (out / "needs-review.csv").read_text()
+        self.assertIn("NON_OPERATIONAL_INFRASTRUCTURE_ONLY", review)
+        non_op = (out / "non-operational-evidence.csv").read_text()
+        self.assertIn("siding", non_op)
+
+    def test_industrial_usage_only_evidence_is_quarantined(self):
+        industrial = self.way(); industrial["properties"]["usage"] = "industrial"
+        out, manifest = self.build([industrial, self.station()])
+        self.assertEqual(manifest["counts"]["settlementRailwayLineMappings"], 0)
+        self.assertIn("NON_OPERATIONAL_INFRASTRUCTURE_ONLY", (out / "needs-review.csv").read_text())
+
+    def test_station_with_both_ordinary_and_non_operational_evidence_keeps_ordinary_and_still_records_non_operational(self):
+        ordinary = self.way("1")
+        siding = self.way("2", 47.0008); siding["properties"]["service"] = "yard"
+        out, manifest = self.build([ordinary, siding, self.station()])
+        self.assertEqual(manifest["counts"]["settlementRailwayLineMappings"], 1)
+        self.assertIn("00001,1", (out / "settlement-railway-lines.csv").read_text())
+        self.assertNotIn("00001,2", (out / "settlement-railway-lines.csv").read_text())
+        self.assertEqual(manifest["review"]["nonOperationalInfrastructureOnly"], 0, "station accepted via code 1; code 2's yard evidence must not trigger station-level quarantine")
+        self.assertIn("yard", (out / "non-operational-evidence.csv").read_text())
+
+    def test_abandoned_and_disused_ways_never_contribute_evidence_even_if_present_in_input(self):
+        # A real distant way keeps the input non-empty; the near abandoned/disused ways
+        # must not be what saves the station from quarantine.
+        abandoned = self.way(); abandoned["properties"]["railway"] = "abandoned"
+        disused = self.way("2", 47.0005); disused["properties"]["railway"] = "disused"
+        far_ordinary = self.way("3", 47.5)
+        out, manifest = self.build([abandoned, disused, far_ordinary, self.station()])
+        self.assertEqual(manifest["counts"]["settlementRailwayLineMappings"], 0)
+        self.assertEqual(manifest["review"]["nonOperationalInfrastructureOnly"], 0)
+        self.assertIn("NO_REFERENCED_LINE_WITHIN_LIMIT", (out / "needs-review.csv").read_text())
+
+    def test_accepted_candidate_has_stable_pair_candidate_id_and_evidence_hash(self):
+        out, manifest = self.build([self.way(), self.station()])
+        candidates = json.loads((out / "candidates.json").read_text())["candidates"]
+        pair = next(c for c in candidates if c["category"] == "OSM_EVIDENCE_ACCEPTED")
+        self.assertEqual(pair["candidateId"], "pair:00001:1")
+        self.assertEqual(pair["kshCode"], "00001")
+        self.assertEqual(pair["lineCode"], "1")
+        self.assertTrue(pair["evidenceHash"])
+
+    def test_deterministic_rebuild_produces_byte_identical_output(self):
+        out1, _ = self.build([self.way(), self.station()])
+        first = (out1 / "candidates.json").read_text()
+        out2, _ = self.build([self.way(), self.station()])
+        second = (out2 / "candidates.json").read_text()
+        self.assertEqual(first, second)
+
+    def test_changed_source_geometry_changes_evidence_hash(self):
+        out1, _ = self.build([self.way(), self.station(latitude=47.0005)])
+        hash1 = self._pair_hash(out1)
+        out2, _ = self.build([self.way(), self.station(latitude=47.0007)])
+        hash2 = self._pair_hash(out2)
+        self.assertNotEqual(hash1, hash2, "moving the station must change the evidence hash so a stale decision is detectable")
+
+    def _pair_hash(self, out):
+        candidates = json.loads((out / "candidates.json").read_text())["candidates"]
+        return next(c for c in candidates if c["category"] == "OSM_EVIDENCE_ACCEPTED")["evidenceHash"]
+
 
 if __name__ == "__main__":
     unittest.main()

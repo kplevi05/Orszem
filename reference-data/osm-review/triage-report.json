@@ -1,0 +1,525 @@
+{
+  "budapestOrCompositeStationNames": {
+    "count": 377,
+    "sample": [
+      "Fehértó felső",
+      "Törökfái felső",
+      "Feketevölgy kitérő",
+      "Rákospalota-Kertváros",
+      "Szob alsó",
+      "Balatonfenyves alsó",
+      "Vecsés-Kertekalja",
+      "Hajdúnánás-Vásártér",
+      "Kecskemét-Máriaváros",
+      "Bánhalma-Halastó",
+      "Lajosmizse alsó",
+      "Dunaharaszti alsó",
+      "Seregélyes-Szőlőhegy",
+      "Kisköre-Tiszahíd",
+      "Maglódi nyaraló",
+      "Konyári Sóstófürdő",
+      "Paks-Dunapart",
+      "Szikszó-Vásártér",
+      "Okorág-Kárászpuszta",
+      "Gencsapáti felső",
+      "Püspökladány-Vásártér",
+      "Olaszliszka-Tolcsva",
+      "Rétszilas alsó",
+      "Pirtói-szőlők",
+      "Sarkadi Cukorgyár",
+      "Nyárlőrinci szőlők",
+      "Gödöllő-Állami telepek",
+      "Nyíregyháza külső",
+      "Petőfiszállási tanyák",
+      "Vaja-Rohod"
+    ]
+  },
+  "byDistanceBand": {
+    "0-10m": 749,
+    "10-25m": 138,
+    "25-50m": 22,
+    "50-100m": 14
+  },
+  "byNonOperationalTag": {
+    "serviceTagCounts": {
+      "siding": 2,
+      "spur": 1
+    },
+    "usageTagCounts": {
+      "industrial": 1
+    }
+  },
+  "byOrdinaryVsUnusualLineCode": {
+    "ordinaryCodeCount": 106,
+    "unusualCodeCount": 13,
+    "unusualCodes": [
+      "262e",
+      "268",
+      "284",
+      "300b",
+      "306",
+      "342",
+      "351",
+      "353",
+      "371",
+      "372",
+      "392",
+      "400",
+      "70AX"
+    ]
+  },
+  "evidenceFartherThan50Metres": {
+    "count": 14,
+    "rows": [
+      {
+        "distanceM": "50.9",
+        "kshCode": "03009",
+        "lineCode": "18"
+      },
+      {
+        "distanceM": "50.4",
+        "kshCode": "03009",
+        "lineCode": "20"
+      },
+      {
+        "distanceM": "70.6",
+        "kshCode": "04260",
+        "lineCode": "125"
+      },
+      {
+        "distanceM": "69.6",
+        "kshCode": "07269",
+        "lineCode": "27"
+      },
+      {
+        "distanceM": "95.3",
+        "kshCode": "07375",
+        "lineCode": "30"
+      },
+      {
+        "distanceM": "50.2",
+        "kshCode": "09919",
+        "lineCode": "400"
+      },
+      {
+        "distanceM": "74.6",
+        "kshCode": "11697",
+        "lineCode": "98"
+      },
+      {
+        "distanceM": "65.9",
+        "kshCode": "13657",
+        "lineCode": "75"
+      },
+      {
+        "distanceM": "72.7",
+        "kshCode": "14827",
+        "lineCode": "44"
+      },
+      {
+        "distanceM": "62.8",
+        "kshCode": "15130",
+        "lineCode": "106"
+      },
+      {
+        "distanceM": "56.5",
+        "kshCode": "15291",
+        "lineCode": "82"
+      },
+      {
+        "distanceM": "71.6",
+        "kshCode": "24396",
+        "lineCode": "149"
+      },
+      {
+        "distanceM": "76.5",
+        "kshCode": "24934",
+        "lineCode": "71"
+      },
+      {
+        "distanceM": "91.8",
+        "kshCode": "33738",
+        "lineCode": "70"
+      }
+    ]
+  },
+  "generatedFrom": {
+    "datasetVersion": "2026-09-23.1",
+    "osmEvidenceAcceptedPairs": 919,
+    "totalCandidates": 1757
+  },
+  "linesCrossingMultipleServiceAreas": {
+    "count": 50,
+    "lineCodes": [
+      "1",
+      "10",
+      "100",
+      "100c",
+      "102",
+      "108",
+      "109",
+      "11",
+      "110",
+      "111",
+      "120",
+      "120a",
+      "121",
+      "125",
+      "128",
+      "13",
+      "130",
+      "135",
+      "14",
+      "140",
+      "142",
+      "145",
+      "146",
+      "147",
+      "15",
+      "150",
+      "154",
+      "16",
+      "2",
+      "20",
+      "25",
+      "26",
+      "27",
+      "29",
+      "30",
+      "40",
+      "40E",
+      "41",
+      "42",
+      "46",
+      "5",
+      "50",
+      "60",
+      "64",
+      "75",
+      "78",
+      "80",
+      "81",
+      "84",
+      "87"
+    ]
+  },
+  "namedUnusualLineCodeDossier": [
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "29.6",
+          "kshCode": "22309",
+          "osmId": "n243750414",
+          "osmName": "Hatvan"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "262e",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "2.0",
+          "kshCode": "14155",
+          "osmId": "n8437402358",
+          "osmName": "Tokod"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "268",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "28.1",
+          "kshCode": "22415",
+          "osmId": "n10251785748",
+          "osmName": "Fényeslitke"
+        },
+        {
+          "distanceM": "18.6",
+          "kshCode": "27146",
+          "osmId": "n3731405240",
+          "osmName": "Komoró"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "284",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "2.7",
+          "kshCode": "08518",
+          "osmId": "n9481803762",
+          "osmName": "Sopron"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "300b",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "0.0",
+          "kshCode": "29939",
+          "osmId": "n5435542749",
+          "osmName": "Felcsút"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "306",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "10.9",
+          "kshCode": "03115",
+          "osmId": "n269706716",
+          "osmName": "Dunaújváros"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "342",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "24.1",
+          "kshCode": "06673",
+          "osmId": "n71526236",
+          "osmName": "Ajka"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "351",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "13.1",
+          "kshCode": "34218",
+          "osmId": "n73838803",
+          "osmName": "Uzsa"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "353",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "7.7",
+          "kshCode": "13596",
+          "osmId": "n506540045",
+          "osmName": "Bükkábrány"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "371",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "13.3",
+          "kshCode": "10418",
+          "osmId": "n9334329080",
+          "osmName": "Nagyút"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "372",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "24.1",
+          "kshCode": "10719",
+          "osmId": "n9849963682",
+          "osmName": "Bácsalmás"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "392",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "50.2",
+          "kshCode": "09919",
+          "osmId": "n414720955",
+          "osmName": "Tuzsér"
+        },
+        {
+          "distanceM": "44.6",
+          "kshCode": "17826",
+          "osmId": "n619723926",
+          "osmName": "Mándok"
+        },
+        {
+          "distanceM": "10.9",
+          "kshCode": "20172",
+          "osmId": "n425898829",
+          "osmName": "Tiszabezdéd"
+        },
+        {
+          "distanceM": "39.4",
+          "kshCode": "27146",
+          "osmId": "n3731405240",
+          "osmName": "Komoró"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "400",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    },
+    {
+      "acceptedEvidence": [
+        {
+          "distanceM": "7.5",
+          "kshCode": "18616",
+          "osmId": "n9480413774",
+          "osmName": "Dunakeszi"
+        }
+      ],
+      "crossesMultipleServiceAreas": false,
+      "independentlyVerified": false,
+      "lineCode": "70AX",
+      "nonOperationalEvidence": [],
+      "note": "No legally-cleared independent source has been consulted for this code in this phase - see reference-data/osm-review/decisions/README.md 'Independent sources'. OSM-internal evidence only; stays at most OSM_EVIDENCE_ACCEPTED until a human records an INDEPENDENTLY_VERIFIED decision against a documented external source."
+    }
+  ],
+  "needsReviewReasonCounts": {
+    "NO_REFERENCED_LINE_WITHIN_LIMIT": 74,
+    "NO_UNIQUE_KSH_NAME": 764
+  },
+  "pairsWithMultipleEvidenceRows": {
+    "count": 4
+  },
+  "stationsWithMultipleAcceptedLines": {
+    "count": 92,
+    "sample": {
+      "n10225137894": [
+        "100",
+        "120a"
+      ],
+      "n10251785748": [
+        "100",
+        "284"
+      ],
+      "n1065129354": [
+        "149",
+        "155"
+      ],
+      "n1065130320": [
+        "145",
+        "146"
+      ],
+      "n1065130344": [
+        "81",
+        "81M"
+      ],
+      "n1065130642": [
+        "121",
+        "125"
+      ],
+      "n1065130899": [
+        "120",
+        "135"
+      ],
+      "n13336796570": [
+        "140",
+        "146",
+        "147",
+        "155"
+      ],
+      "n1687607528": [
+        "70",
+        "71",
+        "75"
+      ],
+      "n2079502878": [
+        "26",
+        "29"
+      ],
+      "n243750414": [
+        "262e",
+        "80",
+        "81"
+      ],
+      "n25546152": [
+        "40",
+        "64",
+        "65"
+      ],
+      "n268202972": [
+        "100",
+        "101"
+      ],
+      "n268212339": [
+        "100",
+        "111"
+      ],
+      "n269706716": [
+        "342",
+        "42"
+      ],
+      "n275275246": [
+        "23",
+        "25"
+      ],
+      "n2753681384": [
+        "29",
+        "30"
+      ],
+      "n276516808": [
+        "10",
+        "13L",
+        "14"
+      ],
+      "n289404886": [
+        "150",
+        "152"
+      ],
+      "n295489366": [
+        "150",
+        "155"
+      ]
+    }
+  }
+}

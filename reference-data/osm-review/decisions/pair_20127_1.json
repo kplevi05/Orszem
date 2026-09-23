@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:20127:1",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "20127",
+  "lineCode": "1",
+  "osmObjectIds": ["n4057764613"],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_STATION_ON_NAMED_NATIONAL_LINE",
+  "note": "hu.wikipedia.org's article on the Budapest–Hegyeshalom–Rajka-vasútvonal explicitly identifies itself as \"a MÁV és a GySEV 1-es számú vasúti fővonala\" (MÁV/GYSEV national line 1) and lists \"Tata vasúttállomás\" among the stations on that line. This independently corroborates the OSM-derived candidate (Tata KSH 20127, station node n4057764613, OSM ref=1, distance 1.1m) against a source unrelated to this OSM extraction and to the KSH settlement roster. Verified live by reading the article directly, not assumed.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/wiki/Budapest%E2%80%93Hegyeshalom%E2%80%93Rajka-vas%C3%BAtvonal",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Publicly published Wikipedia article; consulted for one specific fact (line identity and station membership) and cited by URL, not reproduced.",
+      "licenceNote": "CC BY-SA 4.0 (confirmed on the page footer at the time of retrieval: creativecommons.org/licenses/by-sa/4.0/deed.hu). Used here as a citation for one fact, not as republished content, so no share-alike obligation is triggered."
+    }
+  ],
+  "evidenceHash": "47847652c4f5833bb5bb499addc5295934b7338ab6e7b252e2830d7dd4b45987",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05 (session-assisted)",
+  "decidedAt": "2026-09-23T00:00:00Z"
+}

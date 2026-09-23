@@ -39,9 +39,23 @@ jobs:
 
       - name: Download exact OSM Hungary extract
         run: |
-          curl --fail --location --retry 3 --output hungary.osm.pbf \
-            https://download.geofabrik.de/europe/hungary-latest.osm.pbf
+          # `hungary-latest.osm.pbf` is a moving pointer, not a fixed source: Geofabrik
+          # rotates it onto a new dated file on its own schedule, and never guarantees how
+          # long an older dated file stays downloadable. Resolving the redirect ourselves
+          # and recording *that* dated filename (never wall-clock `date -u`) is what makes
+          # `sourceVersionOrDate` a genuine property of the file that was actually fetched,
+          # reproducible later by re-requesting that exact dated URL while it still exists -
+          # see reference-data/osm-review/review-policy.json and this repo's reproduction
+          # notes for what to do once it no longer does (never silently substitute a newer
+          # snapshot; archive the verified PBF's checksum and stop for a documented decision).
+          RESOLVED_URL="$(curl -fsSL --retry 3 -o /dev/null -w '%{url_effective}' \
+            https://download.geofabrik.de/europe/hungary-latest.osm.pbf)"
+          echo "resolved: $RESOLVED_URL"
+          curl --fail --location --retry 3 --output hungary.osm.pbf "$RESOLVED_URL"
           sha256sum hungary.osm.pbf | tee hungary.osm.pbf.sha256
+          SOURCE_DATE="$(echo "$RESOLVED_URL" | grep -oE '[0-9]{6}' | sed -E 's/([0-9]{2})([0-9]{2})([0-9]{2})/20\1-\2-\3/')"
+          test -n "$SOURCE_DATE" || { echo "could not derive a source date from $RESOLVED_URL"; exit 1; }
+          echo "SOURCE_DATE=$SOURCE_DATE" >> "$GITHUB_ENV"
 
       - name: Extract referenced railway ways and named stations
         run: |
@@ -54,7 +68,6 @@ jobs:
 
       - name: Build blocked-by-default review snapshot
         run: |
-          SOURCE_DATE="$(date -u +%Y-%m-%d)"
           SOURCE_SHA="$(cut -d' ' -f1 hungary.osm.pbf.sha256)"
           python3 scripts/build-osm-railway-reference.py \
             --geojson railway-review.geojson \

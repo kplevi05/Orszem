@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:29939:306",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "29939",
+  "lineCode": "306",
+  "osmObjectIds": ["n5435542749"],
+  "decisionTier": "REJECTED",
+  "decisionMethod": "HUMAN_REVIEW",
+  "reviewerType": "HUMAN",
+  "humanApproved": false,
+  "reasonCode": "INDEPENDENT_SOURCE_CONTRADICTS_NATIONAL_LINE_IDENTITY",
+  "note": "hu.wikipedia.org's Bicske–Székesfehérvár-vasútvonal article documents the only MÁV national line actually running through Felcsút as line 6 (Bicske–Székesfehérvár), not 306 - the code '306' does not appear anywhere in that article. The article also documents that a separate, later-built narrow-gauge heritage/tourist line (a 'kisvásut', reusing part of the old alignment and the old Felcsút station building, with its own 'Felcsút (kisvasút megálló)' stop) now runs through the same area - which, if that is what the OSM node actually represents, falls outside this phase's approved domain scope (review-policy.json: municipal/heritage narrow-gauge lines are not MÁV/GYSEV national network-statement infrastructure). Either way, independent verification does not corroborate '306' as a genuine national line code at this location; it actively contradicts the OSM-derived candidate rather than confirming it. Rejected rather than left at OSM_EVIDENCE_ACCEPTED, since the contradiction is specific and documented, not merely 'unconfirmed'.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/wiki/Bicske%E2%80%93Sz%C3%A9kesfeh%C3%A9rv%C3%A1r-vas%C3%BAtvonal",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Publicly published Wikipedia article; consulted for one specific fact (which line code, if any, actually runs through Felcsút) and cited by URL, not reproduced.",
+      "licenceNote": "CC BY-SA 4.0 (confirmed on the page footer at the time of retrieval). Used as a citation for one fact, not as republished content."
+    }
+  ],
+  "evidenceHash": "e2f8ff3f1db4524ac54db0e984d5e2852f99877c41c910a41c1599e213bceb6c",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05 (session-assisted)",
+  "decidedAt": "2026-09-23T00:00:00Z"
+}

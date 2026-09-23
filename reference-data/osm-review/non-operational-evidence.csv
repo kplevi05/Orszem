@@ -1,0 +1,4 @@
+candidate_id,ksh_code,line_code,osm_id,osm_name,distance_m,railway_tag,service_tag,usage_tag,operator_tag
+osm:n411752399,06442,153K,n411752399,Kalocsa,25.5,rail,spur,,
+osm:n619127268,11031,40,n619127268,Tolnanémedi,13.4,rail,siding,,MÁV
+osm:n71481036,11439,20L,n71481036,Várpalota,3.6,rail,siding,industrial,GYSEV
