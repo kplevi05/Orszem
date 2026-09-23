@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:02097:23",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "02097",
+  "lineCode": "23",
+  "osmObjectIds": ["n1212434623"],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Zalaegerszeg–Rédics railway as line 23 and lists Gutorfölde at kilometre 26; the separate settlement article repeats the same relationship. The line article cites a railway lexicon, maps and timetables and no VPE/HÜSZ source lineage was found. Owner explicitly approved this candidate in the PR #34 approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Zalaegerszeg%E2%80%93R%C3%A9dics-vas%C3%BAtvonal&oldid=29212023",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "7ee49f6362d3104849274eae44a402e4c571d8d95984d1f286cb15bcdcb98d21",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-23T17:39:12Z"
+}
