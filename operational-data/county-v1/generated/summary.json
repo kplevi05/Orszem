@@ -125,7 +125,7 @@
   "officialRailwayJurisdiction": false,
   "policySha256": "d46ea2f34a4725b1f710155892c916a5b108b8d9ed01489438df5f7b71f06f19",
   "policyVersion": "ORSZEM-COUNTY-1",
-  "runtimeBlocker": "Current backend assigns an entire line to one area. This proposal uses settlement+line keys; no database import path is provided.",
+  "runtimeBlocker": "No verified railway relations are present in the selected source snapshot.",
   "runtimeCompatible": false,
   "schemaVersion": 1,
   "sourceCoverage": {
@@ -150,5 +150,6 @@
       "used": "the complete cleared settlement roster (id/KSH code/name/county) - no railway-line or settlement-line relation data of any kind"
     }
   },
+  "sourceVerificationStatus": "VERIFIED",
   "status": "OFFLINE_PROPOSAL_NOT_IMPORTED"
 }
