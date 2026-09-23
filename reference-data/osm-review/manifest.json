@@ -1,12 +1,12 @@
 {
   "canonicalFiles": {
-    "railway-lines.csv": "b671841a9896dfd67a2245091ae88ffced6f54b78e96b3559797db6bc1861cb2",
-    "settlement-railway-lines.csv": "9720c456b8efec044daa560831b27f39d55c2698c0bd1febe7eb40b3689dcbf6",
+    "railway-lines.csv": "1905686c90311640954d50621a46512e2c3d136511048676822d213eb3d6fb9b",
+    "settlement-railway-lines.csv": "d3bea3717d7c92b13b7dbbf630ddfa3467d71253ccd3df04f3cd1e68f6380781",
     "settlements.csv": "70b34b3a94bcc42806996c40189a3877a536e29e7d7b2e668dd41fa6f32359cd"
   },
   "counts": {
-    "railwayLines": 121,
-    "settlementRailwayLineMappings": 921,
+    "railwayLines": 119,
+    "settlementRailwayLineMappings": 919,
     "settlements": 3178
   },
   "coverage": {
@@ -17,13 +17,17 @@
   },
   "coverageStatus": "PARTIAL",
   "datasetVersion": "OSM-HU-RAIL-REVIEW-2026-09-23",
-  "generatedAt": "2026-09-23T10:30:03Z",
+  "generatedAt": "2026-09-23T11:39:50Z",
   "reuseStatus": "CLEARED",
   "review": {
-    "acceptedByDeterministicRule": 921,
+    "acceptedByDeterministicRule": 919,
     "automaticImportAllowed": false,
     "maximumDistanceMetres": 100.0,
-    "quarantinedStations": 838
+    "nonOperationalInfrastructureOnly": 0,
+    "policyVersion": "2026-09-23.1",
+    "quarantinedStations": 838,
+    "runtimeCompatible": false,
+    "status": "OFFLINE_UNVERIFIED_SOURCE_REVIEW"
   },
   "sources": {
     "KSH": {
