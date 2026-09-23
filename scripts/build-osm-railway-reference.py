@@ -22,7 +22,10 @@ from pathlib import Path
 import re
 import sys
 
-LINE_CODE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,15}")
+# Hungarian infrastructure line references are one to three non-zero-leading digits,
+# optionally followed by at most two letters (for example 1, 30, 100c, 70AX).  A broad
+# free-form OSM ref is evidence to review, not permission to create a canonical line.
+LINE_CODE = re.compile(r"[1-9][0-9]{0,2}[A-Za-z]{0,2}")
 STATION_SUFFIX = re.compile(r"\s+(?:vasútállomás|állomás|megállóhely|mh\.)$", re.IGNORECASE)
 GRID = 0.02
 
@@ -216,7 +219,7 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--source-date", required=True)
     parser.add_argument("--source-sha256", required=True)
-    parser.add_argument("--maximum-distance-metres", type=float, default=250.0)
+    parser.add_argument("--maximum-distance-metres", type=float, default=100.0)
     args = parser.parse_args()
     try:
         require(re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", args.source_date), "source date must be YYYY-MM-DD")

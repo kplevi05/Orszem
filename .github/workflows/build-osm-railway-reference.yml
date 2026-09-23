@@ -49,6 +49,7 @@ jobs:
             nwr/railway=station,halt w/railway=rail,narrow_gauge \
             --output railway-review.osm.pbf --overwrite
           osmium export railway-review.osm.pbf \
+            --add-unique-id=type_id \
             --output railway-review.geojson --overwrite
 
       - name: Build blocked-by-default review snapshot
@@ -59,7 +60,8 @@ jobs:
             --geojson railway-review.geojson \
             --out reference-data/osm-review \
             --source-date "$SOURCE_DATE" \
-            --source-sha256 "$SOURCE_SHA"
+            --source-sha256 "$SOURCE_SHA" \
+            --maximum-distance-metres 100
           node reference-data/tools/validate-canonical.mjs reference-data/osm-review/manifest.json
           test "$(python3 -c 'import json; print(json.load(open("reference-data/osm-review/manifest.json"))["verificationStatus"])')" = UNVERIFIED
 
