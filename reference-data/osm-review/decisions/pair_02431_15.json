@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:02431:15",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "02431",
+  "lineCode": "15",
+  "osmObjectIds": ["n1065129608"],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Sopron–Szombathely railway as GYSEV line 15 and lists Bük at kilometre 39. Its bibliography includes print railway history, Hungaricana, a line-specific archived source and GYSEV material; no VPE/HÜSZ source lineage was found. Owner explicitly approved this candidate in the PR #34 approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Sopron%E2%80%93Szombathely-vas%C3%BAtvonal&oldid=29352684",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "6cdc5aa6d831e34132aab386e9cad5be83a0bb34b9de2e45d872687f701df09a",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-23T17:39:12Z"
+}
