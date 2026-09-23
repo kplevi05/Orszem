@@ -147,7 +147,11 @@ def build(geojson_path, settlements_path, output, source_date, source_sha256, ma
         if railway in {"station", "halt"} and properties.get("name"):
             point = station_point(feature.get("geometry"))
             if point:
-                stations.append((str(properties["name"]), point, properties.get("@id") or properties.get("id") or ""))
+                stations.append((
+                    str(properties["name"]),
+                    point,
+                    properties.get("@id") or properties.get("id") or feature.get("id") or "",
+                ))
 
     require(ways, "no referenced railway ways found")
     require(stations, "no named station/halt objects found")
