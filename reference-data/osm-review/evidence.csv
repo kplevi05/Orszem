@@ -278,7 +278,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 11679,25,,Jánosháza,13.0
 11697,90,,Hidasnémeti,6.6
 11697,98,,Hidasnémeti,74.6
-11767,11,,Veszprém,181.9
 11767,20,,Veszprém,19.4
 11776,20,,Sárszentmihály,1.4
 11794,149,,Szank,11.3
@@ -288,7 +287,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 11934,2,,Üröm,2.8
 11943,18,,Gyöngyösfalu,2.6
 11989,120,,Murony,2.3
-11989,129,,Murony,119.7
 11998,40,,Csibrák,4.8
 12007,140,,Szatymaz,5.6
 12177,125,,Kardoskút,2.4
@@ -364,7 +362,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 14562,30,,Balatonmáriafürdő,6.3
 14571,120a,,Tápiószentmárton,2.2
 14580,80,,Vámosgyörk,4.4
-14580,86,,Vámosgyörk,105.5
 14614,100,,Ebes,7.9
 14623,60,,Zákány,4.0
 14632,30,,Fonyód,0.8
@@ -426,7 +423,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 16197,125,,Ambrózfalva,3.5
 16203,100,,Záhony,11.2
 16203,111,,Záhony,11.9
-16203,400,,Záhony,163.8
 16434,125,,Tótkomlós,2.1
 16470,37,,Balatonújlak,0.0
 16753,94,,Szalonna,2.3
@@ -470,7 +466,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 18096,30,,Zalaszentjakab,6.0
 18102,125,,Battonya,2.2
 18157,1,,Tatabánya,3.5
-18157,12,,Tatabánya,108.1
 18193,26,,Gógánfa,8.5
 18209,82,,Jászberény,17.1
 18218,150,,Soltszentimre,2.2
@@ -498,8 +493,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 18786,78,,Szügy,3.0
 18801,94,,Tornanádaska,1.8
 18874,110,,Mátészalka,4.0
-18874,111,,Mátészalka,193.7
-18874,115,,Mátészalka,218.5
 18962,40,,Kaposszekcső,3.6
 19044,81,,Szurdokpüspöki,5.6
 19187,30,,Fityeház,3.4
@@ -623,7 +616,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 23296,41,,Kapospula,5.9
 23302,26,,Gyenesdiás,5.5
 23339,82,,Jászfényszaru,10.5
-23524,109,,Tiszalök,233.5
 23524,117,,Tiszalök,15.6
 23560,10,,Mezőlak,9.0
 23603,40E,,Ercsi,1.4
@@ -708,7 +700,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 26611,100,,Újfehértó,4.9
 26648,10,,Vaszar,5.0
 26666,121,,Kiszombor,2.6
-26675,02,,Lengyeltóti,5.8
 26675,36,,Lengyeltóti,10.7
 26684,140,,Kecskemét,2.8
 26684,142,,Kecskemét,12.0
@@ -744,7 +735,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 27696,87,,Maklár,2.7
 27854,100,,Szolnok,1.4
 27854,120a,,Szolnok,25.0
-27854,264l,,Szolnok,237.2
 27872,100,,Abony,2.6
 27906,121,,Magyarbánhegyes,2.0
 27915,78,,Mohora,5.7
@@ -826,7 +816,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 30933,30,,Nagykanizsa,15.2
 30960,41,,Gyékényes,4.2
 30960,60,,Gyékényes,4.1
-30988,32,,Érd,216.7
 30988,40,,Érd,2.4
 31024,140,,Kistelek,0.0
 31033,101,,Mezőpeterd,2.9
@@ -901,7 +890,6 @@ ksh_code,line_code,osm_id,osm_name,distance_m
 33491,1,,Szárliget,2.0
 33543,1,,Nagyszentjános,1.4
 33552,1,,Herceghalom,1.2
-33570,154,,Pörböly,116.7
 33570,154,,Pörböly,5.0
 33598,142,,Felsőlajos,4.7
 33729,70,,Verőce,10.2

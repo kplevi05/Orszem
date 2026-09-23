@@ -593,6 +593,7 @@ osm_id,osm_name,normalized_name,reason,candidate_ksh_code,candidate_line_code
 ,Pécs-Külváros,Pécs-Külváros,NO_UNIQUE_KSH_NAME,,
 ,Pécsbánya-Rendező,Pécsbánya-Rendező,NO_UNIQUE_KSH_NAME,,
 ,Péterhida-Komlósd,Péterhida-Komlósd,NO_UNIQUE_KSH_NAME,,
+,Pörböly,Pörböly,NO_REFERENCED_LINE_WITHIN_LIMIT,,
 ,Pörkölt,Pörkölt,NO_UNIQUE_KSH_NAME,,
 ,Pötréte,Pötréte,NO_REFERENCED_LINE_WITHIN_LIMIT,,
 ,Pöttyös utca,Pöttyös utca,NO_UNIQUE_KSH_NAME,,
