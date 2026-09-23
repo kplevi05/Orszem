@@ -158,7 +158,11 @@ class SettlementLineMappingIT : AreaAdminTestSupport() {
             assertEquals(403, apply(bearer, change("00001", f.a)).statusCode())
         }
         val deactivated = givenSuperAdmin(); val token = bearerFor(deactivated)
-        assertEquals(200, httpDeactivate(admin, deactivated).statusCode())
+        // SUPER_ADMIN accounts cannot manage one another through the public endpoint
+        // (anti-lockout policy), so set up the inactive-authentication case directly.
+        jdbc.sql("UPDATE users SET status = 'DEACTIVATED' WHERE id = :id")
+            .param("id", deactivated.id)
+            .update()
         assertEquals(401, apply(token, change("00001", f.a)).statusCode())
         assertEquals(0, pairCount())
     }
