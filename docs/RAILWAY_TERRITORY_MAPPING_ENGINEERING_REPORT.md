@@ -64,15 +64,33 @@ settlement, line or relation used by an operational pair mapping.
 ## Verification
 
 - OSM/territory generator tests: 18 passing locally.
-- Full backend suite: 879 tests reached; the only failure was an invalid test fixture
-  that attempted a forbidden SUPER_ADMIN-to-SUPER_ADMIN HTTP deactivation. The fixture
-  was corrected without changing production authorization; final CI is the release gate.
-- Web, reference-data and deployment validation were green before the final test-only
-  correction; all workflows are rerun on final HEAD.
+- Full backend suite: green after correcting an invalid test fixture that attempted a
+  forbidden SUPER_ADMIN-to-SUPER_ADMIN HTTP deactivation. Production authorization was
+  not changed.
+- Backend, Android build/test/lint, Web, reference-data and deployment/restore workflows
+  are all green on final GitHub HEAD `1512635e916d2f517fb02dbc3a8fd279feaa72fe`.
 
 Coverage includes authorization, atomic rollback, concurrent assignment, routing during
 concurrent moves, legacy-mode incompatibility, inactive references/areas, immutable
 history, import protection and territorial report visibility.
+
+### Evidence sampling
+
+The 921 unique proposed pairs are backed by 925 OSM evidence rows (four pairs have two
+evidence objects). Distance distribution is conservative: 750 evidence rows are within
+10 metres of the referenced way, 888 within 25 metres, 911 within 50 metres and all 925
+within the 100-metre hard limit. The median is 4.3 metres and the maximum is 95.3 metres.
+
+The quarantine contains 838 station/halt objects: 764 have no unique exact KSH-name
+match and 74 have no referenced railway way inside the distance limit. They contribute
+no canonical relation.
+
+Sampling also found OSM references that may describe industrial, internal or otherwise
+non-operational line identifiers (for example `262e`, `300b` and `400`). Their syntax is
+valid under the deliberately broad evidence parser, but syntax is not sufficient for
+production verification. Promotion must either classify these references against an
+approved source or add a reviewed infrastructure-type exclusion rule. They must not be
+silently promoted as ordinary public RailwayLines.
 
 ## Owner-review and rollout gate
 
