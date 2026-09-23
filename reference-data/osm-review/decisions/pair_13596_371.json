@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:13596:371",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "13596",
+  "lineCode": "371",
+  "osmObjectIds": ["n506540045"],
+  "decisionTier": "REJECTED",
+  "decisionMethod": "HUMAN_REVIEW",
+  "reviewerType": "HUMAN",
+  "humanApproved": false,
+  "reasonCode": "INDEPENDENT_SOURCE_CONFIRMS_INDUSTRIAL_SIDING_UNDER_A_DIFFERENT_CODE",
+  "note": "hu.wikipedia.org's Mezőkeresztes-Mezőnyárád–Bükkábrány-vasútvonal article documents the real line at Bükkábrány as MAV line '280q' (not '371'), explicitly describing it as an 'iparvágany-szeru' (industrial-siding-like) short branch serving the Bükkalja lignite open-pit mine's electrified industrial siding. Two independent reasons to reject: (1) the documented code is 280q, not 371, matching the same code-mismatch pattern found in pair:29939:306 and pair:14155:268; (2) even setting the code mismatch aside, the line is explicitly documented as industrial mine-siding infrastructure, which review-policy.json excludes from domain scope regardless of code.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/wiki/Mez%C5%91keresztes-Mez%C5%91ny%C3%A1r%C3%A1d%E2%80%93B%C3%BCkk%C3%A1br%C3%A1ny-vas%C3%BAtvonal",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Publicly published Wikipedia line article; consulted for the line's official code and infrastructure character, cited by URL, not reproduced.",
+      "licenceNote": "CC BY-SA 4.0 (Wikipedia's standard licence). Used as a citation for two facts, not as republished content."
+    }
+  ],
+  "evidenceHash": "0465aa41a1605483f98251ad8292b936d20ce148c4efaee5c35b9f7d259e96c8",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05 (session-assisted)",
+  "decidedAt": "2026-09-23T00:00:00Z"
+}
