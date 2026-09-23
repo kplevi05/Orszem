@@ -1,0 +1,31 @@
+{
+  "candidateId": "pair:14155:268",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "14155",
+  "lineCode": "268",
+  "osmObjectIds": ["n8437402358"],
+  "decisionTier": "REJECTED",
+  "decisionMethod": "HUMAN_REVIEW",
+  "reviewerType": "HUMAN",
+  "humanApproved": false,
+  "reasonCode": "INDEPENDENT_SOURCE_NAMES_A_DIFFERENT_LINE_NUMBER",
+  "note": "hu.wikipedia.org has a dedicated, detailed infobox article for Tokod vasúttállomás (active, MAV-operated, S74 service) and for the line running through it, Esztergom–Almásfüzitő-vasútvonal, whose infobox explicitly states 'Vonal: 4' - the real, documented, active national line through Tokod is line 4, not 268. Neither article, nor a direct search for '268-as vasútvonal Tokod', turns up any mention of a line numbered 268 at this location. Same pattern as pair:29939:306: independent verification names a different, real line instead of confirming the OSM candidate's code, which is enough to reject rather than merely leave unconfirmed.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/wiki/Tokod_vas%C3%BAt%C3%A1llom%C3%A1s",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Publicly published Wikipedia station infobox article; consulted for which line actually serves this station, cited by URL, not reproduced.",
+      "licenceNote": "CC BY-SA 4.0 (Wikipedia's standard licence). Used as a citation for one fact, not as republished content."
+    },
+    {
+      "url": "https://hu.wikipedia.org/wiki/Esztergom%E2%80%93Alm%C3%A1sf%C3%BCzit%C5%91-vas%C3%BAtvonal",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Publicly published Wikipedia line infobox article; consulted for the line's official number ('Vonal: 4'), cited by URL, not reproduced.",
+      "licenceNote": "CC BY-SA 4.0 (Wikipedia's standard licence). Used as a citation for one fact, not as republished content."
+    }
+  ],
+  "evidenceHash": "10f74546de073ff24569e4e9bf271f6a3f3fe10b54d5e5101a8b7e663eb153af",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05 (session-assisted)",
+  "decidedAt": "2026-09-23T00:00:00Z"
+}

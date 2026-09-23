@@ -1,0 +1,139 @@
+{
+  "batchId": "sample-10-2026-09-23",
+  "generatedAt": "2026-09-23T00:00:00Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "proposals": [
+    {
+      "candidateId": "pair:01508:75",
+      "evidenceHash": "348985e2117ec7128f282ef958baf4f510b46625e64e4eec0546ea5dfbdb4536",
+      "settlementName": "Ipolyszög",
+      "lineCode": "75",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/V%C3%A1c%E2%80%93Balassagyarmat-vas%C3%BAtvonal",
+      "sourceRevisionUrl": "https://hu.wikipedia.org/w/index.php?title=V%C3%A1c%E2%80%93Balassagyarmat-vas%C3%BAtvonal&oldid=29222283",
+      "sourceFinding": "The checked Wikipedia revision identifies the Vác–Balassagyarmat railway as MÁV line 75, lists Ipolyszög on the route and separately describes the historic line as passing through Ipolyszög with book citations. No VPE/HÜSZ reference was found.",
+      "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_CITED_ROUTE_NARRATIVE",
+      "requiredHumanCheck": "Open the pinned revision and explicitly approve or decline this candidate; no further source search is required by the current policy."
+    },
+    {
+      "candidateId": "pair:01526:81",
+      "evidenceHash": "528e5adbe75f0830ebf4ecd6a1834f309543aaa5e1abc6780866550822c2bdeb",
+      "settlementName": "Somoskőújfalu",
+      "lineCode": "81",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/Hatvan%E2%80%93Somosk%C5%91%C3%BAjfalu-vas%C3%BAtvonal",
+      "sourceRevisionUrl": "https://hu.wikipedia.org/w/index.php?title=Hatvan%E2%80%93Somosk%C5%91%C3%BAjfalu-vas%C3%BAtvonal&oldid=29212373",
+      "sourceFinding": "The checked Wikipedia revision identifies the Hatvan–Somoskőújfalu railway as MÁV line 81 and lists Somoskőújfalu at kilometre 64.6 before the border. Its references include historical print and timetable material; no VPE/HÜSZ reference was found.",
+      "sourceStrength": "DIRECT_CHECKED_WIKIPEDIA_ROUTE_AND_LINE_IDENTITY",
+      "requiredHumanCheck": "Open the pinned revision and explicitly approve or decline this candidate; note that the route-diagram assertion is not individually footnoted."
+    },
+    {
+      "candidateId": "pair:02051:30",
+      "evidenceHash": "9747068dc31c81994bcb430c6841e6f41d75f8b32f843bd26b01eae251d2bbd8",
+      "settlementName": "Sávoly",
+      "lineCode": "30",
+      "status": "BLOCKED_PROHIBITED_SOURCE_LINEAGE",
+      "recommendedDecisionTier": "QUARANTINED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/Budapest%E2%80%93Murakereszt%C3%BAr-vas%C3%BAtvonal",
+      "sourceFinding": "The article identifies line 30 and lists Sávoly, but its further-information section cites the VPE official line sheet.",
+      "requiredHumanCheck": "Find a legally usable, genuinely independent non-VPE source or leave the candidate unverified."
+    },
+    {
+      "candidateId": "pair:02097:23",
+      "evidenceHash": "7ee49f6362d3104849274eae44a402e4c571d8d95984d1f286cb15bcdcb98d21",
+      "settlementName": "Gutorfölde",
+      "lineCode": "23",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/Zalaegerszeg%E2%80%93R%C3%A9dics-vas%C3%BAtvonal",
+      "sourceRevisionUrl": "https://hu.wikipedia.org/w/index.php?title=Zalaegerszeg%E2%80%93R%C3%A9dics-vas%C3%BAtvonal&oldid=29212023",
+      "sourceFinding": "The checked Wikipedia line article identifies the Zalaegerszeg–Rédics railway as line 23 and lists Gutorfölde at kilometre 26; the Gutorfölde article independently repeats the same relationship. The line article cites a railway lexicon, maps and timetables and contains no VPE/HÜSZ reference.",
+      "sourceStrength": "TWO_WIKIPEDIA_ARTICLES_WITH_NON_VPE_BIBLIOGRAPHY",
+      "requiredHumanCheck": "Open the pinned line revision and explicitly approve or decline this candidate; the route-diagram row is not individually footnoted."
+    },
+    {
+      "candidateId": "pair:02185:29",
+      "evidenceHash": "459cc9ad4bf863167022818a5709eb208487f64a9670343340fbe040ae4cd636",
+      "settlementName": "Csopak",
+      "lineCode": "29",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/B%C3%B6rg%C3%B6nd%E2%80%93Szabadbatty%C3%A1n%E2%80%93Tapolca-vas%C3%BAtvonal",
+      "sourceRevisionUrl": "https://hu.wikipedia.org/w/index.php?title=B%C3%B6rg%C3%B6nd%E2%80%93Szabadbatty%C3%A1n%E2%80%93Tapolca-vas%C3%BAtvonal&oldid=29315834",
+      "sourceFinding": "The checked Wikipedia revision identifies the railway as MÁV line 29 and lists Csopak at kilometre 60. Its references include MÁV material and independent railway publications, with no VPE/HÜSZ reference found.",
+      "sourceStrength": "DIRECT_CHECKED_WIKIPEDIA_ROUTE_AND_LINE_IDENTITY",
+      "requiredHumanCheck": "Open the pinned revision and explicitly approve or decline this candidate; the route-diagram row is not individually footnoted."
+    },
+    {
+      "candidateId": "pair:02219:29",
+      "evidenceHash": "d9bfb27c0ad424128cfab7d9fb599f6946d9b91052f8c98c6c5c59d5eac02041",
+      "settlementName": "Balatonfűzfő",
+      "lineCode": "29",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/B%C3%B6rg%C3%B6nd%E2%80%93Szabadbatty%C3%A1n%E2%80%93Tapolca-vas%C3%BAtvonal",
+      "sourceRevisionUrl": "https://hu.wikipedia.org/w/index.php?title=B%C3%B6rg%C3%B6nd%E2%80%93Szabadbatty%C3%A1n%E2%80%93Tapolca-vas%C3%BAtvonal&oldid=29315834",
+      "sourceFinding": "The checked Wikipedia revision identifies the railway as MÁV line 29 and lists Balatonfűzfő at kilometre 44; its lead image caption also places a train at Balatonfűzfő station. Its references include MÁV material and independent railway publications, with no VPE/HÜSZ reference found.",
+      "sourceStrength": "DIRECT_CHECKED_WIKIPEDIA_ROUTE_LINE_AND_IMAGE_CAPTION",
+      "requiredHumanCheck": "Open the pinned revision and explicitly approve or decline this candidate; the route-diagram row is not individually footnoted."
+    },
+    {
+      "candidateId": "pair:02264:40",
+      "evidenceHash": "afed5154d48373c3be6344f782ca7785bf7b229e81aa59fa14c37249324891e4",
+      "settlementName": "Vásárosdombó",
+      "lineCode": "40",
+      "status": "BLOCKED_PROHIBITED_SOURCE_LINEAGE",
+      "recommendedDecisionTier": "QUARANTINED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/Budapest%E2%80%93P%C3%A9cs-vas%C3%BAtvonal",
+      "sourceFinding": "The article identifies line 40 and lists Vásárosdombó, but its references explicitly cite the VPE Hálózati Üzletszabályzat.",
+      "requiredHumanCheck": "Find a legally usable, genuinely independent non-VPE source or leave the candidate unverified."
+    },
+    {
+      "candidateId": "pair:02307:100",
+      "evidenceHash": "1a8aa8baea449802cbf1c2089625a0ee6b9ee354d6920cb3569158b50cc61212",
+      "settlementName": "Kaba",
+      "lineCode": "100",
+      "status": "BLOCKED_PROHIBITED_SOURCE_LINEAGE",
+      "recommendedDecisionTier": "QUARANTINED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/Budapest%E2%80%93Z%C3%A1hony-vas%C3%BAtvonal",
+      "sourceFinding": "The article identifies the railway as line 100 and includes the relevant route, but its sources explicitly include HÜSZ from VPE/KTI.",
+      "requiredHumanCheck": "Find a legally usable, genuinely independent non-VPE source that confirms both Kaba and line 100."
+    },
+    {
+      "candidateId": "pair:02325:116",
+      "evidenceHash": "12f3c6c22d7381a757718ce4f25a18c34d4672288f0efd2041c2b3a9e860e256",
+      "settlementName": "Baktalórántháza",
+      "lineCode": "116",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/Ny%C3%ADregyh%C3%A1za%E2%80%93V%C3%A1s%C3%A1rosnam%C3%A9ny-vas%C3%BAtvonal",
+      "sourceRevisionUrl": "https://hu.wikipedia.org/w/index.php?title=Ny%C3%ADregyh%C3%A1za%E2%80%93V%C3%A1s%C3%A1rosnam%C3%A9ny-vas%C3%BAtvonal&oldid=28592564",
+      "sourceFinding": "The checked Wikipedia revision identifies the railway as MÁV line 116, lists Baktalórántháza at kilometre 34 and describes it as an interchange after the Kisvárda branch opened. The article cites Magyar Vasúttörténet and a railway engineering journal; no VPE/HÜSZ reference was found.",
+      "sourceStrength": "DIRECT_CHECKED_WIKIPEDIA_ROUTE_WITH_PRINT_BIBLIOGRAPHY",
+      "requiredHumanCheck": "Open the pinned revision and explicitly approve or decline this candidate; the route-diagram row is not individually footnoted."
+    },
+    {
+      "candidateId": "pair:02431:15",
+      "evidenceHash": "6cdc5aa6d831e34132aab386e9cad5be83a0bb34b9de2e45d872687f701df09a",
+      "settlementName": "Bük",
+      "lineCode": "15",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED",
+      "sourceUrl": "https://hu.wikipedia.org/wiki/Sopron%E2%80%93Szombathely-vas%C3%BAtvonal",
+      "sourceRevisionUrl": "https://hu.wikipedia.org/w/index.php?title=Sopron%E2%80%93Szombathely-vas%C3%BAtvonal&oldid=29352684",
+      "sourceFinding": "The checked Wikipedia revision identifies the railway as GYSEV line 15 and lists Bük at kilometre 39. Its bibliography includes Magyar Vasúttörténet, Hungaricana, a line-specific archived source and GYSEV material; no VPE/HÜSZ reference was found.",
+      "sourceStrength": "DIRECT_CHECKED_WIKIPEDIA_ROUTE_WITH_LINE_SPECIFIC_BIBLIOGRAPHY",
+      "requiredHumanCheck": "Open the pinned revision and explicitly approve or decline this candidate; the route-diagram row is not individually footnoted."
+    }
+  ],
+  "summary": {
+    "blockedProhibitedSourceLineage": 3,
+    "readyForHumanApproval": 7,
+    "total": 10
+  }
+}
