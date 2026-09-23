@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:02325:116",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "02325",
+  "lineCode": "116",
+  "osmObjectIds": ["n1065129426"],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Nyíregyháza–Vásárosnamény railway as MÁV line 116, lists Baktalórántháza at kilometre 34 and describes its junction history. The article cites print railway history and an engineering journal and no VPE/HÜSZ source lineage was found. Owner explicitly approved this candidate in the PR #34 approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Ny%C3%ADregyh%C3%A1za%E2%80%93V%C3%A1s%C3%A1rosnam%C3%A9ny-vas%C3%BAtvonal&oldid=28592564",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "12f3c6c22d7381a757718ce4f25a18c34d4672288f0efd2041c2b3a9e860e256",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-23T17:39:12Z"
+}
