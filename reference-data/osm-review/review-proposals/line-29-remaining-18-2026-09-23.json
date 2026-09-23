@@ -50,7 +50,7 @@
       "settlementName": "Balatonalmádi",
       "osmObjectIds": ["n9023154312"],
       "minimumDistanceMetres": 5.7,
-      "evidenceHash": "4381cf90743c5c34eedbc084db5a8890319c7b4894826fae751e8fc26a010b12c",
+      "evidenceHash": "4381cf90743c5c34eedbc084db5a8890319c7b4894826fae751e8fc26a010b12",
       "status": "READY_FOR_HUMAN_APPROVAL",
       "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
     },
