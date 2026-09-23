@@ -175,6 +175,21 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
             .optional()
             .orElse(null)
 
+    fun findAreaOfSettlementLine(settlementId: UUID, railwayLineId: UUID): ServiceArea? =
+        jdbc.sql("""
+            SELECT a.id, a.name, a.status, a.created_at, a.updated_at, a.admin_version
+            FROM service_areas a JOIN service_area_settlement_lines m ON m.service_area_id = a.id
+            WHERE m.settlement_id = :s AND m.railway_line_id = :l
+        """.trimIndent()).param("s", settlementId).param("l", railwayLineId).query(::mapArea).optional().orElse(null)
+
+    fun hasSettlementLineMappings(railwayLineId: UUID): Boolean =
+        jdbc.sql("SELECT EXISTS (SELECT 1 FROM service_area_settlement_lines WHERE railway_line_id = :l)")
+            .param("l", railwayLineId).query(Boolean::class.java).single()
+
+    fun countSettlementLineMappings(serviceAreaId: UUID): Int =
+        jdbc.sql("SELECT COUNT(*) FROM service_area_settlement_lines WHERE service_area_id = :a")
+            .param("a", serviceAreaId).query(Int::class.java).single()
+
     fun assignRailwayLine(serviceAreaId: UUID, railwayLineId: UUID) {
         jdbc.sql(
             """

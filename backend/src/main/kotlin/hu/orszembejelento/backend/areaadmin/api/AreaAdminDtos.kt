@@ -43,6 +43,7 @@ data class ServiceAreaAdminListItemResponse(
     val adminVersion: Long,
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
+    val mappedSettlementLineCount: Int,
 ) {
     companion object {
         fun from(row: ServiceAreaAdminListRow) = ServiceAreaAdminListItemResponse(
@@ -52,6 +53,7 @@ data class ServiceAreaAdminListItemResponse(
             adminVersion = row.adminVersion,
             mappedRailwayLineCount = row.mappedRailwayLineCount,
             openOperationalReportCount = row.openOperationalReportCount,
+            mappedSettlementLineCount = row.mappedSettlementLineCount,
         )
     }
 }
@@ -85,6 +87,7 @@ data class ServiceAreaAdminDetailResponse(
     val mappedRailwayLines: List<MappedRailwayLineResponse>,
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
+    val mappedSettlementLineCount: Int,
 ) {
     companion object {
         fun from(detail: ServiceAreaAdminDetail) = ServiceAreaAdminDetailResponse(
@@ -95,6 +98,7 @@ data class ServiceAreaAdminDetailResponse(
             mappedRailwayLines = detail.mappedRailwayLines.map(MappedRailwayLineResponse::from),
             mappedRailwayLineCount = detail.mappedRailwayLineCount,
             openOperationalReportCount = detail.openOperationalReportCount,
+            mappedSettlementLineCount = detail.mappedSettlementLineCount,
         )
     }
 }

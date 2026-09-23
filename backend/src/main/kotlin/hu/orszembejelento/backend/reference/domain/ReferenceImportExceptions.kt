@@ -60,3 +60,9 @@ class ReferenceLineInUseException(val lineCodes: Set<String>) : ReferenceImportE
     "refusing to import: ${lineCodes.size} railway line(s) would be deactivated but are " +
         "still assigned to a service area: ${lineCodes.sorted().joinToString(", ")}",
 )
+
+/** Operational pair configuration must be explicitly removed before its reference fact. */
+class ReferenceMappingInUseException : ReferenceImportException(
+    "REFERENCE_MAPPING_IN_USE",
+    "refusing to import: a settlement or relation is still used by settlement-line service-area configuration",
+)

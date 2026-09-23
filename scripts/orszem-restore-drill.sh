@@ -192,17 +192,25 @@ where indexname in (
   'ux_reports_client_submission_id',
   'ux_report_assignments_open_episode',
   'ux_report_moderation_episodes_open_episode',
-  'ux_service_area_railway_lines_line'
+  'ux_service_area_railway_lines_line',
+  'ix_service_area_settlement_lines_area',
+  'ix_service_area_settlement_lines_line'
 )
 union all
 select 'CONSTRAINT:' || conname || ':' || pg_get_constraintdef(oid)
 from pg_constraint
-where conname in ('report_routing_snapshots_pkey', 'service_area_railway_lines_pkey')
+where conname in (
+  'report_routing_snapshots_pkey',
+  'service_area_railway_lines_pkey',
+  'service_area_settlement_lines_pkey'
+)
 union all
 select 'CONSTRAINT:' || conname || ':' || pg_get_constraintdef(oid)
 from pg_constraint
-where conrelid = 'report_routing_snapshots'::regclass and contype = 'f'
-  and confrelid = 'reports'::regclass
+where (
+  (conrelid = 'report_routing_snapshots'::regclass and confrelid = 'reports'::regclass)
+  or conrelid = 'service_area_settlement_lines'::regclass
+) and contype = 'f'
 order by 1;
 SQL
 
@@ -446,7 +454,7 @@ BEFORE_DEACTIVATED_STATUS="$(sql_source "select status from users where service_
 log "capturing critical constraint/index definitions before backup ..."
 BEFORE_CONSTRAINTS="$(sql_source "$CONSTRAINT_QUERY")"
 CONSTRAINT_ROW_COUNT="$(echo "$BEFORE_CONSTRAINTS" | grep -c ':' || true)"
-[ "$CONSTRAINT_ROW_COUNT" -ge 9 ] || fail "expected at least 9 constraint/index definitions captured (6 indexes + 2 PKs + the routing-snapshot FK), got $CONSTRAINT_ROW_COUNT - the comparison would prove nothing if this list were incomplete"
+[ "$CONSTRAINT_ROW_COUNT" -ge 14 ] || fail "expected at least 14 constraint/index definitions captured (8 indexes + 3 PKs + 3 FKs), got $CONSTRAINT_ROW_COUNT - the comparison would prove nothing if this list were incomplete"
 echo "$BEFORE_CONSTRAINTS" | grep -q "report_routing_snapshots_.*fkey\|report_routing_snapshots.*FOREIGN KEY" \
   || fail "the routing-snapshot -> reports FOREIGN KEY was not found in the captured constraint list - a PRIMARY KEY is not also a FOREIGN KEY, and the comparison must cover both"
 log "OK: captured $CONSTRAINT_ROW_COUNT constraint/index definitions, including the routing-snapshot FOREIGN KEY back to reports (not just its PRIMARY KEY)."
@@ -690,7 +698,7 @@ if [ "$BEFORE_CONSTRAINTS" != "$AFTER_CONSTRAINTS" ]; then
   echo "--- after (restored) ---" >&2; echo "$AFTER_CONSTRAINTS" >&2
   fail "constraint/index definitions differ between the source snapshot and the restored database"
 fi
-log "OK: all $CONSTRAINT_ROW_COUNT critical constraint/index definitions are byte-identical after restore (users/service_id, reports/public_id, reports/client_submission_id, the open-assignment invariant, the open-moderation-episode invariant, the routing-snapshot's PRIMARY KEY *and* its separate FOREIGN KEY back to reports, and the ServiceArea<->RailwayLine mapping's PK and its one-area-per-line uniqueness)."
+log "OK: all $CONSTRAINT_ROW_COUNT critical constraint/index definitions are byte-identical after restore, including both legacy whole-line routing and the settlement+line routing table's PK, reference-pair FK, ServiceArea FK and lookup indexes."
 
 # -------------------------------------------------------------- cross-phase invariant checks
 

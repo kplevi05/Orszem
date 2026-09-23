@@ -33,6 +33,7 @@ class JdbcAreaAdminQueryRepository(private val jdbc: JdbcClient) {
             """
             SELECT sa.id, sa.name, sa.status, sa.admin_version,
                    (SELECT COUNT(*) FROM service_area_railway_lines m WHERE m.service_area_id = sa.id) AS mapped_line_count,
+                   (SELECT COUNT(*) FROM service_area_settlement_lines p WHERE p.service_area_id = sa.id) AS mapped_pair_count,
                    (
                        SELECT COUNT(*) FROM reports r
                          JOIN report_routing_snapshots rs ON rs.report_id = r.id
@@ -78,6 +79,7 @@ class JdbcAreaAdminQueryRepository(private val jdbc: JdbcClient) {
         adminVersion = rs.getLong("admin_version"),
         mappedRailwayLineCount = rs.getInt("mapped_line_count"),
         openOperationalReportCount = rs.getInt("open_report_count"),
+        mappedSettlementLineCount = rs.getInt("mapped_pair_count"),
     )
 
     // ---------------------------------------------------------------- RailwayLine admin list

@@ -136,6 +136,13 @@ class ReferenceImportUseCase(
             throw ReferenceLineInUseException(blockedLines)
         }
 
+        val operationalPairs = repository.operationalSettlementLineKeys()
+        val removedPairs = diff.relationsToRemove.map { it.kshCode.value to it.lineCode }.toSet()
+        val inactiveSettlements = diff.settlementsToDeactivate.map { it.value }.toSet()
+        if (operationalPairs.any { it in removedPairs || it.first in inactiveSettlements }) {
+            throw hu.orszembejelento.backend.reference.domain.ReferenceMappingInUseException()
+        }
+
         val now = clock.instant()
 
         val settlementIdByKsh = existingSettlements.mapValuesTo(HashMap()) { it.value.id }

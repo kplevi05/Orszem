@@ -24,6 +24,7 @@ data class ServiceAreaAdminListRow(
     val adminVersion: Long,
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
+    val mappedSettlementLineCount: Int = 0,
 )
 
 data class ServiceAreaAdminListPage(val items: List<ServiceAreaAdminListRow>, val totalElements: Int)
@@ -40,6 +41,7 @@ data class ServiceAreaAdminDetail(
     val mappedRailwayLines: List<ServiceAreaMappedRailwayLine>,
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
+    val mappedSettlementLineCount: Int = 0,
 )
 
 /** Which assignment state to filter the RailwayLine admin list to (brief §39). */
