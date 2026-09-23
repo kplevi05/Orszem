@@ -17,3 +17,9 @@ PENDING VPE/KTI/GYSEV row-level data.
 settlement/line pair and no VPE citation was found in the rendered page. This is still
 not approval: the reviewer must confirm that the cited assertion is adequately sourced
 and independent before creating an `INDEPENDENTLY_VERIFIED` decision.
+
+`READY_FOR_HUMAN_APPROVAL` means that the detailed source-chain check is complete: a
+pinned Wikipedia revision directly identifies the line and settlement relationship, its
+licence and references were inspected, and no prohibited VPE/HÜSZ lineage was found. It
+is still non-promotable until a human opens the pinned revision and explicitly approves
+that specific candidate.
