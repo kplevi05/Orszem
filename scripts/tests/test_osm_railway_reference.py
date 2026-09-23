@@ -103,7 +103,7 @@ class OsmRailwayReferenceTest(unittest.TestCase):
     def test_accepted_candidate_has_stable_pair_candidate_id_and_evidence_hash(self):
         out, manifest = self.build([self.way(), self.station()])
         candidates = json.loads((out / "candidates.json").read_text())["candidates"]
-        pair = next(c for c in candidates if c["category"] == "ORDINARY_ACCEPTED_BY_RULE")
+        pair = next(c for c in candidates if c["category"] == "OSM_EVIDENCE_ACCEPTED")
         self.assertEqual(pair["candidateId"], "pair:00001:1")
         self.assertEqual(pair["kshCode"], "00001")
         self.assertEqual(pair["lineCode"], "1")
@@ -125,7 +125,7 @@ class OsmRailwayReferenceTest(unittest.TestCase):
 
     def _pair_hash(self, out):
         candidates = json.loads((out / "candidates.json").read_text())["candidates"]
-        return next(c for c in candidates if c["category"] == "ORDINARY_ACCEPTED_BY_RULE")["evidenceHash"]
+        return next(c for c in candidates if c["category"] == "OSM_EVIDENCE_ACCEPTED")["evidenceHash"]
 
 
 if __name__ == "__main__":

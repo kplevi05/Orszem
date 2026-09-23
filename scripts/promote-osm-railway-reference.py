@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-"""Promote a reviewed OSM railway candidate set into an importable canonical dataset.
+"""Promote INDEPENDENTLY_VERIFIED OSM railway candidates into an importable dataset.
 
 This is the ONLY place `verificationStatus` may become `VERIFIED` for an OSM-derived
 dataset. It never runs as a side effect of `build-osm-railway-reference.py`, of a normal
-CI push, or of downloading OSM data — it is a deliberate, separate command a reviewer
-runs after decisions have been recorded (see `decisions/README.md`).
+CI push, or of downloading OSM data - it is a deliberate, separate command a reviewer runs
+after decisions have been recorded (see `decisions/README.md`).
 
-Promotion succeeds only when EVERY deterministically-accepted (kshCode, lineCode) pair
-candidate has a matching decision file that is ACCEPTED and whose evidenceHash still
-matches the candidate's current evidenceHash. If even one is missing, stale, or REJECTED,
-this script writes a `promotion-status.json` report describing exactly what is missing
-and exits non-zero WITHOUT writing any manifest — never a partially-VERIFIED dataset.
+OSM cannot verify itself: every candidate `build-osm-railway-reference.py` produces is, at
+most, `OSM_EVIDENCE_ACCEPTED` - internally consistent within one source, never independently
+corroborated. This script never promotes a candidate on that tier alone, no matter how many
+of them exist. Only a decision file with `decisionTier: INDEPENDENTLY_VERIFIED`, made by a
+human (`reviewerType: HUMAN`, `humanApproved: true`) against at least one documented,
+legally-checked independent source, with a still-current `evidenceHash`, ever reaches the
+promoted output.
+
+If zero candidates carry a current INDEPENDENTLY_VERIFIED decision, promotion correctly
+produces **no manifest at all** - never a `VERIFIED` dataset with zero rows, and never a
+manifest built from `OSM_EVIDENCE_ACCEPTED` alone. A non-empty verified subset promotes
+*only that subset*, leaving every other candidate exactly where it was.
 """
 
 import argparse
@@ -19,6 +26,18 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+
+VALID_TIERS = {"REJECTED", "QUARANTINED", "OSM_EVIDENCE_ACCEPTED", "INDEPENDENTLY_VERIFIED"}
+# OSM_EVIDENCE_ACCEPTED is candidates.json's own record of the deterministic rule's result -
+# never something a human decision *file* asserts (decisions/README.md). A file claiming it
+# would be indistinguishable, on paper, from a genuine human review that merely agreed with
+# the rule - exactly the ambiguity this gate must never allow.
+TIERS_VALID_IN_A_DECISION_FILE = {"REJECTED", "QUARANTINED", "INDEPENDENTLY_VERIFIED"}
+REQUIRED_METHOD_FOR_TIER = {
+    "REJECTED": "HUMAN_REVIEW",
+    "QUARANTINED": "HUMAN_REVIEW",
+    "INDEPENDENTLY_VERIFIED": "INDEPENDENT_SOURCE_VERIFICATION",
+}
 
 
 class PromotionBlocked(Exception):
@@ -41,23 +60,54 @@ def load_candidates(review_dir):
     return {c["candidateId"]: c for c in data["candidates"]}, data["policyVersion"]
 
 
+def validate_decision(path, record):
+    required = {
+        "candidateId", "decisionTier", "decisionMethod", "reviewerType", "humanApproved",
+        "reasonCode", "note", "evidenceHash", "policyVersion", "reviewer", "decidedAt",
+    }
+    missing = required - record.keys()
+    if missing:
+        raise PromotionBlocked(f"{path.name}: missing required field(s) {sorted(missing)} - a blank approval file is never valid")
+
+    tier = record["decisionTier"]
+    if tier not in VALID_TIERS:
+        raise PromotionBlocked(f"{path.name}: decisionTier must be one of {sorted(VALID_TIERS)}, got {tier!r}")
+    if tier not in TIERS_VALID_IN_A_DECISION_FILE:
+        raise PromotionBlocked(
+            f"{path.name}: decisionTier {tier!r} may never appear in a decision file - "
+            "OSM_EVIDENCE_ACCEPTED is candidates.json's own machine record, not a human decision",
+        )
+    if record["reviewerType"] != "HUMAN":
+        raise PromotionBlocked(f"{path.name}: reviewerType must be HUMAN in a decision file, got {record['reviewerType']!r}")
+    if record["decisionMethod"] != REQUIRED_METHOD_FOR_TIER[tier]:
+        raise PromotionBlocked(
+            f"{path.name}: decisionTier {tier!r} requires decisionMethod "
+            f"{REQUIRED_METHOD_FOR_TIER[tier]!r}, got {record['decisionMethod']!r}",
+        )
+    expected_approved = tier == "INDEPENDENTLY_VERIFIED"
+    if record["humanApproved"] != expected_approved:
+        raise PromotionBlocked(f"{path.name}: humanApproved must be {expected_approved} for decisionTier {tier!r}")
+    if not str(record["note"]).strip():
+        raise PromotionBlocked(f"{path.name}: note must not be empty")
+
+    if tier == "INDEPENDENTLY_VERIFIED":
+        sources = record.get("independentSourcesChecked")
+        if not sources or not isinstance(sources, list):
+            raise PromotionBlocked(f"{path.name}: INDEPENDENTLY_VERIFIED requires a non-empty independentSourcesChecked list")
+        for entry in sources:
+            entry_missing = {"url", "retrievedAt", "usageBasis"} - set(entry or {})
+            if entry_missing:
+                raise PromotionBlocked(f"{path.name}: independentSourcesChecked entry missing {sorted(entry_missing)}")
+
+
 def load_decisions(decisions_dir):
     decisions = {}
     for path in sorted(decisions_dir.glob("*.json")):
-        if path.name == "README.md":
-            continue
         try:
             record = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             raise PromotionBlocked(f"{path.name}: not valid JSON ({exc})") from exc
-        required = {"candidateId", "decision", "reasonCode", "note", "evidenceHash", "policyVersion", "reviewer", "decidedAt"}
-        missing = required - record.keys()
-        if missing:
-            raise PromotionBlocked(f"{path.name}: missing required field(s) {sorted(missing)} - a blank approval file is never valid")
-        if record["decision"] not in ("ACCEPTED", "REJECTED"):
-            raise PromotionBlocked(f"{path.name}: decision must be ACCEPTED or REJECTED, got {record['decision']!r}")
-        if not record["note"].strip():
-            raise PromotionBlocked(f"{path.name}: note must not be empty")
+        validate_decision(path, record)
         if record["candidateId"] in decisions:
             raise PromotionBlocked(f"duplicate decision for candidateId {record['candidateId']!r}")
         decisions[record["candidateId"]] = record
@@ -73,21 +123,22 @@ def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None):
         )
     decisions = load_decisions(decisions_dir)
 
-    pair_candidates = {cid: c for cid, c in candidates.items() if c["category"] == "ORDINARY_ACCEPTED_BY_RULE"}
+    pair_candidates = {cid: c for cid, c in candidates.items() if c["category"] == "OSM_EVIDENCE_ACCEPTED"}
 
     report = {
         "totalPairCandidates": len(pair_candidates),
-        "accepted": [],
-        "missingDecision": [],
-        "staleDecision": [],
+        "independentlyVerified": [],
         "rejected": [],
+        "quarantined": [],
+        "staleDecision": [],
         "wrongPolicyVersion": [],
+        "osmEvidenceOnlyNoHumanDecision": [],
     }
 
     for candidate_id, candidate in sorted(pair_candidates.items()):
         decision = decisions.get(candidate_id)
         if decision is None:
-            report["missingDecision"].append(candidate_id)
+            report["osmEvidenceOnlyNoHumanDecision"].append(candidate_id)
             continue
         if decision["policyVersion"] != dataset_policy_version:
             report["wrongPolicyVersion"].append(candidate_id)
@@ -95,27 +146,25 @@ def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None):
         if decision["evidenceHash"] != candidate["evidenceHash"]:
             report["staleDecision"].append(candidate_id)
             continue
-        if decision["decision"] == "REJECTED":
+        tier = decision["decisionTier"]
+        if tier == "REJECTED":
             report["rejected"].append(candidate_id)
-            continue
-        report["accepted"].append(candidate_id)
+        elif tier == "QUARANTINED":
+            report["quarantined"].append(candidate_id)
+        else:
+            report["independentlyVerified"].append(candidate_id)
 
-    # A decision file whose candidateId does not correspond to any known pair candidate at
-    # all (typo, stale file from a removed candidate, or an attempt to smuggle a decision
-    # for something the build never produced) is also a hard block - never silently ignored.
+    # A decision file whose candidateId does not correspond to any known candidate at all
+    # (typo, stale file from a removed candidate, or an attempt to smuggle a decision for
+    # something the build never produced) is also a hard block - never silently ignored.
     unknown_decisions = sorted(set(decisions) - set(candidates))
     if unknown_decisions:
         report["unknownDecisions"] = unknown_decisions
 
-    ready = (
-        report["totalPairCandidates"] > 0
-        and not report["missingDecision"]
-        and not report["staleDecision"]
-        and not report["rejected"]
-        and not report["wrongPolicyVersion"]
-        and not unknown_decisions
-    )
+    verified_count = len(report["independentlyVerified"])
+    ready = verified_count > 0 and not unknown_decisions
     report["readyForPromotion"] = ready
+    report["promotableCount"] = verified_count
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "promotion-status.json").write_text(
@@ -125,19 +174,18 @@ def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None):
     if not ready:
         return report, None
 
-    # Rebuild the canonical three files from ONLY accepted, current decisions - never from
-    # the raw deterministic-rule output directly, even though in a fully-approved run the
-    # two sets are identical by construction.
-    accepted_pairs = sorted(
-        (candidates[cid]["kshCode"], candidates[cid]["lineCode"]) for cid in report["accepted"]
+    # Rebuild the canonical three files from ONLY the current INDEPENDENTLY_VERIFIED subset -
+    # every other candidate, however large that set is, stays exactly where it was.
+    verified_pairs = sorted(
+        (candidates[cid]["kshCode"], candidates[cid]["lineCode"]) for cid in report["independentlyVerified"]
     )
-    used_codes = sorted({code for _, code in accepted_pairs})
+    used_codes = sorted({code for _, code in verified_pairs})
 
     settlements_bytes = (review_dir / "settlements.csv").read_bytes()
     (out_dir / "settlements.csv").write_bytes(settlements_bytes)
     write_csv(out_dir / "railway-lines.csv", ["line_code", "display_name"],
               [(code, f"{code}. számú vasútvonal") for code in used_codes])
-    write_csv(out_dir / "settlement-railway-lines.csv", ["ksh_code", "line_code"], accepted_pairs)
+    write_csv(out_dir / "settlement-railway-lines.csv", ["ksh_code", "line_code"], verified_pairs)
 
     review_manifest = json.loads((review_dir / "manifest.json").read_text(encoding="utf-8"))
     canonical = {name: sha256_bytes((out_dir / name).read_bytes())
@@ -153,15 +201,21 @@ def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None):
         "counts": {
             "settlements": review_manifest["counts"]["settlements"],
             "railwayLines": len(used_codes),
-            "settlementRailwayLineMappings": len(accepted_pairs),
+            "settlementRailwayLineMappings": len(verified_pairs),
         },
         "coverage": {
             "settlements": "COMPLETE", "railwayLines": "PARTIAL", "settlementRailwayLines": "PARTIAL",
-            "settlementsWithVerifiedRelations": len({k for k, _ in accepted_pairs}),
+            "settlementsWithVerifiedRelations": len({k for k, _ in verified_pairs}),
         },
         "review": {
             "promotedFromPolicyVersion": dataset_policy_version,
-            "promotedPairCount": len(accepted_pairs),
+            "promotedPairCount": len(verified_pairs),
+            "totalCandidateCount": report["totalPairCandidates"],
+            "note": (
+                "This manifest contains only the INDEPENDENTLY_VERIFIED subset of the review "
+                "dataset's candidates. OSM_EVIDENCE_ACCEPTED-only candidates are never included, "
+                "regardless of how many exist - see promotion-status.json for the full breakdown."
+            ),
             "automaticImportAllowed": True,
             "runtimeCompatible": True,
             "status": "REVIEWED_PROMOTED",
@@ -185,15 +239,18 @@ def main():
         print(f"BLOCKED: {exc}", file=sys.stderr)
         return 2
     if manifest is None:
-        print(json.dumps({"readyForPromotion": False, **{k: v for k, v in report.items() if k != "readyForPromotion"}}, ensure_ascii=False, indent=2))
+        print(json.dumps({k: v for k, v in report.items() if k != "readyForPromotion"}, ensure_ascii=False, indent=2))
         print(
-            f"NOT PROMOTED - {len(report['missingDecision'])} missing, {len(report['staleDecision'])} stale, "
-            f"{len(report['rejected'])} rejected, {len(report['wrongPolicyVersion'])} wrong-policy-version decision(s) "
-            f"out of {report['totalPairCandidates']} candidate(s). See promotion-status.json.",
+            f"NOT PROMOTED - 0 candidates carry a current INDEPENDENTLY_VERIFIED decision "
+            f"(out of {report['totalPairCandidates']} OSM_EVIDENCE_ACCEPTED candidates: "
+            f"{len(report['osmEvidenceOnlyNoHumanDecision'])} with no human decision yet, "
+            f"{len(report['quarantined'])} quarantined, {len(report['rejected'])} rejected, "
+            f"{len(report['staleDecision'])} stale, {len(report['wrongPolicyVersion'])} wrong-policy-version). "
+            "See promotion-status.json.",
             file=sys.stderr,
         )
         return 1
-    print(f"PROMOTED {manifest['datasetVersion']}: {manifest['counts']}")
+    print(f"PROMOTED {manifest['datasetVersion']}: {manifest['counts']} ({manifest['review']['promotedPairCount']} of {report['totalPairCandidates']} candidates)")
     return 0
 
 

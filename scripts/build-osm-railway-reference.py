@@ -336,7 +336,7 @@ def build(geojson_path, settlements_path, output, source_date, source_sha256, ma
     for (ksh, code), rows in sorted(by_pair.items()):
         candidates.append({
             "candidateId": pair_candidate_id(ksh, code),
-            "category": "ORDINARY_ACCEPTED_BY_RULE",
+            "category": "OSM_EVIDENCE_ACCEPTED",
             "kshCode": ksh,
             "lineCode": code,
             "osmObjectIds": sorted({r["osm_id"] for r in rows}),
