@@ -96,6 +96,19 @@ class TerritoryPlanTest(unittest.TestCase):
                     with self.assertRaises(plan.PlanError):
                         self.build()
 
+    def test_unverified_source_can_only_generate_explicit_offline_review(self):
+        manifest = self.fixture()
+        manifest["verificationStatus"] = "UNVERIFIED"
+        self.manifest(manifest)
+        with self.assertRaises(plan.PlanError):
+            self.build()
+        output = plan.build_plan(self.dataset, self.policy, allow_unverified_review=True)
+        summary = json.loads(output["summary.json"])
+        self.assertEqual(summary["status"], "OFFLINE_UNVERIFIED_SOURCE_REVIEW")
+        self.assertEqual(summary["sourceVerificationStatus"], "UNVERIFIED")
+        self.assertFalse(summary["runtimeCompatible"])
+        self.assertIn("must not be imported", summary["runtimeBlocker"])
+
     def test_bad_checksum_rejected(self):
         self.fixture()
         with (self.dataset / "settlements.csv").open("a") as f:
