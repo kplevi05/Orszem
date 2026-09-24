@@ -1,0 +1,73 @@
+{
+  "batchId": "line-47-fast-batch-4-2026-09-24",
+  "generatedAt": "2026-09-24T17:16:42Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "47",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Godisa%E2%80%93Koml%C3%B3-vas%C3%BAtvonal&oldid=29252448",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Godisa–Komló railway as line 47 and explicitly lists Magyarhertelend, Mecsekpölöske, Magyarszék, Komló and Bodolyabér in its detailed route diagram. The article cites independent press and railway-history sources; no VPE/HÜSZ/KTI/GYSEV material was used as corroboration.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_DIAGRAM_AND_INDEPENDENT_PRESS_SOURCES",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:05430:47",
+      "kshCode": "05430",
+      "settlementName": "Magyarhertelend",
+      "osmObjectIds": ["n1260939555"],
+      "minimumDistanceMetres": 1.6,
+      "evidenceHash": "33a3e93222f7ef1b222bc063b8d6e82b2a3b0496427e45c7513786cecfdd8529",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:11402:47",
+      "kshCode": "11402",
+      "settlementName": "Mecsekpölöske",
+      "osmObjectIds": ["n1260939558"],
+      "minimumDistanceMetres": 7.1,
+      "evidenceHash": "ca386850db951a3d93cd3873c1d47b9cfc1d636c5439ed1fe1be6f631697fd7c",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:22600:47",
+      "kshCode": "22600",
+      "settlementName": "Magyarszék",
+      "osmObjectIds": ["n1260939556"],
+      "minimumDistanceMetres": 3.8,
+      "evidenceHash": "8bce2526bf2fecd49154fe9bb170462908f5588ba2e440abc3aa08a0106fc734",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:26408:47",
+      "kshCode": "26408",
+      "settlementName": "Komló",
+      "osmObjectIds": ["n355873876"],
+      "minimumDistanceMetres": 2.0,
+      "evidenceHash": "e734ab36f67c6427db2dcc35bf14d71a18262efbc8a3a64b97664ef139acd39c",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:33002:47",
+      "kshCode": "33002",
+      "settlementName": "Bodolyabér",
+      "osmObjectIds": ["n25925540"],
+      "minimumDistanceMetres": 0.0,
+      "evidenceHash": "e73468d21aebeeca2d36e56255e93dd5a16fc83fb4cb96182f7caf328839bece",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 5,
+    "totalCandidatesOnLine": 5
+  }
+}
