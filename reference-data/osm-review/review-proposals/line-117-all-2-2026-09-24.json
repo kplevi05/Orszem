@@ -1,0 +1,39 @@
+{
+  "batchId": "line-117-all-2-2026-09-24",
+  "generatedAt": "2026-09-24T10:15:58Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "117",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Ohat-Pusztak%C3%B3cs%E2%80%93G%C3%B6r%C3%B6gsz%C3%A1ll%C3%A1s-vas%C3%BAtvonal&oldid=28010254",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Ohat-Pusztakócs–Görögszállás railway as MÁV line 117 and explicitly lists both Tiszalök and Tiszaeszlár in its route diagram. The article cites Magyar Vasúttörténet volume 2 and independent railway material; no VPE/HÜSZ/KTI/GYSEV source lineage was found during the detailed line-level review.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_CITED_ROUTE_NARRATIVE",
+    "caveat": "The route diagram is explicit, but the individual station rows do not each carry a separate inline citation. This limitation is disclosed for human review and is not an automatic blocker under the current approved review policy."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:09113:117",
+      "kshCode": "09113",
+      "settlementName": "Tiszaeszlár",
+      "osmObjectIds": ["n1060125624"],
+      "minimumDistanceMetres": 2.7,
+      "evidenceHash": "a997a0ae7c7d5cd8266c897882ec1208fcf7144badc55a35b401ba8fc63ded32",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:23524:117",
+      "kshCode": "23524",
+      "settlementName": "Tiszalök",
+      "osmObjectIds": ["n501798340"],
+      "minimumDistanceMetres": 15.6,
+      "evidenceHash": "e87d17c8175adcd2106e3f8e470ef399aecf28c57c0c6a033dd8bf81ad120f6a",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {"alreadyApprovedOnLine": 0, "readyForHumanApproval": 2, "totalCandidatesOnLine": 2}
+}
