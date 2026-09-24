@@ -90,9 +90,19 @@ class NationwideUnclassifiedFallbackPolicyTest {
     }
 
     @Test
-    fun `with the flag enabled, MODERATOR and SUPER_ADMIN still can never claim`() {
-        check(!enabledPolicy.canClaim(actor(UserRole.MODERATOR, global = true), unclassified(ReportStatus.NEW)))
-        check(!enabledPolicy.canClaim(actor(UserRole.SUPER_ADMIN), unclassified(ReportStatus.NEW)))
+    fun `administrator self-claim of UNCLASSIFIED follows their own UNCLASSIFIED visibility, completely independent of this flag`() {
+        // A global MODERATOR/SUPER_ADMIN already sees UNCLASSIFIED unconditionally
+        // (canViewUnclassified / SUPER_ADMIN's own blanket rule) - self-claim inherits that
+        // exactly, in both flag states. A territorial MODERATOR never sees UNCLASSIFIED at
+        // all, flag or no flag, so self-claim stays refused for them too.
+        val globalMod = actor(UserRole.MODERATOR, global = true)
+        val admin = actor(UserRole.SUPER_ADMIN)
+        val territorialMod = actor(UserRole.MODERATOR, ownAreas = setOf(UUID.randomUUID()))
+        for (policy in listOf(enabledPolicy, disabledPolicy)) {
+            check(policy.canClaim(globalMod, unclassified(ReportStatus.NEW)))
+            check(policy.canClaim(admin, unclassified(ReportStatus.NEW)))
+            check(!policy.canClaim(territorialMod, unclassified(ReportStatus.NEW)))
+        }
     }
 
     @Test

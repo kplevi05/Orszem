@@ -31,20 +31,73 @@ class ClaimReportIT : ReportWorkflowTestSupport() {
     }
 
     @Test
-    fun `MODERATOR and SUPER_ADMIN cannot self-claim`() {
+    fun `a territorial MODERATOR can self-claim a NEW report within their own area`() {
         val area = givenRoutedArea()
         val mod = givenTerritorialModerator()
         grantArea(mod.id, area.areaId)
+        val report = givenRoutedReport(area)
+
+        val response = claim(bearerFor(mod), report.publicId, 0)
+        check(response.statusCode() == 200) { response.body() }
+        val body = json(response)
+        check(body.get("status").asText() == "IN_PROGRESS")
+        check(body.get("assignee").get("serviceId").asText() == mod.serviceId.value)
+
+        val row = reportRow(report.publicId)
+        check(row.status == "IN_PROGRESS" && row.assignedUserId == mod.id)
+        check(auditEventCount("REPORT_CLAIMED") == 1)
+    }
+
+    @Test
+    fun `SUPER_ADMIN can self-claim any routed report`() {
+        val area = givenRoutedArea()
         val admin = givenSuperAdmin()
-        val reportForMod = givenRoutedReport(area)
-        val reportForAdmin = givenRoutedReport(area)
+        val report = givenRoutedReport(area)
 
-        val modResponse = claim(bearerFor(mod), reportForMod.publicId, 0)
-        val adminResponse = claim(bearerFor(admin), reportForAdmin.publicId, 0)
+        val response = claim(bearerFor(admin), report.publicId, 0)
+        check(response.statusCode() == 200) { response.body() }
+        check(reportRow(report.publicId).assignedUserId == admin.id)
+    }
 
-        check(modResponse.statusCode() == 403) { modResponse.body() }
-        check(errorCode(modResponse) == "REPORT_WORKFLOW_FORBIDDEN")
-        check(adminResponse.statusCode() == 403) { adminResponse.body() }
+    @Test
+    fun `a territorial MODERATOR cannot self-claim a report outside their own area - hidden as 404`() {
+        val ownArea = givenRoutedArea()
+        val otherArea = givenRoutedArea()
+        val mod = givenTerritorialModerator()
+        grantArea(mod.id, ownArea.areaId)
+        val report = givenRoutedReport(otherArea)
+
+        val response = claim(bearerFor(mod), report.publicId, 0)
+        check(response.statusCode() == 404) { response.body() }
+        check(errorCode(response) == "REPORT_NOT_FOUND")
+    }
+
+    @Test
+    fun `a deactivated MODERATOR cannot self-claim even with a still-valid bearer race`() {
+        val area = givenRoutedArea()
+        val mod = givenTerritorialModerator()
+        grantArea(mod.id, area.areaId)
+        val bearer = bearerFor(mod)
+        val report = givenRoutedReport(area)
+
+        httpDeactivate(adminBearer(), mod)
+
+        val response = claim(bearer, report.publicId, 0)
+        check(response.statusCode() == 403 || response.statusCode() == 401) {
+            "a deactivated MODERATOR must gain no claim access, got ${response.statusCode()}: ${response.body()}"
+        }
+        check(reportRow(report.publicId).status == "NEW")
+    }
+
+    @Test
+    fun `administrator self-claim never widens ordinary out-of-scope SERVICE_USER visibility`() {
+        val area = givenRoutedArea()
+        val outsider = givenServiceUser() // no area grant at all
+        val report = givenRoutedReport(area)
+
+        val response = claim(bearerFor(outsider), report.publicId, 0)
+        check(response.statusCode() == 404) { response.body() }
+        check(errorCode(response) == "REPORT_NOT_FOUND")
     }
 
     @Test
@@ -159,5 +212,23 @@ class ClaimReportIT : ReportWorkflowTestSupport() {
         check(history.size == 1) { "no partial/duplicate history rows may exist, found ${history.size}" }
         check(history.single().assigneeUserId == winnerId)
         check(auditEventCount("REPORT_CLAIMED") == 1) { "exactly one REPORT_CLAIMED audit event may exist" }
+    }
+
+    @Test
+    fun `a SERVICE_USER racing a territorial MODERATOR for the same report - exactly one wins, either role`() {
+        val area = givenRoutedArea()
+        val user = givenServiceUser().also { grantArea(it.id, area.areaId) }
+        val mod = givenTerritorialModerator().also { grantArea(it.id, area.areaId) }
+        val report = givenRoutedReport(area)
+
+        val results = runConcurrently(2) { index ->
+            claim(if (index == 0) bearerFor(user) else bearerFor(mod), report.publicId, 0)
+        }.map { it.getOrThrow() }
+
+        val winners = results.filter { it.statusCode() == 200 }
+        check(winners.size == 1) { "expected exactly one winner regardless of role, got ${results.map { it.statusCode() }}" }
+        check(reportRow(report.publicId).status == "IN_PROGRESS")
+        check(openAssignmentCount(report.publicId) == 1)
+        check(auditEventCount("REPORT_CLAIMED") == 1)
     }
 }
