@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:19415:64",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "19415",
+  "lineCode": "64",
+  "osmObjectIds": [
+    "n25546152"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies MÁV line 64 and explicitly lists Pécs in its route diagram or narrative. No VPE/HÜSZ/KTI/GYSEV source lineage was found. Owner explicitly approved this candidate as part of the PR #46 consolidated approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=P%C3%A9cs%E2%80%93B%C3%A1tasz%C3%A9k-vas%C3%BAtvonal&oldid=29214375",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "a420f0a9218839be4ae75c0ec03660696dcd8a77bc2100a85bf7123810971d28",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T16:21:56Z"
+}
