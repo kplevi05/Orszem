@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:10126:114",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "10126",
+  "lineCode": "114",
+  "osmObjectIds": [
+    "n1260955784"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies MÁV line 114 and explicitly lists Győrtelek in its route diagram. No VPE/HÜSZ/KTI/GYSEV source lineage was found. Owner explicitly approved this candidate as part of the PR #48 consolidated approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Kocsord%E2%80%93Csenger-vas%C3%BAtvonal&oldid=28010253",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "cb8623bbb05a588c67c3a66477c2f47acd0adea96c7a3d9417a109978d3d3543",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T16:51:24Z"
+}
