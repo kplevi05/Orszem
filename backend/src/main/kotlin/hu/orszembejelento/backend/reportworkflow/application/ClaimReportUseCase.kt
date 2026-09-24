@@ -4,7 +4,6 @@ import hu.orszembejelento.backend.audit.domain.AuditActorType
 import hu.orszembejelento.backend.audit.domain.AuditEventType
 import hu.orszembejelento.backend.audit.domain.AuditTargetType
 import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
-import hu.orszembejelento.backend.identity.domain.UserRole
 import hu.orszembejelento.backend.identity.domain.UserStatus
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
 import hu.orszembejelento.backend.moderation.infrastructure.JdbcModerationRepository
@@ -26,26 +25,28 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Atomic self-claim of a NEW report (brief §30-32) — SERVICE_USER only. The visibility gate
- * ([ReportWorkflowPolicy.canClaim]) runs before the status/version checks so a SERVICE_USER
- * who legitimately saw this report as NEW a moment ago gets the specific
+ * Atomic self-claim of a NEW report (brief §30-32) — SERVICE_USER within their own area
+ * access, or (self-claim phase) a MODERATOR/SUPER_ADMIN claiming anything they can already
+ * see ([ReportWorkflowPolicy.canClaim]). The visibility gate runs before the status/version
+ * checks so an actor who legitimately saw this report as NEW a moment ago gets the specific
  * [ReportAlreadyAssignedException]/[ReportAlreadyArchivedException] when they lose a race,
  * rather than a scope-hiding 404 — that 404 is reserved for genuine authorisation loss
- * (out of scope, UNCLASSIFIED, or the report never existed at all).
+ * (out of scope, UNCLASSIFIED without the fallback, or the report never existed at all).
  *
- * **Cross-phase invariant (added after the initial Phase 7 review):** claim makes the
- * *actor themselves* the new current assignee, so their own role/status/area authority must
- * be re-read from a locked row inside this same report-locked transaction — never trusted
- * from the [ReportWorkflowActor] the controller built before this transaction even began.
- * `ReportWorkflowActor`'s own KDoc says "authentication already implies ACTIVE", which is
- * only true *at authentication time* — a Phase 6 role change, deactivation or area revoke
- * can still commit in the window between that read and this transaction's own report lock.
- * The fix mirrors [ReassignReportUseCase]'s already-correct target re-validation exactly:
- * canonical lock order step 2 (`users.lockByServiceId`) on the actor's own row, contending
- * for the *same* row a concurrent Phase 6 mutation locks first — so the two are always
- * serialized against each other, never merely raced. This introduces no new lock resource
- * and no lock-order conflict: it is the identical REPORT-then-USER order
- * [ReassignReportUseCase] already established, just applied to claim's own actor too.
+ * **Cross-phase invariant (added after the initial Phase 7 review, applies to every role
+ * that can claim):** claim makes the *actor themselves* the new current assignee, so their
+ * own role/status/area authority must be re-read from a locked row inside this same
+ * report-locked transaction — never trusted from the [ReportWorkflowActor] the controller
+ * built before this transaction even began. `ReportWorkflowActor`'s own KDoc says
+ * "authentication already implies ACTIVE", which is only true *at authentication time* — a
+ * Phase 6 role change, deactivation or area revoke can still commit in the window between
+ * that read and this transaction's own report lock. The fix mirrors
+ * [ReassignReportUseCase]'s already-correct target re-validation exactly: canonical lock
+ * order step 2 (`users.lockByServiceId`) on the actor's own row, contending for the *same*
+ * row a concurrent Phase 6 mutation locks first — so the two are always serialized against
+ * each other, never merely raced. This introduces no new lock resource and no lock-order
+ * conflict: it is the identical REPORT-then-USER order [ReassignReportUseCase] already
+ * established, just applied to claim's own actor too.
  */
 @Service
 class ClaimReportUseCase(
@@ -62,8 +63,6 @@ class ClaimReportUseCase(
 
     @Transactional
     fun claim(actor: ReportWorkflowActor, publicReportId: UUID, expectedVersion: Long): Report {
-        if (actor.role != UserRole.SERVICE_USER) throw ReportWorkflowForbiddenException()
-
         val (locked, scope) = lockAndResolve(reports, scopeResolver, moderation::hasOpenEpisode, publicReportId)
         if (!policy.canClaim(actor, scope)) throw ReportNotVisibleException()
 
@@ -80,9 +79,9 @@ class ClaimReportUseCase(
         // hard-deleted), not a normal outcome any caller can trigger.
         val selfUser = users.lockByServiceId(actor.serviceId)
             ?: error("authenticated user ${actor.userId} has no corresponding users row")
-        if (selfUser.role != UserRole.SERVICE_USER || selfUser.status != UserStatus.ACTIVE) {
-            // Role/status ineligibility is a forbidden-action outcome, not a visibility one -
-            // mirrors the identical top-of-method gate above, just re-run with fresh data.
+        if (selfUser.status != UserStatus.ACTIVE) {
+            // Status ineligibility is a forbidden-action outcome, not a visibility one - any
+            // role (SERVICE_USER or an administrator self-claiming) must still be ACTIVE.
             throw ReportWorkflowForbiddenException()
         }
         val selfAreaActor = serviceAreas.loadAreaActor(selfUser.id)

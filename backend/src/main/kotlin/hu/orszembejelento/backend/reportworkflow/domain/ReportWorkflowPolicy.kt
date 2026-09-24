@@ -83,20 +83,26 @@ class ReportWorkflowPolicy(
     }
 
     /**
-     * Role + area/routing eligibility to claim (brief §30) — SERVICE_USER only, a routed
-     * report, current area access. Deliberately independent of the report's *current*
-     * status: the caller checks NEW/IN_PROGRESS/ARCHIVED separately, because which of
-     * those three produces which conflict code (§31/§32/§45) is an HTTP-shaping decision,
-     * not an authorisation one.
+     * Role + area/routing eligibility to claim (brief §30). Deliberately independent of the
+     * report's *current* status: the caller checks NEW/IN_PROGRESS/ARCHIVED separately,
+     * because which of those three produces which conflict code (§31/§32/§45) is an
+     * HTTP-shaping decision, not an authorisation one.
      *
-     * **Nationwide fallback:** an UNCLASSIFIED report is claimable by any ACTIVE
-     * SERVICE_USER exactly when [unclassifiedServiceUserAccessEnabled] — no area check,
-     * since UNCLASSIFIED has none.
+     * A SERVICE_USER may claim a routed report only within their own area access; an
+     * UNCLASSIFIED one exactly when [unclassifiedServiceUserAccessEnabled] (no area check,
+     * since UNCLASSIFIED has none).
+     *
+     * **Administrator self-claim:** a MODERATOR/SUPER_ADMIN may personally claim any report
+     * they can currently *see* ([canViewReport]) — a territorial MODERATOR is therefore
+     * still bounded by their own area grants exactly like everywhere else in this class, and
+     * a global MODERATOR/SUPER_ADMIN may claim anything in their (unbounded) scope,
+     * including UNCLASSIFIED. This does not broaden what an admin can *see* — only what they
+     * may additionally *do* with a report they could already see — and it does not touch a
+     * SERVICE_USER's own claim rule above at all.
      */
-    fun canClaim(actor: ReportWorkflowActor, report: ReportScope): Boolean {
-        if (actor.role != UserRole.SERVICE_USER) return false
-        if (!report.routed) return unclassifiedServiceUserAccessEnabled
-        return roleAccessesArea(actor, report)
+    fun canClaim(actor: ReportWorkflowActor, report: ReportScope): Boolean = when (actor.role) {
+        UserRole.SERVICE_USER -> if (!report.routed) unclassifiedServiceUserAccessEnabled else roleAccessesArea(actor, report)
+        UserRole.MODERATOR, UserRole.SUPER_ADMIN -> canViewReport(actor, report)
     }
 
     /**
