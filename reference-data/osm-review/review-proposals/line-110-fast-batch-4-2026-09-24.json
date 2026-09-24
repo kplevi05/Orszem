@@ -1,0 +1,123 @@
+{
+  "batchId": "line-110-fast-batch-4-2026-09-24",
+  "generatedAt": "2026-09-24T17:20:53Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "110",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Apafa%E2%80%93M%C3%A1t%C3%A9szalka-vas%C3%BAtvonal&oldid=28010316",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Apafa–Mátészalka railway as MÁV line 110 and explicitly lists Nyíradony, Hodász, Nyírbátor, Mátészalka, Nyírmeggyes, Nyírcsászári, Nyírmihálydi, Nyírgelse, Hajdúsámson and Nyírbogát in its detailed route diagram and line template. It cites Magyar Vasúttörténet volume 4 and independent national press; no VPE/HÜSZ/KTI/GYSEV material was used as corroboration.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_DIAGRAM_BOOK_AND_INDEPENDENT_PRESS_SOURCES",
+    "caveat": "The article itself requests additional citations and individual route rows do not each carry a separate inline citation; both limitations are disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:06187:110",
+      "kshCode": "06187",
+      "settlementName": "Nyíradony",
+      "osmObjectIds": ["n501798504"],
+      "minimumDistanceMetres": 2.4,
+      "evidenceHash": "dd1736a3c7476c96d5ce00ab0800fd8776e4b07967807cff5a221875c17ec5c8",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:13019:110",
+      "kshCode": "13019",
+      "settlementName": "Hodász",
+      "osmObjectIds": ["n1065130607"],
+      "minimumDistanceMetres": 3.7,
+      "evidenceHash": "6e7b3e616b370862794aa81d27b89b80a68b45baa74d318363cac6a729a6adb6",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:14845:110",
+      "kshCode": "14845",
+      "settlementName": "Nyírbátor",
+      "osmObjectIds": ["n415604493"],
+      "minimumDistanceMetres": 7.2,
+      "evidenceHash": "4b63fad0c8698f086baf3ce0904d5c01a3563c481d1f9a316a955c91e17b0a64",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:18874:110",
+      "kshCode": "18874",
+      "settlementName": "Mátészalka",
+      "osmObjectIds": ["n415604461"],
+      "minimumDistanceMetres": 4.0,
+      "evidenceHash": "e4cd4dbbbeb7d91ee8861e5e6560fc8b173aea7e4f679a95e9bb8b7caa011da8",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:23269:110",
+      "kshCode": "23269",
+      "settlementName": "Nyírmeggyes",
+      "osmObjectIds": ["n1065129948"],
+      "minimumDistanceMetres": 3.7,
+      "evidenceHash": "142a44bc888667cb5080df4d13c7ddc3b605e48525d8a6209364bba5b584647f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:25973:110",
+      "kshCode": "25973",
+      "settlementName": "Nyírcsászári",
+      "osmObjectIds": ["n415604485"],
+      "minimumDistanceMetres": 3.0,
+      "evidenceHash": "924f56ad536ad1576176fbd5dbd4e547c2326dd724b23f63d70def4b7eb7d319",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:26365:110",
+      "kshCode": "26365",
+      "settlementName": "Nyírmihálydi",
+      "osmObjectIds": ["n1065130461"],
+      "minimumDistanceMetres": 0.9,
+      "evidenceHash": "25369a52f6ea2e64bbaacee76aa8b43b20aa05b33852e06ae37daca55bda979b",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:28440:110",
+      "kshCode": "28440",
+      "settlementName": "Nyírgelse",
+      "osmObjectIds": ["n1065130201"],
+      "minimumDistanceMetres": 8.4,
+      "evidenceHash": "990d47e202cc5b376963ce71c32383c13206d33d358c76fb6d7e4e3f95bc7ed3",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:31097:110",
+      "kshCode": "31097",
+      "settlementName": "Hajdúsámson",
+      "osmObjectIds": ["n628589432"],
+      "minimumDistanceMetres": 13.8,
+      "evidenceHash": "21fcd4d024b230e1527e395e1d324c0c7f7d431d5d851bcf7c8c60ef48fcd9b6",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:31158:110",
+      "kshCode": "31158",
+      "settlementName": "Nyírbogát",
+      "osmObjectIds": ["n1065130117"],
+      "minimumDistanceMetres": 1.6,
+      "evidenceHash": "ce66679a693e7a21c4dac6535da548768d5c4f02de6a7c152a0ebad192189132",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 10,
+    "totalCandidatesOnLine": 10
+  }
+}
