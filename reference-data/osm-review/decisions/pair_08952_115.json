@@ -1,0 +1,18 @@
+{
+  "candidateId": "pair:08952:115",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "08952",
+  "lineCode": "115",
+  "osmObjectIds": ["n1212434507"],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Mátészalka–Nagykároly railway as MÁV line 115 and explicitly lists Tiborszállás in its route diagram. No VPE/HÜSZ/KTI/GYSEV source lineage was found. Owner explicitly approved this candidate as part of the PR #43 consolidated approval set.",
+  "independentSourcesChecked": [{"url": "https://hu.wikipedia.org/w/index.php?title=M%C3%A1t%C3%A9szalka%E2%80%93Nagyk%C3%A1roly-vas%C3%BAtvonal&oldid=29224932", "retrievedAt": "2026-09-24", "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.", "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."}],
+  "evidenceHash": "027117a618559c2d915a6c15e13b2562fc5626ff9966eaf079bc39a40d950946",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T12:44:29Z"
+}
