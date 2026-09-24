@@ -1,0 +1,49 @@
+{
+  "batchId": "line-105-all-3-2026-09-24",
+  "generatedAt": "2026-09-24T12:29:25Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "105",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Debrecen%E2%80%93Ny%C3%ADr%C3%A1br%C3%A1ny-vas%C3%BAtvonal&oldid=28328435",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Debrecen–Nyírábrány railway as MÁV line 105 and explicitly lists Debrecen, Vámospércs and Nyírábrány in its route diagram. The article cites Magyar Vasúttörténet volume 2 and Vasútállomások.hu; no VPE/HÜSZ/KTI/GYSEV source lineage was found during the detailed line-level review.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_CITED_ROUTE_NARRATIVE",
+    "caveat": "The route diagram is explicit, but the individual station rows do not each carry a separate inline citation. This limitation is disclosed for human review and is not an automatic blocker under the current approved review policy."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:08989:105",
+      "kshCode": "08989",
+      "settlementName": "Vámospércs",
+      "osmObjectIds": ["n497138749"],
+      "minimumDistanceMetres": 0.0,
+      "evidenceHash": "ed715d38557242fc899046d336fb9603a95f7a1b811e46c422d4140fece82411",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:15130:105",
+      "kshCode": "15130",
+      "settlementName": "Debrecen",
+      "osmObjectIds": ["n3669062535"],
+      "minimumDistanceMetres": 39.3,
+      "evidenceHash": "8a6dcf73033e95be507505a5dce380cd216f9a19c9aca55b542bb8bbaf9e4737",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:32294:105",
+      "kshCode": "32294",
+      "settlementName": "Nyírábrány",
+      "osmObjectIds": ["n1212435195"],
+      "minimumDistanceMetres": 1.4,
+      "evidenceHash": "968e93ff0592e92e6820e5e3ee863b706ef119324e243cd879b0a27f7a481ac2",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {"alreadyApprovedOnLine": 0, "readyForHumanApproval": 3, "totalCandidatesOnLine": 3}
+}

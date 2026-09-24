@@ -1,0 +1,49 @@
+{
+  "batchId": "line-115-all-3-2026-09-24",
+  "generatedAt": "2026-09-24T12:29:25Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "115",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=M%C3%A1t%C3%A9szalka%E2%80%93Nagyk%C3%A1roly-vas%C3%BAtvonal&oldid=29224932",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Mátészalka–Nagykároly railway as MÁV line 115 and explicitly lists Nyírcsaholy, Nagyecsed and Tiborszállás in its route diagram. The article cites independent regional news and Vasútállomások.hu; no VPE/HÜSZ/KTI/GYSEV source lineage was found during the detailed line-level review.",
+    "sourceStrength": "WIKIPEDIA_ARTICLE_WITH_INDEPENDENT_REGIONAL_AND_RAILWAY_SOURCES",
+    "caveat": "The article's sourcing is sparse and the individual station rows do not each carry a separate inline citation. This limitation is disclosed for human review and is not an automatic blocker under the current approved review policy."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:06488:115",
+      "kshCode": "06488",
+      "settlementName": "Nagyecsed",
+      "osmObjectIds": ["n501798440"],
+      "minimumDistanceMetres": 4.2,
+      "evidenceHash": "86429e6c297de2ea888950f5fd348cf305c32f7c8ec97789b2e1bb444d21c69e",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:07904:115",
+      "kshCode": "07904",
+      "settlementName": "Nyírcsaholy",
+      "osmObjectIds": ["n501798414"],
+      "minimumDistanceMetres": 6.2,
+      "evidenceHash": "18f8554592276069c5ba806313b8217dced521249776bf608e0d6632c2ae1707",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:08952:115",
+      "kshCode": "08952",
+      "settlementName": "Tiborszállás",
+      "osmObjectIds": ["n1212434507"],
+      "minimumDistanceMetres": 2.2,
+      "evidenceHash": "027117a618559c2d915a6c15e13b2562fc5626ff9966eaf079bc39a40d950946",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {"alreadyApprovedOnLine": 0, "readyForHumanApproval": 3, "totalCandidatesOnLine": 3}
+}

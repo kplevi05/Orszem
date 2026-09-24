@@ -1,0 +1,49 @@
+{
+  "batchId": "line-61-all-3-2026-09-24",
+  "generatedAt": "2026-09-24T12:29:25Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "61",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Szentl%C5%91rinc%E2%80%93Sellye-vas%C3%BAtvonal&oldid=29214353",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Szentlőrinc–Sellye railway as MÁV line 61 and explicitly lists Sumony, Kákics and Sellye in its route diagram. The article cites Magyar Vasúttörténet volume 2, Vasútállomások.hu and dated operational material; no VPE/HÜSZ/KTI/GYSEV source lineage was found during the detailed line-level review.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_CITED_ROUTE_NARRATIVE",
+    "caveat": "The route diagram is explicit, but the individual station rows do not each carry a separate inline citation. This limitation is disclosed for human review and is not an automatic blocker under the current approved review policy."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:02547:61",
+      "kshCode": "02547",
+      "settlementName": "Sumony",
+      "osmObjectIds": ["n1061100152"],
+      "minimumDistanceMetres": 2.1,
+      "evidenceHash": "1e5efe5e823c83391d5e81e4104aec058206bb4ec604d16e81b5ca896a7c6ebe",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:06415:61",
+      "kshCode": "06415",
+      "settlementName": "Kákics",
+      "osmObjectIds": ["n409005300"],
+      "minimumDistanceMetres": 4.6,
+      "evidenceHash": "69551afcc560725dd3a537460da30f7a00ab4f4092d6f2f7712e8b217982f867",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:28741:61",
+      "kshCode": "28741",
+      "settlementName": "Sellye",
+      "osmObjectIds": ["n9481731663"],
+      "minimumDistanceMetres": 9.3,
+      "evidenceHash": "679026b9a16cc3bff2dc5dd9e88855f0fabe6e8f0660625ebc41a29489aff434",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {"alreadyApprovedOnLine": 0, "readyForHumanApproval": 3, "totalCandidatesOnLine": 3}
+}
