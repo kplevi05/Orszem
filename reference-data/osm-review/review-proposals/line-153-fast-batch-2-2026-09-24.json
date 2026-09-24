@@ -1,0 +1,59 @@
+{
+  "batchId": "line-153-fast-batch-2-2026-09-24",
+  "generatedAt": "2026-09-24T15:50:47Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "153",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Kisk%C5%91r%C3%B6s%E2%80%93Kalocsa-vas%C3%BAtvonal&oldid=29236830",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Kiskőrös–Kalocsa railway as MÁV line 153 and explicitly lists Kecel, Öregcsertő and Kalocsa in its route diagram. It cites Magyar Vasúttörténet volume 2 and independent regional and railway press; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_AND_INDEPENDENT_PRESS_SOURCES",
+    "caveat": "The individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:06442:153",
+      "kshCode": "06442",
+      "settlementName": "Kalocsa",
+      "osmObjectIds": [
+        "n411752399"
+      ],
+      "minimumDistanceMetres": 9.7,
+      "evidenceHash": "dbea42cda5aa656a230f9daac9a4cc9ec8fa6814b074d3cfd381c049608c5d7c",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:08679:153",
+      "kshCode": "08679",
+      "settlementName": "Öregcsertő",
+      "osmObjectIds": [
+        "n411752395"
+      ],
+      "minimumDistanceMetres": 0,
+      "evidenceHash": "764982ac03a6202eb2db62a8fc6936ebe3f8b952366b35b49b065735af3a8e04",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:19789:153",
+      "kshCode": "19789",
+      "settlementName": "Kecel",
+      "osmObjectIds": [
+        "n411753255"
+      ],
+      "minimumDistanceMetres": 0,
+      "evidenceHash": "0fe72d05dc2a18153557d186555c011dbe0c990e2b8335d5ccecdd291a95235c",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 3,
+    "totalCandidatesOnLine": 3
+  }
+}
