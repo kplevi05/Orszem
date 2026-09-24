@@ -38,4 +38,4 @@ All five pinned revisions are CC BY-SA 4.0. No VPE/HÜSZ/KTI/GYSEV material was 
 
 ## Approval boundary
 
-Approval must explicitly name this consolidated sheet or all 19 candidate IDs. Approval authorizes creation of 19 individual `INDEPENDENTLY_VERIFIED` decision files in a separate decisions PR. A generic request to continue is not approval.
+Approval must explicitly name this consolidated sheet or all 19 candidate IDs. Approval authorizes creation of 19 individual `INDEPENDENTLY_VERIFIED` decision files. If the proposal PR remains open, the decisions will be added to that same PR for the accelerated workflow. A generic request to continue is not approval.
