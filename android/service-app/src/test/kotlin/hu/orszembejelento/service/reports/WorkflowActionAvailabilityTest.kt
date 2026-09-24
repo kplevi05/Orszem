@@ -28,10 +28,10 @@ class WorkflowActionAvailabilityTest {
     }
 
     @Test
-    fun `NEW - MODERATOR and SUPER_ADMIN may close directly, never claim`() {
+    fun `NEW - MODERATOR and SUPER_ADMIN may claim for themselves or close directly`() {
         listOf("MODERATOR", "SUPER_ADMIN").forEach { role ->
             val availability = availableWorkflowActions("NEW", role, isOwnAssignment = false)
-            assertFalse(role, availability.claim)
+            assertTrue(role, availability.claim)
             assertTrue(role, availability.close)
             assertFalse(role, availability.reassign)
         }
