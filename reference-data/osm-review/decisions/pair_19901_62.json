@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:19901:62",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "19901",
+  "lineCode": "62",
+  "osmObjectIds": [
+    "n409557413"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies MÁV line 62 and explicitly lists Csányoszró in its route diagram. No VPE/HÜSZ/KTI/GYSEV source lineage was found. Owner explicitly approved this candidate as part of the PR #48 consolidated approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=K%C3%B6z%C3%A9prig%C3%B3c%E2%80%93Vill%C3%A1ny-vas%C3%BAtvonal&oldid=29332395",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "8fb631db43c8be3877d79ab9a8c43762828a4440ecd53b2bd288602dd1da6a1a",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T16:51:24Z"
+}
