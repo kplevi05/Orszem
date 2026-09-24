@@ -1,0 +1,83 @@
+{
+  "batchId": "line-155-fast-batch-2-2026-09-24",
+  "generatedAt": "2026-09-24T15:50:47Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "155",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Kiskunhalas%E2%80%93Kiskunf%C3%A9legyh%C3%A1za-vas%C3%BAtvonal&oldid=28278498",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Kiskunhalas–Kiskunfélegyháza railway as MÁV line 155 and explicitly lists Harkakötöny, Jászszentlászló, Kiskunfélegyháza, Kiskunmajsa and Kiskunhalas in its route diagram. It cites Magyar Vasúttörténet volumes 2 and 4 and dated operational material; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_CITATIONS",
+    "caveat": "The individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:08350:155",
+      "kshCode": "08350",
+      "settlementName": "Harkakötöny",
+      "osmObjectIds": [
+        "n409020131"
+      ],
+      "minimumDistanceMetres": 3.8,
+      "evidenceHash": "8297edbb572b346b04b35af7c9d31aa3111660c8a34390b4b12969728da0aee7",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:08378:155",
+      "kshCode": "08378",
+      "settlementName": "Jászszentlászló",
+      "osmObjectIds": [
+        "n7431917792"
+      ],
+      "minimumDistanceMetres": 3.5,
+      "evidenceHash": "cda81e68e880246dc8503c524a96e44974b82f1177e62a7c84ccd3b4ed4f908e",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:20297:155",
+      "kshCode": "20297",
+      "settlementName": "Kiskunfélegyháza",
+      "osmObjectIds": [
+        "n13336796570"
+      ],
+      "minimumDistanceMetres": 20.4,
+      "evidenceHash": "034a688702b1612a3be3f03f10aea3b488770ed1aeee1ebae1d72f049076cc0f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:24396:155",
+      "kshCode": "24396",
+      "settlementName": "Kiskunmajsa",
+      "osmObjectIds": [
+        "n1065129354"
+      ],
+      "minimumDistanceMetres": 13.2,
+      "evidenceHash": "34675857820cf216bb349d383818a4ee50c25555f33e205f03bb3f8d3e62f366",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:32434:155",
+      "kshCode": "32434",
+      "settlementName": "Kiskunhalas",
+      "osmObjectIds": [
+        "n295489366"
+      ],
+      "minimumDistanceMetres": 28.8,
+      "evidenceHash": "7e287e544bfeb4d70b2a62b2abb8fb211d4bfc8d9d5682c90dc8bf5390341e99",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 5,
+    "totalCandidatesOnLine": 5
+  }
+}

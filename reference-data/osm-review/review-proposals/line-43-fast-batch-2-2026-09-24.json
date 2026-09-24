@@ -1,0 +1,47 @@
+{
+  "batchId": "line-43-fast-batch-2-2026-09-24",
+  "generatedAt": "2026-09-24T15:50:47Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "43",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Mez%C5%91falva%E2%80%93R%C3%A9tszilas-vas%C3%BAtvonal&oldid=28575093",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Mezőfalva–Rétszilas railway as MÁV line 43 and explicitly lists Nagykarácsony and Alap in both its route diagram and historical narrative. It cites dated operational material and Vasútállomások.hu; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "WIKIPEDIA_ARTICLE_WITH_EXPLICIT_ROUTE_AND_NARRATIVE",
+    "caveat": "The individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:07001:43",
+      "kshCode": "07001",
+      "settlementName": "Nagykarácsony",
+      "osmObjectIds": [
+        "n1063783476"
+      ],
+      "minimumDistanceMetres": 1.5,
+      "evidenceHash": "daa32321f44fe282ea4351bede3983968682b7b4982d6b38815e7258af4e31d5",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:26824:43",
+      "kshCode": "26824",
+      "settlementName": "Alap",
+      "osmObjectIds": [
+        "n1063783398"
+      ],
+      "minimumDistanceMetres": 3.5,
+      "evidenceHash": "a786c55e9180007369ad85010677fd8318ec5aef4e8e26ecd6fabee1e2e291bc",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 2,
+    "totalCandidatesOnLine": 2
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "batchId": "line-64-fast-batch-2-2026-09-24",
+  "generatedAt": "2026-09-24T15:50:47Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "64",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=P%C3%A9cs%E2%80%93B%C3%A1tasz%C3%A9k-vas%C3%BAtvonal&oldid=29214375",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Pécs–Bátaszék railway as MÁV line 64 and explicitly lists Pécs, Palotabozsok and Bátaszék in its route diagram and narrative. It cites independent railway press, a transport-authority decision and other published sources; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_INDEPENDENT_AND_AUTHORITY_SOURCES",
+    "caveat": "The individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:08864:64",
+      "kshCode": "08864",
+      "settlementName": "Bátaszék",
+      "osmObjectIds": [
+        "n9213648926"
+      ],
+      "minimumDistanceMetres": 17.4,
+      "evidenceHash": "ef3c75ea68766cc420a402aafe01e63977ec868f5b7fd96457b7dc9b673e8854",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:10135:64",
+      "kshCode": "10135",
+      "settlementName": "Palotabozsok",
+      "osmObjectIds": [
+        "n8606740448"
+      ],
+      "minimumDistanceMetres": 0,
+      "evidenceHash": "16804214ebbda3d116ebfb1055d0c6ce39af0c0b8073d568bbd7b765e71e2346",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:19415:64",
+      "kshCode": "19415",
+      "settlementName": "Pécs",
+      "osmObjectIds": [
+        "n25546152"
+      ],
+      "minimumDistanceMetres": 8,
+      "evidenceHash": "a420f0a9218839be4ae75c0ec03660696dcd8a77bc2100a85bf7123810971d28",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 3,
+    "totalCandidatesOnLine": 3
+  }
+}
