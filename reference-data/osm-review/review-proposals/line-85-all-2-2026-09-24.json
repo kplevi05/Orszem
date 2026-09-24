@@ -1,0 +1,39 @@
+{
+  "batchId": "line-85-all-2-2026-09-24",
+  "generatedAt": "2026-09-24T10:15:58Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "85",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=V%C3%A1mosgy%C3%B6rk%E2%80%93Gy%C3%B6ngy%C3%B6s-vas%C3%BAtvonal&oldid=29151421",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Vámosgyörk–Gyöngyös railway as MÁV line 85 and explicitly lists both Gyöngyös and Gyöngyöshalász in its route diagram. Its references include local-history material and independent regional press; no VPE/HÜSZ/KTI/GYSEV source lineage was found during the detailed line-level review.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_EXPLICIT_ROUTE_DIAGRAM",
+    "caveat": "The route diagram and article text are explicit, but the individual station rows do not each carry a separate inline citation. This limitation is disclosed for human review and is not an automatic blocker under the current approved review policy."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:05236:85",
+      "kshCode": "05236",
+      "settlementName": "Gyöngyös",
+      "osmObjectIds": ["n243750429"],
+      "minimumDistanceMetres": 9.7,
+      "evidenceHash": "e4e769684ce0d8f3715f81b0865869d925aed2166ae78838ef62f803b5ae7ea5",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:17534:85",
+      "kshCode": "17534",
+      "settlementName": "Gyöngyöshalász",
+      "osmObjectIds": ["n243750428"],
+      "minimumDistanceMetres": 3.2,
+      "evidenceHash": "e8bc8ab3aecabc77111ca43ad642c50feb42ce3baf3ce7b7d788ce135249fe1c",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {"alreadyApprovedOnLine": 0, "readyForHumanApproval": 2, "totalCandidatesOnLine": 2}
+}
