@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:30766:12",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "30766",
+  "lineCode": "12",
+  "osmObjectIds": ["n8440432956"],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Tatabánya–Oroszlány railway as MÁV line 12 and explicitly lists Oroszlány in its route diagram and stations section. No VPE/HÜSZ/KTI/GYSEV source lineage was found during the line-level review. Owner explicitly approved this candidate as part of the PR #37 approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Tatab%C3%A1nya%E2%80%93Oroszl%C3%A1ny-vas%C3%BAtvonal&oldid=29195408",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "8a59da576a13649f9f135c9eb780c0169d3834b2a17edeca68a6dfd7feb72815",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T08:37:41Z"
+}
