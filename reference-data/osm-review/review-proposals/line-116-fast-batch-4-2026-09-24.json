@@ -66,8 +66,8 @@
     }
   ],
   "summary": {
-    "alreadyApprovedOnLine": 0,
+    "alreadyApprovedOnLine": 1,
     "readyForHumanApproval": 5,
-    "totalCandidatesOnLine": 5
+    "totalCandidatesOnLine": 6
   }
 }
