@@ -1,0 +1,73 @@
+{
+  "batchId": "line-116-fast-batch-4-2026-09-24",
+  "generatedAt": "2026-09-24T17:11:39Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "116",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Ny%C3%ADregyh%C3%A1za%E2%80%93V%C3%A1s%C3%A1rosnam%C3%A9ny-vas%C3%BAtvonal&oldid=28592564",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Nyíregyháza–Vásárosnamény railway as MÁV line 116 and explicitly lists Napkor, Nyírmada, Vásárosnamény, Apagy and Ófehértó in its route diagram. It cites Magyar Vasúttörténet volume 4 and the independent Sínek Világa journal; no VPE/HÜSZ/KTI/GYSEV material was consulted or used as corroboration.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_DIAGRAM_BOOK_AND_TECHNICAL_JOURNAL_SOURCES",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:08420:116",
+      "kshCode": "08420",
+      "settlementName": "Napkor",
+      "osmObjectIds": ["n1065129655"],
+      "minimumDistanceMetres": 4.3,
+      "evidenceHash": "c0c1287d90d6650d6e306ff7060b9e082ccf64197afe8fb445cf22925fbda824",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:12274:116",
+      "kshCode": "12274",
+      "settlementName": "Nyírmada",
+      "osmObjectIds": ["n1065130262"],
+      "minimumDistanceMetres": 2.6,
+      "evidenceHash": "1123922ac4805cca7e4427826fc732b017649f5f41c891417ac5010977cc58c8",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:18324:116",
+      "kshCode": "18324",
+      "settlementName": "Vásárosnamény",
+      "osmObjectIds": ["n497138617"],
+      "minimumDistanceMetres": 7.6,
+      "evidenceHash": "c41bb090c0af7b56de43ecd2bd3b17f9429bc0acc5849f712dfe6b20ec21f8f9",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:20303:116",
+      "kshCode": "20303",
+      "settlementName": "Apagy",
+      "osmObjectIds": ["n628589437"],
+      "minimumDistanceMetres": 2.5,
+      "evidenceHash": "a6b3a2ba2e685f44bf4155d42270028cf261e8ef10afdd71828ab294fcc9d483",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:22284:116",
+      "kshCode": "22284",
+      "settlementName": "Ófehértó",
+      "osmObjectIds": ["n1065130579"],
+      "minimumDistanceMetres": 5.6,
+      "evidenceHash": "1d7b51e6e8e232e9297a56e7fc63416b01ad4101db9c3f623fa14069a9c33479",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 5,
+    "totalCandidatesOnLine": 5
+  }
+}

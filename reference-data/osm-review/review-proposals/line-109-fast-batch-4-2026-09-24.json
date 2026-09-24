@@ -1,0 +1,73 @@
+{
+  "batchId": "line-109-fast-batch-4-2026-09-24",
+  "generatedAt": "2026-09-24T17:11:39Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "109",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Debrecen%E2%80%93Tiszal%C3%B6k-vas%C3%BAtvonal&oldid=28554587",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Debrecen–Tiszalök railway as MÁV line 109 and explicitly lists Hajdúböszörmény, Tiszavasvári, Hajdúdorog, Hajdúnánás and Szorgalmatos in both its route diagram and service table. It cites Magyar Vasúttörténet volume 2; no VPE/HÜSZ/KTI/GYSEV material was consulted or used as corroboration.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_AND_SERVICE_TABLE_AND_BOOK_SOURCE",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:03045:109",
+      "kshCode": "03045",
+      "settlementName": "Hajdúböszörmény",
+      "osmObjectIds": ["n628589433"],
+      "minimumDistanceMetres": 9.8,
+      "evidenceHash": "16dc8336d7a8d8ea476eb51e0d3c89dc4245a9fecb7e7113871fbebf66cc83a5",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:07597:109",
+      "kshCode": "07597",
+      "settlementName": "Tiszavasvári",
+      "osmObjectIds": ["n1060125673"],
+      "minimumDistanceMetres": 3.9,
+      "evidenceHash": "cba5ffcb2eba70adfa92a23fbe2698459ec52b48b3e15b267dff357817546974",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:12803:109",
+      "kshCode": "12803",
+      "settlementName": "Hajdúdorog",
+      "osmObjectIds": ["n3273591233"],
+      "minimumDistanceMetres": 2.4,
+      "evidenceHash": "cecf032a2c5f4a9bd263a514b56714d539562e49381e8ba7c6f69d17f31a24c1",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:22406:109",
+      "kshCode": "22406",
+      "settlementName": "Hajdúnánás",
+      "osmObjectIds": ["n628589436"],
+      "minimumDistanceMetres": 5.4,
+      "evidenceHash": "5093f00a71181eed864dc6a8765287e72e796f5d568b5937694f6a0dbf9d45c6",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:34388:109",
+      "kshCode": "34388",
+      "settlementName": "Szorgalmatos",
+      "osmObjectIds": ["n1060125536"],
+      "minimumDistanceMetres": 2.4,
+      "evidenceHash": "da74535a4774bf0362fdc7288769c50ecf3486c741208143c3a2e9820b7dd20a",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 5,
+    "totalCandidatesOnLine": 5
+  }
+}
