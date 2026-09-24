@@ -1,0 +1,47 @@
+{
+  "batchId": "line-66-fast-batch-1-2026-09-24",
+  "generatedAt": "2026-09-24T13:20:45Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "66",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Vill%C3%A1ny%E2%80%93Magyarb%C3%B3ly-vas%C3%BAtvonal&oldid=27803762",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Villány–Magyarbóly railway as MÁV line 66 and explicitly lists Villány and Magyarbóly in its route diagram. It cites Magyar Vasúttörténet volume 1, Vasútállomások.hu and independent railway press; no VPE/HÜSZ/KTI/GYSEV source lineage was found for the reviewed facts.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_AND_INDEPENDENT_RAIL_PRESS",
+    "caveat": "The individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:25177:66",
+      "kshCode": "25177",
+      "settlementName": "Magyarbóly",
+      "osmObjectIds": [
+        "n344972535"
+      ],
+      "minimumDistanceMetres": 4.6,
+      "evidenceHash": "5476711bbb1fc4edbb57e37de0a0de2bfd098abe3bfd52ff324dcc3aaf2c5c8f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:28024:66",
+      "kshCode": "28024",
+      "settlementName": "Villány",
+      "osmObjectIds": [
+        "n344972517"
+      ],
+      "minimumDistanceMetres": 5.2,
+      "evidenceHash": "1feeab99f15b8ab565c84b066de4ee2817036069086e50b8fae9ff5a9d8a936f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 2,
+    "totalCandidatesOnLine": 2
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "batchId": "line-44-fast-batch-1-2026-09-24",
+  "generatedAt": "2026-09-24T13:20:45Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "44",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Sz%C3%A9kesfeh%C3%A9rv%C3%A1r%E2%80%93Pusztaszabolcs-vas%C3%BAtvonal&oldid=27860534",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Székesfehérvár–Pusztaszabolcs railway as line 44 and explicitly lists Székesfehérvár, Seregélyes, Zichyújfalu and Pusztaszabolcs in its route diagram. The article contains railway-history sources; no VPE/HÜSZ/KTI/GYSEV source was used for the reviewed line-membership facts.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ROUTE_ARTICLE",
+    "caveat": "The individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:14827:44",
+      "kshCode": "14827",
+      "settlementName": "Székesfehérvár",
+      "osmObjectIds": [
+        "n7575662350"
+      ],
+      "minimumDistanceMetres": 72.7,
+      "evidenceHash": "8b6626f326f9f55539befc431a5749f7c48283ed118d55651ae4508e993692eb",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:20206:44",
+      "kshCode": "20206",
+      "settlementName": "Seregélyes",
+      "osmObjectIds": [
+        "n10160028440"
+      ],
+      "minimumDistanceMetres": 6.2,
+      "evidenceHash": "e7cdf34c9c919e8338ba1a0eba7e6e8032163c5379400efc5ac2ea45badee67d",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:29018:44",
+      "kshCode": "29018",
+      "settlementName": "Pusztaszabolcs",
+      "osmObjectIds": [
+        "n7399473213"
+      ],
+      "minimumDistanceMetres": 10.6,
+      "evidenceHash": "7a10089b54a9b1b51ffabc98d10fb4ed4a597289b217612127dfc53a892544d7",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:34263:44",
+      "kshCode": "34263",
+      "settlementName": "Zichyújfalu",
+      "osmObjectIds": [
+        "n3268470164"
+      ],
+      "minimumDistanceMetres": 3.3,
+      "evidenceHash": "66324837ebbf19682d6c5f6c1fbf617c199430ff3ee6bda5a7a8a30255db7ad2",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 4,
+    "totalCandidatesOnLine": 4
+  }
+}

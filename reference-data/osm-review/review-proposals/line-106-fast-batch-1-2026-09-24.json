@@ -1,0 +1,35 @@
+{
+  "batchId": "line-106-fast-batch-1-2026-09-24",
+  "generatedAt": "2026-09-24T13:20:45Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "106",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Debrecen%E2%80%93Nagykereki-vas%C3%BAtvonal&oldid=28720775",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Debrecen–Nagykereki railway as MÁV line 106 and explicitly lists Debrecen in its route diagram and service table. It cites Magyar Vasúttörténet volumes 2 and 4, independent railway publications and press; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_AND_INDEPENDENT_PRESS_SOURCES",
+    "caveat": "The individual route row does not carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:15130:106",
+      "kshCode": "15130",
+      "settlementName": "Debrecen",
+      "osmObjectIds": [
+        "n3669062535"
+      ],
+      "minimumDistanceMetres": 62.8,
+      "evidenceHash": "c0148237d258301efccbfad3f7d7829ab356dec5673b599dff036496c8f34226",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 1,
+    "totalCandidatesOnLine": 1
+  }
+}

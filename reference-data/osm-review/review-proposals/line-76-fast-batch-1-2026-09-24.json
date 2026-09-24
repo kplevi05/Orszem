@@ -1,0 +1,35 @@
+{
+  "batchId": "line-76-fast-batch-1-2026-09-24",
+  "generatedAt": "2026-09-24T13:20:45Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "76",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Di%C3%B3sjen%C5%91%E2%80%93Romh%C3%A1ny-vas%C3%BAtvonal&oldid=27267673",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Diósjenő–Romhány railway as MÁV line 76 and explicitly lists Diósjenő in its route diagram. It cites Magyar Vasúttörténet volume 4 and government archival material; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_CITATION",
+    "caveat": "The individual route row does not carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:06743:76",
+      "kshCode": "06743",
+      "settlementName": "Diósjenő",
+      "osmObjectIds": [
+        "n3609842991"
+      ],
+      "minimumDistanceMetres": 20.6,
+      "evidenceHash": "5c47f9e1a575508d54898ee5bb8e0dac5c180aff515843c3ff12556eea849dae",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 1,
+    "totalCandidatesOnLine": 1
+  }
+}
