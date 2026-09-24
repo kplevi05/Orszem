@@ -1,0 +1,71 @@
+{
+  "batchId": "line-27-fast-batch-3-2026-09-24",
+  "generatedAt": "2026-09-24T16:35:41Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "27",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Leps%C3%A9ny%E2%80%93Hajm%C3%A1sk%C3%A9r-vas%C3%BAtvonal&oldid=27501910",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Lepsény–Hajmáskér railway as MÁV line 27 and explicitly lists Sóly, Lepsény, Hajmáskér and Csajág in its route diagram and detailed station sections. It cites published railway-history and regional material; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_AND_STATION_SECTIONS",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:03601:27",
+      "kshCode": "03601",
+      "settlementName": "Sóly",
+      "osmObjectIds": [
+        "n9480407144"
+      ],
+      "minimumDistanceMetres": 3.9,
+      "evidenceHash": "28074e435160d366aaeeb5d4ab1b14c07942f69f51f2f52be77e6c78ae3c1177",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:07269:27",
+      "kshCode": "07269",
+      "settlementName": "Lepsény",
+      "osmObjectIds": [
+        "n8517780135"
+      ],
+      "minimumDistanceMetres": 69.6,
+      "evidenceHash": "78be0d7e506d5cafb1ec4398fb942e59e0598dde4d06eca00c97f966b10a20c2",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:15361:27",
+      "kshCode": "15361",
+      "settlementName": "Hajmáskér",
+      "osmObjectIds": [
+        "n80231932"
+      ],
+      "minimumDistanceMetres": 24.8,
+      "evidenceHash": "eaf7d1aaa2b5fbd9a5b8108f607c20ba0067a551302887efe59916c271923e32",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:16072:27",
+      "kshCode": "16072",
+      "settlementName": "Csajág",
+      "osmObjectIds": [
+        "n61086286"
+      ],
+      "minimumDistanceMetres": 25.7,
+      "evidenceHash": "385776ebf378bf9b132abc78f0e328df965d26e7d50524c8ff4c934254492cdb",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 4,
+    "totalCandidatesOnLine": 4
+  }
+}

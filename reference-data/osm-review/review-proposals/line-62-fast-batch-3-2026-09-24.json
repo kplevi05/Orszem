@@ -1,0 +1,71 @@
+{
+  "batchId": "line-62-fast-batch-3-2026-09-24",
+  "generatedAt": "2026-09-24T16:35:41Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "62",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=K%C3%B6z%C3%A9prig%C3%B3c%E2%80%93Vill%C3%A1ny-vas%C3%BAtvonal&oldid=29332395",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Középrigóc–Villány railway as MÁV line 62 and explicitly lists Drávafok, Csányoszró, Vajszló and Sellye in its route diagram. The article includes railway-history references; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ROUTE_ARTICLE",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:17419:62",
+      "kshCode": "17419",
+      "settlementName": "Drávafok",
+      "osmObjectIds": [
+        "n4821991067"
+      ],
+      "minimumDistanceMetres": 2,
+      "evidenceHash": "4a767bf9bc6659c6238c276a910eeda0a56de2bbbbe467bca7735936c4bd7433",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:19901:62",
+      "kshCode": "19901",
+      "settlementName": "Csányoszró",
+      "osmObjectIds": [
+        "n409557413"
+      ],
+      "minimumDistanceMetres": 0.3,
+      "evidenceHash": "8fb631db43c8be3877d79ab9a8c43762828a4440ecd53b2bd288602dd1da6a1a",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:28538:62",
+      "kshCode": "28538",
+      "settlementName": "Vajszló",
+      "osmObjectIds": [
+        "n4817066840"
+      ],
+      "minimumDistanceMetres": 3.4,
+      "evidenceHash": "2225812f7199cce0c6cc01545ccead5c0248ef6216400d271fb7dcddb1dec2d2",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:28741:62",
+      "kshCode": "28741",
+      "settlementName": "Sellye",
+      "osmObjectIds": [
+        "n9481731663"
+      ],
+      "minimumDistanceMetres": 2.3,
+      "evidenceHash": "8893bd399af804f608ae2fb2ff0468ae24ed5b3017f22a4fd80a27c8f2ac5b00",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 4,
+    "totalCandidatesOnLine": 4
+  }
+}

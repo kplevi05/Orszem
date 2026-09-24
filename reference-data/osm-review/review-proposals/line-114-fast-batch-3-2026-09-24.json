@@ -1,0 +1,59 @@
+{
+  "batchId": "line-114-fast-batch-3-2026-09-24",
+  "generatedAt": "2026-09-24T16:35:41Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "114",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Kocsord%E2%80%93Csenger-vas%C3%BAtvonal&oldid=28010253",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Kocsord–Csenger railway as MÁV line 114 and explicitly lists Győrtelek, Ököritófülpös and Csenger in its route diagram. It cites Magyar Vasúttörténet volume 4, independent railway press and Vasútállomások.hu; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "STRONG_WIKIPEDIA_ARTICLE_WITH_BOOK_AND_INDEPENDENT_RAIL_SOURCES",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:10126:114",
+      "kshCode": "10126",
+      "settlementName": "Győrtelek",
+      "osmObjectIds": [
+        "n1260955784"
+      ],
+      "minimumDistanceMetres": 1.2,
+      "evidenceHash": "cb8623bbb05a588c67c3a66477c2f47acd0adea96c7a3d9417a109978d3d3543",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:30641:114",
+      "kshCode": "30641",
+      "settlementName": "Csenger",
+      "osmObjectIds": [
+        "n497138625"
+      ],
+      "minimumDistanceMetres": 0,
+      "evidenceHash": "5c1cd495504c785e5ed4465c6d0b880fa39c1b7fadabd9cfa940f2341112a743",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:31769:114",
+      "kshCode": "31769",
+      "settlementName": "Ököritófülpös",
+      "osmObjectIds": [
+        "n1260955738"
+      ],
+      "minimumDistanceMetres": 3.7,
+      "evidenceHash": "a27ceeb5e7dda6ad123457a3aa8174409372f4a8b35b27302d3e645b105640e3",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 3,
+    "totalCandidatesOnLine": 3
+  }
+}
