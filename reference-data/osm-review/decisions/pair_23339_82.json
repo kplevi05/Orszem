@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:23339:82",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "23339",
+  "lineCode": "82",
+  "osmObjectIds": [
+    "n10218199324"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies MÁV line 82 and explicitly lists Jászfényszaru in its route diagram or route table. No VPE/HÜSZ/KTI/GYSEV source was used for this reviewed line-membership fact. Owner explicitly approved this candidate as part of the PR #45 consolidated approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Hatvan%E2%80%93Szolnok-vas%C3%BAtvonal&oldid=27513485",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "4d046d6043db10e0d0b1bd05fe93d5b30d7e268488b404f67458ef355f547441",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T15:17:18Z"
+}

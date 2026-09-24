@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:05582:89",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "05582",
+  "lineCode": "89",
+  "osmObjectIds": [
+    "n1065130307"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies MÁV line 89 and explicitly lists Nagycsécs in its route diagram or route table. No VPE/HÜSZ/KTI/GYSEV source was used for this reviewed line-membership fact. Owner explicitly approved this candidate as part of the PR #45 consolidated approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Ny%C3%A9kl%C3%A1dh%C3%A1za%E2%80%93Tisza%C3%BAjv%C3%A1ros-vas%C3%BAtvonal&oldid=29324218",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "a08f0b15d9d65977ceec74d6d0cc102a934c81afca8aef6c7cc4d6edd6367612",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T15:17:18Z"
+}

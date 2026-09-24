@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:29018:44",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "29018",
+  "lineCode": "44",
+  "osmObjectIds": [
+    "n7399473213"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies MÁV line 44 and explicitly lists Pusztaszabolcs in its route diagram or route table. No VPE/HÜSZ/KTI/GYSEV source was used for this reviewed line-membership fact. Owner explicitly approved this candidate as part of the PR #45 consolidated approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Sz%C3%A9kesfeh%C3%A9rv%C3%A1r%E2%80%93Pusztaszabolcs-vas%C3%BAtvonal&oldid=27860534",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "7a10089b54a9b1b51ffabc98d10fb4ed4a597289b217612127dfc53a892544d7",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T15:17:18Z"
+}
