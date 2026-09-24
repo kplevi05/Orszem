@@ -1,0 +1,25 @@
+{
+  "candidateId": "pair:06947:75",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "06947",
+  "lineCode": "75",
+  "osmObjectIds": ["n287638744"],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Vác–Balassagyarmat railway as MÁV line 75 and explicitly lists Szokolya on its route diagram. No VPE/HÜSZ source lineage was found during the line-level review. Owner explicitly approved this candidate as part of the PR #36 approval set.",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=V%C3%A1c%E2%80%93Balassagyarmat-vas%C3%BAtvonal&oldid=29222283",
+      "retrievedAt": "2026-09-23",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "573009b8942a704ba64afc7a710f0b6ed230374ed1f68ca7ed500fe5059ca508",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-24T07:20:56Z"
+}
