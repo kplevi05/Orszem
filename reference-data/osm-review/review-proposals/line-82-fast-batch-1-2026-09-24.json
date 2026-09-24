@@ -1,0 +1,71 @@
+{
+  "batchId": "line-82-fast-batch-1-2026-09-24",
+  "generatedAt": "2026-09-24T13:20:45Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "82",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Hatvan%E2%80%93Szolnok-vas%C3%BAtvonal&oldid=27513485",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Hatvan–Szolnok railway as MÁV line 82 and explicitly lists Jászfényszaru, Pusztamonostor, Jászberény and Újszász in its route diagram. No VPE/HÜSZ/KTI/GYSEV source was used for the reviewed line-membership facts.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ROUTE_ARTICLE",
+    "caveat": "The article's general sourcing is limited and the individual route rows do not each carry a separate inline citation. This is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:15246:82",
+      "kshCode": "15246",
+      "settlementName": "Pusztamonostor",
+      "osmObjectIds": [
+        "n10218177881"
+      ],
+      "minimumDistanceMetres": 6.1,
+      "evidenceHash": "3c267d6d55e22efa3872ce3d29865381fa6acae1b256f4f606071bb1a2263d1a",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:15291:82",
+      "kshCode": "15291",
+      "settlementName": "Újszász",
+      "osmObjectIds": [
+        "n9355942020"
+      ],
+      "minimumDistanceMetres": 56.5,
+      "evidenceHash": "7fc8f6908e4b1d79a4fc04f1134b09a7f747701ceb79cfaf8400d14939f6ff34",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:18209:82",
+      "kshCode": "18209",
+      "settlementName": "Jászberény",
+      "osmObjectIds": [
+        "n10218161658"
+      ],
+      "minimumDistanceMetres": 17.1,
+      "evidenceHash": "913997966a5c4e098326a2865040a6d37db80c4ecdaa27acfbb8c8b4d0e6bfae",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:23339:82",
+      "kshCode": "23339",
+      "settlementName": "Jászfényszaru",
+      "osmObjectIds": [
+        "n10218199324"
+      ],
+      "minimumDistanceMetres": 10.5,
+      "evidenceHash": "4d046d6043db10e0d0b1bd05fe93d5b30d7e268488b404f67458ef355f547441",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 4,
+    "totalCandidatesOnLine": 4
+  }
+}

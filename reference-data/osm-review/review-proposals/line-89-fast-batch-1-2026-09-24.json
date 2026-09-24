@@ -1,0 +1,71 @@
+{
+  "batchId": "line-89-fast-batch-1-2026-09-24",
+  "generatedAt": "2026-09-24T13:20:45Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "89",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Ny%C3%A9kl%C3%A1dh%C3%A1za%E2%80%93Tisza%C3%BAjv%C3%A1ros-vas%C3%BAtvonal&oldid=29324218",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Nyékládháza–Tiszaújváros railway as MÁV line 89 and explicitly lists Hejőkeresztúr, Nagycsécs, Sajószöged and Tiszaújváros in its route diagram and narrative. It cites Vasútállomások.hu and dated operational reporting; no VPE/HÜSZ/KTI/GYSEV source lineage was found.",
+    "sourceStrength": "WIKIPEDIA_ARTICLE_WITH_EXPLICIT_ROUTE_AND_OPERATIONAL_SOURCES",
+    "caveat": "The individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:04604:89",
+      "kshCode": "04604",
+      "settlementName": "Hejőkeresztúr",
+      "osmObjectIds": [
+        "n345015012"
+      ],
+      "minimumDistanceMetres": 17.3,
+      "evidenceHash": "c40f6d14dfb364dc92079f5789eacb7d3a998bcfbc2ee88fd078994e9d9f1ad3",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:05582:89",
+      "kshCode": "05582",
+      "settlementName": "Nagycsécs",
+      "osmObjectIds": [
+        "n1065130307"
+      ],
+      "minimumDistanceMetres": 5.6,
+      "evidenceHash": "a08f0b15d9d65977ceec74d6d0cc102a934c81afca8aef6c7cc4d6edd6367612",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:28352:89",
+      "kshCode": "28352",
+      "settlementName": "Tiszaújváros",
+      "osmObjectIds": [
+        "n703385018"
+      ],
+      "minimumDistanceMetres": 20,
+      "evidenceHash": "0644f474e948f726d29f9c50344430842d615e9f613c7bcb6d15ce3ea2f5e0d1",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:30340:89",
+      "kshCode": "30340",
+      "settlementName": "Sajószöged",
+      "osmObjectIds": [
+        "n6595336435"
+      ],
+      "minimumDistanceMetres": 4.9,
+      "evidenceHash": "f55e08879f02b1ed8f311fce37c07085c1cb5a0f950ea2aa63e586346bedbc05",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 4,
+    "totalCandidatesOnLine": 4
+  }
+}
