@@ -39,8 +39,8 @@ android {
         applicationId = "hu.orszembejelento.service"
         minSdk = 26
         targetSdk = 37
-        versionCode = 4
-        versionName = "2.0.3"
+        versionCode = 5
+        versionName = "2.0.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
