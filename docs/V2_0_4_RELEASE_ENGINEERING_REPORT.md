@@ -36,15 +36,17 @@ Lásd `docs/releases/RELEASE_NOTES_2.0.4.md`: V007; SUPER_ADMIN preview/apply; a
 
 ## 5. Regresszió a release HEAD-en
 
-Lásd a PR leírását és a lenti eredménytáblát (backend teljes teszt cache nélkül, Android, Web, Python, validátorok,
-GitHub CI a végső HEAD-en).
+A release HEAD-en (a verziócommitok + dokumentáció) lokálisan futtatva:
 
 | Ellenőrzés | Eredmény |
 |---|---|
-| Backend `test --rerun --no-build-cache` | lásd PR |
-| Android assembleDebug ×2, lint, unit ×2 | lásd PR |
-| Web typecheck + build | lásd PR |
-| Python `scripts/tests` + preview `--check` + validátorok | lásd PR |
+| Backend `test --rerun --no-build-cache` | **887 teszt, 0 hiba, 0 kihagyott**; BUILD SUCCESSFUL (4 p 46 mp) |
+| Backend jar checksum a végső HEAD-en | `2de7d7ff…3a03`, azonos a §3-mal |
+| Android assembleDebug ×2, lint, unit tesztek (public + service), `--rerun-tasks` | BUILD SUCCESSFUL |
+| Public Web `npm ci`, typecheck, build | sikeres |
+| Python `scripts/tests` | 55/55; promóció 146/919 hozzárendelés, 38 vonal; preview `--check` naprakész |
+| Referenciaadat-validátorok (example, evaluation, cleared, promótált) | mind valid |
+| GitHub CI a végső HEAD-en | lásd a PR check-jeit (a PR leírása rögzíti az eredményt) |
 
 ## 6. A production rollout előtti kötelező kapuk (külön bizonyítandók, még nem történtek meg)
 
