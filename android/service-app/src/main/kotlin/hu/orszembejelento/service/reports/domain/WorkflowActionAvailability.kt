@@ -24,7 +24,11 @@ fun availableWorkflowActions(status: String, role: String, isOwnAssignment: Bool
     return when (status) {
         "NEW" -> when {
             role == "SERVICE_USER" -> WorkflowActionAvailability(claim = true)
-            isSupervisor -> WorkflowActionAvailability(close = true) // supervisor closes NEW directly, never claims (brief §21)
+            // Administrator self-claim: a supervisor may either claim a NEW report for
+            // themselves (same as a SERVICE_USER) or close it directly without claiming -
+            // both are independently backend-authorised (ReportWorkflowPolicy.canClaim /
+            // .canClose), so the UI offers both rather than forcing one path.
+            isSupervisor -> WorkflowActionAvailability(claim = true, close = true)
             else -> WorkflowActionAvailability()
         }
         "IN_PROGRESS" -> when {

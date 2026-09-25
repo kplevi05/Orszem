@@ -36,7 +36,15 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
     // ---------------------------------------------------------- 1. claim vs role promotion
 
     @Test
-    fun `a self-claim racing a role promotion of the same user - exactly one side succeeds`() {
+    fun `a self-claim racing a role promotion of the same user - the two orderings are each self-consistent`() {
+        // Since administrator self-claim, promoting SERVICE_USER to MODERATOR no longer
+        // unconditionally disqualifies an in-flight claim: the user's area grant is untouched
+        // by the role change, so a promoted territorial MODERATOR can still claim this exact
+        // report. The two possible lock orderings are therefore no longer mutually exclusive
+        // by construction - both may legitimately succeed. What must still hold, in either
+        // ordering, is that the DB never ends up in an inconsistent state: no double
+        // assignment, no partially-applied role change, and (still enforced, unrelated to
+        // this feature) a role change is refused once an active assignment already exists.
         val area = givenRoutedArea()
         val user = givenServiceUser()
         grantArea(user.id, area.areaId)
@@ -51,28 +59,31 @@ class AssigneeEligibilityCrossPhaseIT : ReportWorkflowTestSupport() {
 
         val claimResult = results[0]
         val roleChangeResult = results[1]
-        val succeeded = listOf(claimResult, roleChangeResult).count { it.statusCode() == 200 }
-        check(succeeded == 1) { "expected exactly one winner, got claim=${claimResult.statusCode()} roleChange=${roleChangeResult.statusCode()}" }
 
         val row = reportRow(report.publicId)
         val finalRole = jdbc.sql("SELECT role FROM users WHERE id = :id").param("id", user.id).query(String::class.java).single()
 
-        if (claimResult.statusCode() == 200) {
+        if (roleChangeResult.statusCode() == 409) {
             // Claim won the user-lock race: the actor was genuinely still SERVICE_USER at
             // the exact moment of assignment. The role change, unblocked afterward, now
             // finds the fresh open assignment and correctly rejects it instead of silently
-            // orphaning it (§R).
+            // orphaning it (§R) - this business rule is unaffected by self-claim.
+            check(claimResult.statusCode() == 200) { "role change was rejected for an active assignment, so claim must have created one: ${claimResult.body()}" }
             check(row.status == "IN_PROGRESS" && row.assignedUserId == user.id)
-            check(roleChangeResult.statusCode() == 409) { "expected USER_HAS_ACTIVE_REPORT_ASSIGNMENTS once the assignment was created first, got ${roleChangeResult.statusCode()}: ${roleChangeResult.body()}" }
             check(errorCode(roleChangeResult) == "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS")
             check(finalRole == "SERVICE_USER") { "the rejected role change must not have partially applied" }
         } else {
+            // Role change won the user-lock race and committed cleanly (no assignment existed
+            // yet to block it). Claim, unblocked afterward, re-reads the now-MODERATOR role
+            // and - since the area grant survived the promotion untouched - legitimately
+            // succeeds too under the new administrator self-claim rule.
             check(roleChangeResult.statusCode() == 200) { roleChangeResult.body() }
             check(finalRole == "MODERATOR")
-            check(claimResult.statusCode() == 403) { "expected REPORT_WORKFLOW_FORBIDDEN once promoted before the claim's own lock, got ${claimResult.statusCode()}: ${claimResult.body()}" }
-            check(errorCode(claimResult) == "REPORT_WORKFLOW_FORBIDDEN")
-            check(row.status == "NEW" && row.assignedUserId == null)
+            check(claimResult.statusCode() == 200) { "a promoted MODERATOR who retains area access must still be able to self-claim: ${claimResult.body()}" }
+            check(row.status == "IN_PROGRESS" && row.assignedUserId == user.id)
         }
+        // Exactly one open assignment either way - never a duplicate, never orphaned.
+        check(openAssignmentCount(report.publicId) == 1)
     }
 
     // -------------------------------------------------------------- 2. claim vs deactivation

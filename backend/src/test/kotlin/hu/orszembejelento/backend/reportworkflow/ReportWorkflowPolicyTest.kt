@@ -124,9 +124,35 @@ class ReportWorkflowPolicyTest {
     }
 
     @Test
-    fun `MODERATOR and SUPER_ADMIN can never claim`() {
-        check(!policy.canClaim(actor(UserRole.MODERATOR, ownAreas = setOf(alpha)), routed(ReportStatus.NEW, areaId = alpha)))
-        check(!policy.canClaim(actor(UserRole.SUPER_ADMIN), routed(ReportStatus.NEW, areaId = alpha)))
+    fun `a territorial MODERATOR may self-claim only within their own area access, same as canViewReport`() {
+        val mod = actor(UserRole.MODERATOR, ownAreas = setOf(alpha))
+        check(policy.canClaim(mod, routed(ReportStatus.NEW, areaId = alpha)))
+        check(!policy.canClaim(mod, routed(ReportStatus.NEW, areaId = beta)))
+    }
+
+    @Test
+    fun `a global MODERATOR or SUPER_ADMIN may self-claim any routed report, including UNCLASSIFIED`() {
+        val globalMod = actor(UserRole.MODERATOR, global = true)
+        val admin = actor(UserRole.SUPER_ADMIN)
+        check(policy.canClaim(globalMod, routed(ReportStatus.NEW, areaId = alpha)))
+        check(policy.canClaim(globalMod, unclassified(ReportStatus.NEW)))
+        check(policy.canClaim(admin, routed(ReportStatus.NEW, areaId = alpha)))
+        check(policy.canClaim(admin, unclassified(ReportStatus.NEW)))
+    }
+
+    @Test
+    fun `a territorial MODERATOR's self-claim of UNCLASSIFIED follows their own UNCLASSIFIED visibility, never SERVICE_USER-style area access`() {
+        // Territorial MODERATOR never sees UNCLASSIFIED (canViewReport / canViewUnclassified) -
+        // so self-claim must refuse it too, independent of the nationwide fallback flag.
+        val mod = actor(UserRole.MODERATOR, ownAreas = setOf(alpha))
+        check(!policy.canClaim(mod, unclassified(ReportStatus.NEW)))
+    }
+
+    @Test
+    fun `administrator self-claim never widens what a SERVICE_USER may claim`() {
+        val user = actor(UserRole.SERVICE_USER, ownAreas = setOf(alpha))
+        check(!policy.canClaim(user, routed(ReportStatus.NEW, areaId = beta)))
+        check(!policy.canClaim(user, unclassified(ReportStatus.NEW)))
     }
 
     @Test

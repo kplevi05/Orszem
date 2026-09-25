@@ -141,7 +141,9 @@ class ReportWorkflowController(
     @PostMapping("/{publicReportId}/claim")
     @Operation(
         summary = "Self-claim a NEW report",
-        description = "SERVICE_USER only. 409 REPORT_ALREADY_ASSIGNED if another user claimed it first; " +
+        description = "A SERVICE_USER within their own area access, or a MODERATOR/SUPER_ADMIN claiming " +
+            "any report they can already see (same visibility rule as GET, area-bounded for a territorial " +
+            "MODERATOR). 409 REPORT_ALREADY_ASSIGNED if another user claimed it first; " +
             "409 REPORT_STATE_CHANGED if expectedVersion is stale for another reason.",
     )
     fun claim(

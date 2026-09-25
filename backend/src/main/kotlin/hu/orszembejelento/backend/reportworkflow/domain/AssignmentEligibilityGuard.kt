@@ -20,7 +20,13 @@ import hu.orszembejelento.backend.scope.domain.AreaSnapshot
  * access covers it, or it is one of the actor's own explicit area grants, and the area
  * itself is ACTIVE (an assignment sitting in an already-inactive area is not this guard's
  * concern; the same [AreaScopePolicy] rule already treats that as out of scope for everyone
- * but SUPER_ADMIN, and a report's assignee is never SUPER_ADMIN).
+ * but SUPER_ADMIN). Since the administrator self-claim phase, an assignee can be a
+ * MODERATOR as well as a SERVICE_USER — this guard needed no change for that: it already
+ * took [postMutationActor] generically by role, and a MODERATOR's own open assignments are
+ * exactly what makes narrowing *their* area access meaningful to re-check here. A
+ * SUPER_ADMIN target never reaches this guard in practice: [GlobalAreaAccessUseCases]
+ * refuses a SUPER_ADMIN target outright, and ordinary area grants are not how a SUPER_ADMIN's
+ * own access works.
  */
 class AssignmentEligibilityGuard(private val areaScopePolicy: AreaScopePolicy = AreaScopePolicy()) {
 
