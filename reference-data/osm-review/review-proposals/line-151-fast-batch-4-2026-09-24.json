@@ -1,0 +1,73 @@
+{
+  "batchId": "line-151-fast-batch-4-2026-09-24",
+  "generatedAt": "2026-09-24T17:16:42Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "151",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Kunszentmikl%C3%B3s-Tass%E2%80%93Dunapataj-vas%C3%BAtvonal&oldid=28586127",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Kunszentmiklós-Tass–Dunapataj railway as MÁV line 151 and explicitly lists Dunavecse, Szalkszentmárton, Dunaegyháza, Apostag and Solt in its route diagram. It cites Magyar Vasúttörténet volume 4 and a dedicated railway-history book; no VPE/HÜSZ/KTI/GYSEV material was used as corroboration.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_DIAGRAM_AND_BOOK_SOURCES",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:07612:151",
+      "kshCode": "07612",
+      "settlementName": "Dunavecse",
+      "osmObjectIds": ["n9481003168"],
+      "minimumDistanceMetres": 6.7,
+      "evidenceHash": "1320eaa61adecf2ecba8cd61f4f31b75c8ed801f66ace295c05fd4d486871f43",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:19947:151",
+      "kshCode": "19947",
+      "settlementName": "Szalkszentmárton",
+      "osmObjectIds": ["n1798245421"],
+      "minimumDistanceMetres": 2.1,
+      "evidenceHash": "990eeda6d8b9210cef3f8787853ccbe6724a8288322f206f5fda9cbccc267520",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:21069:151",
+      "kshCode": "21069",
+      "settlementName": "Dunaegyháza",
+      "osmObjectIds": ["n10313727558"],
+      "minimumDistanceMetres": 0.0,
+      "evidenceHash": "75d7ae70a802bebab466c393ccab3ced04868c91abf5e2172a438f47a452412f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:21148:151",
+      "kshCode": "21148",
+      "settlementName": "Apostag",
+      "osmObjectIds": ["n2430971355"],
+      "minimumDistanceMetres": 2.9,
+      "evidenceHash": "ea06850aff1707a3e5c399b7f0c3bca8c5287c748b5cf6ab7be9eda53dfe2997",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:29115:151",
+      "kshCode": "29115",
+      "settlementName": "Solt",
+      "osmObjectIds": ["n3751784416"],
+      "minimumDistanceMetres": 2.4,
+      "evidenceHash": "477232f5d7bbb7a4319c608a2ca54693827360793dadb57e43b550cf3663683a",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 5,
+    "totalCandidatesOnLine": 5
+  }
+}

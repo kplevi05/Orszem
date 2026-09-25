@@ -1,0 +1,83 @@
+{
+  "batchId": "line-145-fast-batch-4-2026-09-24",
+  "generatedAt": "2026-09-24T17:16:42Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "145",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Kecskem%C3%A9t%E2%80%93Szolnok-vas%C3%BAtvonal&oldid=29166037",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Kecskemét–Szolnok railway as MÁV line 145 and explicitly lists Lakitelek, Tószeg, Nyárlőrinc, Kecskemét, Tiszakécske and Tiszavárkony in its route diagram and service table. It cites the Vasúti Lexikon and independent railway-history material; no VPE/HÜSZ/KTI/GYSEV material was used as corroboration.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_AND_SERVICE_TABLE_AND_LEXICON_SOURCE",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:06202:145",
+      "kshCode": "06202",
+      "settlementName": "Lakitelek",
+      "osmObjectIds": ["n1065130320"],
+      "minimumDistanceMetres": 2.9,
+      "evidenceHash": "9d60e383471dcc58d97ad55bf2af3cad62323974e48c8ab13359fa2cd1e84242",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:07490:145",
+      "kshCode": "07490",
+      "settlementName": "Tószeg",
+      "osmObjectIds": ["n9481003163"],
+      "minimumDistanceMetres": 4.1,
+      "evidenceHash": "fb0e1dc100e98f5c97d2329680b258ac02ff1a9d8f6669defdd53600406ccb53",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:23056:145",
+      "kshCode": "23056",
+      "settlementName": "Nyárlőrinc",
+      "osmObjectIds": ["n1065130295"],
+      "minimumDistanceMetres": 4.0,
+      "evidenceHash": "81579abe1a7259aa2cc2545997a3e0445cbb487ce1c1ac08fbea4d4bea62431c",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:26684:145",
+      "kshCode": "26684",
+      "settlementName": "Kecskemét",
+      "osmObjectIds": ["n4214909592"],
+      "minimumDistanceMetres": 1.9,
+      "evidenceHash": "7d51d4e32e62d868697c14813aff876bc7b67069a3ff419a21b76f7f109db092",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:30623:145",
+      "kshCode": "30623",
+      "settlementName": "Tiszakécske",
+      "osmObjectIds": ["n8403298852"],
+      "minimumDistanceMetres": 8.7,
+      "evidenceHash": "01e8068db4246ab7136ee1509bbe2368e1b7fc20627ba40eb0898c549cc54944",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:31866:145",
+      "kshCode": "31866",
+      "settlementName": "Tiszavárkony",
+      "osmObjectIds": ["n411412655"],
+      "minimumDistanceMetres": 1.1,
+      "evidenceHash": "2c24a044d1558d864d33e819e76dd686aa9753e14b04a4daff7244fe366d689c",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 6,
+    "totalCandidatesOnLine": 6
+  }
+}

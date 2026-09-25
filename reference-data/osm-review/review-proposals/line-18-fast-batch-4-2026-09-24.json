@@ -1,0 +1,63 @@
+{
+  "batchId": "line-18-fast-batch-4-2026-09-24",
+  "generatedAt": "2026-09-24T17:11:39Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "18",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=Szombathely%E2%80%93K%C5%91szeg-vas%C3%BAtvonal&oldid=29197508",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Szombathely–Kőszeg railway as line 18 and explicitly lists Szombathely, Gyöngyösfalu, Lukácsháza and Kőszeg in its route diagram. The article lists independent historical reference material; no VPE/HÜSZ/KTI/GYSEV material was consulted or used as corroboration.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_DIAGRAM_AND_HISTORICAL_SOURCE",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:03009:18",
+      "kshCode": "03009",
+      "settlementName": "Szombathely",
+      "osmObjectIds": ["n93800956"],
+      "minimumDistanceMetres": 50.9,
+      "evidenceHash": "9eec6613c0fdea42a690249d7901fc96e4072d94e067fead45a0066e1b7baa25",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:11943:18",
+      "kshCode": "11943",
+      "settlementName": "Gyöngyösfalu",
+      "osmObjectIds": ["n276520100"],
+      "minimumDistanceMetres": 2.6,
+      "evidenceHash": "12253c54effe16be9c8f7b0ce70b10c103dee3099bdb72f711c20dea837cfccb",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:14021:18",
+      "kshCode": "14021",
+      "settlementName": "Lukácsháza",
+      "osmObjectIds": ["n1065130137"],
+      "minimumDistanceMetres": 3.2,
+      "evidenceHash": "8cd8287956c2507efa8f4bd1262284a88dafc46555b32bc3c3e28af7de93133f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:16832:18",
+      "kshCode": "16832",
+      "settlementName": "Kőszeg",
+      "osmObjectIds": ["n5008124072"],
+      "minimumDistanceMetres": 2.2,
+      "evidenceHash": "a981cbd792a7a0b1f4e8ab43238da2fe305b61f58df05e8277e574fbd99eebfd",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 4,
+    "totalCandidatesOnLine": 4
+  }
+}

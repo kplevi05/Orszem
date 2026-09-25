@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:21148:151",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "21148",
+  "lineCode": "151",
+  "osmObjectIds": [
+    "n2430971355"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Kunszentmiklós-Tass–Dunapataj railway as MÁV line 151 and explicitly lists Dunavecse, Szalkszentmárton, Dunaegyháza, Apostag and Solt in its route diagram. It cites Magyar Vasúttörténet volume 4 and a dedicated railway-history book; no VPE/HÜSZ/KTI/GYSEV material was used as corroboration. Owner explicitly approved this candidate in PR #50 (consolidated approval sheet, all 50 READY_FOR_HUMAN_APPROVAL candidates).",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Kunszentmikl%C3%B3s-Tass%E2%80%93Dunapataj-vas%C3%BAtvonal&oldid=28586127",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "ea06850aff1707a3e5c399b7f0c3bca8c5287c748b5cf6ab7be9eda53dfe2997",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-25T07:18:02Z"
+}

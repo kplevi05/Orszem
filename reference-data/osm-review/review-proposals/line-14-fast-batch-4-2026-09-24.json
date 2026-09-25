@@ -1,0 +1,73 @@
+{
+  "batchId": "line-14-fast-batch-4-2026-09-24",
+  "generatedAt": "2026-09-24T17:16:42Z",
+  "generatedBy": "AI_ASSISTED_RESEARCH",
+  "humanApproved": false,
+  "policyVersion": "2026-09-23.1",
+  "promotionEligible": false,
+  "lineCode": "14",
+  "sharedSource": {
+    "url": "https://hu.wikipedia.org/w/index.php?title=P%C3%A1pa%E2%80%93Csorna-vas%C3%BAtvonal&oldid=29119193",
+    "licence": "CC BY-SA 4.0",
+    "sourceFinding": "The pinned Hungarian Wikipedia revision identifies the Pápa–Csorna railway as line 14 and explicitly lists Csorna, Nemesgörzsöny, Marcaltő, Rábapordány and Pápa in its route diagram and historical narrative. It cites Magyar Vasúttörténet volume 2 and independent local historical publications. Linked VPE/GYSEV operational material is explicitly excluded from this finding.",
+    "sourceStrength": "DETAILED_WIKIPEDIA_ARTICLE_WITH_ROUTE_DIAGRAM_BOOK_AND_LOCAL_HISTORY_SOURCES",
+    "caveat": "Individual route rows do not each carry a separate inline citation; this limitation is disclosed for human review."
+  },
+  "proposals": [
+    {
+      "candidateId": "pair:04039:14",
+      "kshCode": "04039",
+      "settlementName": "Csorna",
+      "osmObjectIds": ["n8431961831"],
+      "minimumDistanceMetres": 47.7,
+      "evidenceHash": "4a8205334f5941d51a8dc582a1bba0436048835007b8d896a0e573f1d9f59bac",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:05652:14",
+      "kshCode": "05652",
+      "settlementName": "Nemesgörzsöny",
+      "osmObjectIds": ["n500911411"],
+      "minimumDistanceMetres": 4.4,
+      "evidenceHash": "b272c4034c2e49fbced51aefdb619c027c38d2bf3aa7bf6016035a2835558027",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:22220:14",
+      "kshCode": "22220",
+      "settlementName": "Marcaltő",
+      "osmObjectIds": ["n500911415"],
+      "minimumDistanceMetres": 8.4,
+      "evidenceHash": "234f529fc7e86b7332f01c80c68e08e6ff90aea5557fb1fc565332fb756b9694",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:24721:14",
+      "kshCode": "24721",
+      "settlementName": "Rábapordány",
+      "osmObjectIds": ["n1065130129"],
+      "minimumDistanceMetres": 12.4,
+      "evidenceHash": "c510d1dcf820b42d85c72a4a4779305e157003a9cce0b83df71b2ad57cc16177",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    },
+    {
+      "candidateId": "pair:31945:14",
+      "kshCode": "31945",
+      "settlementName": "Pápa",
+      "osmObjectIds": ["n276516808"],
+      "minimumDistanceMetres": 43.0,
+      "evidenceHash": "5fab06e1da29bea0830b9420a22001a1e0ba0b19f939680b7e8bdc146ae7533f",
+      "status": "READY_FOR_HUMAN_APPROVAL",
+      "recommendedDecisionTier": "INDEPENDENTLY_VERIFIED"
+    }
+  ],
+  "summary": {
+    "alreadyApprovedOnLine": 0,
+    "readyForHumanApproval": 5,
+    "totalCandidatesOnLine": 5
+  }
+}
