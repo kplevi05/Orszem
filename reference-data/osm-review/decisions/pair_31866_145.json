@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:31866:145",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "31866",
+  "lineCode": "145",
+  "osmObjectIds": [
+    "n411412655"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Kecskemét–Szolnok railway as MÁV line 145 and explicitly lists Lakitelek, Tószeg, Nyárlőrinc, Kecskemét, Tiszakécske and Tiszavárkony in its route diagram and service table. It cites the Vasúti Lexikon and independent railway-history material; no VPE/HÜSZ/KTI/GYSEV material was used as corroboration. Owner explicitly approved this candidate in PR #50 (consolidated approval sheet, all 50 READY_FOR_HUMAN_APPROVAL candidates).",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Kecskem%C3%A9t%E2%80%93Szolnok-vas%C3%BAtvonal&oldid=29166037",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "2c24a044d1558d864d33e819e76dd686aa9753e14b04a4daff7244fe366d689c",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-25T07:18:02Z"
+}

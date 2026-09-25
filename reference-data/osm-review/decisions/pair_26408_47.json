@@ -1,0 +1,27 @@
+{
+  "candidateId": "pair:26408:47",
+  "category": "OSM_EVIDENCE_ACCEPTED",
+  "kshCode": "26408",
+  "lineCode": "47",
+  "osmObjectIds": [
+    "n355873876"
+  ],
+  "decisionTier": "INDEPENDENTLY_VERIFIED",
+  "decisionMethod": "INDEPENDENT_SOURCE_VERIFICATION",
+  "reviewerType": "HUMAN",
+  "humanApproved": true,
+  "reasonCode": "WIKIPEDIA_ARTICLE_CONFIRMS_SETTLEMENT_ON_NAMED_LINE",
+  "note": "The pinned Hungarian Wikipedia revision identifies the Godisa–Komló railway as line 47 and explicitly lists Magyarhertelend, Mecsekpölöske, Magyarszék, Komló and Bodolyabér in its detailed route diagram. The article cites independent press and railway-history sources; no VPE/HÜSZ/KTI/GYSEV material was used as corroboration. Owner explicitly approved this candidate in PR #50 (consolidated approval sheet, all 50 READY_FOR_HUMAN_APPROVAL candidates).",
+  "independentSourcesChecked": [
+    {
+      "url": "https://hu.wikipedia.org/w/index.php?title=Godisa%E2%80%93Koml%C3%B3-vas%C3%BAtvonal&oldid=29252448",
+      "retrievedAt": "2026-09-24",
+      "usageBasis": "Pinned public Wikipedia revision consulted for the specific line identity and settlement membership facts; cited by URL without bulk extraction.",
+      "licenceNote": "CC BY-SA 4.0, as stated in the Wikipedia page footer."
+    }
+  ],
+  "evidenceHash": "e734ab36f67c6427db2dcc35bf14d71a18262efbc8a3a64b97664ef139acd39c",
+  "policyVersion": "2026-09-23.1",
+  "reviewer": "kplevi05",
+  "decidedAt": "2026-09-25T07:18:02Z"
+}
