@@ -60,6 +60,7 @@
     "overrideCandidatesApplied": 0,
     "overrideCandidatesListed": 0
   },
+  "kshIdExceptionPairs": 0,
   "linesCrossingMultipleAreas": 4,
   "pairs": 146,
   "policyVersion": "ORSZEM-COUNTY-V2-1",

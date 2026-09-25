@@ -13,16 +13,21 @@ deployt vagy területi apply-t ebben a fázisban senki nem végzett.
   A backend verziója még `2.0.3`: a kiadáshoz verziócommit kell (a korábbi kiadások mintájára).
 - Élő referenciaállapot: 3183 település (3178 aktív), 3 fiktív vonal, 5 fiktív kapcsolat.
 
-## 1. Kiadás tartalma — külön változásként
+## 1. Kiadási és cutover-egységek — mindegyik külön rollback/cutover egység
 
-| # | Változás | Séma? | Kliens? |
-|---|---|---|---|
-| A | V007 `service_area_settlement_lines` (üres) + páronkénti routing + SUPER_ADMIN preview/apply | **igen (V007, előre-migráció)** | nem |
-| B | Adminisztrátori self-claim (MODERATOR/SUPER_ADMIN) | nem | **Service APK** (a Claim gomb) |
-| C | 146 ellenőrzött vasúti kapcsolat (adat, `reference-import`) | nem | nem |
-| D | Vármegyealapú területi hozzárendelés (adat, pair-level apply) | nem | nem |
+| # | Egység | Séma? | Kliens? | Visszavonás |
+|---|---|---|---|---|
+| 1 | **Backend v2.0.4 + V007** (páronkénti routing, SUPER_ADMIN preview/apply) | igen, V007 (előre-migráció, üres tábla) | nem | §5/A |
+| 2 | **Adminisztrátori self-claim backend** (PR #51; ugyanabban a jarban, de *külön változás*) | nem | — | csak a jar visszaállításával (§5/A) |
+| 3 | **Service Android APK** — a self-claim gombot jeleníti meg | nem | **igen, új APK** | APK-terjesztés visszavonása; a backend enélkül is elfogadja a claimet |
+| 4 | **Referenciaimport** (146 ellenőrzött pár) | nem | nem | §5/C (restore) |
+| 5 | **Pair-level territory apply** (146 hozzárendelés) | nem | nem | §5/B (null-apply) |
 
-A C és a D nem a kiadás része, hanem külön, sorrendben végrehajtott üzemeltetési lépés.
+Kliens-határ: a **vasúti routinghoz nem kell új Public kliens** — a jelenlegi Public web (ellenőrizve:
+`web/public-web/src/domain/lineDecision.ts`) és a Public Android (a KSH fallback fázisban ellenőrizve) már
+támogatja az opcionális vonalválasztást (`requires-choice`, explicit „nem tudom" → `railwayLineId: null`). Az
+adminisztrátori self-claim használatához viszont **új Service APK kell**; a backend telepítése és az APK
+terjesztése külön cutover- és rollback-egység, nem egymás előfeltétele.
 
 ## 2. Kapuk
 
@@ -34,9 +39,8 @@ A C és a D nem a kiadás része, hanem külön, sorrendben végrehajtott üzeme
    ```
    A drill kimenetében a táblák egyezzenek; a V007 után a `service_area_settlement_lines` is szerepeljen.
 4. Az előző jar megőrzése: `cp run/backend.jar run/backend.pre-v2.0.4.jar`.
-5. **Rollback-előpróba (kötelező, a restore drill DB-n):** indítsd a v2.0.3 jart a V007-tel migrált drill
-   adatbázison. Elvárás: elindul (Flyway a „jövőbeli" alkalmazott migrációt figyelmen kívül hagyja), és nem szól
-   bele a routingba. Ezt itt még **nem** ellenőriztem — feltevés, az első kapu lépése, hogy bebizonyosodjon.
+5. **Rollback-előpróba — MEGTÖRTÉNT izolált környezetben (2026-09-25), lásd §5.** Az éles restore drillen a
+   kapu megismétlendő ugyanazzal a próbával (régi jar a V007-es drill-adatbázison), mielőtt az éles jar cserélődik.
 
 ## 3. Sorrend
 
@@ -73,12 +77,52 @@ jóváhagyás nélkül; a `flyway_schema_history` szerkesztése; V007 módosít�
 
 ## 5. Rollback
 
-- **Csak jar (V007 után is):** az előző jar visszaállítása és `docker compose ... up -d --force-recreate backend`.
-  A V007 tábla és a benne lévő párok az régi jarnak ismeretlenek; a pair-módú vonalak a régi routingban
-  „hozzárendeletlen" → `UNCLASSIFIED` (biztonságos). A §2/5. előpróba igazolja.
-- **Csak a területi hozzárendelés:** az `apply` ugyanazzal a payloaddal, `targetServiceAreaId:null`,
-  `expectedCurrentServiceAreaId:<terület>` — a párok visszakerülnek `UNCLASSIFIED`-ba. A meglévő jelentések
-  snapshotja nem változik.
-- **Az import (146 pár):** egy ellenőrzött backupból friss adatbázisba történő restore (a szokásos V2 restore-
-  eljárás). Sosem szabad élőben, helyben felülírni az adatbázist.
-- **Adminisztrátori self-claim (B):** funkció-visszavonás csak a jar visszaállításával lehetséges.
+### Bizonyíték: a v2.0.3 jar V007 után (izolált fixture)
+
+Az ismert production referenciaállapotot reprodukáló izolált fixture (nem production backupból: az `evaluation` +
+`cleared` import adja a 3183 településes / 3 vonalas / 5 kapcsolatos állapotot). Menet: v2.0.3 jar → alapállapot
+(Flyway 001–006) → **main jar**: V007 lefut, import (41 vonal / 151 kapcsolat), 146 pár apply, egy ROUTED
+jelentés → leállítás → **ugyanarra az adatbázisra a v2.0.3 jar**.
+
+A használt v2.0.3 jar a `v2.0.3` címkéből (`c899ae3`) épült, SHA-256
+`524b4594846c310901cfe1151e01c7dbb28a13a47dee829d3609bff370660600` — **azonos** a productionbe másolt jar
+ellenőrzött checksumával. A main jar SHA-256: `88573d110f6684559546e8b4e6796254d7b5dda12fdf02d15a663e9dcc419aa5`
+(a `be4dfb1` main build; a végső release jar checksumát a release SHA-ról újra rögzíteni kell).
+
+| Ellenőrzés | Eredmény a v2.0.3 jarral a V007-es adatbázison |
+|---|---|
+| Elindul-e | **igen** (15,6 s) |
+| Flyway validáció | `Successfully validated 7 migrations`; `Schema "public" has a version (007) that is newer than the latest available migration (006)` **csak WARN**, `No migration necessary`; `validate-on-migrate: true` **változatlan** |
+| Health | `UP` (liveness + readiness) |
+| Public API | település-keresés (Tata) és bejelentés (201) működik |
+| Service API | SUPER_ADMIN login OK; a NEW sor kilistázza a V007 alatt routolt jelentést is |
+| Régi snapshot | változatlan: `ROUTED → Székesfehérvár` |
+| Routing a régi jarral | pair-módú vonal (Tata + 1) → `UNCLASSIFIED / RAILWAY_LINE_UNASSIGNED`; vonalválasztás nélkül `RAILWAY_LINE_NOT_SELECTED`; reláció nélkül `NO_VERIFIED_RAILWAY_LINE_REFERENCE` |
+| Adat | a 146 pair-mapping érintetlen (`service_area_settlement_lines` = 146) |
+| Vissza a main jarra | health UP, Tata + 1 → újra `ROUTED → Székesfehérvár` |
+
+Következtetés: **a backend-only jar rollback V007 után is használható**; a Flyway-validációt nem kellett lazítani,
+`flyway_schema_history`-hoz és a V007-hez nem nyúltunk. A rollback alatt a pair-módú vonalak jelentései
+`UNCLASSIFIED`-ba esnek, ezért **a rollback biztonsága feltételezi, hogy az
+`ORSZEM_UNCLASSIFIED_SERVICE_USER_ACCESS_ENABLED=true` be van kapcsolva** (különben csak MODERATOR/SUPER_ADMIN látja
+ezeket). Ezt a release előtt ellenőrizni kell a futó compose-ban
+(`docker compose ... config | grep UNCLASSIFIED`). Korlát: a próba fixture, nem production backup; a production
+restore drillen ugyanezt meg kell ismételni.
+
+### A. Csak jar (V007 után is)
+Az előző jar visszaállítása (`run/backend.pre-v2.0.4.jar` → `run/backend.jar`) és
+`docker compose --env-file .env up -d --force-recreate backend`. Traffic cutover: a backend egyetlen konténer, a
+recreate alatti pár másodperces kiesés a szokásos; adatvesztés nincs, mert a régi jar nem ír vissza sémát, és a
+Public kliens a saját `clientSubmissionId`-jával idempotensen újrapróbálkozhat. Az adminisztrátori self-claim
+ilyenkor visszavonódik (a v2.0.3 az admin claimet 403-mal elutasítja).
+
+### B. Csak a területi hozzárendelés
+Az `apply` ugyanazzal a payloaddal, `targetServiceAreaId:null` és `expectedCurrentServiceAreaId:<terület>`: a párok
+visszakerülnek `UNCLASSIFIED`-ba. A meglévő jelentések snapshotja nem változik.
+
+### C. Az import (146 pár) visszavonása
+Ellenőrzött pre-release backupból **friss** adatbázisba történő restore a szokásos V2 restore-eljárással; sosem
+helyben felülírva. Az utolsó backup óta érkezett jelentések elvesznének, ezért csak akkor, ha az import
+adatminősége kérdéses; egyébként a B lépés és a jar-rollback elég.
+
+Sosem: `flyway_schema_history` kézi módosítása, a V007 törlése/módosítása, a Flyway-validáció lazítása.

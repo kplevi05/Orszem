@@ -69,6 +69,10 @@ def load_policy(path):
             require(county not in county_owner, f"county {county!r} assigned to two areas")
             county_owner[county] = name
     require(areas["GYSEV"]["counties"] == [], "GYSEV must never receive a county-based assignment")
+    for ksh, exc in policy.get("settlementIdExceptions", {}).items():
+        require(re.fullmatch(r"[0-9]{5}", ksh), f"exception key {ksh!r} must be a 5-digit KSH code")
+        require(exc["serviceArea"] in areas and exc["serviceArea"] != "GYSEV", f"exception {ksh} must target an existing non-GYSEV area")
+        require(bool(exc.get("reason")) and "expectedName" in exc and "expectedCounty" in exc, f"exception {ksh} needs a reason, expectedName and expectedCounty")
     inactive = {a["id"] for a in policy["untouchedInactiveAreas"]}
     require(not (inactive & ids), "an untouched INACTIVE area must never be an assignment target")
     return policy, county_owner
@@ -129,13 +133,23 @@ def build(promoted_dir, policy_path, gysev_path):
     preview, unassigned = [], []
     for ksh, code in pairs:
         name, county = settlements[ksh]
-        area_name = county_owner.get(county) if county else None
+        exception = policy.get("settlementIdExceptions", {}).get(ksh)
+        area_name, rule = (county_owner.get(county) if county else None), "COUNTY_RULE"
+        if exception is not None:
+            # Keyed strictly by KSH code, and only while the canonical record still is exactly
+            # what the exception was written for: a renamed/changed record never inherits it,
+            # and no other settlement ever matches by name.
+            if (name, county) == (exception["expectedName"], exception["expectedCounty"]):
+                area_name, rule = exception["serviceArea"], "KSH_ID_EXCEPTION"
+            else:
+                area_name = None
         if area_name is None:
-            reason = "MISSING_COUNTY" if not county else "COUNTY_NOT_IN_POLICY"
+            reason = ("EXCEPTION_RECORD_MISMATCH" if exception is not None
+                      else "MISSING_COUNTY" if not county else "COUNTY_NOT_IN_POLICY")
             row = (ksh, name, county, code, lines[code], "", "", "UNASSIGNED", reason)
             unassigned.append(row)
         else:
-            row = (ksh, name, county, code, lines[code], area_name, areas[area_name]["id"], "ASSIGNED_GEOGRAPHIC", "COUNTY_RULE")
+            row = (ksh, name, county, code, lines[code], area_name, areas[area_name]["id"], "ASSIGNED_GEOGRAPHIC", rule)
         preview.append(row)
 
     by_area = defaultdict(lambda: {"pairs": 0, "settlements": set(), "lines": set()})
@@ -170,6 +184,7 @@ def build(promoted_dir, policy_path, gysev_path):
                    "settlements": len(by_area[name]["settlements"]), "lines": len(by_area[name]["lines"])}
             for name in sorted(areas)
         },
+        "kshIdExceptionPairs": sum(1 for r in preview if r[8] == "KSH_ID_EXCEPTION"),
         "budapestCheck": {"pairsInBudapestOrPestCounty": len(budapest_rows), "allMappedToBudapest": True},
         "gysevCheck": {"automaticallyAssignedPairs": 0, "overrideCandidatesListed": len(gysev), "overrideCandidatesApplied": 0},
         "untouchedInactiveAreas": [a["id"] for a in policy["untouchedInactiveAreas"]],

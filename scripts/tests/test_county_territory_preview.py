@@ -106,6 +106,38 @@ class CountyTerritoryPreviewTest(unittest.TestCase):
         self.assertEqual((change["kshCode"], change["lineCode"], change["expectedCurrentServiceAreaId"]), ("00001", "1", None))
         self.assertIn(change["targetServiceAreaId"], AREA_IDS)
 
+    def test_ksh_13578_budapest_aggregate_row_is_assigned_to_budapest_by_id_exception(self):
+        ds = self.dataset([("13578", "Budapest", "")], [("1", "x")], [("13578", "1")])
+        files, rows = self.build(ds)
+        self.assertEqual((rows[0]["service_area"], rows[0]["status"], rows[0]["reason"]), ("Budapest", "ASSIGNED_GEOGRAPHIC", "KSH_ID_EXCEPTION"))
+        self.assertEqual(json.loads(files["summary.json"])["kshIdExceptionPairs"], 1)
+
+    def test_another_settlement_with_an_empty_county_stays_unassigned_even_if_named_budapest(self):
+        ds = self.dataset([("00001", "Budapest", ""), ("00002", "Másik", "")], [("1", "x")], [("00001", "1"), ("00002", "1")])
+        _, rows = self.build(ds)
+        self.assertEqual({r["status"] for r in rows}, {"UNASSIGNED"})
+        self.assertEqual({r["reason"] for r in rows}, {"MISSING_COUNTY"})
+
+    def test_the_exception_does_not_survive_a_changed_canonical_record_for_the_same_id(self):
+        for name, county in (("Nem Budapest", ""), ("Budapest", "Pest2")):
+            ds = self.dataset([("13578", name, county)], [("1", "x")], [("13578", "1")])
+            _, rows = self.build(ds)
+            self.assertEqual(rows[0]["status"], "UNASSIGNED", (name, county))
+            self.assertEqual(rows[0]["service_area_id"], "")
+
+    def test_policy_exceptions_must_be_ksh_ids_targeting_an_existing_non_gysev_area(self):
+        for mutate in (
+            lambda p: p["settlementIdExceptions"].update({"Budapest": p["settlementIdExceptions"]["13578"]}),
+            lambda p: p["settlementIdExceptions"]["13578"].update({"serviceArea": "GYSEV"}),
+            lambda p: p["settlementIdExceptions"]["13578"].update({"serviceArea": "Nemletezo"}),
+            lambda p: p["settlementIdExceptions"]["13578"].pop("reason"),
+        ):
+            policy = json.loads(POLICY.read_text(encoding="utf-8"))
+            mutate(policy)
+            bad = self.root / "bad_policy.json"; bad.write_text(json.dumps(policy), encoding="utf-8")
+            with self.assertRaises((preview.PreviewError, KeyError)):
+                preview.load_policy(bad)
+
     def test_output_is_deterministic(self):
         ds = self.dataset([("00002", "B", "Fejér"), ("00001", "A", "Vas")], [("1", "x")], [("00002", "1"), ("00001", "1")])
         self.assertEqual(self.build(ds)[0], self.build(ds)[0])
