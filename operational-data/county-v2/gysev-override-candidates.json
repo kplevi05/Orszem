@@ -1,0 +1,5 @@
+{
+  "status": "CANDIDATES_NOT_APPROVED_NOT_APPLIED",
+  "note": "Nincs jelölt. Ebben a körben nem történt GYSEV-hozzárendelési javaslat: nyilvános, jogszerűen felhasználható, nem PENDING hivatalos GYSEV-forrás használhatóságát (felhasználási feltételek, valamint az, hogy az oldal tartalma nem a PENDING hálózati üzletszabályzatból származik) nem sikerült megnyugtatóan igazolni. Bizonyíték hiányában minden pár a földrajzi ServiceArea-ban marad. Jelölt felvételéhez kötelező: kshCode, lineCode, lineName, sourceUrl, retrievedAt, evidence, confidence, status=CANDIDATE_NOT_APPROVED.",
+  "candidates": []
+}

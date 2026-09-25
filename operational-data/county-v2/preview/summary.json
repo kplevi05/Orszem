@@ -1,0 +1,81 @@
+{
+  "assignedGeographic": 146,
+  "budapestCheck": {
+    "allMappedToBudapest": true,
+    "pairsInBudapestOrPestCounty": 2
+  },
+  "byServiceArea": {
+    "Budapest": {
+      "id": "fbde9347-bee0-4f09-bc77-2beb642d8589",
+      "lines": 1,
+      "pairs": 2,
+      "settlements": 2
+    },
+    "Debrecen": {
+      "id": "6b1aa304-c5fc-46e0-865f-4bc589cd0138",
+      "lines": 10,
+      "pairs": 39,
+      "settlements": 38
+    },
+    "GYSEV": {
+      "id": "bee538cd-0dc7-420e-8d18-8fbf6ca5362e",
+      "lines": 0,
+      "pairs": 0,
+      "settlements": 0
+    },
+    "Miskolc": {
+      "id": "8b519923-a683-4c0a-a522-f85192a22109",
+      "lines": 5,
+      "pairs": 18,
+      "settlements": 17
+    },
+    "Pécs": {
+      "id": "5646c308-d1f3-4649-ac89-43812ae4c35c",
+      "lines": 6,
+      "pairs": 19,
+      "settlements": 18
+    },
+    "Szeged": {
+      "id": "db15dd1e-0d51-4e3b-853e-c75a9aca227e",
+      "lines": 4,
+      "pairs": 17,
+      "settlements": 17
+    },
+    "Szombathely": {
+      "id": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b",
+      "lines": 7,
+      "pairs": 11,
+      "settlements": 11
+    },
+    "Székesfehérvár": {
+      "id": "e3b62884-d1fb-4892-8e08-87bb816be339",
+      "lines": 9,
+      "pairs": 40,
+      "settlements": 37
+    }
+  },
+  "datasetVersion": "OSM-HU-RAIL-VERIFIED-2026-09-23",
+  "gysevCheck": {
+    "automaticallyAssignedPairs": 0,
+    "overrideCandidatesApplied": 0,
+    "overrideCandidatesListed": 0
+  },
+  "kshIdExceptionPairs": 0,
+  "linesCrossingMultipleAreas": 4,
+  "pairs": 146,
+  "policyVersion": "ORSZEM-COUNTY-V2-1",
+  "railwayLines": 38,
+  "sourceFileSha256": {
+    "railway-lines.csv": "fdbb68192f47fe87e009a0cdae9abcd58a84bea8110f47663b553677c31a2cb5",
+    "settlement-railway-lines.csv": "7fa589c03633e576ee0b3c1e1a0be7ab0f40e0d6c19e554d41f9e4abf2b29d8e",
+    "settlements.csv": "70b34b3a94bcc42806996c40189a3877a536e29e7d7b2e668dd41fa6f32359cd"
+  },
+  "status": "OFFLINE_PREVIEW_NOT_APPLIED",
+  "unassigned": 0,
+  "unassignedByReason": {},
+  "untouchedInactiveAreas": [
+    "ed0234ce-2651-43ba-94c9-aa1764ca3273",
+    "cbca1014-ab61-4871-9c18-4ca281486dd7",
+    "8235ad0b-193b-4585-87cb-5559ec52c276"
+  ]
+}
