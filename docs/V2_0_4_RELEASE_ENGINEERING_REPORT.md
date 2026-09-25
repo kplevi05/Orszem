@@ -29,6 +29,34 @@ Komponensenként külön `release:` commit: backend `version`; Public és Servic
 - Összevetés: a v2.0.3 jar a címkéből épített formában azonos a production jarral (`524b4594…0600`), tehát a
   build reprodukálhatósága a gyakorlatban is igazolt.
 
+### 3/A. Az artifactok forrásfához kötése (ellenőrizve)
+
+A jar és az aláíratlan APK **tiszta buildből, a pontos `e50c6f8d21779c94d33212c0feedeaa2a5254a6d` forrásfából
+újraépítve** (`git diff --quiet HEAD` tiszta, `clean bootJar` / `:service-app:clean :service-app:assembleRelease`)
+bájtra azonos checksumot adott a §3 értékeivel. A `c6916de` (a build első forrása) és a `e50c6f8` közti
+különbség kizárólag a két dokumentum; kód nem változott.
+
+### 3/B. APK-aláírási kapu (kötelező a terjesztés előtt)
+
+- Az **aláíratlan APK nem terjeszthető.** Az unsigned checksum **nem helyettesíti** az aláírt terjesztési artifact
+  checksumát.
+- A Service APK-t a **korábbi production kiadásokkal azonos kulccsal** kell aláírni (a jelenleg telepített Service
+  alkalmazás frissítéséhez ez feltétel; más kulccsal az Android nem frissít).
+- Aláírás után kötelező: `apksigner verify --verbose --print-certs <aláírt.apk>`.
+- Ellenőrizni kell, hogy az **aláíró certificate SHA-256 ujjlenyomata megegyezik a jelenleg telepített Service
+  alkalmazáséval** (telepített APK: `adb shell pm path hu.orszembejelento.service` → `adb pull` →
+  `apksigner verify --print-certs`; a két „Signer #1 certificate SHA-256 digest" sor egyezzen).
+- Az **aláírt APK saját SHA-256 checksumát** külön rögzíteni kell (ez a terjesztési artifact azonosítója).
+- Signing key, jelszó vagy bármilyen credential **nem kerülhet Gitbe, logba vagy chatbe**; az aláírást a tulajdonos
+  a saját gépén végzi. Ebben a fázisban kulcsot nem kezeltem és nem kértem.
+
+### 3/C. Public Android
+
+A Public Android `versionName` 2.0.4-re (versionCode 5) emelkedett a komponensek egységes verziózása miatt, de ehhez
+a kiadáshoz **nem kell új Public APK-t terjeszteni**: a vasúti routinghoz a jelenlegi Public kliensek már
+támogatják az opcionális vonalválasztást. Nem készült és nem publikálandó feleslegesen Public production APK; a
+Public verzióemelés csak a repóban követi a kiadási verziót.
+
 ## 4. Tartalom
 
 Lásd `docs/releases/RELEASE_NOTES_2.0.4.md`: V007; SUPER_ADMIN preview/apply; admin self-claim (backend + APK);

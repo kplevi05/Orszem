@@ -40,3 +40,15 @@ Verziók: backend `2.0.4`; Public/Service Android `2.0.4` (versionCode 4 → 5);
 A v2.0.3 jar bizonyítottan elindul a V007-es adatbázison (izolált fixture, lásd az engineering reportot); a
 rollback-biztonsághoz az `ORSZEM_UNCLASSIFIED_SERVICE_USER_ACCESS_ENABLED=true` szükséges. A rollout és rollback
 lépései: `docs/deployment/V2_0_4_TERRITORY_ROLLOUT.md`.
+
+## Terjesztési kapuk
+
+- **Service APK:** az aláíratlan release APK nem terjeszthető. A korábbi production kiadásokkal **azonos kulccsal** kell
+  aláírni; utána `apksigner verify --verbose --print-certs` és az aláíró certificate SHA-256 ujjlenyomatának
+  egyeznie kell a jelenleg telepített Service alkalmazáséval; az **aláírt** APK saját SHA-256 checksumát külön
+  rögzíteni kell (az unsigned checksum nem helyettesíti). Kulcs vagy jelszó nem kerülhet Gitbe, logba vagy chatbe.
+  Részletek: `docs/V2_0_4_RELEASE_ENGINEERING_REPORT.md` §3/B.
+- **Public Android:** a verzió 2.0.4-re emelkedett, de **új Public APK terjesztése nem szükséges** ehhez a
+  kiadáshoz; nem készül és nem publikálandó production Public APK.
+- A backend jar checksumja (`2de7d7ff…3a03`) és az aláíratlan APK checksumja (`bce6e15d…57b8`) a pontos
+  `e50c6f8` forrásfából épített artifactokra vonatkozik.
