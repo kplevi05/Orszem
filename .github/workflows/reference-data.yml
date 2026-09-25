@@ -56,3 +56,14 @@ jobs:
 
       - name: Verify committed territory proposal matches cleared sources
         run: python3 scripts/build-territory-plan.py --check
+
+      - name: Promote reviewed railway decisions (temporary output, never committed)
+        run: |
+          python3 scripts/promote-osm-railway-reference.py \
+            --review-dir reference-data/osm-review \
+            --out "$RUNNER_TEMP/promoted" \
+            --expect-policy-version 2026-09-23.1
+          node reference-data/tools/validate-canonical.mjs "$RUNNER_TEMP/promoted/manifest.json"
+
+      - name: Verify committed county territory preview matches the promoted dataset
+        run: python3 scripts/build-county-territory-preview.py --promoted-dir "$RUNNER_TEMP/promoted" --check

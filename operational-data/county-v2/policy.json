@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "ORSZEM-COUNTY-V2-1",
+  "kind": "COUNTY_BASED_PAIR_LEVEL_SERVICE_AREA_ROUTING",
+  "description": "Az Őrszem belső, vármegyealapú operatív felosztása. Nem állítás a MÁV vagy a GYSEV hivatalos szervezeti illetékességéről. Tulajdonosi termékdöntés.",
+  "rule": "Minden jóváhagyott (settlement, railwayLine) pár ahhoz a ServiceArea-hoz tartozik, amelyhez a település KSH szerinti vármegyéje tartozik. Ugyanazon vonal különböző települései különböző ServiceArea-khoz kerülhetnek. Hiányzó vagy ismeretlen vármegye: a pár hozzárendelés nélkül (UNASSIGNED) marad.",
+  "countyValueSource": "reference-data/cleared/settlements.csv county_name (KSH Helységnévtár, CC BY 4.0). A KSH a fővárost 'főváros' értékkel adja; ez a Budapest ServiceArea-hoz tartozik, mint a Pest vármegye is.",
+  "serviceAreas": {
+    "Budapest": {"id": "fbde9347-bee0-4f09-bc77-2beb642d8589", "counties": ["főváros", "Pest"]},
+    "Debrecen": {"id": "6b1aa304-c5fc-46e0-865f-4bc589cd0138", "counties": ["Hajdú-Bihar", "Jász-Nagykun-Szolnok", "Szabolcs-Szatmár-Bereg"]},
+    "GYSEV": {"id": "bee538cd-0dc7-420e-8d18-8fbf6ca5362e", "counties": [], "note": "Kizárólag külön, owner által jóváhagyott pair-level override. Vármegyéből vagy teljes vonalból automatikusan soha nem kap hozzárendelést."},
+    "Miskolc": {"id": "8b519923-a683-4c0a-a522-f85192a22109", "counties": ["Borsod-Abaúj-Zemplén", "Heves", "Nógrád"]},
+    "Pécs": {"id": "5646c308-d1f3-4649-ac89-43812ae4c35c", "counties": ["Baranya", "Somogy", "Tolna"]},
+    "Szeged": {"id": "db15dd1e-0d51-4e3b-853e-c75a9aca227e", "counties": ["Bács-Kiskun", "Békés", "Csongrád-Csanád"]},
+    "Szombathely": {"id": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b", "counties": ["Győr-Moson-Sopron", "Vas", "Zala"]},
+    "Székesfehérvár": {"id": "e3b62884-d1fb-4892-8e08-87bb816be339", "counties": ["Fejér", "Komárom-Esztergom", "Veszprém"]}
+  },
+  "untouchedInactiveAreas": [
+    {"id": "ed0234ce-2651-43ba-94c9-aa1764ca3273", "name": "[FIKTÍV] Déli szolgálati terület"},
+    {"id": "cbca1014-ab61-4871-9c18-4ca281486dd7", "name": "[FIKTÍV] Északi szolgálati terület"},
+    {"id": "8235ad0b-193b-4585-87cb-5559ec52c276", "name": "Átnevezett terület mubf4kjp"}
+  ],
+  "gysevOverrides": "Lásd gysev-override-candidates.json. Jelölt nem elfogadott és nem alkalmazott addig, amíg a tulajdonos külön nem hagyja jóvá.",
+  "inventoryObservedAt": "2026-09-24"
+}

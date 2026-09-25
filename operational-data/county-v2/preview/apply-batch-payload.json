@@ -1,0 +1,881 @@
+{
+  "changes": [
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "01508",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "01526",
+      "lineCode": "81",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "02097",
+      "lineCode": "23",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "02185",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "02219",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "02325",
+      "lineCode": "116",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "02431",
+      "lineCode": "15",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "02547",
+      "lineCode": "61",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "03009",
+      "lineCode": "18",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "03045",
+      "lineCode": "109",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "03601",
+      "lineCode": "27",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "04039",
+      "lineCode": "14",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "04358",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "04525",
+      "lineCode": "13",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "04561",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "04604",
+      "lineCode": "89",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "05148",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "05236",
+      "lineCode": "85",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "05430",
+      "lineCode": "47",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "05582",
+      "lineCode": "89",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "05625",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "05652",
+      "lineCode": "14",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "05838",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06114",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06187",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06202",
+      "lineCode": "145",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06415",
+      "lineCode": "61",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06442",
+      "lineCode": "153",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06488",
+      "lineCode": "115",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06743",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06743",
+      "lineCode": "76",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "06947",
+      "lineCode": "75",
+      "targetServiceAreaId": "fbde9347-bee0-4f09-bc77-2beb642d8589"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "07001",
+      "lineCode": "43",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "07269",
+      "lineCode": "27",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "07339",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "07490",
+      "lineCode": "145",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "07597",
+      "lineCode": "109",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "07612",
+      "lineCode": "151",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "07904",
+      "lineCode": "115",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "08156",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "08350",
+      "lineCode": "155",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "08378",
+      "lineCode": "155",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "08420",
+      "lineCode": "116",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "08679",
+      "lineCode": "153",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "08864",
+      "lineCode": "64",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "08952",
+      "lineCode": "115",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "08989",
+      "lineCode": "105",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "09034",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "09113",
+      "lineCode": "117",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "09894",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "10092",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "10126",
+      "lineCode": "114",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "10135",
+      "lineCode": "64",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "11402",
+      "lineCode": "47",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "11943",
+      "lineCode": "18",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "12274",
+      "lineCode": "116",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "12511",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "12803",
+      "lineCode": "109",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "13019",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "13532",
+      "lineCode": "22",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "13657",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "14021",
+      "lineCode": "18",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "14827",
+      "lineCode": "44",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "14827",
+      "lineCode": "6",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "14845",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "15130",
+      "lineCode": "105",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "15130",
+      "lineCode": "106",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "15246",
+      "lineCode": "82",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "15291",
+      "lineCode": "82",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "15361",
+      "lineCode": "27",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "15565",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "16072",
+      "lineCode": "27",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "16072",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "16832",
+      "lineCode": "18",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "17154",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "17330",
+      "lineCode": "13",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "17419",
+      "lineCode": "62",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "17525",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "17534",
+      "lineCode": "85",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "17941",
+      "lineCode": "38",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "18209",
+      "lineCode": "82",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "18324",
+      "lineCode": "116",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "18546",
+      "lineCode": "38",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "18874",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "19415",
+      "lineCode": "64",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "19789",
+      "lineCode": "153",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "19901",
+      "lineCode": "62",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "19947",
+      "lineCode": "151",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "20127",
+      "lineCode": "1",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "20206",
+      "lineCode": "44",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "20297",
+      "lineCode": "155",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "20303",
+      "lineCode": "116",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "21069",
+      "lineCode": "151",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "21148",
+      "lineCode": "151",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "21175",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "22220",
+      "lineCode": "14",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "22284",
+      "lineCode": "116",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "22327",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "22406",
+      "lineCode": "109",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "22600",
+      "lineCode": "47",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "22691",
+      "lineCode": "13",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "23056",
+      "lineCode": "145",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "23269",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "23339",
+      "lineCode": "82",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "23524",
+      "lineCode": "117",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "23986",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "24396",
+      "lineCode": "155",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "24721",
+      "lineCode": "14",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "24934",
+      "lineCode": "75",
+      "targetServiceAreaId": "fbde9347-bee0-4f09-bc77-2beb642d8589"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "25177",
+      "lineCode": "66",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "25973",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "26365",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "26408",
+      "lineCode": "47",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "26684",
+      "lineCode": "145",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "26824",
+      "lineCode": "43",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "28024",
+      "lineCode": "66",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "28352",
+      "lineCode": "89",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "28440",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "28538",
+      "lineCode": "62",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "28705",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "28741",
+      "lineCode": "61",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "28741",
+      "lineCode": "62",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "29018",
+      "lineCode": "44",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "29115",
+      "lineCode": "151",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "29319",
+      "lineCode": "75",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "29434",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "30340",
+      "lineCode": "89",
+      "targetServiceAreaId": "8b519923-a683-4c0a-a522-f85192a22109"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "30526",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "30553",
+      "lineCode": "12",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "30553",
+      "lineCode": "13",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "30623",
+      "lineCode": "145",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "30641",
+      "lineCode": "114",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "30766",
+      "lineCode": "12",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "31097",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "31158",
+      "lineCode": "110",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "31769",
+      "lineCode": "114",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "31866",
+      "lineCode": "145",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "31945",
+      "lineCode": "14",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "32294",
+      "lineCode": "105",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "32434",
+      "lineCode": "155",
+      "targetServiceAreaId": "db15dd1e-0d51-4e3b-853e-c75a9aca227e"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "32522",
+      "lineCode": "24",
+      "targetServiceAreaId": "4c3ae602-3a75-4f0c-bdf7-d6e15bed6d1b"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "33002",
+      "lineCode": "47",
+      "targetServiceAreaId": "5646c308-d1f3-4649-ac89-43812ae4c35c"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "33844",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "34263",
+      "lineCode": "44",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "34388",
+      "lineCode": "109",
+      "targetServiceAreaId": "6b1aa304-c5fc-46e0-865f-4bc589cd0138"
+    },
+    {
+      "expectedCurrentServiceAreaId": null,
+      "kshCode": "34421",
+      "lineCode": "29",
+      "targetServiceAreaId": "e3b62884-d1fb-4892-8e08-87bb816be339"
+    }
+  ],
+  "expectedReferenceVersion": "OSM-HU-RAIL-VERIFIED-2026-09-23"
+}
