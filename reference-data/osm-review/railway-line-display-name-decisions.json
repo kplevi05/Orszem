@@ -1,0 +1,541 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "RAILWAY-LINE-NAME-V1",
+  "generatedAt": "2026-09-30T00:00:00Z",
+  "note": "Owner-approved user-facing display names for the 38 promoted railway lines (dataset OSM-HU-RAIL-VERIFIED-2026-09-23). Approval does not assert current passenger service, complete settlement coverage, reproduction of legal infrastructure endpoints, or a single operator along the full line - see docs/RAILWAY_LINE_DISPLAY_NAME_AND_DETAIL_REVIEW.md and the owner's approval message for the exact disclaimer. Applied by scripts/promote-osm-railway-reference.py via --display-name-decisions; a line with no entry here, or an entry with humanApproved != true, keeps the safe '<code>. számú vasútvonal' placeholder.",
+  "attribution": "Egyes vonalnevek forrása a magyar Wikipédia (CC BY-SA 4.0) - lásd reference-data/LICENSES/Wikipedia-CC-BY-SA.md.",
+  "decisions": [
+    {
+      "lineCode": "1",
+      "approvedDisplayName": "1 – Budapest–Győr–Hegyeshalom",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Budapest%E2%80%93Hegyeshalom%E2%80%93Rajka-vas%C3%BAtvonal",
+        "retrievedAt": "2026-09-30",
+        "sourceType": "WIKIPEDIA_DEDICATED_LINE_ARTICLE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 1 settlement (Tata), an intermediate stop; the dedicated article confirms this line's own opening photo caption 'Személyvonat Tata közelében'. Legal endpoint is Budapest-Keleti–Rusovce (SK, cross-border); domestic short name uses Hegyeshalom (last major Hungarian town before the border) with Győr added as a recognisable intermediate hub, not itself evidenced as a verified settlement in this dataset.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "6",
+      "approvedDisplayName": "6 – Bicske–Székesfehérvár",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Bicske%E2%80%93Sz%C3%A9kesfeh%C3%A9rv%C3%A1r-vas%C3%BAtvonal",
+        "retrievedAt": "2026-09-30",
+        "sourceType": "WIKIPEDIA_DEDICATED_LINE_ARTICLE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 1 settlement (Székesfehérvár), the shared endpoint of both the legal endpoint name (Lovasberény–Székesfehérvár) and the article's own name (Bicske–Székesfehérvár); owner chose the article's common name. The dedicated article's own infobox lists a max speed of '20/0 km/h' and an 'official walkability limit' marker, suggesting the line may not currently carry regular passenger service along its full length - owner approval explicitly does not assert current service.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "12",
+      "approvedDisplayName": "12 – Környe–Oroszlány",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies both legal endpoints (Környe, Oroszlány) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "13",
+      "approvedDisplayName": "13 – Tatabánya–Pápa",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 4 intermediate settlements (Kecskéd, Kisbér, Környe, Veszprémvarsny) on this line; neither legal endpoint itself is a verified settlement in this dataset. Owner approved the legal endpoint name despite the thinner direct evidence.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "14",
+      "approvedDisplayName": "14 – Pápa–Csorna",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies both legal endpoints (Pápa, Csorna) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "15",
+      "approvedDisplayName": "15 – Sopron–Szombathely",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 1 intermediate settlement (Bük) on this line; neither legal endpoint itself is a verified settlement. Owner approved the legal endpoint name despite the thinner direct evidence.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "18",
+      "approvedDisplayName": "18 – Szombathely–Kőszeg",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies both legal endpoints (Szombathely, Kőszeg) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "22",
+      "approvedDisplayName": "22 – Körmend–Zalalövő",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Körmend) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "23",
+      "approvedDisplayName": "23 – Zalaegerszeg–Rédics",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 1 intermediate settlement (Gutorfölde) on this line; neither legal endpoint itself is a verified settlement. Owner approved the legal endpoint name despite the thinner direct evidence.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "24",
+      "approvedDisplayName": "24 – Zalabér-Batyk–Zalaszentgrót",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Zalaszentgrót) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "27",
+      "approvedDisplayName": "27 – Lepsény–Hajmáskér",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies both legal endpoints (Lepsény, Hajmáskér) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "29",
+      "approvedDisplayName": "29 – Szabadbattyán–Tapolca",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies both legal endpoints (Szabadbattyán, Tapolca) directly, plus 18 further intermediate settlements (20 in total, machine-recounted from settlement-railway-lines.csv). The article's own third name ('Börgönd') and an unsourced colloquial 'Balaton-part' qualifier were deliberately excluded from the approved name.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "38",
+      "approvedDisplayName": "38 – Nagyatád–Somogyszob",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies both legal endpoints (Nagyatád, Somogyszob) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "43",
+      "approvedDisplayName": "43 – Mezőfalva–Rétszilas",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 2 intermediate settlements (Alap, Nagykarácsony) on this line; neither legal endpoint itself is a verified settlement. Owner approved the legal endpoint name despite the thinner direct evidence.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "44",
+      "approvedDisplayName": "44 – Székesfehérvár–Pusztaszabolcs",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies Pusztaszabolcs (a legal endpoint) plus Székesfehérvár, Seregélyes, Zichyújfalu. The legal table's other endpoint is 'Szabadbattyán' while the dedicated article's title uses 'Székesfehérvár' instead; owner approved the article's name, which matches a directly verified settlement.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "47",
+      "approvedDisplayName": "47 – Godisa–Komló",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies both legal endpoints (Godisa, Komló) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "61",
+      "approvedDisplayName": "61 – Szentlőrinc–Sellye",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Sellye) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "62",
+      "approvedDisplayName": "62 – Középrigóc–Villány",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 4 settlements (Csnyáoszró, Drávafok, Sellye, Vajszló), none matching Középrigóc, Nagyharsny (legal table) or Villány (article title) exactly. Owner combined the legal table's first endpoint with the article's second endpoint.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "64",
+      "approvedDisplayName": "64 – Pécs–Bátaszék",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies Pécs (a legal endpoint) plus Bátaszék and Palotabozsok. The legal table's other endpoint is 'Pécsvárad rh.' while the dedicated article's title uses 'Bátaszék' instead; owner approved the article's name, which matches a directly verified settlement.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "66",
+      "approvedDisplayName": "66 – Villány–Mohács",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Villány) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "75",
+      "approvedDisplayName": "75 – Vác–Balassagyarmat",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies Vác, Drégelypalánk and Balassagyarmat directly, plus 9 further intermediate settlements (12 in total). The approved name merges the legal sub-lines 75 (Vác–Drégelypalánk) and 75A (Drégelypalánk–Balassagyarmat), which this dataset's single line_code=75 already treats as one line.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "76",
+      "approvedDisplayName": "76 – Diósjenő–Romhány",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Diósjenő) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "81",
+      "approvedDisplayName": "81 – Hatvan–Somoskőújfalu",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies Somoskőújfalu, the exact domestic endpoint the dedicated article names; the legal table's own endpoint (Fiľakovo, SK) is a foreign town beyond the border and was deliberately excluded from the domestic short name.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "82",
+      "approvedDisplayName": "82 – Hatvan–Újszász",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Újszász) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "85",
+      "approvedDisplayName": "85 – Vámosgyörk–Gyöngyös",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Gyöngyös) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "89",
+      "approvedDisplayName": "89 – Nyékládháza–Tiszaújváros",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies Tiszaújváros, Hejőkeresztúr, Nagycsécs, Sajószöged; the legal table's own endpoint is an industrial siding name ('Tiszapalkonya-TIFO ipv.') while the article's endpoint (Nyékládháza) is itself not a verified settlement in this dataset. Owner approved the article's more recognisable name.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "105",
+      "approvedDisplayName": "105 – Debrecen–Nyírábrány",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies Debrecen and Nyírábrány directly (plus Vámospércs); the legal table's own endpoint (Valea lui Mihai, RO) is a foreign town beyond the border and was deliberately excluded from the domestic short name.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "106",
+      "approvedDisplayName": "106 – Debrecen–Nagykereki",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Debrecen) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "109",
+      "approvedDisplayName": "109 – Debrecen–Tiszalök",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 5 intermediate settlements (Hajdúböszörmény, Hajdúdorog, Hajdúnánás, Szorgalmatos, Tiszavasvári) on this line; neither legal endpoint (Tócóvölgy, Tiszalök) itself is a verified settlement. Owner approved the article's common name ('Debrecen–Tiszalök', using Debrecen instead of the Tócóvölgy district name) despite the thinner direct evidence.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "110",
+      "approvedDisplayName": "110 – Debrecen–Mátészalka",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Apafa%E2%80%93M%C3%A1t%C3%A9szalka-vas%C3%BAtvonal",
+        "retrievedAt": "2026-09-30",
+        "sourceType": "WIKIPEDIA_DEDICATED_LINE_ARTICLE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 10 settlements. The dedicated article's own km-marked station list starts at Debrecen (km 0, before the legal endpoint Apafa at km 8) and runs through Hajdúsámson(18), Nyíradony(33), Nyírmihálydi(39), Nyírgelse(42), Nyírbogát(50), Nyírbátor(55), Nyírcsászári(63), Hodász(67) to Mátészalka(78) - all 10 verified settlements appear on this list, in order, between Debrecen and Mátészalka. Nyírbátor (v1's mistaken candidate endpoint, km 55) is confirmed as an intermediate stop, not the line's end.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "114",
+      "approvedDisplayName": "114 – Kocsord–Csenger",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Csenger) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "115",
+      "approvedDisplayName": "115 – Mátészalka–Tiborszállás",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/M%C3%A1t%C3%A9szalka%E2%80%93Nagyk%C3%A1roly-vas%C3%BAtvonal",
+        "retrievedAt": "2026-09-30",
+        "sourceType": "WIKIPEDIA_DEDICATED_LINE_ARTICLE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies Nagyecsed, Nyírcsaholy and Tiborszállás. The dedicated article's own 'Forgalom' section names currently-operated services explicitly as 'Mátészalka–Tiborszállás' among others; it also states international service toward Nagykároly/Carei (Romania) ended entirely on 2026-12-10 [sic, per article: 2023-12-10], making that a historical, not a currently selectable, route. Tiborszállás (km 18) is the article's confirmed current operational endpoint, having taken over from the closed border station Ágerdőmajor.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "116",
+      "approvedDisplayName": "116 – Nyíregyháza–Vásárosnamény",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Vásárosnamény) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "117",
+      "approvedDisplayName": "117 – Ohat-Pusztakócs–Görögszállás",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies 2 intermediate settlements (Tiszaeszlár, Tiszalök) on this line; neither legal endpoint itself is a verified settlement. Owner approved the legal endpoint name despite the thinner direct evidence.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "145",
+      "approvedDisplayName": "145 – Kecskemét–Szolnok",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Kecskemét) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "151",
+      "approvedDisplayName": "151 – Kunszentmiklós-Tass–Dunapataj",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Kunszentmikl%C3%B3s-Tass%E2%80%93Dunapataj-vas%C3%BAtvonal",
+        "retrievedAt": "2026-09-30",
+        "sourceType": "WIKIPEDIA_DEDICATED_LINE_ARTICLE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies Apostag, Dunaegyháza, Dunavecse, Solt, Szalkszentmárton - all 5 appear in order on the dedicated article's own km-marked station list between Kunszentmiklós-Tass (km 0) and Dunapataj (km 49). The article's mention of a 'Dunaföldvár–Solt' branch and a never-physically-built 'Dunapataj–Kalocsa–Baja' line refer to separate, different lines, not this dataset's line_code=151 - the v2 review's 'merged historic segments' concern is resolved by this reading. The article's lead photo caption ('Az utolsó vonatok egyike Dunapatajon') suggests passenger service may have ended or be ending; owner approval does not assert current service.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "153",
+      "approvedDisplayName": "153 – Kiskőrös–Kalocsa",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies one legal endpoint (Kalocsa) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    },
+    {
+      "lineCode": "155",
+      "approvedDisplayName": "155 – Kiskunhalas–Kiskunfélegyháza",
+      "source": {
+        "url": "https://hu.wikipedia.org/wiki/Magyarorsz%C3%A1gi_vas%C3%BAtvonalak_list%C3%A1ja",
+        "retrievedAt": "2026-09-29",
+        "sourceType": "WIKIPEDIA_TABLE_CITING_LEGAL_DECREE",
+        "license": "CC BY-SA 4.0"
+      },
+      "evidence": "Own dataset verifies both legal endpoints (Kiskunhalas, Kiskunfélegyháza) directly.",
+      "decisionStatus": "OWNER_APPROVED",
+      "humanApproved": true,
+      "policyVersion": "RAILWAY-LINE-NAME-V1"
+    }
+  ]
+}
