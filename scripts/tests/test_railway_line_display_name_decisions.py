@@ -89,6 +89,8 @@ class RailwayLineDisplayNameDecisionsTest(unittest.TestCase):
             "humanApproved": human_approved, "policyVersion": policy_version,
         }
         record.update(overrides)
+        if not human_approved and "decisionStatus" not in overrides:
+            record["decisionStatus"] = "PENDING_OWNER_APPROVAL"
         return record
 
     def promote(self, **kwargs):
@@ -202,6 +204,52 @@ class RailwayLineDisplayNameDecisionsTest(unittest.TestCase):
         path = self._write_name_decisions([record])
         with self.assertRaises(promote_module.PromotionBlocked):
             self.promote(display_name_decisions_path=path)
+
+    def test_human_approved_true_requires_owner_approved_status(self):
+        record = self._name_decision(
+            "1", "1 – Teszt–Város", decisionStatus="PENDING_OWNER_APPROVAL",
+        )
+        path = self._write_name_decisions([record])
+        with self.assertRaises(promote_module.PromotionBlocked):
+            self.promote(display_name_decisions_path=path)
+
+    def test_owner_approved_status_requires_human_approved_true(self):
+        record = self._name_decision(
+            "1", "1 – Teszt–Város", human_approved=False, decisionStatus="OWNER_APPROVED",
+        )
+        path = self._write_name_decisions([record])
+        with self.assertRaises(promote_module.PromotionBlocked):
+            self.promote(display_name_decisions_path=path)
+
+    def test_blank_decision_status_blocks(self):
+        record = self._name_decision("1", "1 – Teszt–Város", decisionStatus="   ")
+        path = self._write_name_decisions([record])
+        with self.assertRaises(promote_module.PromotionBlocked):
+            self.promote(display_name_decisions_path=path)
+
+    def test_manifest_is_path_independent_for_the_same_decisions_file(self):
+        path = self._write_name_decisions([self._name_decision("1", "1 – Teszt–Város")])
+        alias_parent = path.parent / "path-alias"
+        alias_parent.mkdir()
+        path_with_parent_segment = alias_parent / ".." / path.name
+        first_out = self.root / "first-out"
+        second_out = self.root / "second-out"
+
+        _, first_manifest = promote_module.promote(
+            self.review_dir, self.decisions_dir, first_out,
+            display_name_decisions_path=path,
+        )
+        _, second_manifest = promote_module.promote(
+            self.review_dir, self.decisions_dir, second_out,
+            display_name_decisions_path=path_with_parent_segment,
+        )
+
+        self.assertEqual(first_manifest, second_manifest)
+        self.assertEqual(
+            (first_out / "manifest.json").read_bytes(),
+            (second_out / "manifest.json").read_bytes(),
+        )
+        self.assertEqual(first_manifest["displayNameSource"]["decisionsFile"], path.name)
 
     # ------------------------------------------------------------- determinism / real file
 

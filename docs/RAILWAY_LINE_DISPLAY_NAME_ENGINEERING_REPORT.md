@@ -24,7 +24,7 @@ proof that the regenerated dataset changes only what it should.
   table (6 rows: the master line-list table plus the 5 dedicated line articles fetched during
   the deeper research pass) and a note on why short place-name pairs do not trigger ShareAlike
   propagation.
-- **`scripts/tests/test_railway_line_display_name_decisions.py`** — 16 new tests (see §4).
+- **`scripts/tests/test_railway_line_display_name_decisions.py`** — 20 new tests (see §4).
 - **This report.**
 
 ## 3. Promoter change
@@ -43,7 +43,7 @@ proof that the regenerated dataset changes only what it should.
   `(code, f"{code}. számú vasútvonal")` to
   `(code, display_name_overrides.get(code, f"{code}. számú vasútvonal"))` — a line without an
   approved override is unaffected, byte for byte.
-- The manifest gains a `displayNameSource` block (decisions file path, its own SHA-256,
+- The manifest gains a `displayNameSource` block (stable decisions filename, its own SHA-256,
   overridden/total line counts, attribution string) whenever a decisions file was supplied.
 
 ### 3.1 Stale / missing / duplicate protection
@@ -60,8 +60,15 @@ proof that the regenerated dataset changes only what it should.
 | Two decisions name the same `lineCode` (**duplicate**) | `PromotionBlocked` |
 | A decision names a `lineCode` absent from this run's own promoted `used_codes` (**stale** — the closest structural equivalent here to the OSM decisions' evidence-hash staleness, since a line name has no per-candidate hash to go stale against) | `PromotionBlocked` |
 | `humanApproved` is present but not a boolean | `PromotionBlocked` |
+| `humanApproved: true` without `decisionStatus: OWNER_APPROVED` | `PromotionBlocked` |
+| `decisionStatus: OWNER_APPROVED` with `humanApproved: false` | `PromotionBlocked` |
+| `decisionStatus` is blank | `PromotionBlocked` |
 | `humanApproved: false` | Entry is simply not applied — not an error, the safe placeholder is kept |
 | No `--display-name-decisions` at all | Every line keeps its safe placeholder — unchanged prior behaviour |
+
+The manifest records the stable filename `railway-line-display-name-decisions.json`, never the
+caller's relative or absolute filesystem path. Two invocations addressing the same file through
+different path spellings therefore produce byte-identical manifests.
 
 ### 3.2 `datasetVersion` collision — found and fixed during this work
 
@@ -77,8 +84,8 @@ upserting — this name-only release would have been **unimportable** as origina
 
 **Fix:** when a decisions file is supplied and at least one line is actually overridden, the
 promoter appends a deterministic suffix derived from the decisions file's own SHA-256:
-`-NAMES-<first 8 hex chars>`. This produces
-`OSM-HU-RAIL-VERIFIED-2026-09-23-NAMES-d895e061` for the current decisions file — a genuinely
+`-NAMES-<first 16 hex chars>`. This produces
+`OSM-HU-RAIL-VERIFIED-2026-09-23-NAMES-d895e061e47dfb1e` for the current decisions file — a genuinely
 new, importable version, while staying fully deterministic (an unchanged decisions file always
 regenerates the identical suffix; a changed one changes it automatically, so a future name
 correction can never silently collide with this one).
@@ -90,12 +97,12 @@ Docker container, since the local Windows Python install is a non-functional Sto
 workaround used throughout this project's sessions).
 
 ```
-Ran 71 tests in 1.087s
+Ran 75 tests
 OK
 ```
 
-71 = the pre-existing 55 (county territory preview, OSM railway reference, promote-osm-railway-
-reference, territory plan) **+ 16 new** in `test_railway_line_display_name_decisions.py`:
+75 = the pre-existing 55 (county territory preview, OSM railway reference, promote-osm-railway-
+reference, territory plan) **+ 20 new** in `test_railway_line_display_name_decisions.py`:
 happy path (override applied; untouched lines keep the placeholder), `humanApproved: false`
 never applied, `--expect-name-policy-version` match, and one test per hard-failure condition in
 §3.1 (missing file, invalid JSON, wrong schema version, policy version mismatch at both the
@@ -105,6 +112,12 @@ loads the **real, committed** decisions file and asserts: `schemaVersion`/`polic
 expected, exactly 38 entries, no duplicate `lineCode`, every entry `humanApproved`, every
 `approvedDisplayName`/`evidence` non-blank, every decision's `policyVersion` matching the file's
 own.
+
+The additional integrity cases cover contradictory approval status/boolean combinations, a
+blank decision status, and byte-identical manifests when the same decision file is addressed
+through different filesystem path spellings. The `reference-data` GitHub workflow also runs
+the real 38-line decisions file end-to-end with both expected policy versions, validates that
+generated canonical dataset, and checks the territory preview against that same output.
 
 ## 5. Regenerated dataset — proof that only 38 `display_name` values changed
 
@@ -116,7 +129,7 @@ python3 scripts/promote-osm-railway-reference.py \
   --display-name-decisions reference-data/osm-review/railway-line-display-name-decisions.json \
   --expect-name-policy-version RAILWAY-LINE-NAME-V1
 
-PROMOTED OSM-HU-RAIL-VERIFIED-2026-09-23-NAMES-d895e061: {'settlements': 3178, 'railwayLines': 38, 'settlementRailwayLineMappings': 146} (146 of 919 candidates)
+PROMOTED OSM-HU-RAIL-VERIFIED-2026-09-23-NAMES-d895e061e47dfb1e: {'settlements': 3178, 'railwayLines': 38, 'settlementRailwayLineMappings': 146} (146 of 919 candidates)
 ```
 
 Not committed to Git (same convention as the existing, untracked `work/promote-release/` used
@@ -133,6 +146,13 @@ Manifest diff: `datasetVersion` changed (§3.2, required for importability),
 `counts`/`coverage`/`sources`/`review` block unchanged, new `displayNameSource` block added
 (`overriddenLineCount: 38`, `totalLineCount: 38`, the decisions file's own SHA-256, the
 attribution string).
+
+The committed county-v2 territory preview was regenerated from this exact named dataset.
+Its 146 pair assignments, ServiceArea IDs, statuses and reasons are unchanged; the preview now
+shows the approved line names, records the new `railway-lines.csv` checksum, and its apply
+payload expects this new dataset version. This keeps the later, separately approved territory
+apply fail-closed against the exact reference revision that will exist after the name-only
+import.
 
 Independent verification, run directly against both generated directories in this session:
 

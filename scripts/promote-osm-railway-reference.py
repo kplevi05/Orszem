@@ -45,6 +45,7 @@ class PromotionBlocked(Exception):
 
 
 DISPLAY_NAME_SCHEMA_VERSION = 1
+OWNER_APPROVED_DISPLAY_NAME_STATUS = "OWNER_APPROVED"
 REQUIRED_DISPLAY_NAME_DECISION_FIELDS = {
     "lineCode", "approvedDisplayName", "source", "evidence", "decisionStatus",
     "humanApproved", "policyVersion",
@@ -119,6 +120,21 @@ def load_display_name_decisions(path, used_codes, expect_policy_version=None):
                 f"file's own policyVersion {file_policy_version!r}",
             )
 
+        human_approved = record["humanApproved"]
+        decision_status = record["decisionStatus"]
+        if not isinstance(decision_status, str) or not decision_status.strip():
+            raise PromotionBlocked(f"{path}: decisions[{i}].decisionStatus must not be empty")
+        if human_approved is True and decision_status != OWNER_APPROVED_DISPLAY_NAME_STATUS:
+            raise PromotionBlocked(
+                f"{path}: decisions[{i}] has humanApproved true but decisionStatus is "
+                f"{decision_status!r}, expected {OWNER_APPROVED_DISPLAY_NAME_STATUS!r}",
+            )
+        if human_approved is False and decision_status == OWNER_APPROVED_DISPLAY_NAME_STATUS:
+            raise PromotionBlocked(
+                f"{path}: decisions[{i}] has decisionStatus {OWNER_APPROVED_DISPLAY_NAME_STATUS!r} "
+                "but humanApproved is false",
+            )
+
         code = record["lineCode"]
         if code in seen_codes:
             raise PromotionBlocked(f"{path}: duplicate decision for lineCode {code!r}")
@@ -130,9 +146,9 @@ def load_display_name_decisions(path, used_codes, expect_policy_version=None):
                 "promoted line codes - a stale decision for a line no longer in the verified subset",
             )
 
-        if record["humanApproved"] is True:
+        if human_approved is True:
             approved[code] = record["approvedDisplayName"]
-        elif record["humanApproved"] is not False:
+        elif human_approved is not False:
             raise PromotionBlocked(f"{path}: decisions[{i}].humanApproved must be a boolean")
 
     return approved
@@ -284,7 +300,10 @@ def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None,
         )
         decisions_bytes = display_name_decisions_path.read_bytes()
         display_name_source_meta = {
-            "decisionsFile": str(display_name_decisions_path),
+            # A provenance label, not a build-machine path. The content hash below is the
+            # identity. Keeping the label path-independent makes the manifest byte-identical
+            # whether the same file was supplied through a relative or absolute path.
+            "decisionsFile": display_name_decisions_path.name,
             "decisionsFileSha256": sha256_bytes(decisions_bytes),
             "overriddenLineCount": len(display_name_overrides),
             "totalLineCount": len(used_codes),
@@ -314,8 +333,9 @@ def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None,
         # rather than upserting. The suffix is derived from the decisions file's own content,
         # so it changes deterministically whenever the approved name set changes, and stays
         # identical on a byte-for-byte identical re-run (still deterministic promotion output).
-        dataset_version = f"{dataset_version}-NAMES-{display_name_source_meta['decisionsFileSha256'][:8]}"
-        display_name_source_meta["appliedToDatasetVersionSuffix"] = f"-NAMES-{display_name_source_meta['decisionsFileSha256'][:8]}"
+        name_decision_digest = display_name_source_meta["decisionsFileSha256"][:16]
+        dataset_version = f"{dataset_version}-NAMES-{name_decision_digest}"
+        display_name_source_meta["appliedToDatasetVersionSuffix"] = f"-NAMES-{name_decision_digest}"
     manifest = {
         "datasetVersion": dataset_version,
         "generatedAt": review_manifest["generatedAt"],
