@@ -44,6 +44,116 @@ class PromotionBlocked(Exception):
     pass
 
 
+DISPLAY_NAME_SCHEMA_VERSION = 1
+OWNER_APPROVED_DISPLAY_NAME_STATUS = "OWNER_APPROVED"
+REQUIRED_DISPLAY_NAME_DECISION_FIELDS = {
+    "lineCode", "approvedDisplayName", "source", "evidence", "decisionStatus",
+    "humanApproved", "policyVersion",
+}
+REQUIRED_DISPLAY_NAME_SOURCE_FIELDS = {"url", "retrievedAt", "sourceType", "license"}
+
+
+def load_display_name_decisions(path, used_codes, expect_policy_version=None):
+    """Load owner-approved line display-name overrides.
+
+    Returns `{line_code: approved_display_name}` for exactly the lines with a current,
+    `humanApproved: true` decision. A line with no entry here, or an entry that is not
+    `humanApproved: true`, is simply absent from the returned mapping - the caller keeps
+    the safe placeholder for it. This function never invents or infers a name.
+
+    Hard failure (never a partial/silent result) on:
+      - the file missing or not valid JSON;
+      - `schemaVersion` not the one this promoter understands;
+      - a policyVersion mismatch, if `expect_policy_version` was given;
+      - a decision missing a required field, or its `source` missing a required subfield;
+      - two decisions naming the same `lineCode` (duplicate);
+      - a decision naming a `lineCode` that is not among this run's own promoted
+        `used_codes` - i.e. a decision that no longer corresponds to a currently verified
+        line (the closest equivalent here to a "stale" decision: railway line names have
+        no per-candidate evidence hash to go stale against the way OSM pair decisions do,
+        so staleness is defined structurally instead - the decision has drifted away from
+        the dataset it was meant to describe).
+    """
+    if not path.is_file():
+        raise PromotionBlocked(f"{path}: display-name decisions file not found")
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise PromotionBlocked(f"{path}: not valid JSON ({exc})") from exc
+
+    if doc.get("schemaVersion") != DISPLAY_NAME_SCHEMA_VERSION:
+        raise PromotionBlocked(
+            f"{path}: schemaVersion is {doc.get('schemaVersion')!r}, expected {DISPLAY_NAME_SCHEMA_VERSION!r}",
+        )
+    file_policy_version = doc.get("policyVersion")
+    if not file_policy_version:
+        raise PromotionBlocked(f"{path}: missing top-level policyVersion")
+    if expect_policy_version is not None and expect_policy_version != file_policy_version:
+        raise PromotionBlocked(
+            f"{path}: policyVersion is {file_policy_version!r}, expected {expect_policy_version!r} - "
+            "pass the version you actually reviewed against, or omit --expect-name-policy-version deliberately",
+        )
+
+    decisions = doc.get("decisions")
+    if not isinstance(decisions, list):
+        raise PromotionBlocked(f"{path}: 'decisions' must be a list")
+
+    seen_codes = set()
+    approved = {}
+    for i, record in enumerate(decisions):
+        if not isinstance(record, dict):
+            raise PromotionBlocked(f"{path}: decisions[{i}] is not an object")
+        missing = REQUIRED_DISPLAY_NAME_DECISION_FIELDS - record.keys()
+        if missing:
+            raise PromotionBlocked(f"{path}: decisions[{i}] missing required field(s) {sorted(missing)}")
+        source = record["source"]
+        if not isinstance(source, dict) or (REQUIRED_DISPLAY_NAME_SOURCE_FIELDS - source.keys()):
+            src_missing = REQUIRED_DISPLAY_NAME_SOURCE_FIELDS - (source.keys() if isinstance(source, dict) else set())
+            raise PromotionBlocked(f"{path}: decisions[{i}].source missing required field(s) {sorted(src_missing)}")
+        if not str(record["approvedDisplayName"]).strip():
+            raise PromotionBlocked(f"{path}: decisions[{i}].approvedDisplayName must not be empty")
+        if not str(record["evidence"]).strip():
+            raise PromotionBlocked(f"{path}: decisions[{i}].evidence must not be empty")
+        if record["policyVersion"] != file_policy_version:
+            raise PromotionBlocked(
+                f"{path}: decisions[{i}].policyVersion {record['policyVersion']!r} does not match the "
+                f"file's own policyVersion {file_policy_version!r}",
+            )
+
+        human_approved = record["humanApproved"]
+        decision_status = record["decisionStatus"]
+        if not isinstance(decision_status, str) or not decision_status.strip():
+            raise PromotionBlocked(f"{path}: decisions[{i}].decisionStatus must not be empty")
+        if human_approved is True and decision_status != OWNER_APPROVED_DISPLAY_NAME_STATUS:
+            raise PromotionBlocked(
+                f"{path}: decisions[{i}] has humanApproved true but decisionStatus is "
+                f"{decision_status!r}, expected {OWNER_APPROVED_DISPLAY_NAME_STATUS!r}",
+            )
+        if human_approved is False and decision_status == OWNER_APPROVED_DISPLAY_NAME_STATUS:
+            raise PromotionBlocked(
+                f"{path}: decisions[{i}] has decisionStatus {OWNER_APPROVED_DISPLAY_NAME_STATUS!r} "
+                "but humanApproved is false",
+            )
+
+        code = record["lineCode"]
+        if code in seen_codes:
+            raise PromotionBlocked(f"{path}: duplicate decision for lineCode {code!r}")
+        seen_codes.add(code)
+
+        if code not in used_codes:
+            raise PromotionBlocked(
+                f"{path}: decisions[{i}] names lineCode {code!r}, which is not among this run's "
+                "promoted line codes - a stale decision for a line no longer in the verified subset",
+            )
+
+        if human_approved is True:
+            approved[code] = record["approvedDisplayName"]
+        elif human_approved is not False:
+            raise PromotionBlocked(f"{path}: decisions[{i}].humanApproved must be a boolean")
+
+    return approved
+
+
 def sha256_bytes(value):
     return hashlib.sha256(value).hexdigest()
 
@@ -114,7 +224,8 @@ def load_decisions(decisions_dir):
     return decisions
 
 
-def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None):
+def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None,
+            display_name_decisions_path=None, expect_name_policy_version=None):
     candidates, dataset_policy_version = load_candidates(review_dir)
     if expect_policy_version is not None and expect_policy_version != dataset_policy_version:
         raise PromotionBlocked(
@@ -181,17 +292,52 @@ def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None):
     )
     used_codes = sorted({code for _, code in verified_pairs})
 
+    display_name_overrides = {}
+    display_name_source_meta = None
+    if display_name_decisions_path is not None:
+        display_name_overrides = load_display_name_decisions(
+            display_name_decisions_path, used_codes, expect_name_policy_version,
+        )
+        decisions_bytes = display_name_decisions_path.read_bytes()
+        display_name_source_meta = {
+            # A provenance label, not a build-machine path. The content hash below is the
+            # identity. Keeping the label path-independent makes the manifest byte-identical
+            # whether the same file was supplied through a relative or absolute path.
+            "decisionsFile": display_name_decisions_path.name,
+            "decisionsFileSha256": sha256_bytes(decisions_bytes),
+            "overriddenLineCount": len(display_name_overrides),
+            "totalLineCount": len(used_codes),
+            "attribution": (
+                "Egyes vonalnevek forrása a magyar Wikipédia (CC BY-SA 4.0) - lásd "
+                "reference-data/LICENSES/Wikipedia-CC-BY-SA.md."
+            ),
+        }
+
     settlements_bytes = (review_dir / "settlements.csv").read_bytes()
     (out_dir / "settlements.csv").write_bytes(settlements_bytes)
-    write_csv(out_dir / "railway-lines.csv", ["line_code", "display_name"],
-              [(code, f"{code}. számú vasútvonal") for code in used_codes])
+    write_csv(
+        out_dir / "railway-lines.csv", ["line_code", "display_name"],
+        [(code, display_name_overrides.get(code, f"{code}. számú vasútvonal")) for code in used_codes],
+    )
     write_csv(out_dir / "settlement-railway-lines.csv", ["ksh_code", "line_code"], verified_pairs)
 
     review_manifest = json.loads((review_dir / "manifest.json").read_text(encoding="utf-8"))
     canonical = {name: sha256_bytes((out_dir / name).read_bytes())
                  for name in ("settlements.csv", "railway-lines.csv", "settlement-railway-lines.csv")}
+    dataset_version = review_manifest["datasetVersion"].replace("OSM-HU-RAIL-REVIEW-", "OSM-HU-RAIL-VERIFIED-")
+    if display_name_source_meta is not None and display_name_source_meta["overriddenLineCount"] > 0:
+        # A display-name-only re-promotion must never share its exact datasetVersion string
+        # with an already-imported dataset that has different content: the backend's
+        # ReferenceImportUseCase looks up an existing import BY datasetVersion, and a content
+        # mismatch under the same version raises ReferenceDatasetVersionConflictException
+        # rather than upserting. The suffix is derived from the decisions file's own content,
+        # so it changes deterministically whenever the approved name set changes, and stays
+        # identical on a byte-for-byte identical re-run (still deterministic promotion output).
+        name_decision_digest = display_name_source_meta["decisionsFileSha256"][:16]
+        dataset_version = f"{dataset_version}-NAMES-{name_decision_digest}"
+        display_name_source_meta["appliedToDatasetVersionSuffix"] = f"-NAMES-{name_decision_digest}"
     manifest = {
-        "datasetVersion": review_manifest["datasetVersion"].replace("OSM-HU-RAIL-REVIEW-", "OSM-HU-RAIL-VERIFIED-"),
+        "datasetVersion": dataset_version,
         "generatedAt": review_manifest["generatedAt"],
         "verificationStatus": "VERIFIED",
         "coverageStatus": "PARTIAL",
@@ -221,6 +367,8 @@ def promote(review_dir, decisions_dir, out_dir, expect_policy_version=None):
             "status": "REVIEWED_PROMOTED",
         },
     }
+    if display_name_source_meta is not None:
+        manifest["displayNameSource"] = display_name_source_meta
     (out_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return report, manifest
 
@@ -231,10 +379,20 @@ def main():
     parser.add_argument("--decisions-dir", type=Path, default=None, help="Defaults to <review-dir>/decisions")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--expect-policy-version", default=None)
+    parser.add_argument(
+        "--display-name-decisions", type=Path, default=None,
+        help="Owner-approved railway-line display-name decisions file (e.g. "
+             "reference-data/osm-review/railway-line-display-name-decisions.json). "
+             "Omit to keep every line's safe '<code>. számú vasútvonal' placeholder.",
+    )
+    parser.add_argument("--expect-name-policy-version", default=None)
     args = parser.parse_args()
     decisions_dir = args.decisions_dir or (args.review_dir / "decisions")
     try:
-        report, manifest = promote(args.review_dir, decisions_dir, args.out, args.expect_policy_version)
+        report, manifest = promote(
+            args.review_dir, decisions_dir, args.out, args.expect_policy_version,
+            args.display_name_decisions, args.expect_name_policy_version,
+        )
     except PromotionBlocked as exc:
         print(f"BLOCKED: {exc}", file=sys.stderr)
         return 2

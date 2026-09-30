@@ -54,7 +54,7 @@
       "settlements": 37
     }
   },
-  "datasetVersion": "OSM-HU-RAIL-VERIFIED-2026-09-23",
+  "datasetVersion": "OSM-HU-RAIL-VERIFIED-2026-09-23-NAMES-d895e061e47dfb1e",
   "gysevCheck": {
     "automaticallyAssignedPairs": 0,
     "overrideCandidatesApplied": 0,
@@ -66,7 +66,7 @@
   "policyVersion": "ORSZEM-COUNTY-V2-1",
   "railwayLines": 38,
   "sourceFileSha256": {
-    "railway-lines.csv": "fdbb68192f47fe87e009a0cdae9abcd58a84bea8110f47663b553677c31a2cb5",
+    "railway-lines.csv": "1c5ec6dd3af1087b37a4cbcefc98a205a17755e727d9bdc6bf09d2eaf04b4f80",
     "settlement-railway-lines.csv": "7fa589c03633e576ee0b3c1e1a0be7ab0f40e0d6c19e554d41f9e4abf2b29d8e",
     "settlements.csv": "70b34b3a94bcc42806996c40189a3877a536e29e7d7b2e668dd41fa6f32359cd"
   },
