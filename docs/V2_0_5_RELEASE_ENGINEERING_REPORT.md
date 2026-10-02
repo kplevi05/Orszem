@@ -49,7 +49,28 @@ A kód a verziócommitok óta nem változott; a későbbi commitok kizárólag d
   (`E6:2A:DE:23:9E:02:65:F5:DD:C1:5E:30:18:13:5A:D0:A5:93:0D:95:0C:BF:73:90:B5:5D:13:15:D7:B3:03:CF`); az
   **aláírt** APK saját SHA-256-ját külön rögzíteni kell.
 
-### 3/B. Public Android
+### 3/B. Post-merge / tag reproducibility gate (kötelező Release és deploy előtt)
+
+A merge és a `v2.0.5` tag létrehozása után, **a Release publikálása és bármilyen deploy előtt**:
+
+1. A **pontos `v2.0.5` tagből** egy **tiszta, új worktree** készül (`git worktree add <út> v2.0.5`; a tag által
+   mutatott commit SHA-ját rögzíteni kell, és a `git status` tiszta, módosítatlan legyen).
+2. Ebből újra kell építeni a backend JAR-t (`clean bootJar`, a kimenet `backend.jar` → `backend-2.0.5.jar`) és az
+   aláíratlan Service APK-t (`:service-app:clean :service-app:assembleRelease`).
+3. A két új SHA-256-nak **bájtra egyeznie kell** a §3 előkészítéskor rögzített értékekkel:
+   - `backend-2.0.5.jar`: `ef79845e1267fcca3e72291bd1fd1066135525f9e98173e43427ca6ff1d2aedb`
+   - `service-app-release-unsigned.apk`: `7a7375ade8797292ad319fe581d77671a7d49a4ad2c8c6c08b258424c3aea075`
+4. **Bármilyen eltérés esetén STOP:** nincs GitHub Release, nincs feltöltés, nincs deploy, nincs aláírás, amíg az
+   eltérés oka nincs feltárva és a tulajdonos újra nem hagyta jóvá. Az előkészített artifactokat ilyenkor nem
+   szabad „megmenteni” (átnevezés, újraépítés addig, míg egyezik).
+5. Az eredményt (tag SHA, két új checksum, egyezés igen/nem) a tulajdonos számára rögzíteni kell, mielőtt a Release
+   vagy a rollout következik.
+
+Megjegyzés: a tag a squash/merge után a `main` egy másik commitját is mutathatja, mint a `5ee9aa6`; ez nem baj,
+amíg a futtatott forráskód azonos (a két docs commit kódot nem érint). A bájtazonosságot a build ténylegesen
+bizonyítja — nem a commit SHA egyezése.
+
+### 3/C. Public Android
 
 A verzió csak az egységes verziózás miatt emelkedett; **új Public APK nem szükséges** és nem készült. A Public Web
 kódja nem változott.
@@ -84,12 +105,26 @@ a külön, owner által jóváhagyott név-only adatkiadással szerepel; a 146 h
 | Referenciaadat-validátorok; a promotált dataset reprodukálása | valid; „preview is up to date” |
 | GitHub CI a `a3527bc` merge-commiton | 6/6 workflow zöld |
 
-A release PR CI-eredménye a PR megnyitása után kerül rögzítésre (lásd a PR-t).
+**A #57 draft release PR tényleges CI-eredménye a pontos `5ee9aa663b9258db0e340036fadf027aad567cb5` HEAD-en**
+(a GitHub Actions API alapján; mind sikeres):
+
+| Workflow | `pull_request` | `push` |
+|---|---|---|
+| `backend` | success | success |
+| `android` | success | success |
+| `web` | success | success |
+| `reference-data` | success | success |
+| `deploy-config` | success | success |
+
+Ez 10 workflow-futás és 12 check-run (egyes workflow-k több jobból állnak: `build`, `validate`, `caddy`,
+`backup-restore-scripts`), mind `success`, hiba vagy kihagyott check nélkül. Ha később új commit kerül a PR-ra,
+ez a bejegyzés az új HEAD CI-jére külön frissítendő.
 
 ## 6. Production rollout és rollback (rövid terv — végrehajtás csak külön owner jóváhagyással)
 
 **Rollout (backend elöl, nincs migráció):**
 
+0. **Előfeltétel:** a §3/B post-merge/tag reproducibility gate teljesült (egyező checksumok a tag tiszta worktree-jéből).
 1. Friss adatbázis-backup + a megszokott ellenőrzés; a `ORSZEM_UNCLASSIFIED_SERVICE_USER_ACCESS_ENABLED=true`
    beállítás változatlan marad.
 2. A `backend-2.0.5.jar` checksum-ellenőrzött kihelyezése új néven (`.next` staging), a futó

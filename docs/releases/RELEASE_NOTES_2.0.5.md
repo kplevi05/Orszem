@@ -71,6 +71,9 @@ nem.
   aláíró certificate SHA-256 ujjlenyomatának egyeznie kell a jelenleg telepített Service alkalmazáséval
   (`E6:2A:DE:23:…:B3:03:CF`); az **aláírt** APK saját SHA-256 checksumát külön rögzíteni kell. Kulcs vagy jelszó nem
   kerülhet Gitbe, logba vagy chatbe.
+- **Post-merge/tag reproducibility gate:** a pontos `v2.0.5` tag tiszta worktree-jéből újra kell építeni a backend
+  JAR-t és az aláíratlan Service APK-t; a checksumoknak egyezniük kell az alábbiakkal. Eltérés esetén **STOP**: nincs
+  Release, nincs deploy (engineering report §3/B).
 - **Public Android:** a verzió 2.0.5-re emelkedett, de új Public APK nem szükséges.
 - A backend jar checksumja (`ef79845e…aedb`) és az aláíratlan APK checksumja (`7a7375ad…a075`) a pontos
   forrásfából, kétszer, tiszta buildből épített artifactokra vonatkozik (részletek: engineering report §3).
