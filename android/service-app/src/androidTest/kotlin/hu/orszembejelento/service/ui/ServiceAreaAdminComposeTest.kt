@@ -113,7 +113,17 @@ class ServiceAreaAdminComposeTest {
         val fake = FakeAreaAdminRepo(
             listAreasResult = ApiResult.Success(
                 ServiceAreaAdminListPageResponse(
-                    items = listOf(ServiceAreaAdminListItemResponse("a1", "Nyugat-dunantuli terulet", true, 7, 3, 0)),
+                    items = listOf(
+                        ServiceAreaAdminListItemResponse(
+                            id = "a1",
+                            name = "Nyugat-dunantuli terulet",
+                            active = true,
+                            adminVersion = 7,
+                            mappedRailwayLineCount = 3,
+                            openOperationalReportCount = 0,
+                            mappedSettlementLineCount = 2,
+                        ),
+                    ),
                     page = 0, size = 50, totalElements = 1, totalPages = 1,
                 ),
             ),
@@ -126,7 +136,8 @@ class ServiceAreaAdminComposeTest {
         // Two legitimate "Aktív" nodes: the Összes/Aktív/Inaktív status filter chip, and the
         // card's own status label - not a duplicate-rendering bug.
         compose.onAllNodesWithText("Aktív").assertCountEquals(2)
-        compose.onNodeWithText("3 vasútvonal").assertExists()
+        compose.onNodeWithText("3 teljes vonal").assertExists()
+        compose.onNodeWithText("2 településenkénti hozzárendelés").assertExists()
         compose.onAllNodesWithText("7", substring = true).assertCountEquals(0) // the adminVersion itself must never render
     }
 
@@ -146,11 +157,37 @@ class ServiceAreaAdminComposeTest {
 
     // ---------------------------------------------------------------------------------- Detail
 
-    private fun detailOf(active: Boolean, version: Long, lines: List<MappedRailwayLineResponse> = emptyList(), openReports: Int = 0) =
+    private fun detailOf(
+        active: Boolean,
+        version: Long,
+        lines: List<MappedRailwayLineResponse> = emptyList(),
+        openReports: Int = 0,
+        settlementMappings: Int = 0,
+    ) =
         ServiceAreaAdminDetailResponse(
             id = "a1", name = "Keleti terulet", active = active, adminVersion = version,
-            mappedRailwayLines = lines, mappedRailwayLineCount = lines.size, openOperationalReportCount = openReports,
+            mappedRailwayLines = lines,
+            mappedRailwayLineCount = lines.size,
+            openOperationalReportCount = openReports,
+            mappedSettlementLineCount = settlementMappings,
         )
+
+    @Test
+    fun a_pair_mapped_area_shows_the_pair_count_without_claiming_that_no_railway_line_is_assigned() {
+        val fake = FakeAreaAdminRepo(
+            areaDetailResult = ApiResult.Success(
+                detailOf(active = true, version = 0, settlementMappings = 2),
+            ),
+        )
+        val vm = ServiceAreaDetailViewModel("a1", fake, onSessionEnded = {})
+        compose.setContent { ServiceAreaDetailScreen(viewModel = vm, onBack = {}, onAddRailwayLine = {}) }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Településenkénti hozzárendelések: 2").assertExists()
+        compose.onNodeWithText("Teljes vonalas hozzárendelések").assertExists()
+        compose.onNodeWithText("Nincs teljes vonal ehhez a területhez rendelve.").assertExists()
+        compose.onNodeWithText("Ehhez a területhez jelenleg nincs vasútvonal rendelve.").assertDoesNotExist()
+    }
 
     @Test
     fun an_inactive_area_shows_the_activate_action_not_deactivate() {

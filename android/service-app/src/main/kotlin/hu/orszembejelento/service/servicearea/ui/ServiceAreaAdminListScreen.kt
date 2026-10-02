@@ -172,6 +172,11 @@ private fun ServiceAreaAdminCard(area: ServiceAreaAdminListItemResponse, onClick
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Text(
+                stringResource(R.string.area_card_settlement_mapping_count, area.mappedSettlementLineCount),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             if (area.openOperationalReportCount > 0) {
                 Text(
                     stringResource(R.string.area_card_open_report_count, area.openOperationalReportCount),
