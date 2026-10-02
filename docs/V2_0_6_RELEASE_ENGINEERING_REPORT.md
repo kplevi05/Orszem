@@ -78,9 +78,11 @@ Az instrumented suite az előző kiadás (106 teszt) óta eggyel bővült: a
 `ServiceAreaAdminComposeTest.a_pair_mapped_area_shows_the_pair_count_without_claiming_that_no_railway_line_is_assigned`
 regressziós teszt bizonyítja, hogy pair-level mapping mellett a régi, félrevezető állítás nem jelenik meg.
 
-A lint-jelzések közül a `PluralsCandidate` típus már a v2.0.5-ben is jelen volt; a v2.0.6 két új, azonos jellegű
-darabszám-sztringet ad hozzá (`area_card_settlement_mapping_count`, `railway_lines_settlement_mapping_count`); nem hiba, és a
-build nem bukik rajta.
+A hat `PluralsCandidate` jelzés darabszám-sztringekre vonatkozik. Ötnek a sztringje már a v2.0.5-ben is megvolt
+(`area_card_line_count` — itt csak a szöveg változott —, `area_card_open_report_count`, `cd_line_details_toggle_count`,
+`line_settlements_truncated`, `analytics_trend_bar_description`); egy új: `area_card_settlement_mapping_count`. A v2.0.5 lint-kimenetét
+ezen a HEAD-en nem futtattam újra, ezért azt, hogy a régi sztringek akkor is jelezve voltak-e, nem állítom. Egyik sem hiba,
+és a build nem bukik rajta.
 
 ## 9. Az unsigned Service release APK reprodukálhatósága
 
