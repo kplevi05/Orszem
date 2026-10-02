@@ -97,6 +97,7 @@ fun ServiceAreaDetailScreen(viewModel: ServiceAreaDetailViewModel, onBack: () ->
 
                     RailwayLinesSection(
                         lines = detail.mappedRailwayLines,
+                        settlementMappingCount = detail.mappedSettlementLineCount,
                         mutationInFlight = state.mutationInFlight,
                         onAdd = onAddRailwayLine,
                         onUnassign = { confirmUnassignLine = it },
@@ -156,6 +157,7 @@ fun ServiceAreaDetailScreen(viewModel: ServiceAreaDetailViewModel, onBack: () ->
 @Composable
 private fun RailwayLinesSection(
     lines: List<MappedRailwayLineResponse>,
+    settlementMappingCount: Int,
     mutationInFlight: Boolean,
     onAdd: () -> Unit,
     onUnassign: (MappedRailwayLineResponse) -> Unit,
@@ -165,6 +167,16 @@ private fun RailwayLinesSection(
             Text(stringResource(R.string.railway_lines_section_title), style = MaterialTheme.typography.titleSmall)
             TextButton(onClick = onAdd) { Text(stringResource(R.string.action_add_railway_line)) }
         }
+        Text(
+            stringResource(R.string.railway_lines_settlement_mapping_count, settlementMappingCount),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            stringResource(R.string.railway_lines_whole_line_title),
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(top = 10.dp),
+        )
         if (lines.isEmpty()) {
             Text(
                 stringResource(R.string.railway_lines_section_empty),
