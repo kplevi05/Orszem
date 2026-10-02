@@ -1,8 +1,9 @@
 # v2.0.5 — release engineering report
 
-Állapot: **előkészítés, owner review-ra vár.** Nincs tag, nincs GitHub Release, nincs merge, nincs deploy, nem
-történt production SSH, referenciaimport vagy territory apply. Kiadási jegyzet:
-`docs/releases/RELEASE_NOTES_2.0.5.md`.
+Állapot: **kiadva és productionben ellenőrizve 2026-10-02-án.** A release commit
+`7db16c7c729f3588d7fecc95cd5625e464c5bea1`, az annotált tag `v2.0.5`, a publikus GitHub Release:
+<https://github.com/kplevi05/Orszem/releases/tag/v2.0.5>. A részletes, végrehajtás utáni bizonyítékot a §8
+tartalmazza. Kiadási jegyzet: `docs/releases/RELEASE_NOTES_2.0.5.md`.
 
 ## 1. Kiindulás
 
@@ -48,6 +49,11 @@ A kód a verziócommitok óta nem változott; a későbbi commitok kizárólag d
   ujjlenyomata egyezzen a telepített Service alkalmazáséval
   (`E6:2A:DE:23:9E:02:65:F5:DD:C1:5E:30:18:13:5A:D0:A5:93:0D:95:0C:BF:73:90:B5:5D:13:15:D7:B3:03:CF`); az
   **aláírt** APK saját SHA-256-ját külön rögzíteni kell.
+
+A kapu a kiadáskor teljesült. A terjesztett `service-app-release-2.0.5-SIGNED.apk` mérete 2 126 246 B,
+SHA-256 értéke `b36d70a67d49488624023704b0d5f83e156bf0260bc0521107dc2709dc85ecd6`. Az APK v2/v3 aláírása
+érvényes, egyetlen signerrel; a certificate SHA-256 a fent rögzített production ujjlenyomat. A csomag
+`hu.orszembejelento.service`, `versionName=2.0.5`, `versionCode=6`.
 
 ### 3/B. Post-merge / tag reproducibility gate (kötelező Release és deploy előtt)
 
@@ -142,10 +148,71 @@ ez a bejegyzés az új HEAD CI-jére külön frissítendő.
 - Service APK: Android nem engedi az alacsonyabb versionCode-ra frissítést; visszavonás = terjesztés leállítása,
   szükség esetén a v2.0.4 build újra aláírva magasabb versionCode-dal (külön döntés).
 
-## 7. Nem történt
+## 7. Az előkészítési fázisban nem történt
 
 - Nem készült tag, GitHub Release; a `v2.0.4` címke és a draft Release (id 396517433) érintetlen.
 - Nem történt merge, deploy, production SSH, referenciaimport, territory apply, ServiceArea-módosítás.
 - Nem használtam `reference-data/local-research/`-t vagy PENDING (VPE/KTI/GYSEV) adatot; nincs GYSEV-hozzárendelés.
 - Az aláíratlan APK-t nem terjesztettem; kulcsot vagy credentialt nem kezeltem.
 - A `.claude/`, `dump*.xml`, `sample.py`, `work/` nem része a commitoknak.
+
+Ez a szakasz az owner-review előtti állapotot rögzíti. A későbbi, jóváhagyott kiadás és production rollout
+eredménye a következő szakaszban szerepel; referenciaimport és territory apply a v2.0.5 rollout részeként ott sem
+történt.
+
+## 8. Végrehajtás utáni kiadási és production bizonyíték (2026-10-02)
+
+### 8.1. Merge, tag, artifactok és Release
+
+- A #57 PR a jóváhagyott `72ff087e9f315f7002cf5f702d0b64d81f1e5beb` headről merge-committal került a
+  `main` ágba. A merge commit `7db16c7c729f3588d7fecc95cd5625e464c5bea1`; mind az öt workflow sikeres volt rajta.
+- Az annotált `v2.0.5` tag erre a merge commitra mutat. A tag tiszta worktree-jéből végrehajtott §3/B gate
+  bájtra azonos artifactokat adott: backend JAR `ef79845e…aedb`, unsigned Service APK `7a7375ad…a075`.
+- A Service APK a production kulccsal aláírva, `apksigner`-rel ellenőrizve és `adb install -r` frissítésként
+  kipróbálva került a Release-be. Az Android megőrizte a csomagazonosságot és a `firstInstallTime` értéket.
+- A GitHub Release publikus, nem draft és nem prerelease. Assetjei: `backend-2.0.5.jar`,
+  `service-app-release-2.0.5-SIGNED.apk`, `SHA256SUMS.txt`. A publikus URL-ekről visszatöltve a
+  `sha256sum -c` mindkét artifactra sikeres volt, az APK aláírása változatlanul érvényes.
+
+### 8.2. Production preflight, backup és rollout
+
+- A rollout előtti backend v2.0.4 volt (`2de7d7ff…3a03`), Flyway `007`, a fallback flag `true`.
+- A közvetlen rollback-backup:
+  `/home/opc/backups/v2/orszem_v2_20261002T130017Z.dump`, SHA-256
+  `6bf1151bf60bc79a855d58c0de5ab928dfbd0ebd34f35871ba96707693cfcad7`. Az eldobható restore drill
+  mind a 19 táblán azonos tartalmat adott.
+- A checksum-ellenőrzött v2.0.5 JAR került `run/backend.jar` alá; a v2.0.4 rollback artifact
+  `run/backend.pre-v2.0.5.jar` néven megmaradt. Csak a backend konténer indult újra; a DB és az edge nem.
+- A backend healthy, a boot log és `/api/v1/meta` szerint 2.0.5. A Flyway verzió maradt `007`, nem futott új
+  migráció. A fallback flag maradt `true`; a nyilvános actuator/OpenAPI/Swagger útvonalak továbbra is 404-et adnak.
+- A rollout előtti és utáni ujjlenyomat azonos: 146 pair-level hozzárendelés, 0 teljes-vonalas hozzárendelés,
+  41 vonal, 151 település-vonal kapcsolat, 3183 település (3178 aktív), 5 referenciaimport, 8 ACTIVE és 3
+  INACTIVE ServiceArea. Nem történt reference-import, territory apply vagy kézi adatírás.
+
+### 8.3. Hitelesített backend smoke
+
+- A SUPER_ADMIN vonallista mind a 41 sorban visszaadta az `assignmentMode` és `settlementMappingCount` mezőt:
+  38 `PER_SETTLEMENT`, 3 `UNASSIGNED`, 0 `WHOLE_LINE`, az SQL-lel soronként egyezően.
+- Az 1-es vonal `PER_SETTLEMENT`, egy beállított településsel és teljes-vonalas terület nélkül. Az
+  `UNASSIGNED` szűrő nem tartalmaz pair-level vonalat; a három szűrő darabszáma egyezett az adatbázissal.
+- A részletvégpont mind a 38 pair-level vonalnál egyezett az SQL-lel: településszám, település→ServiceArea pár,
+  inaktív jelző és `truncated=false`. Ismeretlen azonosítóra 404 `RAILWAY_LINE_NOT_FOUND` érkezett.
+- A csak olvasó ellenőrzés előtt és után a routing-, referencia- és területi ujjlenyomat, valamint a report/user
+  darabszám változatlan volt. A bejelentkezés létrehozott egy sessiont, amelyet a smoke végén 204-es logout vont vissza.
+
+### 8.4. Aláírt Service APK UI-smoke
+
+- A release-aláírású Service 2.0.5 (versionCode 6) a production API-val, valódi emulátoron futott.
+- A „Hozzárendelés nélküli” szűrőben csak a 900/901/902 fixture-vonal maradt; az 1-es vonal a
+  „Településenként” szűrőben jelent meg „Településenként hozzárendelve” állapottal és 1 beállított településsel.
+- Az 1-es vonal egészben nem volt hozzárendelhető. A lenyitott részlet Tata (Komárom-Esztergom) települést és a
+  Székesfehérvár szolgálati területet mutatta, a részleges lefedettséget jelző felirattal. Nem jelent meg általános
+  hibaüzenet.
+- A smoke kizárólag navigációt, szűrést és részletnyitást végzett; sem hozzárendelés, sem más production adatírás
+  nem történt. A session kijelentkezéssel zárult, az emulátor leállt.
+
+### 8.5. Végső állapot és ismert következő munka
+
+A v2.0.5 backend productionben fut, a Release publikált, az aláírt APK terjeszthető. A v2.0.4 draft Release
+audit/rollback nyomként draft maradt. A ServiceArea-részlet régi, teljes-vonalas listája külön UI-javítást igényel:
+a pair-level hozzárendelések mellett ne állítsa általánosan, hogy nincs vasútvonal a területhez rendelve.
