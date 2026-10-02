@@ -6,8 +6,11 @@ import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.servicearea.data.AreaAdminRepository
 import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListFilter
 import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListItemResponse
+import hu.orszembejelento.service.servicearea.data.RailwayLineAssignmentFilter
 import hu.orszembejelento.service.servicearea.data.RailwayLineSettlementMappingsResponse
+import hu.orszembejelento.service.servicearea.domain.PairLevelSupport
 import hu.orszembejelento.service.servicearea.domain.canOfferWholeLineAssign
+import hu.orszembejelento.service.servicearea.domain.detectPairLevelSupport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,8 +48,13 @@ class RailwayLinePickerViewModel(
         val expandedLineIds: Set<String> = emptySet(),
         /** Per line id: the on-demand detail load - never fetched until the user opens that line. */
         val details: Map<String, LineDetailState> = emptyMap(),
+        /** Learned from the list rows (see [PairLevelSupport]); starts UNKNOWN, i.e. new features off. */
+        val pairLevelSupport: PairLevelSupport = PairLevelSupport.UNKNOWN,
     ) {
         val canLoadMore: Boolean get() = page + 1 < totalPages
+
+        /** The pair-level filter and the settlement detail exist only against a backend that sent `assignmentMode`. */
+        val supportsPairLevel: Boolean get() = pairLevelSupport == PairLevelSupport.SUPPORTED
     }
 
     /** The on-demand pair-level detail of one line. Opening it never selects or assigns the line. */
@@ -80,6 +88,8 @@ class RailwayLinePickerViewModel(
     }
 
     fun updateFilter(filter: RailwayLineAdminListFilter) {
+        // A legacy backend has no PER_SETTLEMENT filter (it would silently answer "all"): never send it.
+        if (filter.assignment == RailwayLineAssignmentFilter.PER_SETTLEMENT && !_state.value.supportsPairLevel) return
         _state.update { it.copy(filter = filter) }
         refresh()
     }
@@ -93,6 +103,8 @@ class RailwayLinePickerViewModel(
      * read-only action, separate from the explicit, confirmed assign action.
      */
     fun toggleDetails(lineId: String) {
+        // The detail endpoint does not exist on a legacy backend: never call it (it would only fail).
+        if (!_state.value.supportsPairLevel) return
         val current = _state.value
         if (lineId in current.expandedLineIds) {
             _state.update { it.copy(expandedLineIds = it.expandedLineIds - lineId) }
@@ -188,6 +200,7 @@ class RailwayLinePickerViewModel(
                     loading = false,
                     loadingMore = false,
                     loadError = null,
+                    pairLevelSupport = detectPairLevelSupport(it.pairLevelSupport, result.value.items),
                 )
             }
             ApiResult.SessionEnded -> {

@@ -128,11 +128,15 @@ fun RailwayLinePickerScreen(
                     onClick = { viewModel.updateFilter(state.filter.copy(assignment = RailwayLineAssignmentFilter.ASSIGNED)) },
                     label = { Text(stringResource(R.string.filter_assignment_assigned)) },
                 )
-                FilterChip(
-                    selected = state.filter.assignment == RailwayLineAssignmentFilter.PER_SETTLEMENT,
-                    onClick = { viewModel.updateFilter(state.filter.copy(assignment = RailwayLineAssignmentFilter.PER_SETTLEMENT)) },
-                    label = { Text(stringResource(R.string.filter_assignment_per_settlement)) },
-                )
+                // Only against a backend that understands pair-level routing (it sent assignmentMode):
+                // a legacy backend would silently answer "all" for an unknown filter value.
+                if (state.supportsPairLevel) {
+                    FilterChip(
+                        selected = state.filter.assignment == RailwayLineAssignmentFilter.PER_SETTLEMENT,
+                        onClick = { viewModel.updateFilter(state.filter.copy(assignment = RailwayLineAssignmentFilter.PER_SETTLEMENT)) },
+                        label = { Text(stringResource(R.string.filter_assignment_per_settlement)) },
+                    )
+                }
             }
             if (state.assignError != null) {
                 InlineErrorBanner(apiErrorMessage(state.assignError!!))
@@ -153,6 +157,7 @@ fun RailwayLinePickerScreen(
                         line = line,
                         targetAreaId = targetAreaId,
                         enabled = !state.assigning,
+                        detailsSupported = state.supportsPairLevel,
                         expanded = line.id in state.expandedLineIds,
                         detail = state.details[line.id],
                         onSelect = { pendingLine = line },
@@ -200,6 +205,8 @@ private fun RailwayLinePickerRow(
     line: RailwayLineAdminListItemResponse,
     targetAreaId: String,
     enabled: Boolean,
+    /** False against a legacy backend: no settlement-detail control is drawn (its endpoint does not exist there). */
+    detailsSupported: Boolean,
     expanded: Boolean,
     detail: RailwayLinePickerViewModel.LineDetailState?,
     onSelect: () -> Unit,
@@ -249,24 +256,28 @@ private fun RailwayLinePickerRow(
                 }
             }
 
-            val stateWord = stringResource(if (expanded) R.string.line_details_state_open else R.string.line_details_state_closed)
-            val toggleDescription = if (status == LineRowStatus.PER_SETTLEMENT) {
-                stringResource(R.string.cd_line_details_toggle_count, line.displayName, line.settlementMappingCount, stateWord)
-            } else {
-                stringResource(R.string.cd_line_details_toggle, line.displayName, stateWord)
-            }
-            TextButton(
-                onClick = onToggleDetails,
-                modifier = Modifier.semantics {
-                    contentDescription = toggleDescription
-                    stateDescription = stateWord
-                },
-            ) {
-                Text(stringResource(if (expanded) R.string.line_details_close else R.string.line_details_open))
-            }
+            // No detail control at all against a legacy backend: its endpoint does not exist there,
+            // so a button would only ever lead to an error.
+            if (detailsSupported) {
+                val stateWord = stringResource(if (expanded) R.string.line_details_state_open else R.string.line_details_state_closed)
+                val toggleDescription = if (status == LineRowStatus.PER_SETTLEMENT) {
+                    stringResource(R.string.cd_line_details_toggle_count, line.displayName, line.settlementMappingCount, stateWord)
+                } else {
+                    stringResource(R.string.cd_line_details_toggle, line.displayName, stateWord)
+                }
+                TextButton(
+                    onClick = onToggleDetails,
+                    modifier = Modifier.semantics {
+                        contentDescription = toggleDescription
+                        stateDescription = stateWord
+                    },
+                ) {
+                    Text(stringResource(if (expanded) R.string.line_details_close else R.string.line_details_open))
+                }
 
-            if (expanded) {
-                LineSettlementDetails(detail = detail, onRetry = onRetryDetails)
+                if (expanded) {
+                    LineSettlementDetails(detail = detail, onRetry = onRetryDetails)
+                }
             }
         }
     }

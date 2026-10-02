@@ -142,6 +142,7 @@ data class RailwayLineSettlementAssignmentResponse(
     val kshCode: String,
     val settlementName: String,
     val countyName: String?,
+    /** `false` = a retired settlement whose relation still exists: administrative/historical visibility only, NOT "currently selectable in the Public clients". */
     val settlementActive: Boolean,
     val serviceAreaId: String?,
     val serviceAreaName: String?,

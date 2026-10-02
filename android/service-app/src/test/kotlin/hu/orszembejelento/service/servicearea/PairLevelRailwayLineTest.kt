@@ -5,9 +5,12 @@ import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.common.ui.errorMessageRes
 import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListItemResponse
 import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListPageResponse
+import hu.orszembejelento.service.servicearea.data.RailwayLineAssignmentFilter
 import hu.orszembejelento.service.servicearea.data.RailwayLineSettlementAssignmentResponse
 import hu.orszembejelento.service.servicearea.data.RailwayLineSettlementMappingsResponse
 import hu.orszembejelento.service.servicearea.domain.LineRoutingMode
+import hu.orszembejelento.service.servicearea.domain.PairLevelSupport
+import hu.orszembejelento.service.servicearea.domain.detectPairLevelSupport
 import hu.orszembejelento.service.servicearea.domain.LineRowStatus
 import hu.orszembejelento.service.servicearea.domain.canOfferWholeLineAssign
 import hu.orszembejelento.service.servicearea.domain.lineRowStatus
@@ -132,6 +135,87 @@ class PairLevelRailwayLineTest {
         assertFalse(vm.state.value.assigned)
     }
 
+    // ------------------------------------------------------ new client -> legacy backend fallback
+
+    /** A list as a pair-aware backend sends it: every row carries assignmentMode. */
+    private fun aware() = RailwayLineAdminListPageResponse(listOf(pairLine()), 0, 50, 1, 1)
+
+    /** A list as a legacy (pre-ADR-0011-aware) backend sends it: no row carries assignmentMode. */
+    private fun legacy() = RailwayLineAdminListPageResponse(
+        listOf(
+            RailwayLineAdminListItemResponse("w", "9", "9 – Teljes", true, "area-1", "Terület"),
+            RailwayLineAdminListItemResponse("f", "8", "8 – Szabad", true, null, null),
+        ),
+        0, 50, 2, 1,
+    )
+
+    @Test
+    fun `support is learned from the list - every row carrying assignmentMode means pair-aware, any row without it means legacy`() {
+        assertEquals(PairLevelSupport.SUPPORTED, detectPairLevelSupport(PairLevelSupport.UNKNOWN, aware().items))
+        assertEquals(PairLevelSupport.LEGACY, detectPairLevelSupport(PairLevelSupport.UNKNOWN, legacy().items))
+        // Conservative: one row without the field is enough to treat the backend as legacy.
+        assertEquals(PairLevelSupport.LEGACY, detectPairLevelSupport(PairLevelSupport.SUPPORTED, aware().items + legacy().items))
+        // An empty page proves nothing either way: the previous knowledge is kept.
+        assertEquals(PairLevelSupport.SUPPORTED, detectPairLevelSupport(PairLevelSupport.SUPPORTED, emptyList()))
+        assertEquals(PairLevelSupport.UNKNOWN, detectPairLevelSupport(PairLevelSupport.UNKNOWN, emptyList()))
+    }
+
+    @Test
+    fun `against a legacy backend the pair-level filter and the detail are off, and nothing is ever requested for them`() = runTest {
+        val fake = FakeAreaAdminRepository(listRailwayLinesResult = ApiResult.Success(legacy()))
+        val vm = RailwayLinePickerViewModel("target-area", fake, onSessionEnded = {})
+        assertEquals(PairLevelSupport.LEGACY, vm.state.value.pairLevelSupport)
+        assertFalse(vm.state.value.supportsPairLevel)
+        // The detail control is not drawn; even a stale call never reaches the (non-existent) endpoint.
+        vm.toggleDetails("w")
+        assertEquals(0, fake.settlementMappingsCalls)
+        assertTrue(vm.state.value.expandedLineIds.isEmpty()); assertTrue(vm.state.value.details.isEmpty())
+        // The PER_SETTLEMENT filter is never sent (a legacy backend would silently answer "all").
+        val callsBefore = fake.seenLineFilters.size
+        vm.updateFilter(vm.state.value.filter.copy(assignment = RailwayLineAssignmentFilter.PER_SETTLEMENT))
+        assertEquals(callsBefore, fake.seenLineFilters.size)
+        assertTrue(fake.seenLineFilters.none { it.assignment == RailwayLineAssignmentFilter.PER_SETTLEMENT })
+    }
+
+    @Test
+    fun `against a legacy backend the whole-line administration keeps working exactly as before`() = runTest {
+        val fake = FakeAreaAdminRepository(listRailwayLinesResult = ApiResult.Success(legacy()))
+        val vm = RailwayLinePickerViewModel("target-area", fake, onSessionEnded = {})
+        val free = vm.state.value.items.first { it.id == "f" }
+        val assignedElsewhere = vm.state.value.items.first { it.id == "w" }
+        assertEquals(LineRowStatus.UNASSIGNED, lineRowStatus(free, "target-area"))
+        assertEquals(LineRowStatus.IN_OTHER_AREA, lineRowStatus(assignedElsewhere, "target-area"))
+        assertTrue(canOfferWholeLineAssign(free, "target-area")); assertTrue(canOfferWholeLineAssign(assignedElsewhere, "target-area"))
+        vm.confirmAssign(free)
+        assertEquals(Triple("f", "target-area", null), fake.lastAssignArgs)
+        assertTrue(vm.state.value.assigned)
+    }
+
+    @Test
+    fun `against a pair-aware backend the pair-level features are on`() = runTest {
+        val fake = FakeAreaAdminRepository(listRailwayLinesResult = ApiResult.Success(aware()))
+        val vm = RailwayLinePickerViewModel("target-area", fake, onSessionEnded = {})
+        assertTrue(vm.state.value.supportsPairLevel)
+        vm.updateFilter(vm.state.value.filter.copy(assignment = RailwayLineAssignmentFilter.PER_SETTLEMENT))
+        assertTrue(fake.seenLineFilters.any { it.assignment == RailwayLineAssignmentFilter.PER_SETTLEMENT })
+    }
+
+    @Test
+    fun `before anything is known the new features stay off - an empty first page proves nothing`() = runTest {
+        val fake = FakeAreaAdminRepository() // default: an empty list
+        val vm = RailwayLinePickerViewModel("target-area", fake, onSessionEnded = {})
+        assertEquals(PairLevelSupport.UNKNOWN, vm.state.value.pairLevelSupport)
+        vm.toggleDetails("line-1")
+        assertEquals(0, fake.settlementMappingsCalls)
+    }
+
+    @Test
+    fun `the assigned filter is labelled as the whole-line mode it really is`() {
+        val xml = java.io.File("src/main/res/values/strings.xml").readText(Charsets.UTF_8)
+        val label = Regex("<string name=\"filter_assignment_assigned\">(.*?)</string>").find(xml)!!.groupValues[1]
+        assertEquals("Teljes vonalhoz rendelt", label)
+    }
+
     // ------------------------------------------------------------------- settlement detail
 
     @Test
@@ -163,7 +247,7 @@ class PairLevelRailwayLineTest {
 
     @Test
     fun `an empty settlement list is a normal loaded state`() = runTest {
-        val fake = FakeAreaAdminRepository(settlementMappingsResult = ApiResult.Success(mappings(emptyList())))
+        val fake = FakeAreaAdminRepository(listRailwayLinesResult = ApiResult.Success(aware()), settlementMappingsResult = ApiResult.Success(mappings(emptyList())))
         val vm = RailwayLinePickerViewModel("target-area", fake, onSessionEnded = {})
         vm.toggleDetails("line-1")
         val loaded = vm.state.value.details["line-1"] as RailwayLinePickerViewModel.LineDetailState.Loaded
@@ -173,7 +257,7 @@ class PairLevelRailwayLineTest {
     @Test
     fun `a long list is kept in full and a truncated one carries its honest total`() = runTest {
         val long = (1..120).map { settlement("Város %03d".format(it), "Székesfehérvár") }
-        val fake = FakeAreaAdminRepository(settlementMappingsResult = ApiResult.Success(mappings(long, truncated = true, total = 600)))
+        val fake = FakeAreaAdminRepository(listRailwayLinesResult = ApiResult.Success(aware()), settlementMappingsResult = ApiResult.Success(mappings(long, truncated = true, total = 600)))
         val vm = RailwayLinePickerViewModel("target-area", fake, onSessionEnded = {})
         vm.toggleDetails("line-1")
         val loaded = vm.state.value.details["line-1"] as RailwayLinePickerViewModel.LineDetailState.Loaded
@@ -182,7 +266,7 @@ class PairLevelRailwayLineTest {
 
     @Test
     fun `a failed detail load is recoverable with a retry and does not touch the rest of the screen`() = runTest {
-        val fake = FakeAreaAdminRepository(settlementMappingsResult = ApiResult.NetworkError)
+        val fake = FakeAreaAdminRepository(listRailwayLinesResult = ApiResult.Success(aware()), settlementMappingsResult = ApiResult.NetworkError)
         val vm = RailwayLinePickerViewModel("target-area", fake, onSessionEnded = {})
         vm.toggleDetails("line-1")
         assertTrue(vm.state.value.details["line-1"] is RailwayLinePickerViewModel.LineDetailState.Failed)
@@ -195,7 +279,7 @@ class PairLevelRailwayLineTest {
     @Test
     fun `an ended session during a detail load signs out like every other call`() = runTest {
         var ended = 0
-        val fake = FakeAreaAdminRepository(settlementMappingsResult = ApiResult.SessionEnded)
+        val fake = FakeAreaAdminRepository(listRailwayLinesResult = ApiResult.Success(aware()), settlementMappingsResult = ApiResult.SessionEnded)
         val vm = RailwayLinePickerViewModel("target-area", fake, onSessionEnded = { ended++ })
         vm.toggleDetails("line-1")
         assertEquals(1, ended)

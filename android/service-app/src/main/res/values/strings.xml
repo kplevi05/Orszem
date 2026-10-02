@@ -309,7 +309,7 @@
     <string name="line_settlement_area_inactive">Szolgálati terület: %1$s (inaktív terület)</string>
     <string name="line_settlement_inactive_suffix">(inaktív település)</string>
     <string name="filter_assignment_all">Összes</string>
-    <string name="filter_assignment_assigned">Hozzárendelt</string>
+    <string name="filter_assignment_assigned">Teljes vonalhoz rendelt</string>
     <string name="filter_assignment_unassigned">Hozzárendelés nélküli</string>
     <string name="filter_assignment_per_settlement">Településenként</string>
 

@@ -44,8 +44,9 @@ the picker row derived its label from it; `errorMessageRes` had no entry for any
 Why C is the most compatible: older clients ignore unknown JSON fields (`ignoreUnknownKeys` is set in the
 app), `currentServiceAreaId/Name` keep their meaning, `ASSIGNED` keeps its legacy meaning, and the
 only changed semantics is the deliberate bug fix (`UNASSIGNED` no longer contains pair-configured
-lines). A newer client talking to an *older* backend degrades to the legacy inference (documented:
-deploy the backend first).
+lines). A newer client talking to an *older* backend recognises it from the list itself (no row carries
+`assignmentMode`) and switches the two new features off (see §3.3) — the legacy whole-line administration
+keeps working unchanged.
 
 ### 3.1 Backend changes
 
@@ -94,20 +95,50 @@ deploy the backend first).
 - `confirmAssign` additionally refuses (no network call) for a pair-configured line — defence in depth;
   the backend remains the authority.
 
+### 3.3 Follow-up after independent review (this commit)
+
+1. **Filter label.** The Android "Hozzárendelt" chip is now **"Teljes vonalhoz rendelt"**: the backend value
+   `ASSIGNED` only ever meant the legacy *whole-line* mode, and "assigned" next to "Településenként" was
+   misleading (a pair-configured line *is* assigned, just not as a whole line). The backend value is
+   unchanged.
+2. **A client → legacy-backend fallback that is actually safe.** The client no longer merely "degrades":
+   it *learns* the backend's capability from the list (`PairLevelSupport`: `UNKNOWN | SUPPORTED | LEGACY`).
+   A pair-aware backend sends `assignmentMode` on **every** row; **any row without it ⇒ `LEGACY`**
+   (conservative), and an empty page proves nothing (the previous knowledge is kept; `UNKNOWN` behaves like
+   `LEGACY` for the two new features). Against `LEGACY`/`UNKNOWN`:
+   - the **"Településenként" filter is not drawn**, and `updateFilter` refuses to send it (a legacy backend
+     would silently answer "all");
+   - the **settlement-detail button is not drawn** and `toggleDetails` refuses to call the endpoint
+     (which does not exist there), so there is no path to an error;
+   - the **whole-line administration is untouched**: free and whole-line-assigned lines are listed, labelled
+     and assignable/movable exactly as before (`canOfferWholeLineAssign` / `lineRowStatus` use the legacy
+     inference from `currentServiceAreaId` when `assignmentMode` is absent).
+   Tested at unit level (6 new) and on the emulator (2 new Compose tests): with a legacy-shaped response there
+   is no pair-level filter and no detail button, no detail request is ever made, and a free line is still
+   clickable; with a pair-aware response both are present.
+3. **Inactive settlements in the detail — what it does and does not mean.** The detail endpoint returns every
+   currently *recorded* relation of the line, **including relations whose settlement has since been
+   deactivated** (`settlementActive = false`; retired settlements are deactivated, never deleted, and a pair
+   mapping to one can still exist). The Android UI marks such a row explicitly as **"(inaktív település)"** and
+   an inactive area as "(inaktív terület)", in words. This is **administrative/historical visibility** of an
+   existing mapping. It is **not** a statement that the settlement is currently selectable in the Public
+   clients — the Public settlement search and line lookup serve active settlements only. The endpoint's
+   OpenAPI text and the DTO/domain KDoc now say so.
+
 ## 4. Tests
 
 | Area | Tests |
 |---|---|
 | Backend `RailwayLinePairLevelAdminIT` (new, 15; Testcontainers/PostgreSQL) | pair line listed `PER_SETTLEMENT` with count, null whole-line area; **excluded from `UNASSIGNED`**, included in `PER_SETTLEMENT`, excluded from `ASSIGNED`, the three modes partition the whole list; whole-line fixture and free line unchanged; **old whole-line assign (and a "move") → 409 `SETTLEMENT_LINE_MIXED_ROUTING_MODES`, nothing changes**; old unassign refused; existing snapshots and per-pair routing unchanged; detail lists mapped/unmapped settlements with the right areas and **exposes no internal field**; **Hungarian ordering** (a case where binary order differs); whole-line-mode detail; empty list; **long list (505 → 500 + `truncated`)**; inactive settlement flagged; unknown line 404; **SUPER_ADMIN only (403 for every other role, 401 anonymous)**; reading changes nothing |
 | Backend regression | the full suite (see §5), incl. `SettlementLineMappingIT`, `RailwayLineAdminIT`, `AreaAdminAuthorizationIT`, `AreaAdminRoutingImmutabilityIT`, routing and workflow suites |
-| Android unit `PairLevelRailwayLineTest` (new, 17) | pair line status ≠ unassigned; three states stay distinct; old-backend fallback; DTO decoding incl. unknown future mode; whole-line assign offered only where it can succeed; assign for a pair line never reaches the network; **localised mixed-mode error** (and an old client surfacing it); detail fetched once, never assigns; **no N+1** (a 50-line list triggers 0 detail requests); empty / long / truncated; retry; session end; the DTOs carry no internal field; the **owner-approved strings are exactly as specified and contain no internal terminology** |
-| Android instrumented `RailwayLinePickerPairLevelComposeTest` (new, 4; **run on an emulator**) | pair line labelled and **not clickable** while a free line is clickable; list opens with the approved wording and never assigns; toggle semantics (name, count, open/closed); empty list wording |
-| Existing Android | unit + the whole instrumented suite (**104 tests, 0 failures**) incl. the pre-existing four-state picker test; `ErrorCopyTest` extended |
+| Android unit `PairLevelRailwayLineTest` (new, 23 incl. 6 for the legacy fallback and the filter label) | pair line status ≠ unassigned; three states stay distinct; old-backend fallback; DTO decoding incl. unknown future mode; whole-line assign offered only where it can succeed; assign for a pair line never reaches the network; **localised mixed-mode error** (and an old client surfacing it); detail fetched once, never assigns; **no N+1** (a 50-line list triggers 0 detail requests); empty / long / truncated; retry; session end; the DTOs carry no internal field; the **owner-approved strings are exactly as specified and contain no internal terminology** |
+| Android instrumented `RailwayLinePickerPairLevelComposeTest` (new, 6; **run on an emulator**) | legacy-shaped response: no pair-level filter, no detail button, no detail request, legacy free line still clickable; pair-aware response: both present; | pair line labelled and **not clickable** while a free line is clickable; list opens with the approved wording and never assigns; toggle semantics (name, count, open/closed); empty list wording |
+| Existing Android | unit + the whole instrumented suite (**106 tests, 0 failures**) incl. the pre-existing four-state picker test; `ErrorCopyTest` extended |
 
 Note on the emulator: the first full instrumented run showed 8 failures in unrelated screens
 (analytics, moderation, workflow, and the existing picker test). Root cause was a **leftover `wm size
 840x1774` display override** on the local `orszem-test` AVD (a 320dp-wide, short viewport pushes content
-off-screen), not this change; after `wm size reset` the same suite is **104/104 green**. The
+off-screen), not this change; after `wm size reset` the same suite was green (104, now 106 with this follow-up). The
 override was reset on the local emulator.
 
 ## 5. Regression (this branch)
@@ -119,7 +150,7 @@ Run locally on this branch:
 | Backend `test --rerun --no-build-cache` (Testcontainers/PostgreSQL 16) | **902 tests, 0 failures, 0 skipped** (887 existing + 15 new), BUILD SUCCESSFUL in 5 m 51 s |
 | Android `:public-app:assembleDebug :service-app:assembleDebug`, both apps' unit tests, `lint` | BUILD SUCCESSFUL |
 | Android Service unit tests | all green, incl. the 17 new and the extended `ErrorCopyTest` |
-| Android Service instrumented, emulator API 35, default 1080x2280 | **104 tests, 0 failures** (incl. the 4 new Compose tests and the pre-existing four-state picker test) |
+| Android Service instrumented, emulator API 35, default 1080x2280 | **106 tests, 0 failures** (incl. the 6 new Compose tests and the pre-existing four-state picker test) |
 | Public Web `npm ci`, `typecheck`, `npm test`, `build` | 74/74 tests, build OK (no Web code changed) |
 | Python/reference-data `unittest discover` | 75/75 |
 | Canonical dataset validators (`example`, `evaluation`, `cleared`) | all valid |
@@ -128,9 +159,11 @@ CI is the final gate on the PR itself.
 
 ## 6. Compatibility and rollout notes
 
-- **Deploy order: backend first, then the app.** The new app against an old backend degrades to the
-  legacy inference (it cannot tell a pair line from a free one). The old app against the new backend is
-  unaffected (additive fields; the changed filter is the intended fix).
+- **Deploy order: backend first, then the app** — that is the order in which the fix is complete. Either
+  order is safe: the new app against an old backend recognises it from the list (§3.3), switches the
+  pair-level filter and the detail off and keeps the whole-line administration working (it just cannot
+  show the pair-level state a legacy backend does not provide); the old app against the new backend is
+  unaffected (additive fields; the changed `UNASSIGNED` filter is the intended fix).
 - No Flyway migration, no schema change, no reference-data change.
 - Not changed: the 146 production mappings and their semantics, routing/routing snapshots, the
   reference dataset, the county-v2 policy, `ReportWorkflowPolicy`/`AreaScopePolicy`, the Public clients.

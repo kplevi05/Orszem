@@ -147,7 +147,10 @@ class AreaAdminController(
         summary = "A railway line's verified settlements and where each routes today",
         description = "SUPER_ADMIN only, read-only. One joined query, no per-row lookups; ordered by settlement name in Hungarian " +
             "collation. The list is exactly what the CURRENT verified reference data names for this line - it makes no claim of " +
-            "covering the whole line and grows with later reference imports. 404 RAILWAY_LINE_NOT_FOUND if the line does not exist.",
+            "covering the whole line and grows with later reference imports. It also lists relations whose settlement is no longer " +
+            "active, flagged `settlementActive=false`: that is administrative/historical visibility of an existing relation, NOT a " +
+            "statement that the settlement is currently selectable in the Public clients. " +
+            "404 RAILWAY_LINE_NOT_FOUND if the line does not exist.",
     )
     fun railwayLineSettlementMappings(
         @AuthenticationPrincipal principal: AuthenticatedActor,

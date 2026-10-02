@@ -44,6 +44,7 @@ class RailwayLinePickerPairLevelComposeTest {
 
     private class Repo(private val lines: List<RailwayLineAdminListItemResponse>, private val detail: RailwayLineSettlementMappingsResponse) : AreaAdminRepository {
         var assignCalls = 0
+        var detailCalls = 0
         override suspend fun listAreas(page: Int, size: Int, filter: ServiceAreaAdminListFilter): ApiResult<ServiceAreaAdminListPageResponse> = error("not used")
         override suspend fun areaDetail(areaId: String): ApiResult<ServiceAreaAdminDetailResponse> = error("not used")
         override suspend fun createArea(name: String): ApiResult<ServiceAreaAdminResponse> = error("not used")
@@ -52,7 +53,9 @@ class RailwayLinePickerPairLevelComposeTest {
         override suspend fun deactivateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse> = error("not used")
         override suspend fun listRailwayLines(page: Int, size: Int, filter: RailwayLineAdminListFilter): ApiResult<RailwayLineAdminListPageResponse> =
             ApiResult.Success(RailwayLineAdminListPageResponse(lines, 0, 50, lines.size, 1))
-        override suspend fun railwayLineSettlementMappings(railwayLineId: String): ApiResult<RailwayLineSettlementMappingsResponse> = ApiResult.Success(detail)
+        override suspend fun railwayLineSettlementMappings(railwayLineId: String): ApiResult<RailwayLineSettlementMappingsResponse> {
+            detailCalls++; return ApiResult.Success(detail)
+        }
         override suspend fun assignRailwayLine(railwayLineId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit> {
             assignCalls++; return ApiResult.Success(Unit)
         }
@@ -105,6 +108,34 @@ class RailwayLinePickerPairLevelComposeTest {
         compose.onNodeWithText("Szolgálati terület: Székesfehérvár").assertIsDisplayed()
         assertEquals("opening the list must never assign anything", 0, repo.assignCalls)
         compose.onNodeWithText("Települések elrejtése").assertIsDisplayed()
+    }
+
+    // A legacy backend sends no assignmentMode on any row (and has no settlement-mappings endpoint).
+    private val legacyAssigned = RailwayLineAdminListItemResponse("w", "9", "9 – Teljes vonal", true, "area-1", "Régi terület")
+    private val legacyFree = RailwayLineAdminListItemResponse("f", "8", "8 – Szabad vonal", true, null, null)
+
+    @Test
+    fun againstALegacyBackendThereIsNoPairLevelFilterAndNoDetailButton() {
+        val repo = Repo(listOf(legacyAssigned, legacyFree), detail(emptyList()))
+        show(repo)
+        // The legacy admin controls are all there and usable ...
+        compose.onNodeWithText("Összes").assertIsDisplayed()
+        compose.onNodeWithText("Hozzárendelés nélküli").assertIsDisplayed()
+        compose.onNodeWithText("Teljes vonalhoz rendelt").assertIsDisplayed()
+        // ... but the new pair-level filter and the detail control (which would call an endpoint that
+        // does not exist there) are not drawn at all - nothing can run into an error.
+        compose.onNodeWithText("Településenként").assertDoesNotExist()
+        compose.onAllNodesWithText("Települések megtekintése").assertCountEquals(0)
+        compose.onNodeWithText("Nincs szolgálati területhez rendelve").assertHasClickAction()
+        assertEquals(0, repo.detailCalls)
+    }
+
+    @Test
+    fun againstAPairAwareBackendTheFilterAndTheDetailButtonAreThere() {
+        show(Repo(listOf(pairLine, freeLine), detail(emptyList())))
+        compose.onNodeWithText("Településenként").assertIsDisplayed()
+        compose.onNodeWithText("Teljes vonalhoz rendelt").assertIsDisplayed()
+        compose.onAllNodesWithText("Települések megtekintése").assertCountEquals(2)
     }
 
     @Test

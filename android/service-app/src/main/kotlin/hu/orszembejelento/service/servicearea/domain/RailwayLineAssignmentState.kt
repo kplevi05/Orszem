@@ -45,3 +45,21 @@ fun canOfferWholeLineAssign(line: RailwayLineAdminListItemResponse, targetAreaId
         LineRowStatus.UNASSIGNED, LineRowStatus.IN_OTHER_AREA -> true
         LineRowStatus.INACTIVE, LineRowStatus.ALREADY_IN_THIS_AREA, LineRowStatus.PER_SETTLEMENT -> false
     }
+
+/**
+ * Whether the backend behind this session understands pair-level routing (ADR 0011).
+ *
+ * Decided from the list itself, never assumed: a backend that knows pair-level routing sends
+ * `assignmentMode` on EVERY line row; a legacy backend sends none. [LEGACY] is conservative and
+ * wins as soon as any row lacks the field - the new pair-level filter and the settlement detail
+ * (which would call an endpoint a legacy backend does not have) are then neither shown nor run,
+ * and the whole-line administration keeps working exactly as before. [UNKNOWN] (nothing loaded
+ * yet, or only empty pages) behaves like [LEGACY] for these two features.
+ */
+enum class PairLevelSupport { UNKNOWN, SUPPORTED, LEGACY }
+
+fun detectPairLevelSupport(previous: PairLevelSupport, loaded: List<RailwayLineAdminListItemResponse>): PairLevelSupport = when {
+    loaded.any { it.assignmentMode == null } -> PairLevelSupport.LEGACY
+    loaded.isNotEmpty() -> PairLevelSupport.SUPPORTED
+    else -> previous
+}
