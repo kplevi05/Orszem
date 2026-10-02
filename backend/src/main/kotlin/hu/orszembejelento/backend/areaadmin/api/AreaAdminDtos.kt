@@ -2,6 +2,8 @@ package hu.orszembejelento.backend.areaadmin.api
 
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminListPage
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminListRow
+import hu.orszembejelento.backend.areaadmin.domain.RailwayLineSettlementAssignment
+import hu.orszembejelento.backend.areaadmin.domain.RailwayLineSettlementMappings
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminDetail
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListPage
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListRow
@@ -108,8 +110,13 @@ data class RailwayLineAdminListItemResponse(
     val lineCode: String,
     val displayName: String,
     val active: Boolean,
+    /** The *whole-line* mapping only; null for a pair-configured line - read [assignmentMode], never infer "unassigned" from this. */
     val currentServiceAreaId: String?,
     val currentServiceAreaName: String?,
+    /** `UNASSIGNED` | `WHOLE_LINE` | `PER_SETTLEMENT` (ADR 0011). Additive field: older clients ignore it. */
+    val assignmentMode: String,
+    /** Number of (settlement, line) pairs configured for this line; 0 unless `PER_SETTLEMENT`. */
+    val settlementMappingCount: Int,
 ) {
     companion object {
         fun from(row: RailwayLineAdminListRow) = RailwayLineAdminListItemResponse(
@@ -119,6 +126,63 @@ data class RailwayLineAdminListItemResponse(
             active = row.active,
             currentServiceAreaId = row.currentServiceAreaId?.toString(),
             currentServiceAreaName = row.currentServiceAreaName,
+            assignmentMode = row.assignmentMode.name,
+            settlementMappingCount = row.settlementMappingCount,
+        )
+    }
+}
+
+/**
+ * One verified settlement of a line and where it routes today. Deliberately carries no
+ * routing reason, evidence, reference version, revision or internal state - an administrator
+ * sees *what is configured*, nothing about how it was derived.
+ */
+data class RailwayLineSettlementAssignmentResponse(
+    val settlementId: String,
+    val kshCode: String,
+    val settlementName: String,
+    val countyName: String?,
+    val settlementActive: Boolean,
+    val serviceAreaId: String?,
+    val serviceAreaName: String?,
+    val serviceAreaActive: Boolean?,
+) {
+    companion object {
+        fun from(row: RailwayLineSettlementAssignment) = RailwayLineSettlementAssignmentResponse(
+            settlementId = row.settlementId.toString(),
+            kshCode = row.kshCode,
+            settlementName = row.settlementName,
+            countyName = row.countyName,
+            settlementActive = row.settlementActive,
+            serviceAreaId = row.serviceAreaId?.toString(),
+            serviceAreaName = row.serviceAreaName,
+            serviceAreaActive = row.serviceAreaActive,
+        )
+    }
+}
+
+data class RailwayLineSettlementMappingsResponse(
+    val railwayLineId: String,
+    val lineCode: String,
+    val displayName: String,
+    val active: Boolean,
+    val assignmentMode: String,
+    /** The exact number of currently verified settlements of this line (not a coverage claim). */
+    val settlementCount: Int,
+    val items: List<RailwayLineSettlementAssignmentResponse>,
+    /** True only if [items] was capped below [settlementCount]. */
+    val truncated: Boolean,
+) {
+    companion object {
+        fun from(detail: RailwayLineSettlementMappings) = RailwayLineSettlementMappingsResponse(
+            railwayLineId = detail.railwayLineId.toString(),
+            lineCode = detail.lineCode,
+            displayName = detail.displayName,
+            active = detail.active,
+            assignmentMode = detail.assignmentMode.name,
+            settlementCount = detail.settlementCount,
+            items = detail.items.map(RailwayLineSettlementAssignmentResponse::from),
+            truncated = detail.truncated,
         )
     }
 }

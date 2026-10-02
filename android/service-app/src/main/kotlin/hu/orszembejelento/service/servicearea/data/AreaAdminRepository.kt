@@ -10,7 +10,11 @@ data class ServiceAreaAdminListFilter(val query: String? = null, val active: Boo
 }
 
 /** Which assignment state to filter the RailwayLine admin list/picker to (brief §39/§50). */
-enum class RailwayLineAssignmentFilter { ALL, ASSIGNED, UNASSIGNED }
+/**
+ * `ASSIGNED` = whole-line mapping (legacy, unchanged); `PER_SETTLEMENT` = configured pair by pair
+ * (ADR 0011); `UNASSIGNED` = neither - a pair-configured line is never unassigned.
+ */
+enum class RailwayLineAssignmentFilter { ALL, ASSIGNED, PER_SETTLEMENT, UNASSIGNED }
 
 data class RailwayLineAdminListFilter(
     val query: String? = null,
@@ -38,6 +42,7 @@ interface AreaAdminRepository {
     suspend fun activateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse>
     suspend fun deactivateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse>
     suspend fun listRailwayLines(page: Int, size: Int, filter: RailwayLineAdminListFilter): ApiResult<RailwayLineAdminListPageResponse>
+    suspend fun railwayLineSettlementMappings(railwayLineId: String): ApiResult<RailwayLineSettlementMappingsResponse>
     suspend fun assignRailwayLine(railwayLineId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit>
     suspend fun unassignRailwayLine(railwayLineId: String, expectedCurrentServiceAreaId: String): ApiResult<Unit>
 }
@@ -77,6 +82,9 @@ class DefaultAreaAdminRepository(
                 filter.assignment.takeIf { it != RailwayLineAssignmentFilter.ALL }?.name,
             )
         }
+
+    override suspend fun railwayLineSettlementMappings(railwayLineId: String): ApiResult<RailwayLineSettlementMappingsResponse> =
+        apiCall(auth) { bearer -> api.railwayLineSettlementMappings(bearer, railwayLineId) }
 
     override suspend fun assignRailwayLine(railwayLineId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit> =
         apiCall(auth) { bearer -> api.assignRailwayLine(bearer, railwayLineId, AssignRailwayLineRequest(targetServiceAreaId, expectedCurrentServiceAreaId)) }

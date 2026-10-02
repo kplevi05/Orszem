@@ -290,9 +290,28 @@
     <string name="railway_line_currently_in_this_area">Jelenleg ehhez a területhez van rendelve</string>
     <string name="railway_line_inactive_reference">Inaktív vasútvonal</string>
     <string name="railway_line_empty">Nincs a szűrésnek megfelelő vasútvonal.</string>
+    <string name="railway_line_per_settlement">Településenként hozzárendelve</string>
+    <string name="railway_line_per_settlement_count">Beállított települések: %1$d</string>
+    <string name="railway_line_per_settlement_hint">Ez a vonal településenként van konfigurálva, ezért egészében nem rendelhető egyetlen szolgálati területhez.</string>
+    <string name="line_details_open">Települések megtekintése</string>
+    <string name="line_details_close">Települések elrejtése</string>
+    <string name="line_details_state_open">nyitva</string>
+    <string name="line_details_state_closed">zárva</string>
+    <string name="cd_line_details_toggle">%1$s: települések, %2$s</string>
+    <string name="cd_line_details_toggle_count">%1$s: %2$d beállított település, %3$s</string>
+    <string name="line_settlements_title">Jelenleg elérhető települések ezen a vonalon</string>
+    <string name="line_settlements_partial_note">A lista az ellenőrzött referenciaadatok bővítésével frissül.</string>
+    <string name="line_settlements_loading">Települések betöltése…</string>
+    <string name="line_settlements_empty">Ehhez a vonalhoz jelenleg nincs ellenőrzött település.</string>
+    <string name="line_settlements_truncated">A lista az első %1$d települést mutatja, összesen %2$d van.</string>
+    <string name="line_settlement_no_area">Nincs szolgálati területhez rendelve</string>
+    <string name="line_settlement_area">Szolgálati terület: %1$s</string>
+    <string name="line_settlement_area_inactive">Szolgálati terület: %1$s (inaktív terület)</string>
+    <string name="line_settlement_inactive_suffix">(inaktív település)</string>
     <string name="filter_assignment_all">Összes</string>
     <string name="filter_assignment_assigned">Hozzárendelt</string>
     <string name="filter_assignment_unassigned">Hozzárendelés nélküli</string>
+    <string name="filter_assignment_per_settlement">Településenként</string>
 
     <string name="move_line_dialog_title">Vasútvonal áthelyezése</string>
     <string name="move_line_dialog_text">A vasútvonal jelenleg a(z) „%1$s” szolgálati terület része. Áthelyezi a(z) „%2$s” szolgálati területhez?</string>
@@ -333,6 +352,7 @@
     <string name="error_target_service_area_inactive">A kiválasztott szolgálati terület jelenleg inaktív.</string>
     <string name="error_railway_line_assignment_changed">A vasútvonal hozzárendelése időközben megváltozott. Frissítettük az aktuális állapotot.</string>
     <string name="error_railway_line_already_assigned">Ez a vasútvonal már ehhez a területhez van rendelve.</string>
+    <string name="error_settlement_line_mixed_routing_modes">Ez a vonal településenként van konfigurálva, ezért nem rendelhető teljes egészében egyetlen szolgálati területhez. A vonal településpárjai külön-külön rendelhetők területhez.</string>
     <string name="error_service_area_admin_forbidden">Ehhez a művelethez nincs jogosultsága.</string>
 
     <!-- Phase 11: analytics (brief §33-51). "Statisztika"/nav_stats and stats_title already

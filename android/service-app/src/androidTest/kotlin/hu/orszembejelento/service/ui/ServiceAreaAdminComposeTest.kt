@@ -70,6 +70,7 @@ class ServiceAreaAdminComposeTest {
         override suspend fun activateArea(areaId: String, expectedVersion: Long) = ApiResult.Success(ServiceAreaAdminResponse(areaId, "X", true, expectedVersion + 1))
         override suspend fun deactivateArea(areaId: String, expectedVersion: Long) = ApiResult.Success(ServiceAreaAdminResponse(areaId, "X", false, expectedVersion + 1))
         override suspend fun listRailwayLines(page: Int, size: Int, filter: RailwayLineAdminListFilter) = listRailwayLinesResult
+        override suspend fun railwayLineSettlementMappings(railwayLineId: String): ApiResult<hu.orszembejelento.service.servicearea.data.RailwayLineSettlementMappingsResponse> = error("not used")
         override suspend fun assignRailwayLine(railwayLineId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit> {
             assignCalls++
             lastAssignArgs = Triple(railwayLineId, targetServiceAreaId, expectedCurrentServiceAreaId)

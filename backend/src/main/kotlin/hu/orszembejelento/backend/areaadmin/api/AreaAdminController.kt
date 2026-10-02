@@ -142,6 +142,21 @@ class AreaAdminController(
         return noStore(RailwayLineAdminListPageResponse.from(queries.railwayLineList(filter, boundedPage, boundedSize), boundedPage, boundedSize))
     }
 
+    @GetMapping("/railway-lines/{railwayLineId}/settlement-mappings")
+    @Operation(
+        summary = "A railway line's verified settlements and where each routes today",
+        description = "SUPER_ADMIN only, read-only. One joined query, no per-row lookups; ordered by settlement name in Hungarian " +
+            "collation. The list is exactly what the CURRENT verified reference data names for this line - it makes no claim of " +
+            "covering the whole line and grows with later reference imports. 404 RAILWAY_LINE_NOT_FOUND if the line does not exist.",
+    )
+    fun railwayLineSettlementMappings(
+        @AuthenticationPrincipal principal: AuthenticatedActor,
+        @PathVariable railwayLineId: UUID,
+    ): ResponseEntity<RailwayLineSettlementMappingsResponse> {
+        actorLoader.load(principal)
+        return noStore(RailwayLineSettlementMappingsResponse.from(queries.railwayLineSettlementMappings(railwayLineId)))
+    }
+
     @PostMapping("/railway-lines/{railwayLineId}/assign")
     @Operation(
         summary = "Assign or move a railway line",
