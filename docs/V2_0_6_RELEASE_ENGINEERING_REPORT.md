@@ -60,3 +60,46 @@ A GitHub Release-be csak az ellenőrzött, owner-aláírt `service-app-release-2
 - Az alkalmazáson belüli updater (#59) külön feature.
 - További OSM-candidate review, reference-import vagy territory apply.
 - Production backend, adatbázis, ServiceArea vagy routing módosítása.
+
+## 8. Ellenőrzési eredmények a pontos `0db54746d44e4fe09a4c99f21fa340cff6fb7546` HEAD-en
+
+A #61 draft PR HEAD-je (`release/v2.0.6`); az ellenőrzések előtt a working tree tiszta volt (`git status --porcelain`: 0 sor),
+a `HEAD` pontosan egyezett. A kód a verziócommitok óta nem változott; az ez a szakasz utáni commit kizárólag
+dokumentáció.
+
+| Ellenőrzés | Parancs / környezet | Eredmény |
+|---|---|---|
+| Service unit tesztek | `:service-app:testDebugUnitTest` | **198/198 zöld** (30 suite, 0 hiba, 0 kihagyott) |
+| Lint | `:service-app:lint` | **0 error**; 7 warning-szintű jelzés: 6× `PluralsCandidate` (`strings.xml` darabszám-sztringek; a magyar nem különböztet többes számot) és 1× `ComposableNaming` (`NarrowWidthLayoutComposeTest`, androidTest) |
+| Debug build | `:service-app:assembleDebug` | sikeres |
+| Service instrumented/Compose suite | `:service-app:connectedDebugAndroidTest`, `orszem-test` AVD (API 35), **alapértelmezett 1080×2280, 420 dpi** | **107/107 zöld** (17 suite, 0 hiba, 0 kihagyott) |
+
+Az instrumented suite az előző kiadás (106 teszt) óta eggyel bővült: a
+`ServiceAreaAdminComposeTest.a_pair_mapped_area_shows_the_pair_count_without_claiming_that_no_railway_line_is_assigned`
+regressziós teszt bizonyítja, hogy pair-level mapping mellett a régi, félrevezető állítás nem jelenik meg.
+
+A lint-jelzések közül a `PluralsCandidate` típus már a v2.0.5-ben is jelen volt; a v2.0.6 két új, azonos jellegű
+darabszám-sztringet ad hozzá (`area_card_settlement_mapping_count`, `railway_lines_settlement_mapping_count`); nem hiba, és a
+build nem bukik rajta.
+
+## 9. Az unsigned Service release APK reprodukálhatósága
+
+Két **külön, friss git worktree-ből** (mindkettő `0db54746…`, tiszta, `--no-build-cache`, `:service-app:assembleRelease`)
+épített `service-app-release-unsigned.apk` **bájtra azonos** (`cmp`).
+
+| Tulajdonság | Érték |
+|---|---|
+| Fájl | `service-app-release-unsigned.apk` |
+| Fájlméret | **2 109 219 B** |
+| **SHA-256** | `bea3335fd37700260a43c90cbf9ebf6332b9f0d47e526eb60629b4b24196f11c` |
+| package | `hu.orszembejelento.service` |
+| versionName / versionCode | **2.0.6 / 7** |
+| Aláírás | **nincs** (`apksigner verify`: nincs `META-INF/MANIFEST.MF`, tehát aláíratlan) |
+
+Az APK a Gitből kizárt `work/release-2.0.6/` mappában van (`SHA256SUMS-build-provenance.txt`). **Nem aláírt, nem
+terjeszthető, nem lett feltöltve.** Az owner aláírása és az aláírt APK saját checksumja a terjesztés előtti külön kapu (§4).
+
+## 10. Nem történt
+
+Nem írtam alá APK-t, nem készült tag vagy GitHub Release, nem történt deploy, és nem nyúltam productionhöz (nincs SSH,
+nincs API-hívás, nincs adatváltozás). A `v2.0.5` tag és Release érintetlen.
