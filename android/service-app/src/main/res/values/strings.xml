@@ -276,12 +276,15 @@
     <string name="service_area_detail_title">Szolgálati terület</string>
     <string name="service_area_status_active">Aktív</string>
     <string name="service_area_status_inactive">Inaktív</string>
-    <string name="area_card_line_count">%1$d vasútvonal</string>
+    <string name="area_card_line_count">%1$d teljes vonal</string>
+    <string name="area_card_settlement_mapping_count">%1$d településenkénti hozzárendelés</string>
     <string name="area_card_open_report_count">%1$d nyitott bejelentés</string>
     <string name="service_area_empty">Nincs a szűrésnek megfelelő szolgálati terület.</string>
 
-    <string name="railway_lines_section_title">Vasútvonalak</string>
-    <string name="railway_lines_section_empty">Ehhez a területhez jelenleg nincs vasútvonal rendelve.</string>
+    <string name="railway_lines_section_title">Vasútvonal-hozzárendelések</string>
+    <string name="railway_lines_whole_line_title">Teljes vonalas hozzárendelések</string>
+    <string name="railway_lines_settlement_mapping_count">Településenkénti hozzárendelések: %1$d</string>
+    <string name="railway_lines_section_empty">Nincs teljes vonal ehhez a területhez rendelve.</string>
     <string name="action_add_railway_line">Vasútvonal hozzáadása</string>
     <string name="railway_line_picker_title">Vasútvonal kiválasztása</string>
     <string name="railway_line_search_hint">Vonalszám vagy név keresése…</string>
