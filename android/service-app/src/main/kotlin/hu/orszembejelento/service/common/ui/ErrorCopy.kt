@@ -55,6 +55,8 @@ fun errorMessageRes(code: String?): Int = when (code) {
     "TARGET_SERVICE_AREA_INACTIVE" -> R.string.error_target_service_area_inactive
     "RAILWAY_LINE_ASSIGNMENT_CHANGED" -> R.string.error_railway_line_assignment_changed
     "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA" -> R.string.error_railway_line_already_assigned
+    // ADR 0011: an older/stale client calling the whole-line endpoint for a pair-configured line.
+    "SETTLEMENT_LINE_MIXED_ROUTING_MODES" -> R.string.error_settlement_line_mixed_routing_modes
     // Phase 11 - analytics. A fresh, dedicated set of codes (brief §30).
     "ANALYTICS_AREA_NOT_AVAILABLE" -> R.string.error_analytics_area_not_available
     "ANALYTICS_UNCLASSIFIED_FORBIDDEN" -> R.string.error_analytics_unclassified_forbidden

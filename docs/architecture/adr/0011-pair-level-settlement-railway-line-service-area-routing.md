@@ -79,6 +79,27 @@ to a line carrying pair mappings: `service_area_settlement_lines` has
 the database itself refuses a deactivation/removal that would orphan a pair mapping, on top
 of the application-level check.
 
+## Decision 6 — the administration read model names the three modes explicitly (addendum)
+
+The Phase 10 administration list described a line by its whole-line `ServiceArea` only, so
+once pair mappings existed a pair-configured line read as *unassigned* in the Service app and
+fell into the "unassigned" filter - an administrator could then try to assign the whole line,
+which Decision 2 correctly refuses (`SETTLEMENT_LINE_MIXED_ROUTING_MODES`). The read model now
+says what a line is:
+
+- `GET .../service-area-admin/railway-lines` rows gain two **additive** fields,
+  `assignmentMode` (`UNASSIGNED` | `WHOLE_LINE` | `PER_SETTLEMENT`) and
+  `settlementMappingCount`, computed in the same single list query. `currentServiceAreaId/Name`
+  keep their meaning (the whole-line mapping) and stay null for a pair-configured line.
+- The `assignment` filter gains `PER_SETTLEMENT`; `UNASSIGNED` now means *neither* mode, so a
+  pair-configured line is never listed as unassigned. `ASSIGNED` keeps its legacy meaning.
+- `GET .../railway-lines/{id}/settlement-mappings` (SUPER_ADMIN, read-only) returns a line's
+  currently verified settlements with the effective area of each, one joined query, ordered in
+  Hungarian collation. It makes no coverage claim - the set grows with later reference imports.
+- Nothing about the write path changes: the whole-line `assign`/`unassign` still reject a
+  pair-configured line, and only a SUPER_ADMIN may change anything. Clients must not offer
+  the whole-line action for a `PER_SETTLEMENT` line, but the backend stays the authority.
+
 ## Consequences
 
 - A future settlement/line administration UI can show, per line, whether it is in whole-line

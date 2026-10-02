@@ -116,6 +116,7 @@ class BackArrowComposeTest {
             override suspend fun activateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse> = error("not used")
             override suspend fun deactivateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse> = error("not used")
             override suspend fun listRailwayLines(page: Int, size: Int, filter: RailwayLineAdminListFilter): ApiResult<RailwayLineAdminListPageResponse> = error("not used")
+            override suspend fun railwayLineSettlementMappings(railwayLineId: String): ApiResult<hu.orszembejelento.service.servicearea.data.RailwayLineSettlementMappingsResponse> = error("not used")
             override suspend fun assignRailwayLine(railwayLineId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit> = error("not used")
             override suspend fun unassignRailwayLine(railwayLineId: String, expectedCurrentServiceAreaId: String): ApiResult<Unit> = error("not used")
         }

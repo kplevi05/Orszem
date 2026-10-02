@@ -4,6 +4,7 @@ import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminListFilter
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminListPage
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminListRow
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAssignmentFilter
+import hu.orszembejelento.backend.areaadmin.domain.RailwayLineSettlementAssignment
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListFilter
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListPage
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListRow
@@ -89,7 +90,8 @@ class JdbcAreaAdminQueryRepository(private val jdbc: JdbcClient) {
         val total = jdbc.sql("SELECT COUNT(*) $LINE_FROM_JOINS $where").params(params).query(Int::class.java).single()
 
         val items = jdbc.sql(
-            "SELECT l.id, l.line_code, l.display_name, l.active, m.service_area_id, sa.name AS service_area_name " +
+            "SELECT l.id, l.line_code, l.display_name, l.active, m.service_area_id, sa.name AS service_area_name, " +
+                "COALESCE(p.pair_count, 0) AS pair_count " +
                 "$LINE_FROM_JOINS $where ORDER BY l.line_code ASC LIMIT :limit OFFSET :offset",
         )
             .params(params)
@@ -107,9 +109,12 @@ class JdbcAreaAdminQueryRepository(private val jdbc: JdbcClient) {
 
         filter.active?.let { clauses += "l.active = :fActive"; params["fActive"] = it }
         filter.serviceAreaId?.let { clauses += "m.service_area_id = :fArea"; params["fArea"] = it }
+        // Three mutually exclusive routing modes (ADR 0011). A pair-configured line has no
+        // whole-line mapping (`m.*` is NULL) but is NOT unassigned: UNASSIGNED must exclude it.
         when (filter.assignment) {
             RailwayLineAssignmentFilter.ASSIGNED -> clauses += "m.service_area_id IS NOT NULL"
-            RailwayLineAssignmentFilter.UNASSIGNED -> clauses += "m.service_area_id IS NULL"
+            RailwayLineAssignmentFilter.PER_SETTLEMENT -> clauses += "m.service_area_id IS NULL AND p.pair_count IS NOT NULL"
+            RailwayLineAssignmentFilter.UNASSIGNED -> clauses += "m.service_area_id IS NULL AND p.pair_count IS NULL"
             RailwayLineAssignmentFilter.ALL -> {}
         }
         filter.query?.takeIf { it.isNotBlank() }?.let {
@@ -127,15 +132,75 @@ class JdbcAreaAdminQueryRepository(private val jdbc: JdbcClient) {
         active = rs.getBoolean("active"),
         currentServiceAreaId = rs.getObject("service_area_id", UUID::class.java),
         currentServiceAreaName = rs.getString("service_area_name"),
+        settlementMappingCount = rs.getInt("pair_count"),
     )
+
+    // ----------------------------------------------- RailwayLine pair-level detail
+
+    /**
+     * Every currently verified relation of [lineId] with the ServiceArea it routes to today,
+     * in ONE joined query (no per-settlement or per-area lookup): the pair mapping if present,
+     * else the line's whole-line mapping, else none. Ordered by KSH code here only to make the
+     * LIMIT deterministic; the presentation order (Hungarian collation) is the use case's job.
+     *
+     * Returns the rows (at most [limit]) and the exact total relation count.
+     */
+    fun findRailwayLineSettlementAssignments(lineId: UUID, limit: Int): Pair<List<RailwayLineSettlementAssignment>, Int> {
+        val total = jdbc.sql("SELECT COUNT(*) FROM settlement_railway_lines WHERE railway_line_id = :line")
+            .param("line", lineId).query(Int::class.java).single()
+        val rows = jdbc.sql(
+            """
+            SELECT s.id AS settlement_id, s.ksh_code, s.name AS settlement_name, s.county_name, s.active AS settlement_active,
+                   COALESCE(pm.service_area_id, wm.service_area_id) AS area_id,
+                   a.name AS area_name, (a.status = 'ACTIVE') AS area_active
+              FROM settlement_railway_lines r
+              JOIN settlements s ON s.id = r.settlement_id
+              LEFT JOIN service_area_settlement_lines pm
+                     ON pm.settlement_id = r.settlement_id AND pm.railway_line_id = r.railway_line_id
+              LEFT JOIN service_area_railway_lines wm ON wm.railway_line_id = r.railway_line_id
+              LEFT JOIN service_areas a ON a.id = COALESCE(pm.service_area_id, wm.service_area_id)
+             WHERE r.railway_line_id = :line
+             ORDER BY s.ksh_code ASC
+             LIMIT :limit
+            """.trimIndent(),
+        )
+            .param("line", lineId)
+            .param("limit", limit)
+            .query { rs, _ ->
+                RailwayLineSettlementAssignment(
+                    settlementId = rs.getObject("settlement_id", UUID::class.java),
+                    kshCode = rs.getString("ksh_code"),
+                    settlementName = rs.getString("settlement_name"),
+                    countyName = rs.getString("county_name"),
+                    settlementActive = rs.getBoolean("settlement_active"),
+                    serviceAreaId = rs.getObject("area_id", UUID::class.java),
+                    serviceAreaName = rs.getString("area_name"),
+                    serviceAreaActive = rs.getObject("area_active") as Boolean?,
+                )
+            }
+            .list()
+        return rows to total
+    }
+
+    /** Whether [lineId] has at least one pair-level mapping (decides the line's routing mode). */
+    fun hasPairMapping(lineId: UUID): Boolean =
+        jdbc.sql("SELECT EXISTS (SELECT 1 FROM service_area_settlement_lines WHERE railway_line_id = :line)")
+            .param("line", lineId).query(Boolean::class.java).single()
 
     private fun escapeLike(raw: String): String = raw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
     private companion object {
+        // `p` is one grouped row per line that has pair-level mappings, so the join can never
+        // multiply a line's row; a line without any pair mapping simply has p.pair_count NULL.
         const val LINE_FROM_JOINS = """
               FROM railway_lines l
               LEFT JOIN service_area_railway_lines m ON m.railway_line_id = l.id
               LEFT JOIN service_areas sa ON sa.id = m.service_area_id
+              LEFT JOIN (
+                  SELECT railway_line_id, COUNT(*) AS pair_count
+                    FROM service_area_settlement_lines
+                   GROUP BY railway_line_id
+              ) p ON p.railway_line_id = l.id
         """
     }
 }

@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,6 +38,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.common.ui.EmptyState
@@ -45,6 +52,10 @@ import hu.orszembejelento.service.common.ui.LoadMoreButton
 import hu.orszembejelento.service.common.ui.apiErrorMessage
 import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListItemResponse
 import hu.orszembejelento.service.servicearea.data.RailwayLineAssignmentFilter
+import hu.orszembejelento.service.servicearea.data.RailwayLineSettlementAssignmentResponse
+import hu.orszembejelento.service.servicearea.domain.LineRowStatus
+import hu.orszembejelento.service.servicearea.domain.canOfferWholeLineAssign
+import hu.orszembejelento.service.servicearea.domain.lineRowStatus
 import kotlinx.coroutines.delay
 
 /**
@@ -117,6 +128,15 @@ fun RailwayLinePickerScreen(
                     onClick = { viewModel.updateFilter(state.filter.copy(assignment = RailwayLineAssignmentFilter.ASSIGNED)) },
                     label = { Text(stringResource(R.string.filter_assignment_assigned)) },
                 )
+                // Only against a backend that understands pair-level routing (it sent assignmentMode):
+                // a legacy backend would silently answer "all" for an unknown filter value.
+                if (state.supportsPairLevel) {
+                    FilterChip(
+                        selected = state.filter.assignment == RailwayLineAssignmentFilter.PER_SETTLEMENT,
+                        onClick = { viewModel.updateFilter(state.filter.copy(assignment = RailwayLineAssignmentFilter.PER_SETTLEMENT)) },
+                        label = { Text(stringResource(R.string.filter_assignment_per_settlement)) },
+                    )
+                }
             }
             if (state.assignError != null) {
                 InlineErrorBanner(apiErrorMessage(state.assignError!!))
@@ -137,7 +157,12 @@ fun RailwayLinePickerScreen(
                         line = line,
                         targetAreaId = targetAreaId,
                         enabled = !state.assigning,
+                        detailsSupported = state.supportsPairLevel,
+                        expanded = line.id in state.expandedLineIds,
+                        detail = state.details[line.id],
                         onSelect = { pendingLine = line },
+                        onToggleDetails = { viewModel.toggleDetails(line.id) },
+                        onRetryDetails = { viewModel.retryDetails(line.id) },
                     )
                 }
                 if (state.canLoadMore) {
@@ -174,40 +199,156 @@ fun RailwayLinePickerScreen(
     }
 }
 
+
 @Composable
 private fun RailwayLinePickerRow(
     line: RailwayLineAdminListItemResponse,
     targetAreaId: String,
     enabled: Boolean,
+    /** False against a legacy backend: no settlement-detail control is drawn (its endpoint does not exist there). */
+    detailsSupported: Boolean,
+    expanded: Boolean,
+    detail: RailwayLinePickerViewModel.LineDetailState?,
     onSelect: () -> Unit,
+    onToggleDetails: () -> Unit,
+    onRetryDetails: () -> Unit,
 ) {
-    val alreadyHere = line.currentServiceAreaId == targetAreaId
-    // Assigning/moving an inactive RailwayLine would create a NEW mapping for it, which the
-    // backend never allows (brief §24) - only an existing legacy mapping may be cleared, and
-    // that happens from the area detail's own unassign action, never from this picker.
-    val selectable = enabled && line.active && !alreadyHere
+    val status = lineRowStatus(line, targetAreaId)
+    // The legacy whole-line assign/move is offered ONLY where it can succeed: never for a
+    // pair-configured line (ADR 0011), an inactive one, or the line's current area. Nothing
+    // about this row is clickable otherwise - the settlement detail has its own control.
+    val selectable = enabled && canOfferWholeLineAssign(line, targetAreaId)
 
-    Card(
-        modifier = Modifier.fillMaxWidth().let { if (selectable) it.clickable(onClick = onSelect) else it },
-    ) {
-        // Stacked, not a side-by-side Row: an unweighted status label ("Jelenleg itt: <a real,
-        // potentially long area name>") would otherwise claim its own full width first and
-        // squeeze the weighted name column into whatever is left over - the same class of
-        // layout squeeze the Phase 9 correction pass fixed for long metadata.
+    Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(line.displayName, style = MaterialTheme.typography.bodyMedium)
-            Text(line.lineCode, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(
-                text = when {
-                    !line.active -> stringResource(R.string.railway_line_inactive_reference)
-                    alreadyHere -> stringResource(R.string.railway_line_currently_in_this_area)
-                    line.currentServiceAreaId != null -> stringResource(R.string.railway_line_currently_in_area, line.currentServiceAreaName.orEmpty())
-                    else -> stringResource(R.string.railway_line_unassigned)
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+            // Stacked, not a side-by-side Row: an unweighted status label ("Jelenleg itt: <a real,
+            // potentially long area name>") would otherwise claim its own full width first and
+            // squeeze the weighted name column into whatever is left over.
+            Column(
+                modifier = Modifier.fillMaxWidth().let { if (selectable) it.clickable(onClick = onSelect) else it },
+            ) {
+                Text(line.displayName, style = MaterialTheme.typography.bodyMedium)
+                Text(line.lineCode, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // The status is always spelled out in words, never conveyed by colour alone.
+                Text(
+                    text = when (status) {
+                        LineRowStatus.INACTIVE -> stringResource(R.string.railway_line_inactive_reference)
+                        LineRowStatus.ALREADY_IN_THIS_AREA -> stringResource(R.string.railway_line_currently_in_this_area)
+                        LineRowStatus.IN_OTHER_AREA -> stringResource(R.string.railway_line_currently_in_area, line.currentServiceAreaName.orEmpty())
+                        LineRowStatus.PER_SETTLEMENT -> stringResource(R.string.railway_line_per_settlement)
+                        LineRowStatus.UNASSIGNED -> stringResource(R.string.railway_line_unassigned)
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                if (status == LineRowStatus.PER_SETTLEMENT) {
+                    Text(
+                        stringResource(R.string.railway_line_per_settlement_count, line.settlementMappingCount),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        stringResource(R.string.railway_line_per_settlement_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
+
+            // No detail control at all against a legacy backend: its endpoint does not exist there,
+            // so a button would only ever lead to an error.
+            if (detailsSupported) {
+                val stateWord = stringResource(if (expanded) R.string.line_details_state_open else R.string.line_details_state_closed)
+                val toggleDescription = if (status == LineRowStatus.PER_SETTLEMENT) {
+                    stringResource(R.string.cd_line_details_toggle_count, line.displayName, line.settlementMappingCount, stateWord)
+                } else {
+                    stringResource(R.string.cd_line_details_toggle, line.displayName, stateWord)
+                }
+                TextButton(
+                    onClick = onToggleDetails,
+                    modifier = Modifier.semantics {
+                        contentDescription = toggleDescription
+                        stateDescription = stateWord
+                    },
+                ) {
+                    Text(stringResource(if (expanded) R.string.line_details_close else R.string.line_details_open))
+                }
+
+                if (expanded) {
+                    LineSettlementDetails(detail = detail, onRetry = onRetryDetails)
+                }
+            }
         }
+    }
+}
+
+/**
+ * The line's currently verified settlements and where each routes. States no coverage claim:
+ * the title and the note say the list is what the *current* verified data names and grows with
+ * later imports. Shows only names and ServiceArea names - no routing reason, evidence, revision,
+ * KSH or internal id.
+ */
+@Composable
+private fun LineSettlementDetails(detail: RailwayLinePickerViewModel.LineDetailState?, onRetry: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        Text(
+            stringResource(R.string.line_settlements_title),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.semantics { heading() },
+        )
+        Text(
+            stringResource(R.string.line_settlements_partial_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        when (detail) {
+            null, RailwayLinePickerViewModel.LineDetailState.Loading ->
+                Text(stringResource(R.string.line_settlements_loading), style = MaterialTheme.typography.bodySmall)
+            is RailwayLinePickerViewModel.LineDetailState.Failed -> {
+                InlineErrorBanner(apiErrorMessage(detail.error))
+                TextButton(onClick = onRetry) { Text(stringResource(R.string.action_retry)) }
+            }
+            is RailwayLinePickerViewModel.LineDetailState.Loaded -> {
+                val mappings = detail.mappings
+                if (mappings.items.isEmpty()) {
+                    Text(stringResource(R.string.line_settlements_empty), style = MaterialTheme.typography.bodySmall)
+                } else {
+                    // A bounded, scrollable window: a long list scrolls inside the card instead of
+                    // pushing the rest of the picker off screen. heightIn (not a fixed height) so a
+                    // short list stays short and a large system font still gets the room it needs.
+                    Column(modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                        mappings.items.forEach { item -> LineSettlementRow(item) }
+                    }
+                }
+                if (mappings.truncated) {
+                    Text(
+                        stringResource(R.string.line_settlements_truncated, mappings.items.size, mappings.settlementCount),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LineSettlementRow(item: RailwayLineSettlementAssignmentResponse) {
+    val areaText = when {
+        item.serviceAreaName == null -> stringResource(R.string.line_settlement_no_area)
+        item.serviceAreaActive == false -> stringResource(R.string.line_settlement_area_inactive, item.serviceAreaName)
+        else -> stringResource(R.string.line_settlement_area, item.serviceAreaName)
+    }
+    val title = buildString {
+        append(item.settlementName)
+        item.countyName?.takeIf { it.isNotBlank() }?.let { append(" ($it)") }
+    }
+    val suffix = if (item.settlementActive) "" else " " + stringResource(R.string.line_settlement_inactive_suffix)
+    // One merged accessibility node per settlement: TalkBack reads "<name>, <area>" as a unit.
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).semantics(mergeDescendants = true) {}) {
+        Text(title + suffix, style = MaterialTheme.typography.bodyMedium)
+        Text(areaText, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

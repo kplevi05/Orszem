@@ -68,8 +68,38 @@ data class RailwayLineAdminListItemResponse(
     val lineCode: String,
     val displayName: String,
     val active: Boolean,
+    /** The *whole-line* mapping only - null for a pair-configured line. Read [assignmentMode], never infer "unassigned" from this. */
     val currentServiceAreaId: String? = null,
     val currentServiceAreaName: String? = null,
+    /** `UNASSIGNED` | `WHOLE_LINE` | `PER_SETTLEMENT` (ADR 0011). Absent on a backend older than this field. */
+    val assignmentMode: String? = null,
+    val settlementMappingCount: Int = 0,
+)
+
+/** One verified settlement of a line and where it routes today - no routing reason, evidence or revision (by design). */
+@Serializable
+data class RailwayLineSettlementAssignmentResponse(
+    val settlementId: String,
+    val kshCode: String,
+    val settlementName: String,
+    val countyName: String? = null,
+    val settlementActive: Boolean = true,
+    val serviceAreaId: String? = null,
+    val serviceAreaName: String? = null,
+    val serviceAreaActive: Boolean? = null,
+)
+
+@Serializable
+data class RailwayLineSettlementMappingsResponse(
+    val railwayLineId: String,
+    val lineCode: String,
+    val displayName: String,
+    val active: Boolean,
+    val assignmentMode: String,
+    /** The exact number of currently verified settlements - never a claim that this is the whole line. */
+    val settlementCount: Int,
+    val items: List<RailwayLineSettlementAssignmentResponse> = emptyList(),
+    val truncated: Boolean = false,
 )
 
 @Serializable
@@ -158,6 +188,13 @@ interface AreaAdminApi {
         @Query("serviceAreaId") serviceAreaId: String? = null,
         @Query("assignment") assignment: String? = null,
     ): Response<RailwayLineAdminListPageResponse>
+
+    /** Read-only, SUPER_ADMIN only: one line's verified settlements and their effective ServiceArea. */
+    @GET("api/v1/service/service-area-admin/railway-lines/{railwayLineId}/settlement-mappings")
+    suspend fun railwayLineSettlementMappings(
+        @Header("Authorization") bearer: String,
+        @Path("railwayLineId") railwayLineId: String,
+    ): Response<RailwayLineSettlementMappingsResponse>
 
     @POST("api/v1/service/service-area-admin/railway-lines/{railwayLineId}/assign")
     suspend fun assignRailwayLine(

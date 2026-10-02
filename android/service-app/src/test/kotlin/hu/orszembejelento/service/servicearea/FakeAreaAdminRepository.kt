@@ -4,6 +4,7 @@ import hu.orszembejelento.service.common.data.ApiResult
 import hu.orszembejelento.service.servicearea.data.AreaAdminRepository
 import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListFilter
 import hu.orszembejelento.service.servicearea.data.RailwayLineAdminListPageResponse
+import hu.orszembejelento.service.servicearea.data.RailwayLineSettlementMappingsResponse
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminDetailResponse
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminListFilter
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminListPageResponse
@@ -22,6 +23,7 @@ class FakeAreaAdminRepository(
     var listRailwayLinesResult: ApiResult<RailwayLineAdminListPageResponse> = ApiResult.Success(
         RailwayLineAdminListPageResponse(emptyList(), 0, 50, 0, 0),
     ),
+    var settlementMappingsResult: ApiResult<RailwayLineSettlementMappingsResponse>? = null,
     var assignRailwayLineResult: ApiResult<Unit> = ApiResult.Success(Unit),
     var unassignRailwayLineResult: ApiResult<Unit> = ApiResult.Success(Unit),
 ) : AreaAdminRepository {
@@ -34,6 +36,8 @@ class FakeAreaAdminRepository(
     var activateCalls = 0
     var deactivateCalls = 0
     var assignCalls = 0
+    var settlementMappingsCalls = 0
+    val settlementMappingsRequested = mutableListOf<String>()
     var unassignCalls = 0
     val seenFilters = mutableListOf<ServiceAreaAdminListFilter>()
     val seenLineFilters = mutableListOf<RailwayLineAdminListFilter>()
@@ -81,6 +85,12 @@ class FakeAreaAdminRepository(
     override suspend fun listRailwayLines(page: Int, size: Int, filter: RailwayLineAdminListFilter): ApiResult<RailwayLineAdminListPageResponse> {
         seenLineFilters += filter
         return listRailwayLinesResult
+    }
+
+    override suspend fun railwayLineSettlementMappings(railwayLineId: String): ApiResult<RailwayLineSettlementMappingsResponse> {
+        settlementMappingsCalls++
+        settlementMappingsRequested += railwayLineId
+        return settlementMappingsResult ?: error("settlementMappingsResult not configured")
     }
 
     override suspend fun assignRailwayLine(railwayLineId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit> {
