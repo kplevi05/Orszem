@@ -85,6 +85,7 @@ class JdbcUserManagementRepository(private val jdbc: JdbcClient) {
         val status: UserStatus,
         val mustChangePassword: Boolean,
         val globalAreaAccess: Boolean,
+        val nickname: String?,
     )
 
     private fun findManagedUsers(userIds: Set<UUID>): List<ManagedUser> {
@@ -92,7 +93,7 @@ class JdbcUserManagementRepository(private val jdbc: JdbcClient) {
 
         val rows = jdbc.sql(
             """
-            SELECT id, service_id, role, status, must_change_password, global_area_access
+            SELECT id, service_id, role, status, must_change_password, global_area_access, nickname
               FROM users WHERE id IN (:ids)
             """.trimIndent(),
         )
@@ -105,6 +106,7 @@ class JdbcUserManagementRepository(private val jdbc: JdbcClient) {
                     status = UserStatus.valueOf(rs.getString("status")),
                     mustChangePassword = rs.getBoolean("must_change_password"),
                     globalAreaAccess = rs.getBoolean("global_area_access"),
+                    nickname = rs.getString("nickname"),
                 )
             }
             .list()
@@ -138,6 +140,7 @@ class JdbcUserManagementRepository(private val jdbc: JdbcClient) {
                 mustChangePassword = row.mustChangePassword,
                 globalAreaAccess = row.globalAreaAccess,
                 assignedAreas = areasByUser[row.id].orEmpty(),
+                nickname = row.nickname,
             )
         }
     }
@@ -157,7 +160,7 @@ class JdbcUserManagementRepository(private val jdbc: JdbcClient) {
             params["status"] = it.name
         }
         filter.serviceIdQuery?.let {
-            clauses += "u.service_id ILIKE :serviceIdPattern"
+            clauses += "(u.service_id ILIKE :serviceIdPattern OR u.nickname ILIKE :serviceIdPattern)"
             params["serviceIdPattern"] = "%${escapeLike(it)}%"
         }
         filter.areaId?.let {

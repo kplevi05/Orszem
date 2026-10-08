@@ -61,6 +61,8 @@ data class PasswordResetResponse(val serviceId: String, val temporaryCredential:
 
 data class ChangeRoleRequest(@field:Pattern(regexp = ROLE_PATTERN) val role: String = "")
 
+data class ChangeNicknameRequest(val nickname: String? = null)
+
 /** One service area as it currently applies to a managed user — id, name and its own status (§27, §30). */
 data class ManagedUserAreaResponse(val id: String, val name: String, val status: String)
 
@@ -77,6 +79,7 @@ data class ManagedUserResponse(
     val globalAreaAccess: Boolean,
     val areas: List<ManagedUserAreaResponse>,
     val canManage: Boolean,
+    val nickname: String?,
 ) {
     companion object {
         fun from(view: ManagedUserView) = from(view.user, view.canManage)
@@ -89,6 +92,7 @@ data class ManagedUserResponse(
             globalAreaAccess = user.globalAreaAccess,
             areas = user.assignedAreas.map { ManagedUserAreaResponse(it.id.toString(), it.name, it.status.name) },
             canManage = canManage,
+            nickname = user.nickname,
         )
     }
 }

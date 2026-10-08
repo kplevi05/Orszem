@@ -161,6 +161,10 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             AuditEventType.USER_AREA_REVOKED -> listOfNotNull(singleAreaDetail(AuditDetailCode.AREA, node, "areaId", areaNames))
             AuditEventType.USER_GLOBAL_ACCESS_GRANTED -> emptyList()
             AuditEventType.USER_GLOBAL_ACCESS_REVOKED -> emptyList()
+            AuditEventType.USER_NICKNAME_CHANGED -> listOf(
+                AuditDetailItem(AuditDetailCode.OLD_NICKNAME, node.path("oldNickname").asString("")),
+                AuditDetailItem(AuditDetailCode.NEW_NICKNAME, node.path("newNickname").asString("")),
+            )
 
             AuditEventType.REPORT_CLAIMED -> listOfNotNull(
                 stringDetail(AuditDetailCode.FROM_STATUS, node.path("fromStatus").asString(null)),
@@ -217,6 +221,10 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             AuditEventType.USER_ROLE_CHANGED -> listOfNotNull(
                 stringDetail(AuditDetailCode.OLD_ROLE, node.path("oldRole").asString(null)),
                 stringDetail(AuditDetailCode.NEW_ROLE, node.path("newRole").asString(null)),
+            )
+            AuditEventType.USER_NICKNAME_CHANGED -> listOf(
+                AuditDetailItem(AuditDetailCode.OLD_NICKNAME, node.path("oldNickname").asString("")),
+                AuditDetailItem(AuditDetailCode.NEW_NICKNAME, node.path("newNickname").asString("")),
             )
             AuditEventType.SERVICE_AREA_RENAMED -> listOfNotNull(
                 stringDetail(AuditDetailCode.OLD_NAME, node.path("oldName").asString(null)),

@@ -25,6 +25,9 @@ data class RefreshRequest(val refreshToken: String)
 data class ChangePasswordRequest(val currentPassword: String, val newPassword: String)
 
 @Serializable
+data class ChangeNicknameRequest(val nickname: String? = null)
+
+@Serializable
 data class TokenResponse(
     val tokenType: String,
     val accessToken: String,
@@ -41,6 +44,7 @@ data class MeResponse(
     // Defaulted so an older server (or a test double) that omits them still deserializes.
     val globalAreaAccess: Boolean = false,
     val areas: List<MeAreaResponse> = emptyList(),
+    val nickname: String? = null,
 )
 
 @Serializable
@@ -95,6 +99,12 @@ interface AuthApi {
         @Header("Authorization") bearer: String,
         @Body request: ChangePasswordRequest,
     ): Response<TokenResponse>
+
+    @POST("api/v1/service/account/nickname")
+    suspend fun changeNickname(
+        @Header("Authorization") bearer: String,
+        @Body request: ChangeNicknameRequest,
+    ): Response<MeResponse>
 }
 
 /** Stable error codes the client actually branches on. */

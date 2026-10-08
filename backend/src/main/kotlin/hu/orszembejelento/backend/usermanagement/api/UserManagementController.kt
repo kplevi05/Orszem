@@ -7,6 +7,7 @@ import hu.orszembejelento.backend.identity.domain.UserStatus
 import hu.orszembejelento.backend.usermanagement.application.AdminPasswordResetUseCase
 import hu.orszembejelento.backend.usermanagement.application.ChangeGlobalAreaAccessUseCase
 import hu.orszembejelento.backend.usermanagement.application.ChangeUserRoleUseCase
+import hu.orszembejelento.backend.usermanagement.application.ChangeUserNicknameUseCase
 import hu.orszembejelento.backend.usermanagement.application.CreateUserUseCase
 import hu.orszembejelento.backend.usermanagement.application.DeactivateUserUseCase
 import hu.orszembejelento.backend.usermanagement.application.ManagementActorLoader
@@ -56,6 +57,7 @@ class UserManagementController(
     private val deactivate: DeactivateUserUseCase,
     private val reactivate: ReactivateUserUseCase,
     private val changeRole: ChangeUserRoleUseCase,
+    private val changeNickname: ChangeUserNicknameUseCase,
     private val globalAccess: ChangeGlobalAreaAccessUseCase,
     private val grantArea: ServiceAreaGrantUseCase,
     private val revokeArea: ServiceAreaRevokeUseCase,
@@ -183,6 +185,21 @@ class UserManagementController(
         val actor = actorLoader.load(principal)
         val requestedRole = parseRoleOrNull(request.role) ?: throw UserManagementForbiddenException()
         return noStore(ManagedUserResponse.from(changeRole.changeRole(actor, serviceId, requestedRole), canManage = true))
+    }
+
+    @PostMapping("/users/{serviceId}/nickname")
+    @Operation(
+        summary = "Set or remove a lower-ranked user's nickname",
+        description = "Uses the current server-side hierarchy and territorial management scope. " +
+            "Peers and higher-ranked users are never manageable. Null or blank removes the nickname.",
+    )
+    fun changeNickname(
+        @AuthenticationPrincipal principal: AuthenticatedActor,
+        @PathVariable serviceId: String,
+        @RequestBody request: ChangeNicknameRequest,
+    ): ResponseEntity<ManagedUserResponse> {
+        val actor = actorLoader.load(principal)
+        return managedResponse(actor) { changeNickname.changeManaged(it, serviceId, request.nickname) }
     }
 
     @PostMapping("/users/{serviceId}/global-access/grant")

@@ -24,6 +24,7 @@ data class ManagedUserResponse(
     val globalAreaAccess: Boolean,
     val areas: List<ManagedUserAreaResponse> = emptyList(),
     val canManage: Boolean,
+    val nickname: String? = null,
 )
 
 @Serializable
@@ -48,6 +49,9 @@ data class PasswordResetResponse(val serviceId: String, val temporaryCredential:
 
 @Serializable
 data class ChangeRoleRequest(val role: String)
+
+@Serializable
+data class ChangeNicknameRequest(val nickname: String? = null)
 
 /**
  * The Phase 6 service user-management API. MODERATOR/SUPER_ADMIN only - the backend rejects
@@ -105,6 +109,13 @@ interface UserManagementApi {
         @Header("Authorization") bearer: String,
         @Path("serviceId") serviceId: String,
         @Body request: ChangeRoleRequest,
+    ): Response<ManagedUserResponse>
+
+    @POST("api/v1/service/user-management/users/{serviceId}/nickname")
+    suspend fun changeNickname(
+        @Header("Authorization") bearer: String,
+        @Path("serviceId") serviceId: String,
+        @Body request: ChangeNicknameRequest,
     ): Response<ManagedUserResponse>
 
     @POST("api/v1/service/user-management/users/{serviceId}/global-access/grant")
