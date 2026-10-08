@@ -116,6 +116,74 @@ class UserNicknameIT : AbstractUserManagementIntegrationTest() {
         check(metadata.contains("Levente"))
     }
 
+    @Test
+    fun `nicknames PostgreSQL cannot store are rejected as validation errors and change nothing`() {
+        val admin = createSuperAdmin.create()
+        completeInitialChange(admin.serviceId, admin.temporaryCredential)
+        val bearer = loginSuccessfully(admin.serviceId).accessToken
+        val target = givenUser()
+
+        // Raw JSON text on purpose (`\\u0000` is a JSON escape, not a Kotlin one): a NUL and an unpaired
+        // UTF-16 surrogate cannot be stored in a PostgreSQL text/jsonb value, so they must be refused up
+        // front as validation errors instead of surfacing as a 500 from the database.
+        listOf("a\\u0000b", "a\\ud800b", "\\udc00").forEach { escaped ->
+            val managed = post(
+                "/api/v1/service/user-management/users/${target.serviceId.value}/nickname",
+                """{"nickname":"$escaped"}""",
+                bearer,
+            )
+            check(managed.statusCode() == 400) { "$escaped: ${managed.statusCode()} ${managed.body()}" }
+            check(errorCode(managed) == "VALIDATION_ERROR")
+
+            val own = post("/api/v1/service/account/nickname", """{"nickname":"$escaped"}""", bearer)
+            check(own.statusCode() == 400) { "$escaped: ${own.statusCode()} ${own.body()}" }
+            check(errorCode(own) == "VALIDATION_ERROR")
+        }
+
+        check(users.findById(target.id)?.nickname == null)
+        check(users.findByServiceId(admin.serviceId)?.nickname == null)
+        val events = jdbc.sql("SELECT COUNT(*) FROM audit_events WHERE event_type = 'USER_NICKNAME_CHANGED'")
+            .query(Int::class.java).single()
+        check(events == 0)
+    }
+
+    @Test
+    fun `removing a nickname through the managed endpoint audits one change and a repeated removal is idempotent`() {
+        val admin = createSuperAdmin.create()
+        completeInitialChange(admin.serviceId, admin.temporaryCredential)
+        val bearer = loginSuccessfully(admin.serviceId).accessToken
+        val target = givenUser()
+
+        check(changeManagedNickname(bearer, target.serviceId.value, "Levente").statusCode() == 200)
+        val removed = changeManagedNickname(bearer, target.serviceId.value, "  ")
+        check(removed.statusCode() == 200)
+        check(json(removed).get("nickname").isNull)
+        check(changeManagedNickname(bearer, target.serviceId.value, null).statusCode() == 200)
+        check(users.findById(target.id)?.nickname == null)
+
+        val count = jdbc.sql(
+            "SELECT COUNT(*) FROM audit_events WHERE event_type = 'USER_NICKNAME_CHANGED' AND target_id = :targetId",
+        ).param("targetId", target.id).query(Int::class.java).single()
+        check(count == 2) { "set + remove = 2 audit events, a repeated removal adds none, got $count" }
+    }
+
+    @Test
+    fun `the managed endpoint never lets an actor change their own nickname`() {
+        val admin = createSuperAdmin.create()
+        completeInitialChange(admin.serviceId, admin.temporaryCredential)
+        val adminBearer = loginSuccessfully(admin.serviceId).accessToken
+        val self = changeManagedNickname(adminBearer, admin.serviceId.value, "Én")
+        check(self.statusCode() == 403)
+        check(errorCode(self) == "USER_NOT_MANAGEABLE")
+
+        val moderator = givenUser(role = UserRole.MODERATOR)
+        val modSelf = changeManagedNickname(loginSuccessfully(moderator.serviceId).accessToken, moderator.serviceId.value, "Én")
+        // 403 (visible but not manageable) or 404 (a peer outside the actor's scope is not visible): never 200.
+        check(modSelf.statusCode() == 403 || modSelf.statusCode() == 404) { "${modSelf.statusCode()} ${modSelf.body()}" }
+        check(users.findById(moderator.id)?.nickname == null)
+        check(users.findByServiceId(admin.serviceId)?.nickname == null)
+    }
+
     private fun changeOwnNickname(bearer: String, nickname: String?) = post(
         "/api/v1/service/account/nickname",
         objectMapper.writeValueAsString(mapOf("nickname" to nickname)),
