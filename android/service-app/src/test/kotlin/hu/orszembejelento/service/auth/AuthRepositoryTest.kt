@@ -370,6 +370,47 @@ class AuthRepositoryTest {
         assertEquals("rt_3.secret", store.load()?.refreshToken)
     }
 
+    // ---------------------------------------------------------------- nickname
+
+    @Test
+    fun `changing the nickname posts it with the bearer and reports the updated identity`() = runTest {
+        server.enqueue(tokens("at_1.secret", "rt_1.secret"))
+        server.enqueue(me(role = "SUPER_ADMIN"))
+        repository.login("SZ-123456", "korte alma szilva dio")
+        server.takeRequest()
+        server.takeRequest()
+
+        server.enqueue(
+            MockResponse.Builder()
+                .code(200)
+                .setHeader("Content-Type", "application/json")
+                .body("""{"serviceId":"SZ-123456","role":"SUPER_ADMIN","nickname":"Levente"}""")
+                .build(),
+        )
+        val outcome = repository.changeNickname("Levente")
+
+        assertTrue(outcome is AuthOutcome.Success)
+        assertEquals("SZ-123456", (outcome as AuthOutcome.Success).serviceId)
+        assertEquals("Levente", outcome.nickname)
+        val request = server.takeRequest()
+        assertEquals("/api/v1/service/account/nickname", request.url.encodedPath)
+        assertEquals("Bearer at_1.secret", request.headers["Authorization"])
+        assertEquals("""{"nickname":"Levente"}""", request.body?.utf8())
+    }
+
+    @Test
+    fun `a rejected nickname change reports a failure and keeps the stored session`() = runTest {
+        server.enqueue(tokens("at_1.secret", "rt_1.secret"))
+        server.enqueue(me(role = "SUPER_ADMIN"))
+        repository.login("SZ-123456", "korte alma szilva dio")
+
+        server.enqueue(error(403, "USER_MANAGEMENT_FORBIDDEN"))
+        val outcome = repository.changeNickname("Nem")
+
+        assertTrue(outcome is AuthOutcome.Failure)
+        assertEquals("rt_1.secret", store.load()?.refreshToken)
+    }
+
     @Test
     fun `an unreachable server is reported as a network failure, not a sign-out`() = runTest {
         server.close()

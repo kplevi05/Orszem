@@ -46,6 +46,7 @@ data class DeletedReportRow(
     val workflowVersion: Long,
     val reason: ModerationReason,
     val deletedByServiceId: String,
+    val deletedByNickname: String?,
     val deletedAt: Instant,
     val statusBeforeDelete: ReportStatus,
 )
@@ -161,6 +162,7 @@ class JdbcModerationQueryRepository(private val jdbc: JdbcClient) {
         workflowVersion = rs.getLong("workflow_version"),
         reason = ModerationReason.valueOf(rs.getString("reason")),
         deletedByServiceId = rs.getString("deleted_by_service_id"),
+        deletedByNickname = rs.getString("deleted_by_nickname"),
         deletedAt = rs.getTimestamp("deleted_at").toInstant(),
         statusBeforeDelete = ReportStatus.valueOf(rs.getString("status_before_delete")),
     )
@@ -189,7 +191,8 @@ class JdbcModerationQueryRepository(private val jdbc: JdbcClient) {
                    rs.resolved_railway_line_id, rl.display_name AS resolved_railway_line_display_name,
                    rs.service_area_id, sa.name AS service_area_name, sa.status AS service_area_status,
                    r.workflow_version,
-                   rme.reason, du.service_id AS deleted_by_service_id, rme.deleted_at, rme.status_before_delete
+                   rme.reason, du.service_id AS deleted_by_service_id, du.nickname AS deleted_by_nickname,
+                   rme.deleted_at, rme.status_before_delete
             $FROM_JOINS
         """
     }

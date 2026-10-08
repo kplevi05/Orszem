@@ -31,6 +31,7 @@ data class AuthenticatedActor(
     val serviceId: ServiceId,
     val role: UserRole,
     val sessionId: UUID,
+    val nickname: String? = null,
 )
 
 /**

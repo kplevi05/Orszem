@@ -1,5 +1,6 @@
 package hu.orszembejelento.backend.moderation.application
 
+import hu.orszembejelento.backend.identity.domain.User
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
 import hu.orszembejelento.backend.moderation.domain.ModerationEpisode
 import hu.orszembejelento.backend.moderation.domain.ModerationPolicy
@@ -49,18 +50,24 @@ class ModerationQueryUseCase(
             ?: error("report ${row.publicId} was returned by the deleted-report read model but has no open moderation episode")
 
         val episodes = assignmentRepository.findHistoryByReport(row.id)
-        val serviceIdOf = mutableMapOf<UUID, String>()
-        fun resolve(userId: UUID) = serviceIdOf.getOrPut(userId) {
-            users.findById(userId)?.serviceId?.value
+        val userOf = mutableMapOf<UUID, User>()
+        fun resolve(userId: UUID) = userOf.getOrPut(userId) {
+            users.findById(userId)
                 ?: error("assignment history references user $userId, which no longer exists")
         }
         val history = episodes.map { ep ->
+            val assignee = resolve(ep.assigneeUserId)
+            val assignedBy = resolve(ep.assignedByUserId)
+            val endedBy = ep.endedByUserId?.let(::resolve)
             ResolvedAssignmentEpisode(
-                assigneeServiceId = resolve(ep.assigneeUserId),
-                assignedByServiceId = resolve(ep.assignedByUserId),
+                assigneeServiceId = assignee.serviceId.value,
+                assigneeNickname = assignee.nickname,
+                assignedByServiceId = assignedBy.serviceId.value,
+                assignedByNickname = assignedBy.nickname,
                 assignedAt = ep.assignedAt,
                 endedAt = ep.endedAt,
-                endedByServiceId = ep.endedByUserId?.let(::resolve),
+                endedByServiceId = endedBy?.serviceId?.value,
+                endedByNickname = endedBy?.nickname,
                 endReason = ep.endReason,
             )
         }

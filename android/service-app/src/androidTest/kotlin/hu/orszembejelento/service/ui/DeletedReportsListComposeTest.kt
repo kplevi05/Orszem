@@ -34,6 +34,7 @@ class DeletedReportsListComposeTest {
             reason = "DUPLICATE",
             deletedAt = "2026-01-02T00:00:00Z",
             deletedByServiceId = "SZ-300003",
+            deletedByNickname = "Moderátor",
             statusBeforeDelete = "NEW",
             restoreTargetStatus = "NEW",
             workflowVersion = 1,
@@ -50,7 +51,7 @@ class DeletedReportsListComposeTest {
 
         compose.onNodeWithText("Duplikált bejelentés").assertExists() // localized reason, not "DUPLICATE"
         compose.onNodeWithText("TÖRÖLVE").assertExists() // UI-only status label
-        compose.onNodeWithText("SZ-300003").assertExists() // deleting service id, human-readable
+        compose.onNodeWithText("SZ-300003(Moderátor)").assertExists()
         compose.onAllNodesWithText("DUPLICATE", substring = true).assertCountEquals(0)
     }
 

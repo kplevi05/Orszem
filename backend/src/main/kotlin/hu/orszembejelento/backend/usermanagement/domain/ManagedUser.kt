@@ -35,6 +35,7 @@ data class ManagedUser(
     val mustChangePassword: Boolean,
     val globalAreaAccess: Boolean,
     val assignedAreas: List<AssignedArea>,
+    val nickname: String? = null,
 )
 
 /**

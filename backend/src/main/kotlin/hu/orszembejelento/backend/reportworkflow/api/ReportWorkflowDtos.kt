@@ -12,7 +12,7 @@ data class ReportSettlementSummary(val id: String, val name: String, val countyN
 data class ReportCategorySummary(val code: String, val displayName: String)
 data class ReportEventTypeSummary(val code: String, val displayName: String)
 data class ReportAreaSummary(val id: String, val name: String)
-data class ReportAssigneeSummary(val serviceId: String)
+data class ReportAssigneeSummary(val serviceId: String, val nickname: String?)
 
 /**
  * One report as it appears in a list (brief §20/§22/§23). [assignee] is always null for the
@@ -48,7 +48,7 @@ data class ReportListItemResponse(
                 eventType = ReportEventTypeSummary(row.eventTypeCode, row.eventTypeDisplayName),
                 routingClassification = row.routingStatus.name,
                 serviceArea = row.serviceAreaId?.let { ReportAreaSummary(it.toString(), row.serviceAreaName ?: "") },
-                assignee = row.assigneeServiceId?.let { ReportAssigneeSummary(it) },
+                assignee = row.assigneeServiceId?.let { ReportAssigneeSummary(it, row.assigneeNickname) },
                 workflowVersion = row.workflowVersion,
                 ageBucket = item.ageBucket?.name,
                 archivedAt = row.archivedAt,
@@ -79,19 +79,25 @@ data class ReportRailwayLineSummary(val id: String, val displayName: String)
 
 data class AssignmentHistoryItemResponse(
     val assigneeServiceId: String,
+    val assigneeNickname: String?,
     val assignedByServiceId: String,
+    val assignedByNickname: String?,
     val assignedAt: Instant,
     val endedAt: Instant?,
     val endedByServiceId: String?,
+    val endedByNickname: String?,
     val endReason: String?,
 ) {
     companion object {
         fun from(episode: ResolvedAssignmentEpisode) = AssignmentHistoryItemResponse(
             assigneeServiceId = episode.assigneeServiceId,
+            assigneeNickname = episode.assigneeNickname,
             assignedByServiceId = episode.assignedByServiceId,
+            assignedByNickname = episode.assignedByNickname,
             assignedAt = episode.assignedAt,
             endedAt = episode.endedAt,
             endedByServiceId = episode.endedByServiceId,
+            endedByNickname = episode.endedByNickname,
             endReason = episode.endReason?.name,
         )
     }
@@ -139,7 +145,7 @@ data class ReportDetailResponse(
                     ReportRailwayLineSummary(it.toString(), row.resolvedRailwayLineDisplayName ?: "")
                 },
                 serviceArea = row.serviceAreaId?.let { ReportAreaSummary(it.toString(), row.serviceAreaName ?: "") },
-                assignee = row.assigneeServiceId?.let { ReportAssigneeSummary(it) },
+                assignee = row.assigneeServiceId?.let { ReportAssigneeSummary(it, row.assigneeNickname) },
                 archivedAt = row.archivedAt,
                 assignmentHistory = result.history.map(AssignmentHistoryItemResponse::from),
             )

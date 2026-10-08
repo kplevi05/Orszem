@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 import hu.orszembejelento.service.common.ui.ConfirmDialog
 import hu.orszembejelento.service.common.ui.ErrorState
 import hu.orszembejelento.service.common.ui.FullScreenLoading
@@ -233,7 +234,9 @@ private fun ReportFieldsCard(detail: ReportDetailResponse) {
                 stringResource(R.string.field_service_area),
                 detail.serviceArea?.name ?: stringResource(R.string.value_unclassified_area),
             )
-            detail.assignee?.let { DetailRow(stringResource(R.string.field_current_assignee), it.serviceId) }
+            detail.assignee?.let {
+                DetailRow(stringResource(R.string.field_current_assignee), userIdentityLabel(it.serviceId, it.nickname))
+            }
             detail.archivedAt?.let { DetailRow(stringResource(R.string.field_closed_at), formatInstant(it)) }
             DetailRow(stringResource(R.string.field_report_id), shortReportId(detail.publicReportId))
             SettlementDataSourceNote(

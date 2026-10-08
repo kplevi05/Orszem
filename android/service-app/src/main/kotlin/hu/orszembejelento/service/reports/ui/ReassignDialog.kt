@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.common.data.ApiResult
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 import hu.orszembejelento.service.usermanagement.data.ManagedUserResponse
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
 import kotlinx.coroutines.delay
@@ -85,7 +86,7 @@ fun ReassignDialog(
                             ) {
                                 RadioButton(selected = selected == user.serviceId, onClick = { selected = user.serviceId })
                                 Column {
-                                    Text(user.serviceId, style = MaterialTheme.typography.bodyMedium)
+                                    Text(userIdentityLabel(user.serviceId, user.nickname), style = MaterialTheme.typography.bodyMedium)
                                     Text(
                                         text = if (user.globalAreaAccess) {
                                             stringResource(R.string.active_work_view_all)

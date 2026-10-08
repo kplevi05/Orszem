@@ -28,16 +28,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.auth.domain.AuthErrorKind
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 import hu.orszembejelento.service.reports.ui.AreaChoice
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AccountScreen(
     serviceId: String,
+    nickname: String?,
     role: String,
     busy: Boolean,
     error: AuthErrorKind?,
     onChangePassword: (String, String, (Boolean) -> Unit) -> Unit,
+    onChangeNickname: (String, (Boolean) -> Unit) -> Unit,
     onLogout: () -> Unit,
     onLogoutAll: () -> Unit,
     onBack: () -> Unit,
@@ -50,6 +53,8 @@ fun AccountScreen(
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var changed by remember { mutableStateOf(false) }
+    var nicknameDraft by remember(nickname) { mutableStateOf(nickname.orEmpty()) }
+    var nicknameChanged by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -60,12 +65,44 @@ fun AccountScreen(
     ) {
         Text(stringResource(R.string.account_title), style = MaterialTheme.typography.headlineSmall)
 
-        Text(stringResource(R.string.account_service_id, serviceId), style = MaterialTheme.typography.bodyLarge)
+        Text(stringResource(R.string.account_service_id, userIdentityLabel(serviceId, nickname)), style = MaterialTheme.typography.bodyLarge)
         Text(
             stringResource(R.string.account_role, stringResource(hu.orszembejelento.service.common.ui.roleLabelRes(role))),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+
+        if (role == "SUPER_ADMIN") {
+            HorizontalDivider()
+            Text(stringResource(R.string.nickname_section_title), style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.nickname_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            androidx.compose.material3.OutlinedTextField(
+                value = nicknameDraft,
+                onValueChange = {
+                    if (it.codePointCount(0, it.length) <= 64) {
+                        nicknameDraft = it
+                        nicknameChanged = false
+                    }
+                },
+                label = { Text(stringResource(R.string.field_nickname)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (nicknameChanged) {
+                Text(stringResource(R.string.nickname_saved), color = MaterialTheme.colorScheme.primary)
+            }
+            Button(
+                onClick = { onChangeNickname(nicknameDraft) { nicknameChanged = it } },
+                enabled = !busy && nicknameDraft.trim() != nickname.orEmpty(),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.action_save_nickname))
+            }
+        }
 
         if (activeWorkAreaChoices.isNotEmpty()) {
             HorizontalDivider()

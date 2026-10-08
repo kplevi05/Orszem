@@ -34,7 +34,7 @@ class OwnAccountScopeIT : AbstractUserManagementIntegrationTest() {
 
         @Suppress("UNCHECKED_CAST")
         val parsed = objectMapper.readValue(raw.body(), Map::class.java) as Map<String, Any?>
-        check(parsed.keys == setOf("serviceId", "role", "globalAreaAccess", "areas")) {
+        check(parsed.keys == setOf("serviceId", "role", "globalAreaAccess", "areas", "nickname")) {
             "/me must expose nothing beyond the self-account contract, got ${parsed.keys}"
         }
         val firstArea = (parsed["areas"] as List<Map<String, Any?>>).first()

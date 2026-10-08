@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,6 +39,7 @@ import hu.orszembejelento.service.common.ui.ErrorState
 import hu.orszembejelento.service.common.ui.FullScreenLoading
 import hu.orszembejelento.service.common.ui.InlineErrorBanner
 import hu.orszembejelento.service.common.ui.apiErrorMessage
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 import hu.orszembejelento.service.usermanagement.data.AssignableAreaResponse
 import hu.orszembejelento.service.usermanagement.data.ManagedUserResponse
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
@@ -65,7 +67,10 @@ fun UserDetailScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back))
             }
-            Text(state.user?.serviceId ?: "", style = MaterialTheme.typography.titleLarge)
+            Text(
+                state.user?.let { userIdentityLabel(it.serviceId, it.nickname) }.orEmpty(),
+                style = MaterialTheme.typography.titleLarge,
+            )
         }
 
         when {
@@ -74,6 +79,7 @@ fun UserDetailScreen(
             state.user == null -> Unit
             else -> {
                 val user = state.user!!
+                var nicknameDraft by remember(user.serviceId, user.nickname) { mutableStateOf(user.nickname.orEmpty()) }
                 Column(
                     modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -97,6 +103,29 @@ fun UserDetailScreen(
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                         )
+                    }
+
+                    if (user.canManage) {
+                        Text(stringResource(R.string.nickname_section_title), style = MaterialTheme.typography.titleSmall)
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedTextField(
+                                    value = nicknameDraft,
+                                    onValueChange = { if (it.codePointCount(0, it.length) <= 64) nicknameDraft = it },
+                                    label = { Text(stringResource(R.string.field_nickname)) },
+                                    supportingText = { Text(stringResource(R.string.nickname_hint)) },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                                Button(
+                                    onClick = { viewModel.changeNickname(nicknameDraft) },
+                                    enabled = !state.mutationInFlight && nicknameDraft.trim() != user.nickname.orEmpty(),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Text(stringResource(R.string.action_save_nickname))
+                                }
+                            }
+                        }
                     }
 
                     state.mutationError?.let { error ->

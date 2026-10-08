@@ -81,10 +81,10 @@ class JdbcUserRepository(private val jdbc: JdbcClient) {
             """
             INSERT INTO users (
                 id, service_id, role, status, password_hash,
-                must_change_password, password_changed_at, created_at, updated_at
+                must_change_password, password_changed_at, created_at, updated_at, nickname
             ) VALUES (
                 :id, :serviceId, :role, :status, :passwordHash,
-                :mustChangePassword, :passwordChangedAt, :createdAt, :updatedAt
+                :mustChangePassword, :passwordChangedAt, :createdAt, :updatedAt, :nickname
             )
             ON CONFLICT (service_id) DO NOTHING
             """.trimIndent(),
@@ -98,6 +98,7 @@ class JdbcUserRepository(private val jdbc: JdbcClient) {
             .param("passwordChangedAt", user.passwordChangedAt?.let(::toTimestamp))
             .param("createdAt", toTimestamp(user.createdAt))
             .param("updatedAt", toTimestamp(user.updatedAt))
+            .param("nickname", user.nickname)
             .update() == 1
 
     fun updatePassword(
@@ -141,6 +142,15 @@ class JdbcUserRepository(private val jdbc: JdbcClient) {
             .update()
     }
 
+    /** Updates only the optional display nickname; service_id remains the identity. */
+    fun updateNickname(userId: UUID, nickname: String?, now: Instant) {
+        jdbc.sql("UPDATE users SET nickname = :nickname, updated_at = :now WHERE id = :id")
+            .param("nickname", nickname)
+            .param("now", toTimestamp(now))
+            .param("id", userId)
+            .update()
+    }
+
     private fun mapUser(rs: ResultSet, @Suppress("UNUSED_PARAMETER") rowNum: Int): User = User(
         id = rs.getObject("id", UUID::class.java),
         serviceId = ServiceId.ofTrusted(rs.getString("service_id")),
@@ -151,12 +161,13 @@ class JdbcUserRepository(private val jdbc: JdbcClient) {
         passwordChangedAt = rs.getTimestamp("password_changed_at")?.toInstant(),
         createdAt = rs.getTimestamp("created_at").toInstant(),
         updatedAt = rs.getTimestamp("updated_at").toInstant(),
+        nickname = rs.getString("nickname"),
     )
 
     private companion object {
         const val SELECT_COLUMNS = """
             SELECT id, service_id, role, status, password_hash,
-                   must_change_password, password_changed_at, created_at, updated_at
+                   must_change_password, password_changed_at, created_at, updated_at, nickname
               FROM users
         """
 
