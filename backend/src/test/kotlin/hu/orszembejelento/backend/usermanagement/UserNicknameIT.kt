@@ -21,6 +21,13 @@ class UserNicknameIT : AbstractUserManagementIntegrationTest() {
         check(json(set).get("nickname").asText() == "Levente 🚂")
         check(users.findByServiceId(admin.serviceId)?.nickname == "Levente 🚂")
 
+        val auditItems = json(
+            get("/api/v1/service/audit/events?period=ALL&eventType=USER_NICKNAME_CHANGED", bearer),
+        ).get("items")
+        check(auditItems.size() == 1)
+        check(auditItems.get(0).get("actorServiceId").asText() == "${admin.serviceId.value}(Levente 🚂)")
+        check(auditItems.get(0).get("targetDisplayLabel").asText() == "${admin.serviceId.value}(Levente 🚂)")
+
         val me = get("/api/v1/service/account/me", bearer)
         check(json(me).get("nickname").asText() == "Levente 🚂")
 

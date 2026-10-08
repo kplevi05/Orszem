@@ -33,6 +33,7 @@ data class DeletedReportListItemResponse(
     val reason: String,
     val deletedAt: String,
     val deletedByServiceId: String,
+    val deletedByNickname: String? = null,
     val statusBeforeDelete: String,
     val restoreTargetStatus: String,
     val workflowVersion: Long,
@@ -63,6 +64,7 @@ data class DeletedReportDetailResponse(
     val reason: String,
     val deletedAt: String,
     val deletedByServiceId: String,
+    val deletedByNickname: String? = null,
     val statusBeforeDelete: String,
     val restoreTargetStatus: String,
 )

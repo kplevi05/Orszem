@@ -42,6 +42,7 @@ class DeletedReportDetailComposeTest {
         reason = "TROLL_OR_FALSE_REPORT",
         deletedAt = "2026-01-02T00:00:00Z",
         deletedByServiceId = "SZ-200002",
+        deletedByNickname = "Moderátor",
         statusBeforeDelete = statusBeforeDelete,
         restoreTargetStatus = if (statusBeforeDelete == "ARCHIVED") "ARCHIVED" else "NEW",
     )
@@ -114,6 +115,7 @@ class DeletedReportDetailComposeTest {
         compose.waitForIdle()
 
         compose.onNodeWithText("Troll vagy hamis bejelentés").assertExists()
+        compose.onNodeWithText("SZ-200002(Moderátor)").assertExists()
         assertTrue(compose.onAllNodesWithText("TROLL_OR_FALSE_REPORT", substring = true).fetchSemanticsNodes().isEmpty())
     }
 }

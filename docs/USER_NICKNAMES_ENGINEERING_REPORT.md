@@ -39,8 +39,13 @@ The audit UI has explicit localized event/detail mappings; a removed nickname is
 
 - `SUPER_ADMIN` sees a nickname editor on the own-account screen; other roles do not.
 - A manageable user's detail screen contains the nickname editor; read-only peers do not.
-- User list, user detail header, own profile and reassignment picker use one shared display
-  formatter for the canonical `serviceId(nickname)` form.
+- User list, user detail header, own profile, reassignment picker, report cards/details,
+  assignment history and moderation screens use one shared display formatter for the
+  canonical `serviceId(nickname)` form.
+- Report-workflow and moderation read models carry the optional nickname separately from the
+  canonical service ID, so authorization, ownership comparisons and filters still operate on
+  the immutable identifier. Audit actor/USER-target labels are resolved in the same format,
+  and audit search accepts either the service ID or current nickname.
 - No nickname is persisted locally as authority. The authenticated user's value comes from
   `/account/me`; managed-user values come from current API responses.
 
@@ -48,8 +53,9 @@ The audit UI has explicit localized event/detail mappings; a removed nickname is
 
 Added coverage includes Unicode normalization and length, SUPER_ADMIN self-service,
 rank/scope negative cases, peer rejection, removal, idempotent audit behaviour, nickname
-search, ViewModel state replacement, display formatting, audit mapping coverage and Compose
-visibility/submission checks.
+search, report/assignment-history propagation, audit actor/target resolution, ViewModel state
+replacement, display formatting, audit mapping coverage and Compose visibility/submission
+checks.
 
 The local sandbox cannot download the repository's Gradle 9.7.1 distribution, so final
 backend/Android compilation and automated execution are delegated to the branch's normal

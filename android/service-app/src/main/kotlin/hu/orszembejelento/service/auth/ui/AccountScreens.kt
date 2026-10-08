@@ -82,7 +82,12 @@ fun AccountScreen(
             )
             androidx.compose.material3.OutlinedTextField(
                 value = nicknameDraft,
-                onValueChange = { if (it.codePointCount(0, it.length) <= 64) nicknameDraft = it },
+                onValueChange = {
+                    if (it.codePointCount(0, it.length) <= 64) {
+                        nicknameDraft = it
+                        nicknameChanged = false
+                    }
+                },
                 label = { Text(stringResource(R.string.field_nickname)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
