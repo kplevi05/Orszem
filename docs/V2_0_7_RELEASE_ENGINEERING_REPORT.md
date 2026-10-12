@@ -1,7 +1,7 @@
 # v2.0.7 — release engineering report
 
-Állapot: **előkészítés, owner review-ra vár.** Nincs tag, GitHub Release, artifact-terjesztés, deploy vagy
-production adatváltozás.
+Állapot: **draft release PR, CI-zöld, owner review-ra vár.** Nincs tag, GitHub Release, artifact-terjesztés,
+deploy vagy production adatváltozás.
 
 ## 1. Kiindulás és hatókör
 
@@ -58,21 +58,25 @@ csak bizonyított adatvesztés vagy integritási probléma esetén.
 
 ## 5. Ellenőrzési mátrix
 
-Az alábbi eredményeket a release ág végső HEAD-jén kell rögzíteni; a release-előkészítés indulásakor a feature
-HEAD bizonyítékai: backend 914/914, Service unit 204/204, instrumented/Compose 109/109, Public Web 74/74, valamint
-mind az öt GitHub workflow sikeres.
+A draft PR #63 első remote HEAD-je `a8178f0c8b6a353f4f3c8ca34c379f0428522b2b`. Ezen a pontos SHA-n mind az
+öt GitHub workflow sikeres. A release-változás verziómezőkre és dokumentációra korlátozódik; a funkcionális kód
+azonos a PR #62 függetlenül ellenőrzött és merge-elt kódjával.
 
 | Ellenőrzés | Követelmény | Release-eredmény |
 |---|---|---|
-| Backend clean build | PostgreSQL 16 Testcontainers, minden teszt zöld | függőben |
-| Android unit/lint/debug/release | Public + Service, 0 hiba | függőben |
-| Service instrumented/Compose | alapértelmezett AVD, minden teszt zöld | függőben |
-| Public Web | typecheck, tesztek, build | függőben |
-| Reference/deploy config | minden validátor zöld | függőben |
-| GitHub Actions | öt workflow a pontos release HEAD-en | függőben |
+| Backend clean build | PostgreSQL 16 Testcontainers, minden teszt zöld | **GitHub backend success**, run `38219041860` |
+| Android unit/lint/debug/release | Public + Service, 0 hiba | **GitHub android success**, run `38219041810` |
+| Service instrumented/Compose | alapértelmezett AVD, minden teszt zöld | feature HEAD-en **109/109**; release CI instrumented teszteket fordít, nem futtat |
+| Public Web | typecheck, tesztek, build | **helyben 74/74 + typecheck/build**, GitHub web success, run `38219041826` |
+| Reference/deploy config | minden validátor zöld | **success**, runs `38219041803` és `38219041883` |
+| GitHub Actions | öt workflow a pontos release HEAD-en | **5/5 success** az `a8178f0c…` SHA-n |
 | Backend JAR reprodukálhatóság | két tiszta build bájtra azonos, SHA-256 rögzítve | függőben |
 | Unsigned Service APK reprodukálhatóság | két tiszta build bájtra azonos, SHA-256 rögzítve | függőben |
 | V008 restore drill + v2.0.5 rollback smoke | teljes §4 sorrend sikeres | production rollout előtt függőben |
+
+A jelenlegi végrehajtási környezetből a Gradle 9.7.1 disztribúció hálózati korlátozás miatt nem volt letölthető,
+és Docker sem érhető el; ezért itt backend/Android buildet vagy Testcontainers restore drillt nem állítunk
+lokálisan lefuttatottnak. A Public Web helyi futása és a teljes GitHub CI eredményei fent külön szerepelnek.
 
 ## 6. Release- és rollout-határok
 
