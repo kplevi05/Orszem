@@ -13,6 +13,7 @@ class ClaimReportIT : ReportWorkflowTestSupport() {
     fun `a SERVICE_USER with area access can claim a NEW report`() {
         val area = givenRoutedArea()
         val user = givenServiceUser()
+        jdbc.sql("UPDATE users SET nickname = 'Levente' WHERE id = :id").param("id", user.id).update()
         grantArea(user.id, area.areaId)
         val report = givenRoutedReport(area)
 
@@ -22,6 +23,9 @@ class ClaimReportIT : ReportWorkflowTestSupport() {
         check(body.get("status").asText() == "IN_PROGRESS")
         check(body.get("workflowVersion").asLong() == 1L)
         check(body.get("assignee").get("serviceId").asText() == user.serviceId.value)
+        check(body.get("assignee").get("nickname").asText() == "Levente")
+        check(body.get("assignmentHistory").get(0).get("assigneeNickname").asText() == "Levente")
+        check(body.get("assignmentHistory").get(0).get("assignedByNickname").asText() == "Levente")
 
         val row = reportRow(report.publicId)
         check(row.status == "IN_PROGRESS" && row.assignedUserId == user.id && row.workflowVersion == 1L)

@@ -36,6 +36,7 @@ enum class AuditEventType {
     USER_AREA_REVOKED,
     USER_GLOBAL_ACCESS_GRANTED,
     USER_GLOBAL_ACCESS_REVOKED,
+    USER_NICKNAME_CHANGED,
 
     // Phase 7 — Service report workflow. The target is always the REPORT; the actor is
     // always the SERVICE_USER/MODERATOR/SUPER_ADMIN who performed the mutation.

@@ -52,14 +52,16 @@ class AuditQueryUseCase(
 
         val raw = repository.findPage(range, filter, page, size)
         val areaNames = resolveAreaNames(raw.items.map { it })
-        return AuditListPage(raw.items.map { projector.listItem(it, areaNames) }, raw.totalElements)
+        val userLabels = resolveUserLabels(raw.items)
+        return AuditListPage(raw.items.map { projector.listItem(it, areaNames, userLabels) }, raw.totalElements)
     }
 
     fun detail(actor: AuthenticatedActor, auditEventId: UUID): AuditEventDetailView {
         actorLoader.load(actor)
         val row = repository.findById(auditEventId) ?: throw AuditEventNotFoundException(auditEventId)
         val areaNames = resolveAreaNames(listOf(row))
-        return projector.detail(row, areaNames)
+        val userLabels = resolveUserLabels(listOf(row))
+        return projector.detail(row, areaNames, userLabels)
     }
 
     fun options(actor: AuthenticatedActor): AuditOptions {
@@ -73,6 +75,12 @@ class AuditQueryUseCase(
     private fun resolveAreaNames(rows: List<hu.orszembejelento.backend.audit.infrastructure.AuditRawRow>): Map<UUID, String> {
         val ids = rows.flatMap(projector::embeddedServiceAreaIds).toSet()
         return repository.serviceAreaNamesByIds(ids)
+    }
+
+    /** One batch resolution for user service IDs embedded in whitelisted report-workflow metadata. */
+    private fun resolveUserLabels(rows: List<hu.orszembejelento.backend.audit.infrastructure.AuditRawRow>): Map<String, String> {
+        val serviceIds = rows.flatMap(projector::embeddedUserServiceIds).toSet()
+        return repository.userLabelsByServiceIds(serviceIds)
     }
 
     private fun parsePeriod(raw: String?): AuditPeriod {

@@ -39,6 +39,7 @@ import hu.orszembejelento.service.common.ui.ErrorState
 import hu.orszembejelento.service.common.ui.FullScreenLoading
 import hu.orszembejelento.service.common.ui.LoadMoreButton
 import hu.orszembejelento.service.common.ui.apiErrorMessage
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 import hu.orszembejelento.service.usermanagement.data.ManagedUserResponse
 import kotlinx.coroutines.delay
 
@@ -123,7 +124,7 @@ private fun ManagedUserRow(user: ManagedUserResponse, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            Text(user.serviceId, style = MaterialTheme.typography.titleSmall)
+            Text(userIdentityLabel(user.serviceId, user.nickname), style = MaterialTheme.typography.titleSmall)
             Text(
                 text = buildString {
                     append(stringResource(hu.orszembejelento.service.common.ui.roleLabelRes(user.role)))

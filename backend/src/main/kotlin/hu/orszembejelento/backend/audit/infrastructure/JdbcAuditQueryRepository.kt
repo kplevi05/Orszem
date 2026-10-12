@@ -26,6 +26,7 @@ data class AuditRawRow(
     val id: UUID,
     val actorType: AuditActorType,
     val actorServiceId: String?,
+    val actorNickname: String?,
     // Null only for a value unknown to this build's enum (brief §6/§27) - a
     // forward-compatibility guard against a future writer's new event/target type, never
     // reachable from today's closed writer set.
@@ -33,6 +34,7 @@ data class AuditRawRow(
     val targetType: AuditTargetType?,
     val targetId: UUID?,
     val targetUserServiceId: String?,
+    val targetUserNickname: String?,
     val targetAreaName: String?,
     val targetLineCode: String?,
     val targetLineDisplayName: String?,
@@ -88,6 +90,20 @@ class JdbcAuditQueryRepository(private val jdbc: JdbcClient) {
             .toMap()
     }
 
+    /** Current canonical-ID-plus-nickname labels for whitelisted user IDs embedded in metadata. */
+    fun userLabelsByServiceIds(serviceIds: Collection<String>): Map<String, String> {
+        if (serviceIds.isEmpty()) return emptyMap()
+        return jdbc.sql("SELECT service_id, nickname FROM users WHERE service_id IN (:serviceIds)")
+            .param("serviceIds", serviceIds)
+            .query { rs, _ ->
+                val serviceId = rs.getString("service_id")
+                val nickname = rs.getString("nickname")
+                serviceId to (nickname?.takeIf(String::isNotBlank)?.let { "$serviceId(${it.trim()})" } ?: serviceId)
+            }
+            .list()
+            .toMap()
+    }
+
     private fun findByIdsPreservingOrder(ids: List<UUID>): List<AuditRawRow> {
         if (ids.isEmpty()) return emptyList()
         val byId = jdbc.sql("$SELECT_ROW WHERE ae.id IN (:ids)")
@@ -123,7 +139,9 @@ class JdbcAuditQueryRepository(private val jdbc: JdbcClient) {
             // search the brief allows - not the generic `metadata::text ILIKE` it forbids.
             clauses += """(
                 au.service_id ILIKE :q OR
+                au.nickname ILIKE :q OR
                 tu.service_id ILIKE :q OR
+                tu.nickname ILIKE :q OR
                 tsa.name ILIKE :q OR
                 trl.line_code ILIKE :q OR
                 trl.display_name ILIKE :q OR
@@ -141,10 +159,12 @@ class JdbcAuditQueryRepository(private val jdbc: JdbcClient) {
         id = rs.getObject("id", UUID::class.java),
         actorType = AuditActorType.valueOf(rs.getString("actor_type")),
         actorServiceId = rs.getString("actor_service_id"),
+        actorNickname = rs.getString("actor_nickname"),
         eventType = runCatching { AuditEventType.valueOf(rs.getString("event_type")) }.getOrNull(),
         targetType = runCatching { AuditTargetType.valueOf(rs.getString("target_type")) }.getOrNull(),
         targetId = rs.getObject("target_id", UUID::class.java),
         targetUserServiceId = rs.getString("target_user_service_id"),
+        targetUserNickname = rs.getString("target_user_nickname"),
         targetAreaName = rs.getString("target_area_name"),
         targetLineCode = rs.getString("target_line_code"),
         targetLineDisplayName = rs.getString("target_line_display_name"),
@@ -162,9 +182,9 @@ class JdbcAuditQueryRepository(private val jdbc: JdbcClient) {
         """
 
         val SELECT_ROW = """
-            SELECT ae.id, ae.actor_type, au.service_id AS actor_service_id,
+            SELECT ae.id, ae.actor_type, au.service_id AS actor_service_id, au.nickname AS actor_nickname,
                    ae.event_type, ae.target_type, ae.target_id,
-                   tu.service_id AS target_user_service_id,
+                   tu.service_id AS target_user_service_id, tu.nickname AS target_user_nickname,
                    tsa.name AS target_area_name,
                    trl.line_code AS target_line_code, trl.display_name AS target_line_display_name,
                    ae.metadata::text AS metadata_json,

@@ -29,6 +29,8 @@ import hu.orszembejelento.backend.auth.application.InvalidCredentialsException
 import hu.orszembejelento.backend.auth.application.PasswordChangeRequiredException
 import hu.orszembejelento.backend.auth.application.RateLimitedException
 import hu.orszembejelento.backend.auth.application.SessionInvalidException
+import hu.orszembejelento.backend.identity.domain.NicknameInvalidCharactersException
+import hu.orszembejelento.backend.identity.domain.NicknameTooLongException
 import hu.orszembejelento.backend.identity.domain.PasswordPolicyException
 import hu.orszembejelento.backend.moderation.domain.ModerationForbiddenException
 import hu.orszembejelento.backend.moderation.domain.ReportAlreadyDeletedException
@@ -122,6 +124,14 @@ class ApiExceptionHandler {
                 "The new password must differ from the current one."
         },
     )
+
+    @ExceptionHandler(NicknameInvalidCharactersException::class)
+    fun handleNicknameInvalidCharacters(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, "The nickname contains unsupported characters.")
+
+    @ExceptionHandler(NicknameTooLongException::class)
+    fun handleNicknameTooLong(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, "The nickname is too long.")
 
     @ExceptionHandler(RateLimitedException::class)
     fun handleRateLimited(exception: RateLimitedException, request: HttpServletRequest) =

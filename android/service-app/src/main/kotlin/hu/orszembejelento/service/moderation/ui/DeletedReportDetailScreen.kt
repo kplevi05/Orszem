@@ -33,6 +33,7 @@ import hu.orszembejelento.service.common.ui.ErrorState
 import hu.orszembejelento.service.common.ui.FullScreenLoading
 import hu.orszembejelento.service.common.ui.InlineErrorBanner
 import hu.orszembejelento.service.common.ui.StatusBadge
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 import hu.orszembejelento.service.common.ui.apiErrorMessage
 import hu.orszembejelento.service.common.ui.moderationReasonLabelRes
 import hu.orszembejelento.service.moderation.data.DeletedReportDetailResponse
@@ -165,7 +166,10 @@ private fun ModerationSection(detail: DeletedReportDetailResponse) {
         Card(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
             Column(modifier = Modifier.padding(4.dp)) {
                 DetailRow(stringResource(R.string.deleted_reason_label), stringResource(moderationReasonLabelRes(detail.reason)))
-                DetailRow(stringResource(R.string.deleted_by_label), detail.deletedByServiceId)
+                DetailRow(
+                    stringResource(R.string.deleted_by_label),
+                    userIdentityLabel(detail.deletedByServiceId, detail.deletedByNickname),
+                )
                 DetailRow(stringResource(R.string.deleted_at_label), formatInstant(detail.deletedAt))
                 DetailRow(stringResource(R.string.deleted_status_before_label), stringResource(statusLabelRes(detail.statusBeforeDelete)))
                 DetailRow(stringResource(R.string.deleted_restore_target_label), stringResource(statusLabelRes(detail.restoreTargetStatus)))

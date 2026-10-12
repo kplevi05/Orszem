@@ -34,6 +34,7 @@ data class DeletedReportListItemResponse(
     val reason: String,
     val deletedAt: Instant,
     val deletedByServiceId: String,
+    val deletedByNickname: String?,
     val statusBeforeDelete: String,
     val restoreTargetStatus: String,
     val workflowVersion: Long,
@@ -51,6 +52,7 @@ data class DeletedReportListItemResponse(
             reason = row.reason.name,
             deletedAt = row.deletedAt,
             deletedByServiceId = row.deletedByServiceId,
+            deletedByNickname = row.deletedByNickname,
             statusBeforeDelete = row.statusBeforeDelete.name,
             // Frozen restore-target rule (brief §9): NEW and IN_PROGRESS both restore to
             // NEW, only ARCHIVED restores to ARCHIVED - mirrors `ModerationEpisode.restoreTargetStatus` exactly.
@@ -95,6 +97,7 @@ data class DeletedReportDetailResponse(
     val reason: String,
     val deletedAt: Instant,
     val deletedByServiceId: String,
+    val deletedByNickname: String?,
     val statusBeforeDelete: String,
     val restoreTargetStatus: String,
 ) {
@@ -118,6 +121,7 @@ data class DeletedReportDetailResponse(
                 reason = row.reason.name,
                 deletedAt = row.deletedAt,
                 deletedByServiceId = row.deletedByServiceId,
+                deletedByNickname = row.deletedByNickname,
                 statusBeforeDelete = row.statusBeforeDelete.name,
                 restoreTargetStatus = result.episode.restoreTargetStatus.name,
             )

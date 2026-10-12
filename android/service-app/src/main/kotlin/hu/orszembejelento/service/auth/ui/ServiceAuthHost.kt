@@ -66,6 +66,7 @@ fun ServiceAuthHost(
         // bars) - only the pre-authentication states below share this simple top-bar shell.
         is AuthState.Authenticated -> ServiceNavHost(
             serviceId = current.serviceId,
+            nickname = current.nickname,
             role = current.role,
             globalAreaAccess = current.globalAreaAccess,
             ownAreas = current.areas,

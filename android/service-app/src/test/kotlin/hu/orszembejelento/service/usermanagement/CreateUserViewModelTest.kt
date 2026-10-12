@@ -57,6 +57,7 @@ class CreateUserViewModelTest {
         override suspend fun deactivate(serviceId: String) = error("unused")
         override suspend fun reactivate(serviceId: String) = error("unused")
         override suspend fun changeRole(serviceId: String, role: String) = error("unused")
+        override suspend fun changeNickname(serviceId: String, nickname: String?) = error("unused")
         override suspend fun grantGlobalAccess(serviceId: String) = error("unused")
         override suspend fun revokeGlobalAccess(serviceId: String) = error("unused")
         override suspend fun grantArea(serviceId: String, areaId: String) = error("unused")

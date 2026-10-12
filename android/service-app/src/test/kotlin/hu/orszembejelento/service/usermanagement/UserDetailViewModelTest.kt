@@ -45,6 +45,7 @@ class UserDetailViewModelTest {
         var detailResponses: MutableList<ApiResult<ManagedUserResponse>>,
         var deactivateResult: ApiResult<ManagedUserResponse> = ApiResult.SessionEnded,
         var resetResult: ApiResult<PasswordResetResponse> = ApiResult.SessionEnded,
+        var nicknameResult: ApiResult<ManagedUserResponse> = ApiResult.SessionEnded,
     ) : UserManagementRepository {
         var deactivateCalls = 0
         var detailCalls = 0
@@ -68,10 +69,25 @@ class UserDetailViewModelTest {
 
         override suspend fun reactivate(serviceId: String) = error("unused")
         override suspend fun changeRole(serviceId: String, role: String) = error("unused")
+        override suspend fun changeNickname(serviceId: String, nickname: String?) = nicknameResult
         override suspend fun grantGlobalAccess(serviceId: String) = error("unused")
         override suspend fun revokeGlobalAccess(serviceId: String) = error("unused")
         override suspend fun grantArea(serviceId: String, areaId: String) = error("unused")
         override suspend fun revokeArea(serviceId: String, areaId: String) = error("unused")
+    }
+
+    @Test
+    fun `a successful nickname change replaces local state with the server-normalized nickname`() = runTest {
+        val fake = FakeRepository(
+            detailResponses = mutableListOf(ApiResult.Success(user())),
+            nicknameResult = ApiResult.Success(user().copy(nickname = "Levente")),
+        )
+        val vm = UserDetailViewModel("SZ-1042", fake, onSessionEnded = {})
+
+        vm.changeNickname("  Levente  ")
+
+        assertEquals("Levente", vm.state.value.user?.nickname)
+        assertNull(vm.state.value.mutationError)
     }
 
     @Test

@@ -29,7 +29,7 @@ data class ReportEventTypeSummary(val code: String, val displayName: String)
 data class ReportAreaSummary(val id: String, val name: String)
 
 @Serializable
-data class ReportAssigneeSummary(val serviceId: String)
+data class ReportAssigneeSummary(val serviceId: String, val nickname: String? = null)
 
 @Serializable
 data class ReportRailwayLineSummary(val id: String, val displayName: String)
@@ -63,10 +63,13 @@ data class ReportQueuePageResponse(
 @Serializable
 data class AssignmentHistoryItemResponse(
     val assigneeServiceId: String,
+    val assigneeNickname: String? = null,
     val assignedByServiceId: String,
+    val assignedByNickname: String? = null,
     val assignedAt: String,
     val endedAt: String? = null,
     val endedByServiceId: String? = null,
+    val endedByNickname: String? = null,
     val endReason: String? = null,
 )
 

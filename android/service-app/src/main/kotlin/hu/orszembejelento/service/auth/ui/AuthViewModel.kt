@@ -89,6 +89,32 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun changeOwnNickname(nickname: String, onDone: (Boolean) -> Unit) {
+        val current = _state.value
+        if (current !is AuthState.Authenticated || current.role != "SUPER_ADMIN") {
+            onDone(false)
+            return
+        }
+        withBusy {
+            when (val outcome = repository.changeNickname(nickname)) {
+                is AuthOutcome.Success -> {
+                    lastError = null
+                    apply(outcome, onEnded = AuthState.Unauthenticated)
+                    onDone(true)
+                }
+                AuthOutcome.SessionEnded -> {
+                    _state.value = AuthState.Unauthenticated
+                    onDone(false)
+                }
+                is AuthOutcome.Failure -> {
+                    lastError = outcome.kind
+                    onDone(false)
+                }
+                is AuthOutcome.PasswordChangeRequired -> onDone(false)
+            }
+        }
+    }
+
     fun logout() = withBusy {
         repository.logout()
         pendingTemporaryPassword = null
@@ -128,6 +154,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 role = outcome.role,
                 globalAreaAccess = outcome.globalAreaAccess,
                 areas = outcome.areas.map { AuthState.AuthArea(it.id, it.name, it.status == "ACTIVE") },
+                nickname = outcome.nickname,
             )
             is AuthOutcome.PasswordChangeRequired -> AuthState.PasswordChangeRequired(outcome.serviceId)
             AuthOutcome.SessionEnded -> onEnded

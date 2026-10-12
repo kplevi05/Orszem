@@ -53,6 +53,9 @@ data class ChangePasswordRequest(
     override fun toString(): String = "ChangePasswordRequest(currentPassword=[redacted], newPassword=[redacted])"
 }
 
+/** Null or blank removes the nickname; any non-blank Unicode text is accepted up to the domain cap. */
+data class ChangeNicknameRequest(val nickname: String? = null)
+
 /** Credentials returned to the client. Sent with `Cache-Control: no-store`. */
 data class TokenResponse(
     val tokenType: String,
@@ -86,6 +89,7 @@ data class MeResponse(
     val role: String,
     val globalAreaAccess: Boolean,
     val areas: List<MeServiceAreaResponse>,
+    val nickname: String?,
 )
 
 /** One of the caller's own assigned service areas, with its current activation status. */

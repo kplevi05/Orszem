@@ -35,6 +35,7 @@ sealed interface AuthState {
         val role: String,
         val globalAreaAccess: Boolean = false,
         val areas: List<AuthArea> = emptyList(),
+        val nickname: String? = null,
     ) : AuthState
 
     /** One of the signed-in user's own service areas (id + display name + activation status). */

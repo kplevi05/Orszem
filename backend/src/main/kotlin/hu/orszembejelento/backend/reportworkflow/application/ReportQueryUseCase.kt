@@ -1,5 +1,6 @@
 package hu.orszembejelento.backend.reportworkflow.application
 
+import hu.orszembejelento.backend.identity.domain.User
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
 import hu.orszembejelento.backend.reference.domain.ServiceAreaStatus
 import hu.orszembejelento.backend.reports.domain.RoutingSnapshotStatus
@@ -38,10 +39,13 @@ data class ReportQueuePageResult(
  */
 data class ResolvedAssignmentEpisode(
     val assigneeServiceId: String,
+    val assigneeNickname: String?,
     val assignedByServiceId: String,
+    val assignedByNickname: String?,
     val assignedAt: Instant,
     val endedAt: Instant?,
     val endedByServiceId: String?,
+    val endedByNickname: String?,
     val endReason: AssignmentEndReason?,
 )
 
@@ -83,22 +87,28 @@ class ReportQueryUseCase(
         if (!policy.canViewReport(actor, row.toScope())) throw ReportNotVisibleException()
 
         val episodes = assignmentRepository.findHistoryByReport(row.id)
-        val serviceIdOf = mutableMapOf<UUID, String>()
-        fun resolve(userId: UUID) = serviceIdOf.getOrPut(userId) {
+        val userOf = mutableMapOf<UUID, User>()
+        fun resolve(userId: UUID) = userOf.getOrPut(userId) {
             // Users are never hard-deleted (Phase 6 brief §44), so every historical
             // assignment reference must still resolve - exactly the same assumption
             // GetPublicReportUseCase already makes about settlement/event-type references.
-            users.findById(userId)?.serviceId?.value
+            users.findById(userId)
                 ?: error("assignment history references user $userId, which no longer exists")
         }
 
         val history = episodes.map { episode ->
+            val assignee = resolve(episode.assigneeUserId)
+            val assignedBy = resolve(episode.assignedByUserId)
+            val endedBy = episode.endedByUserId?.let(::resolve)
             ResolvedAssignmentEpisode(
-                assigneeServiceId = resolve(episode.assigneeUserId),
-                assignedByServiceId = resolve(episode.assignedByUserId),
+                assigneeServiceId = assignee.serviceId.value,
+                assigneeNickname = assignee.nickname,
+                assignedByServiceId = assignedBy.serviceId.value,
+                assignedByNickname = assignedBy.nickname,
                 assignedAt = episode.assignedAt,
                 endedAt = episode.endedAt,
-                endedByServiceId = episode.endedByUserId?.let(::resolve),
+                endedByServiceId = endedBy?.serviceId?.value,
+                endedByNickname = endedBy?.nickname,
                 endReason = episode.endReason,
             )
         }

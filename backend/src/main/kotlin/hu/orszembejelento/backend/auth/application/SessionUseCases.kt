@@ -60,6 +60,7 @@ class AuthenticateAccessTokenUseCase(
             serviceId = user.serviceId,
             role = user.role,
             sessionId = session.id,
+            nickname = user.nickname,
         )
     }
 }

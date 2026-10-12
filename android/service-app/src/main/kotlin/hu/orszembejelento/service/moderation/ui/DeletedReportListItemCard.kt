@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
 import hu.orszembejelento.service.common.ui.StatusBadge
 import hu.orszembejelento.service.common.ui.moderationReasonLabelRes
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 import hu.orszembejelento.service.moderation.data.DeletedReportListItemResponse
 import hu.orszembejelento.service.reports.domain.formatInstant
 import hu.orszembejelento.service.reports.domain.shortReportId
@@ -67,7 +68,7 @@ fun DeletedReportListItemCard(item: DeletedReportListItemResponse, onClick: () -
             ) {
                 MetaChip(stringResource(moderationReasonLabelRes(item.reason)))
                 MetaChip(formatInstant(item.deletedAt))
-                MetaChip(item.deletedByServiceId)
+                MetaChip(userIdentityLabel(item.deletedByServiceId, item.deletedByNickname))
             }
             MetaChip(
                 text = item.serviceArea?.name ?: stringResource(R.string.value_unclassified_area),

@@ -51,6 +51,7 @@ internal fun auditEventTypeLabelRes(code: String): Int? = when (code) {
     "USER_AREA_REVOKED" -> R.string.audit_event_user_area_revoked
     "USER_GLOBAL_ACCESS_GRANTED" -> R.string.audit_event_user_global_access_granted
     "USER_GLOBAL_ACCESS_REVOKED" -> R.string.audit_event_user_global_access_revoked
+    "USER_NICKNAME_CHANGED" -> R.string.audit_event_user_nickname_changed
     "REPORT_CLAIMED" -> R.string.audit_event_report_claimed
     "REPORT_RETURNED_TO_NEW" -> R.string.audit_event_report_returned_to_new
     "REPORT_REASSIGNED" -> R.string.audit_event_report_reassigned
@@ -82,7 +83,7 @@ internal fun auditTargetTypeLabelRes(code: String): Int? = when (code) {
 /** Every event type the filter sheet offers, in a fixed, readable order - not the backend's own enum declaration order. */
 internal val AUDIT_EVENT_TYPE_ORDER: List<String> = listOf(
     "USER_CREATED", "USER_PASSWORD_RESET", "USER_DEACTIVATED", "USER_REACTIVATED", "USER_ROLE_CHANGED",
-    "USER_AREA_GRANTED", "USER_AREA_REVOKED", "USER_GLOBAL_ACCESS_GRANTED", "USER_GLOBAL_ACCESS_REVOKED",
+    "USER_AREA_GRANTED", "USER_AREA_REVOKED", "USER_GLOBAL_ACCESS_GRANTED", "USER_GLOBAL_ACCESS_REVOKED", "USER_NICKNAME_CHANGED",
     "REPORT_CLAIMED", "REPORT_RETURNED_TO_NEW", "REPORT_REASSIGNED", "REPORT_ARCHIVED",
     "REPORT_MODERATION_DELETED", "REPORT_MODERATION_RESTORED",
     "SERVICE_AREA_CREATED", "SERVICE_AREA_RENAMED", "SERVICE_AREA_ACTIVATED", "SERVICE_AREA_DEACTIVATED",
@@ -100,6 +101,8 @@ private fun auditDetailCodeLabelRes(code: String): Int? = when (code) {
     "NEW_ROLE" -> R.string.audit_detail_new_role
     "OLD_NAME" -> R.string.audit_detail_old_name
     "NEW_NAME" -> R.string.audit_detail_new_name
+    "OLD_NICKNAME" -> R.string.audit_detail_old_nickname
+    "NEW_NICKNAME" -> R.string.audit_detail_new_nickname
     "FROM_AREA" -> R.string.audit_detail_from_area
     "TO_AREA" -> R.string.audit_detail_to_area
     "AREA" -> R.string.audit_detail_area
@@ -162,5 +165,6 @@ internal fun auditDetailValueLabel(code: String, rawValue: String): String = whe
     "REVOCATION_REASON" -> stringResource(revocationReasonLabelRes(rawValue))
     "SOURCE" -> stringResource(sourceLabelRes(rawValue))
     "GLOBAL_ACCESS" -> stringResource(if (rawValue == "true") R.string.common_yes else R.string.common_no)
+    "OLD_NICKNAME", "NEW_NICKNAME" -> if (rawValue.isBlank()) stringResource(R.string.nickname_not_set) else rawValue
     else -> rawValue
 }

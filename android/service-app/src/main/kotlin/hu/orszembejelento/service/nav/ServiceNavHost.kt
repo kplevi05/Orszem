@@ -175,6 +175,7 @@ private fun bottomDestinationsFor(role: String): List<BottomDestination> = botto
 @Composable
 fun ServiceNavHost(
     serviceId: String,
+    nickname: String?,
     role: String,
     globalAreaAccess: Boolean,
     ownAreas: List<AuthState.AuthArea>,
@@ -470,10 +471,12 @@ fun ServiceNavHost(
             composable(Routes.PROFILE) {
                 AccountScreen(
                     serviceId = serviceId,
+                    nickname = nickname,
                     role = role,
                     busy = authViewModel.busy.collectAsState().value,
                     error = authViewModel.lastError,
                     onChangePassword = authViewModel::changeOwnPassword,
+                    onChangeNickname = authViewModel::changeOwnNickname,
                     onLogout = authViewModel::logout,
                     onLogoutAll = authViewModel::logoutAll,
                     onBack = { navController.popBackStack() },
@@ -645,10 +648,12 @@ fun ServiceNavHost(
             composable(Routes.ACCOUNT) {
                 AccountScreen(
                     serviceId = serviceId,
+                    nickname = nickname,
                     role = role,
                     busy = authViewModel.busy.collectAsState().value,
                     error = authViewModel.lastError,
                     onChangePassword = authViewModel::changeOwnPassword,
+                    onChangeNickname = authViewModel::changeOwnNickname,
                     onLogout = authViewModel::logout,
                     onLogoutAll = authViewModel::logoutAll,
                     onBack = { navController.popBackStack() },

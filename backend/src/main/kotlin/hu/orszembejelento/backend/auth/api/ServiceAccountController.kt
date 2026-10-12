@@ -4,6 +4,7 @@ import hu.orszembejelento.backend.auth.application.AuthenticatedActor
 import hu.orszembejelento.backend.auth.application.ChangeOwnPasswordUseCase
 import hu.orszembejelento.backend.auth.application.GetOwnAccountUseCase
 import hu.orszembejelento.backend.common.web.ApiPaths
+import hu.orszembejelento.backend.usermanagement.application.ChangeUserNicknameUseCase
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 class ServiceAccountController(
     private val changeOwnPassword: ChangeOwnPasswordUseCase,
     private val getOwnAccount: GetOwnAccountUseCase,
+    private val changeNickname: ChangeUserNicknameUseCase,
 ) {
 
     @GetMapping("/me")
@@ -45,6 +47,31 @@ class ServiceAccountController(
                     role = actor.role.name,
                     globalAreaAccess = scope.globalAreaAccess,
                     areas = scope.areas.map { MeServiceAreaResponse(it.id.toString(), it.name, it.status.name) },
+                    nickname = actor.nickname,
+                ),
+            )
+    }
+
+    @PostMapping("/nickname")
+    @Operation(
+        summary = "Change the current SUPER_ADMIN's nickname",
+        description = "Self-service is available only to SUPER_ADMIN. Null or blank removes the optional nickname.",
+    )
+    fun changeNickname(
+        @AuthenticationPrincipal actor: AuthenticatedActor,
+        @RequestBody request: ChangeNicknameRequest,
+    ): ResponseEntity<MeResponse> {
+        val updated = changeNickname.changeOwn(actor, request.nickname)
+        val scope = getOwnAccount.scopeOf(actor.userId)
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CACHE_CONTROL, "no-store")
+            .body(
+                MeResponse(
+                    serviceId = updated.serviceId.value,
+                    role = updated.role.name,
+                    globalAreaAccess = scope.globalAreaAccess,
+                    areas = scope.areas.map { MeServiceAreaResponse(it.id.toString(), it.name, it.status.name) },
+                    nickname = updated.nickname,
                 ),
             )
     }

@@ -38,7 +38,7 @@ import tools.jackson.databind.ObjectMapper
 @Component
 class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
 
-    fun listItem(row: AuditRawRow, areaNames: Map<UUID, String>): AuditListItem {
+    fun listItem(row: AuditRawRow, areaNames: Map<UUID, String>, userLabels: Map<String, String>): AuditListItem {
         val eventType = row.eventType
             ?: return AuditListItem(row.id, row.createdAt, null, actorOf(row), genericTarget(row), emptyList())
 
@@ -50,11 +50,11 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             eventType = eventType,
             actor = actorOf(row),
             target = target,
-            summary = summaryDetails(eventType, node, areaNames),
+            summary = summaryDetails(eventType, node, areaNames, userLabels),
         )
     }
 
-    fun detail(row: AuditRawRow, areaNames: Map<UUID, String>): AuditEventDetailView {
+    fun detail(row: AuditRawRow, areaNames: Map<UUID, String>, userLabels: Map<String, String>): AuditEventDetailView {
         val eventType = row.eventType
             ?: return AuditEventDetailView(row.id, row.createdAt, null, actorOf(row), genericTarget(row), emptyList())
 
@@ -65,7 +65,7 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             eventType = eventType,
             actor = actorOf(row),
             target = targetOf(row, node),
-            details = fullDetails(eventType, node, areaNames),
+            details = fullDetails(eventType, node, areaNames, userLabels),
         )
     }
 
@@ -91,9 +91,23 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
         }
     }
 
+    /** User service IDs read from the same explicit metadata whitelist as the detail projector. */
+    fun embeddedUserServiceIds(row: AuditRawRow): Set<String> {
+        val eventType = row.eventType ?: return emptySet()
+        val node = metadataOf(row)
+        val keys = when (eventType) {
+            AuditEventType.REPORT_CLAIMED -> listOf("newAssigneeServiceId")
+            AuditEventType.REPORT_RETURNED_TO_NEW, AuditEventType.REPORT_ARCHIVED -> listOf("previousAssigneeServiceId")
+            AuditEventType.REPORT_REASSIGNED -> listOf("previousAssigneeServiceId", "newAssigneeServiceId")
+            else -> emptyList()
+        }
+        return keys.mapNotNull { key -> node.path(key).asString(null)?.takeIf(String::isNotBlank) }.toSet()
+    }
+
     // --------------------------------------------------------------------------------- actor
 
-    private fun actorOf(row: AuditRawRow): AuditActorIdentity = AuditActorIdentity(serviceId = row.actorServiceId)
+    private fun actorOf(row: AuditRawRow): AuditActorIdentity =
+        AuditActorIdentity(serviceId = userLabel(row.actorServiceId, row.actorNickname))
 
     // -------------------------------------------------------------------------------- target
 
@@ -102,7 +116,7 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
     private fun targetOf(row: AuditRawRow, node: JsonNode): AuditTargetIdentity {
         val targetType = row.targetType ?: return AuditTargetIdentity(null, null)
         val label = when (targetType) {
-            AuditTargetType.USER -> row.targetUserServiceId
+            AuditTargetType.USER -> userLabel(row.targetUserServiceId, row.targetUserNickname)
             AuditTargetType.REPORT -> node.path("publicReportId").asString(null)?.let(::shortReportId)
             AuditTargetType.SERVICE_AREA -> row.targetAreaName
             AuditTargetType.RAILWAY_LINE -> railwayLineLabel(row.targetLineCode, row.targetLineDisplayName)
@@ -114,6 +128,9 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
         }
         return AuditTargetIdentity(targetType, label)
     }
+
+    private fun userLabel(serviceId: String?, nickname: String?): String? =
+        serviceId?.let { id -> nickname?.takeIf(String::isNotBlank)?.let { "$id(${it.trim()})" } ?: id }
 
     private fun railwayLineLabel(code: String?, displayName: String?): String? = when {
         code != null && displayName != null -> "$code · $displayName"
@@ -127,7 +144,12 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
     // ------------------------------------------------------------------------------- details
 
     /** The full safe detail array for the detail screen (brief §22/§23/§54/§55). */
-    private fun fullDetails(eventType: AuditEventType, node: JsonNode, areaNames: Map<UUID, String>): List<AuditDetailItem> =
+    private fun fullDetails(
+        eventType: AuditEventType,
+        node: JsonNode,
+        areaNames: Map<UUID, String>,
+        userLabels: Map<String, String>,
+    ): List<AuditDetailItem> =
         when (eventType) {
             AuditEventType.SUPER_ADMIN_CREATED -> listOfNotNull(sourceDetail(node))
             AuditEventType.SUPER_ADMIN_PASSWORD_RESET -> listOfNotNull(sourceDetail(node), revokedSessionsDetail(node))
@@ -161,25 +183,29 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             AuditEventType.USER_AREA_REVOKED -> listOfNotNull(singleAreaDetail(AuditDetailCode.AREA, node, "areaId", areaNames))
             AuditEventType.USER_GLOBAL_ACCESS_GRANTED -> emptyList()
             AuditEventType.USER_GLOBAL_ACCESS_REVOKED -> emptyList()
+            AuditEventType.USER_NICKNAME_CHANGED -> listOf(
+                AuditDetailItem(AuditDetailCode.OLD_NICKNAME, node.path("oldNickname").asString("")),
+                AuditDetailItem(AuditDetailCode.NEW_NICKNAME, node.path("newNickname").asString("")),
+            )
 
             AuditEventType.REPORT_CLAIMED -> listOfNotNull(
                 stringDetail(AuditDetailCode.FROM_STATUS, node.path("fromStatus").asString(null)),
                 stringDetail(AuditDetailCode.TO_STATUS, node.path("toStatus").asString(null)),
-                stringDetail(AuditDetailCode.NEW_ASSIGNEE, node.path("newAssigneeServiceId").asString(null)),
+                userDetail(AuditDetailCode.NEW_ASSIGNEE, node, "newAssigneeServiceId", userLabels),
             )
             AuditEventType.REPORT_RETURNED_TO_NEW -> listOfNotNull(
                 stringDetail(AuditDetailCode.FROM_STATUS, node.path("fromStatus").asString(null)),
                 stringDetail(AuditDetailCode.TO_STATUS, node.path("toStatus").asString(null)),
-                stringDetail(AuditDetailCode.PREVIOUS_ASSIGNEE, node.path("previousAssigneeServiceId").asString(null)),
+                userDetail(AuditDetailCode.PREVIOUS_ASSIGNEE, node, "previousAssigneeServiceId", userLabels),
             )
             AuditEventType.REPORT_REASSIGNED -> listOfNotNull(
-                stringDetail(AuditDetailCode.PREVIOUS_ASSIGNEE, node.path("previousAssigneeServiceId").asString(null)),
-                stringDetail(AuditDetailCode.NEW_ASSIGNEE, node.path("newAssigneeServiceId").asString(null)),
+                userDetail(AuditDetailCode.PREVIOUS_ASSIGNEE, node, "previousAssigneeServiceId", userLabels),
+                userDetail(AuditDetailCode.NEW_ASSIGNEE, node, "newAssigneeServiceId", userLabels),
             )
             AuditEventType.REPORT_ARCHIVED -> listOfNotNull(
                 stringDetail(AuditDetailCode.FROM_STATUS, node.path("fromStatus").asString(null)),
                 stringDetail(AuditDetailCode.TO_STATUS, node.path("toStatus").asString(null)),
-                stringDetail(AuditDetailCode.PREVIOUS_ASSIGNEE, node.path("previousAssigneeServiceId").asString(null)),
+                userDetail(AuditDetailCode.PREVIOUS_ASSIGNEE, node, "previousAssigneeServiceId", userLabels),
             )
 
             AuditEventType.REPORT_MODERATION_DELETED -> listOfNotNull(
@@ -212,11 +238,20 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
         }
 
     /** A short subset of [fullDetails] for the list row (brief §21/§51) - at most the one or two facts a card can show. */
-    private fun summaryDetails(eventType: AuditEventType, node: JsonNode, areaNames: Map<UUID, String>): List<AuditDetailItem> =
+    private fun summaryDetails(
+        eventType: AuditEventType,
+        node: JsonNode,
+        areaNames: Map<UUID, String>,
+        userLabels: Map<String, String>,
+    ): List<AuditDetailItem> =
         when (eventType) {
             AuditEventType.USER_ROLE_CHANGED -> listOfNotNull(
                 stringDetail(AuditDetailCode.OLD_ROLE, node.path("oldRole").asString(null)),
                 stringDetail(AuditDetailCode.NEW_ROLE, node.path("newRole").asString(null)),
+            )
+            AuditEventType.USER_NICKNAME_CHANGED -> listOf(
+                AuditDetailItem(AuditDetailCode.OLD_NICKNAME, node.path("oldNickname").asString("")),
+                AuditDetailItem(AuditDetailCode.NEW_NICKNAME, node.path("newNickname").asString("")),
             )
             AuditEventType.SERVICE_AREA_RENAMED -> listOfNotNull(
                 stringDetail(AuditDetailCode.OLD_NAME, node.path("oldName").asString(null)),
@@ -227,12 +262,22 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
                 singleAreaDetail(AuditDetailCode.FROM_AREA, node, "fromAreaId", areaNames),
                 singleAreaDetail(AuditDetailCode.TO_AREA, node, "toAreaId", areaNames),
             )
-            else -> fullDetails(eventType, node, areaNames).take(2)
+            else -> fullDetails(eventType, node, areaNames, userLabels).take(2)
         }
 
     // ---------------------------------------------------------------------- detail builders
 
     private fun stringDetail(code: AuditDetailCode, value: String?): AuditDetailItem? = value?.let { AuditDetailItem(code, it) }
+
+    private fun userDetail(
+        code: AuditDetailCode,
+        node: JsonNode,
+        key: String,
+        userLabels: Map<String, String>,
+    ): AuditDetailItem? {
+        val serviceId = node.path(key).asString(null) ?: return null
+        return AuditDetailItem(code, userLabels[serviceId] ?: serviceId)
+    }
 
     private fun sourceDetail(node: JsonNode) = stringDetail(AuditDetailCode.SOURCE, node.path("source").asString(null))
 

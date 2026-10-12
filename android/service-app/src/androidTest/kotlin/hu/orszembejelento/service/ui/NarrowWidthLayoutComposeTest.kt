@@ -116,7 +116,7 @@ class NarrowWidthLayoutComposeTest {
             workflowVersion = 1,
             routingClassification = "ROUTED",
             serviceArea = ReportAreaSummary("a1", longAreaName),
-            assignee = ReportAssigneeSummary("SZ-100001"),
+            assignee = ReportAssigneeSummary("SZ-100001", "Levente"),
         )
         val vm = ReportDetailViewModel("rep-1", FixedDetailRepo(detail), onSessionEnded = {})
 
@@ -135,6 +135,7 @@ class NarrowWidthLayoutComposeTest {
 
         // Full canonical name present - never truncated or abbreviated.
         compose.onNodeWithText(longAreaName).assertExists()
+        compose.onNodeWithText("SZ-100001(Levente)").assertExists()
         val labelBounds = compose.onNodeWithText("Szolgálati terület").getUnclippedBoundsInRoot()
         val valueBounds = compose.onNodeWithText(longAreaName).getUnclippedBoundsInRoot()
         // Stacked (label strictly above the value), never side-by-side - the old SpaceBetween

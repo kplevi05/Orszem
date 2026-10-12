@@ -13,6 +13,7 @@ sealed interface AuthOutcome {
         val role: String,
         val globalAreaAccess: Boolean,
         val areas: List<MeAreaResponse>,
+        val nickname: String? = null,
     ) : AuthOutcome
     data class PasswordChangeRequired(val serviceId: String) : AuthOutcome
     data class Failure(val kind: AuthErrorKind) : AuthOutcome
@@ -126,6 +127,20 @@ class AuthRepository(
         if (response.isSuccessful) adopt(response.body()!!) else AuthOutcome.Failure(failureKind(response))
     }
 
+    suspend fun changeNickname(nickname: String?): AuthOutcome = call {
+        val response = withFreshToken { bearer ->
+            api.changeNickname(bearer, ChangeNicknameRequest(nickname))
+        } ?: return@call AuthOutcome.SessionEnded
+
+        if (response.isSuccessful) {
+            val identity = response.body()!!
+            cachedIdentity = identity
+            successOf(identity)
+        } else {
+            AuthOutcome.Failure(failureKind(response))
+        }
+    }
+
     /**
      * The single entry point every other feature repository (report workflow, user
      * management) uses to call a Service-authenticated endpoint.
@@ -212,13 +227,21 @@ class AuthRepository(
 
         return if (identity != null) {
             cachedIdentity = identity
-            AuthOutcome.Success(identity.serviceId, identity.role, identity.globalAreaAccess, identity.areas)
+            successOf(identity)
         } else {
             AuthOutcome.Failure(AuthErrorKind.NETWORK)
         }
     }
 
     private fun bearerOrNull(): String? = accessToken?.let { "Bearer $it" }
+
+    private fun successOf(identity: MeResponse) = AuthOutcome.Success(
+        identity.serviceId,
+        identity.role,
+        identity.globalAreaAccess,
+        identity.areas,
+        identity.nickname,
+    )
 
     private fun clearLocalSession() {
         accessToken = null

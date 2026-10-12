@@ -1,6 +1,7 @@
 package hu.orszembejelento.service.reports.domain
 
 import hu.orszembejelento.service.reports.data.AssignmentHistoryItemResponse
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 
 /** One human-readable timeline entry (brief §29) - never a raw backend field dump. */
 data class AssignmentHistoryEntry(
@@ -22,24 +23,28 @@ data class AssignmentHistoryEntry(
  */
 fun buildAssignmentHistoryEntries(history: List<AssignmentHistoryItemResponse>): List<AssignmentHistoryEntry> =
     history.flatMap { episode ->
+        val assignee = userIdentityLabel(episode.assigneeServiceId, episode.assigneeNickname)
+        val assignedBy = userIdentityLabel(episode.assignedByServiceId, episode.assignedByNickname)
         buildList {
             add(
                 if (episode.assignedByServiceId == episode.assigneeServiceId) {
                     AssignmentHistoryEntry(
-                        label = "${episode.assigneeServiceId} átvette",
+                        label = "$assignee átvette",
                         timestampRaw = episode.assignedAt,
                         active = episode.endedAt == null,
                     )
                 } else {
                     AssignmentHistoryEntry(
-                        label = "${episode.assignedByServiceId} átrendelte ${episode.assigneeServiceId} felhasználóhoz",
+                        label = "$assignedBy átrendelte $assignee felhasználóhoz",
                         timestampRaw = episode.assignedAt,
                         active = false,
                     )
                 },
             )
             if (episode.endedAt != null && episode.endReason != "REASSIGNED") {
-                val endedBy = episode.endedByServiceId ?: episode.assigneeServiceId
+                val endedBy = episode.endedByServiceId?.let {
+                    userIdentityLabel(it, episode.endedByNickname)
+                } ?: assignee
                 val label = when (episode.endReason) {
                     "RETURNED" -> "$endedBy visszaadta"
                     "ARCHIVED" -> "$endedBy lezárta"
@@ -47,7 +52,7 @@ fun buildAssignmentHistoryEntries(history: List<AssignmentHistoryItemResponse>):
                     // shown as the raw "MODERATION_DELETED" code. Deliberately the ASSIGNEE's
                     // own service ID here, not `endedBy` (the moderator who deleted it) - the
                     // sentence is about whose handling ended, not who ended it.
-                    "MODERATION_DELETED" -> "${episode.assigneeServiceId} ügyintézése moderációs törlés miatt megszűnt"
+                    "MODERATION_DELETED" -> "$assignee ügyintézése moderációs törlés miatt megszűnt"
                     // Every current end reason is handled above; any other value degrades to
                     // a neutral phrase rather than showing a raw code (brief §29/§85).
                     else -> "$endedBy lezárta az ügyintézést"

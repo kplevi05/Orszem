@@ -57,6 +57,22 @@ class UserListingIT : AbstractUserManagementIntegrationTest() {
     }
 
     @Test
+    fun `the same query also finds a user by nickname`() {
+        val target = givenUser()
+        val bearer = adminBearer()
+        val changed = post(
+            "/api/v1/service/user-management/users/${target.serviceId.value}/nickname",
+            """{"nickname":"Éjszakai Sas"}""",
+            bearer,
+        )
+        check(changed.statusCode() == 200) { changed.body() }
+
+        val response = listUsers(bearer, query = "éjszakai")
+        val ids = json(response).get("items").asList().map { it.get("serviceId").asText() }
+        check(ids.contains(target.serviceId.value))
+    }
+
+    @Test
     fun `role and status filters narrow the result`() {
         val moderator = givenUser(role = UserRole.MODERATOR)
         val deactivated = givenUser(status = hu.orszembejelento.backend.identity.domain.UserStatus.DEACTIVATED)

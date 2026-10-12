@@ -23,6 +23,7 @@ data class User(
     val passwordChangedAt: Instant?,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val nickname: String? = null,
 ) {
     val isActive: Boolean get() = status == UserStatus.ACTIVE
 

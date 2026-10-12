@@ -53,6 +53,7 @@ data class ReportWorkflowRow(
     val serviceAreaStatus: ServiceAreaStatus?,
     val assignedUserId: UUID?,
     val assigneeServiceId: String?,
+    val assigneeNickname: String?,
     val workflowVersion: Long,
     val archivedAt: Instant?,
 )
@@ -296,6 +297,7 @@ class JdbcReportWorkflowQueryRepository(
         serviceAreaStatus = rs.getString("service_area_status")?.let(ServiceAreaStatus::valueOf),
         assignedUserId = rs.getObject("assigned_user_id", UUID::class.java),
         assigneeServiceId = rs.getString("assignee_service_id"),
+        assigneeNickname = rs.getString("assignee_nickname"),
         workflowVersion = rs.getLong("workflow_version"),
         archivedAt = rs.getTimestamp("archived_at")?.toInstant(),
     )
@@ -329,7 +331,7 @@ class JdbcReportWorkflowQueryRepository(
                    rs.routing_status, rs.routing_reason,
                    rs.resolved_railway_line_id, rl.display_name AS resolved_railway_line_display_name,
                    rs.service_area_id, sa.name AS service_area_name, sa.status AS service_area_status,
-                   r.assigned_user_id, au.service_id AS assignee_service_id,
+                   r.assigned_user_id, au.service_id AS assignee_service_id, au.nickname AS assignee_nickname,
                    r.workflow_version, r.archived_at
             $FROM_JOINS
         """

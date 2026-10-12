@@ -26,6 +26,12 @@
     <string name="account_title">Fiók</string>
     <string name="account_service_id">Szolgálati azonosító: %1$s</string>
     <string name="account_role">Szerepkör: %1$s</string>
+    <string name="nickname_section_title">Becenév</string>
+    <string name="field_nickname">Becenév</string>
+    <string name="nickname_hint">Nem kell egyedinek lennie. Üresen mentve a becenév törlődik.</string>
+    <string name="action_save_nickname">Becenév mentése</string>
+    <string name="nickname_saved">A becenév elmentve.</string>
+    <string name="nickname_not_set">Nincs beállítva</string>
     <string name="account_change_password">Jelszó módosítása</string>
     <string name="account_change_password_warning">A jelszó módosítása minden eszközön megszünteti a meglévő munkameneteket.</string>
     <string name="field_current_password">Jelenlegi jelszó</string>
@@ -447,6 +453,7 @@
     <string name="audit_event_user_area_revoked">Szolgálati terület eltávolítva</string>
     <string name="audit_event_user_global_access_granted">Globális hozzáférés engedélyezve</string>
     <string name="audit_event_user_global_access_revoked">Globális hozzáférés visszavonva</string>
+    <string name="audit_event_user_nickname_changed">Becenév módosítva</string>
     <string name="audit_event_report_claimed">Bejelentés átvéve</string>
     <string name="audit_event_report_returned_to_new">Bejelentés visszahelyezve az új sorba</string>
     <string name="audit_event_report_reassigned">Bejelentés áthelyezve másik munkatárshoz</string>
@@ -475,6 +482,8 @@
     <string name="audit_detail_new_role">Új szerepkör</string>
     <string name="audit_detail_old_name">Korábbi név</string>
     <string name="audit_detail_new_name">Új név</string>
+    <string name="audit_detail_old_nickname">Korábbi becenév</string>
+    <string name="audit_detail_new_nickname">Új becenév</string>
     <string name="audit_detail_from_area">Korábbi terület</string>
     <string name="audit_detail_to_area">Új terület</string>
     <string name="audit_detail_area">Szolgálati terület</string>

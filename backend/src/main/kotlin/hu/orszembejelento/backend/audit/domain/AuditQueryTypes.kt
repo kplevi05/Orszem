@@ -55,6 +55,7 @@ data class AuditDetailItem(val code: AuditDetailCode, val value: String)
 enum class AuditDetailCode {
     OLD_ROLE, NEW_ROLE,
     OLD_NAME, NEW_NAME,
+    OLD_NICKNAME, NEW_NICKNAME,
     FROM_AREA, TO_AREA,
     AREA, AREAS,
     GLOBAL_ACCESS,

@@ -21,6 +21,7 @@ interface UserManagementRepository {
     suspend fun deactivate(serviceId: String): ApiResult<ManagedUserResponse>
     suspend fun reactivate(serviceId: String): ApiResult<ManagedUserResponse>
     suspend fun changeRole(serviceId: String, role: String): ApiResult<ManagedUserResponse>
+    suspend fun changeNickname(serviceId: String, nickname: String?): ApiResult<ManagedUserResponse>
     suspend fun grantGlobalAccess(serviceId: String): ApiResult<ManagedUserResponse>
     suspend fun revokeGlobalAccess(serviceId: String): ApiResult<ManagedUserResponse>
     suspend fun grantArea(serviceId: String, areaId: String): ApiResult<ManagedUserResponse>
@@ -56,6 +57,9 @@ class DefaultUserManagementRepository(
 
     override suspend fun changeRole(serviceId: String, role: String): ApiResult<ManagedUserResponse> =
         apiCall(auth) { bearer -> api.changeRole(bearer, serviceId, ChangeRoleRequest(role)) }
+
+    override suspend fun changeNickname(serviceId: String, nickname: String?): ApiResult<ManagedUserResponse> =
+        apiCall(auth) { bearer -> api.changeNickname(bearer, serviceId, ChangeNicknameRequest(nickname)) }
 
     override suspend fun grantGlobalAccess(serviceId: String): ApiResult<ManagedUserResponse> =
         apiCall(auth) { bearer -> api.grantGlobalAccess(bearer, serviceId) }

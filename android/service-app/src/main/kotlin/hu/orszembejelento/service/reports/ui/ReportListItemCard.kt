@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.service.R
+import hu.orszembejelento.service.common.ui.userIdentityLabel
 import hu.orszembejelento.service.common.ui.StatusBadge
 import hu.orszembejelento.service.reports.data.ReportListItemResponse
 import hu.orszembejelento.service.reports.domain.formatInstant
@@ -58,7 +59,7 @@ fun ReportListItemCard(item: ReportListItemResponse, onClick: () -> Unit) {
                             append(shortReportId(item.publicReportId))
                             append(" · ")
                             append(item.settlement.name)
-                            item.assignee?.let { append(" · ").append(it.serviceId) }
+                            item.assignee?.let { append(" · ").append(userIdentityLabel(it.serviceId, it.nickname)) }
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

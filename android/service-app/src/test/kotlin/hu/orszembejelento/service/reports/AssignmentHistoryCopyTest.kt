@@ -11,6 +11,23 @@ import org.junit.Test
 class AssignmentHistoryCopyTest {
 
     @Test
+    fun `history appends nicknames without replacing canonical service ids`() {
+        val entries = buildAssignmentHistoryEntries(
+            listOf(
+                AssignmentHistoryItemResponse(
+                    assigneeServiceId = "SZ-1042",
+                    assigneeNickname = "Levente",
+                    assignedByServiceId = "SZ-2041",
+                    assignedByNickname = "Diszpécser",
+                    assignedAt = "2026-01-01T10:11:00Z",
+                ),
+            ),
+        )
+
+        assertEquals("SZ-2041(Diszpécser) átrendelte SZ-1042(Levente) felhasználóhoz", entries.single().label)
+    }
+
+    @Test
     fun `a self-claim produces one active entry, no separate end entry while open`() {
         val history = listOf(
             AssignmentHistoryItemResponse(

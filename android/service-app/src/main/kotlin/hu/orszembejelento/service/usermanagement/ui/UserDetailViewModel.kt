@@ -92,6 +92,7 @@ class UserDetailViewModel(
     fun deactivate() = mutateUser { repository.deactivate(serviceId) }
     fun reactivate() = mutateUser { repository.reactivate(serviceId) }
     fun changeRole(role: String) = mutateUser { repository.changeRole(serviceId, role) }
+    fun changeNickname(nickname: String) = mutateUser { repository.changeNickname(serviceId, nickname) }
     fun grantGlobalAccess() = mutateUser { repository.grantGlobalAccess(serviceId) }
     fun revokeGlobalAccess() = mutateUser { repository.revokeGlobalAccess(serviceId) }
     fun grantArea(areaId: String) = mutateUser { repository.grantArea(serviceId, areaId) }
