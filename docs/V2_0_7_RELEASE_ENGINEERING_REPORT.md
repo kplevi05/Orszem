@@ -1,7 +1,7 @@
 # v2.0.7 — release engineering report
 
-Állapot: **draft release PR, CI-zöld, owner review-ra vár.** Nincs tag, GitHub Release, artifact-terjesztés,
-deploy vagy production adatváltozás.
+Állapot: **owner-reviewed release PR; review-ready az aktuális HEAD CI-jének zöldülése után.** Nincs tag,
+GitHub Release, artifact-terjesztés, deploy vagy production adatváltozás.
 
 ## 1. Kiindulás és hatókör
 
@@ -77,6 +77,10 @@ azonos a PR #62 függetlenül ellenőrzött és merge-elt kódjával.
 A jelenlegi végrehajtási környezetből a Gradle 9.7.1 disztribúció hálózati korlátozás miatt nem volt letölthető,
 és Docker sem érhető el; ezért itt backend/Android buildet vagy Testcontainers restore drillt nem állítunk
 lokálisan lefuttatottnak. A Public Web helyi futása és a teljes GitHub CI eredményei fent külön szerepelnek.
+
+A végső owner-review egy rollout-dokumentációs hibát talált és javított: a `/api/v1/meta` az API-szerződés
+verzióját (`v1`) adja vissza, nem a termék buildverzióját. A production kapu ezért a futó JAR rögzített SHA-256
+értékét hasonlítja a jóváhagyott v2.0.7 release-artifacthoz; a meta végpont külön elérhetőségi ellenőrzés marad.
 
 ## 6. Release- és rollout-határok
 
