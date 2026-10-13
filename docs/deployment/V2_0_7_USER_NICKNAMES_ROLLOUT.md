@@ -50,7 +50,8 @@ docker compose --env-file .env ps
 
 Kötelező ellenőrzés:
 
-- backend healthy, `/api/v1/meta` 200 és verzió 2.0.7;
+- a futó `run/backend.jar` SHA-256 értéke egyezik a jóváhagyott v2.0.7 release-artifact rögzített
+  checksumával, a backend healthy, és a `/api/v1/meta` 200 választ ad `apiVersion: v1` értékkel;
 - `flyway_schema_history` legutolsó sora `008`, `success = true`;
 - `users.nickname` oszlop létezik, minden korábbi sor kezdetben null;
 - a kontrollált user/report/reference darabszámok változatlanok;
