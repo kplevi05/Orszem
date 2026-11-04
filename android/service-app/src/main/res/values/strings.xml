@@ -557,4 +557,22 @@
     <string name="message_confirm_dialog_text">Ellenőrizte az üzenet tartalmát? Biztosan el szeretné küldeni? Az elküldött üzenet nem vonható vissza.</string>
     <string name="error_report_message_invalid">Az üzenet nem lehet üres, és legfeljebb 1000 karakter hosszú lehet.</string>
     <string name="audit_event_report_message_sent">Üzenet küldése a bejelentőnek</string>
+
+    <!-- In-app update -->
+    <string name="update_optional_title">Új verzió érhető el</string>
+    <string name="update_optional_text">Az Őrszem Szolgálat %1$s verziója letölthető.</string>
+    <string name="update_mandatory_title">Kötelező frissítés</string>
+    <string name="update_mandatory_text">Az alkalmazás ezen verziója már nem használható. A folytatáshoz telepítse a(z) %1$s verziót.</string>
+    <string name="update_release_notes_title">Újdonságok</string>
+    <string name="update_action_update">Frissítés</string>
+    <string name="update_action_later">Később</string>
+    <string name="update_needs_permission">A telepítéshez engedélyezze az Őrszem Szolgálat számára az „Ismeretlen alkalmazások telepítése” lehetőséget, majd térjen vissza ide.</string>
+    <string name="update_downloading">Letöltés folyamatban…</string>
+    <string name="update_installing">A telepítést a rendszer ablakában hagyja jóvá.</string>
+    <string name="update_error_download">A letöltés nem sikerült. Ellenőrizze az internetkapcsolatot, és próbálja újra.</string>
+    <string name="update_error_too_large">A letöltött fájl mérete nem megfelelő, a telepítés megszakítva.</string>
+    <string name="update_error_checksum">A letöltött fájl ellenőrzése sikertelen (ujjlenyomat-eltérés). A fájl törölve, próbálja újra.</string>
+    <string name="update_error_verification">A letöltött fájl nem az Őrszem Szolgálat hiteles kiadása, ezért nem telepíthető.</string>
+    <string name="update_error_install">A telepítés nem sikerült. Próbálja újra.</string>
+    <string name="update_error_aborted">A telepítés megszakadt. A Frissítés gombbal újrakezdheti.</string>
 </resources>

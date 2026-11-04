@@ -20,6 +20,8 @@ import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
 import hu.orszembejelento.service.servicearea.data.AreaAdminApi
 import hu.orszembejelento.service.servicearea.data.AreaAdminRepository
 import hu.orszembejelento.service.servicearea.data.DefaultAreaAdminRepository
+import hu.orszembejelento.service.update.data.HttpUpdateRepository
+import hu.orszembejelento.service.update.data.UpdateRepository
 import hu.orszembejelento.service.usermanagement.data.DefaultUserManagementRepository
 import hu.orszembejelento.service.usermanagement.data.UserManagementApi
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
@@ -126,4 +128,19 @@ object NetworkModule {
 
     fun auditRepository(auth: AuthRepository): AuditRepository =
         DefaultAuditRepository(api = retrofit.create(AuditApi::class.java), auth = auth)
+
+    /**
+     * The in-app updater talks to the public website host, not the API host, and needs a long
+     * read timeout for the APK download - so it gets its own small client. No auth, no logging.
+     */
+    fun updateRepository(context: Context): UpdateRepository =
+        HttpUpdateRepository(
+            client = OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build(),
+            manifestUrl = BuildConfig.UPDATE_MANIFEST_URL,
+            downloadDir = File(context.applicationContext.cacheDir, "updates"),
+            json = json,
+        )
 }

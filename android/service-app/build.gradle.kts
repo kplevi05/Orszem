@@ -31,6 +31,11 @@ val hasReleaseSigning = listOf(
 fun apiBaseUrl(default: String): String =
     providers.gradleProperty("ORSZEM_API_BASE_URL").getOrElse(default)
 
+// In-app update manifest. Empty switches the updater off (the debug default: a debug build
+// has a different applicationId and could never be replaced by a release APK anyway).
+fun updateManifestUrl(default: String): String =
+    providers.gradleProperty("ORSZEM_UPDATE_MANIFEST_URL").getOrElse(default)
+
 android {
     namespace = "hu.orszembejelento.service"
     compileSdk = 37
@@ -39,8 +44,8 @@ android {
         applicationId = "hu.orszembejelento.service"
         minSdk = 26
         targetSdk = 37
-        versionCode = 10
-        versionName = "2.0.9"
+        versionCode = 11
+        versionName = "2.0.10"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -65,6 +70,7 @@ android {
             applicationIdSuffix = ".debug"
             // Android emulator loopback to the developer machine.
             buildConfigField("String", "API_BASE_URL", "\"${apiBaseUrl("http://10.0.2.2:8080/")}\"")
+            buildConfigField("String", "UPDATE_MANIFEST_URL", "\"${updateManifestUrl("")}\"")
         }
         release {
             isMinifyEnabled = true
@@ -74,6 +80,11 @@ android {
                 "String",
                 "API_BASE_URL",
                 "\"${apiBaseUrl("https://api.orszembejelento.hu/")}\"",
+            )
+            buildConfigField(
+                "String",
+                "UPDATE_MANIFEST_URL",
+                "\"${updateManifestUrl("https://orszembejelento.hu/letoltes/service-app/latest.json")}\"",
             )
             // Left unsigned when no signing material is supplied, rather than silently
             // falling back to the debug key as Demo v1 did.

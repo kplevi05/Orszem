@@ -41,6 +41,13 @@
 		}
 	}
 
+	handle_path /letoltes/* {
+		@manifest path *.json
+		header @manifest Cache-Control "no-cache"
+		root * /srv/downloads
+		file_server
+	}
+
 	handle {
 		header {
 			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"

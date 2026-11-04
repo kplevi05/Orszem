@@ -138,6 +138,14 @@ orszembejelento.hu {
 		import backend_proxy
 	}
 
+	# Downloads: signed APKs and latest.json manifests
+	handle_path /letoltes/* {
+		@manifest path *.json
+		header @manifest Cache-Control "no-cache"
+		root * /home/opc/apps/orszem-v2/downloads
+		file_server
+	}
+
 	# Static Public Web build output (web/public-web/dist), deployed by the runbook.
 	handle {
 		root * /home/opc/apps/orszem-v2/web

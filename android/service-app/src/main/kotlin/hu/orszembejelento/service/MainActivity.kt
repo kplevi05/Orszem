@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -12,6 +15,10 @@ import hu.orszembejelento.service.auth.ui.AuthViewModel
 import hu.orszembejelento.service.auth.ui.ServiceAuthHost
 import hu.orszembejelento.service.reports.data.SharedPrefsActiveWorkAreaStore
 import hu.orszembejelento.service.ui.OrszemServiceTheme
+import hu.orszembejelento.service.update.data.AndroidApkInstaller
+import hu.orszembejelento.service.update.data.AndroidApkVerifier
+import hu.orszembejelento.service.update.ui.UpdateGate
+import hu.orszembejelento.service.update.ui.UpdateViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -28,6 +35,7 @@ class MainActivity : ComponentActivity() {
         val analyticsRepository = NetworkModule.analyticsRepository(repository)
         val auditRepository = NetworkModule.auditRepository(repository)
         val activeWorkAreaStore = SharedPrefsActiveWorkAreaStore(applicationContext)
+        val updateRepository = NetworkModule.updateRepository(applicationContext)
 
         setContent {
             OrszemServiceTheme {
@@ -40,17 +48,32 @@ class MainActivity : ComponentActivity() {
                             AuthViewModel(repository) as T
                     },
                 )
-                ServiceAuthHost(
-                    authViewModel,
-                    reportRepository,
-                    userManagementRepository,
-                    catalogRepository,
-                    activeWorkAreaStore,
-                    moderationRepository,
-                    areaAdminRepository,
-                    analyticsRepository,
-                    auditRepository,
+                val updateViewModel: UpdateViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            UpdateViewModel(
+                                repository = updateRepository,
+                                verifier = AndroidApkVerifier(applicationContext),
+                                installer = AndroidApkInstaller(applicationContext),
+                                currentVersionCode = BuildConfig.VERSION_CODE.toLong(),
+                            ) as T
+                    },
                 )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    ServiceAuthHost(
+                        authViewModel,
+                        reportRepository,
+                        userManagementRepository,
+                        catalogRepository,
+                        activeWorkAreaStore,
+                        moderationRepository,
+                        areaAdminRepository,
+                        analyticsRepository,
+                        auditRepository,
+                    )
+                    UpdateGate(updateViewModel)
+                }
             }
         }
     }
