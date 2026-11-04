@@ -22,6 +22,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,6 +54,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun ReportsScreen(
     role: String,
+    currentServiceId: String = "",
     newViewModel: ReportQueueViewModel,
     inProgressViewModel: ReportQueueViewModel,
     onOpenReport: (String) -> Unit,
@@ -87,14 +91,20 @@ fun ReportsScreen(
                 onAreaFilterChanged = onAreaFilterChanged,
             )
         } else {
+            val inProgressFilter = inProgressViewModel.state.collectAsState().value.filter
+            val isMyReports = inProgressFilter.assigneeServiceId == currentServiceId
+            val emptyMsg = if (isMyReports) {
+                stringResource(R.string.empty_my_in_progress_queue)
+            } else {
+                stringResource(R.string.empty_in_progress_queue)
+            }
             ReportQueueBody(
                 viewModel = inProgressViewModel,
                 onOpenReport = onOpenReport,
-                emptyMessage = stringResource(R.string.empty_in_progress_queue),
+                emptyMessage = emptyMsg,
                 bucketed = false,
-                hint = stringResource(
-                    if (role == "SERVICE_USER") R.string.in_progress_hint_service else R.string.in_progress_hint_supervisor,
-                ),
+                currentServiceId = currentServiceId,
+                isInProgressTab = true,
                 catalogRepository = catalogRepository,
                 areaChoices = areaChoices,
                 onAreaFilterChanged = onAreaFilterChanged,
@@ -111,6 +121,8 @@ internal fun ReportQueueBody(
     emptyMessage: String,
     bucketed: Boolean,
     hint: String? = null,
+    currentServiceId: String = "",
+    isInProgressTab: Boolean = false,
     catalogRepository: CatalogRepository? = null,
     areaChoices: List<AreaChoice> = emptyList(),
     onAreaFilterChanged: (String?) -> Unit = {},
@@ -130,8 +142,40 @@ internal fun ReportQueueBody(
 
     Column(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-            hint?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (isInProgressTab) {
+                val isMyReports = state.filter.assigneeServiceId == currentServiceId
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                ) {
+                    SegmentedButton(
+                        selected = !isMyReports,
+                        onClick = {
+                            if (isMyReports) {
+                                viewModel.updateFilter(state.filter.copy(assigneeServiceId = null))
+                            }
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    ) {
+                        Text(stringResource(R.string.filter_in_progress_all))
+                    }
+                    SegmentedButton(
+                        selected = isMyReports,
+                        onClick = {
+                            if (!isMyReports && currentServiceId.isNotBlank()) {
+                                viewModel.updateFilter(state.filter.copy(assigneeServiceId = currentServiceId))
+                            }
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    ) {
+                        Text(stringResource(R.string.filter_in_progress_mine))
+                    }
+                }
+            } else {
+                hint?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
             OutlinedTextField(
                 value = searchText,

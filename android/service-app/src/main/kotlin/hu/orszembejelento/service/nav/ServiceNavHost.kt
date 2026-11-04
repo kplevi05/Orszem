@@ -421,6 +421,7 @@ fun ServiceNavHost(
                 }
                 ReportsScreen(
                     role = role,
+                    currentServiceId = serviceId,
                     newViewModel = newQueueViewModel,
                     inProgressViewModel = inProgressQueueViewModel,
                     onOpenReport = { navController.navigate(Routes.reportDetail(it)) },

@@ -42,6 +42,8 @@ postgres-data/
 tmp/
 temp/
 *.tmp
+work/
+.claude/
 
 # Local toolchain bootstrap (not committed)
 .toolchain/

@@ -67,8 +67,7 @@ class ReportWorkflowPolicy(
                 if (actor.role == UserRole.MODERATOR) return true
                 if (actor.role == UserRole.SERVICE_USER) {
                     return when (report.status) {
-                        ReportStatus.NEW, ReportStatus.ARCHIVED -> true
-                        ReportStatus.IN_PROGRESS -> report.assignedUserId == actor.userId
+                        ReportStatus.NEW, ReportStatus.IN_PROGRESS, ReportStatus.ARCHIVED -> true
                     }
                 }
             }
@@ -79,8 +78,7 @@ class ReportWorkflowPolicy(
             UserRole.SUPER_ADMIN -> true
             UserRole.MODERATOR -> roleAccessesArea(actor, report)
             UserRole.SERVICE_USER -> when (report.status) {
-                ReportStatus.IN_PROGRESS -> report.assignedUserId == actor.userId && roleAccessesArea(actor, report)
-                ReportStatus.NEW, ReportStatus.ARCHIVED -> roleAccessesArea(actor, report)
+                ReportStatus.IN_PROGRESS, ReportStatus.NEW, ReportStatus.ARCHIVED -> roleAccessesArea(actor, report)
             }
         }
     }
@@ -119,10 +117,20 @@ class ReportWorkflowPolicy(
     fun canAssignAtAll(report: ReportScope): Boolean = report.routed || unclassifiedServiceUserAccessEnabled
 
     /** Whether [actor] may return this report at all, independent of its current status (checked separately by the caller). */
-    fun canReturn(actor: ReportWorkflowActor, report: ReportScope): Boolean = canViewReport(actor, report)
+    fun canReturn(actor: ReportWorkflowActor, report: ReportScope): Boolean =
+        if (actor.role == UserRole.SERVICE_USER) {
+            report.assignedUserId == actor.userId && canViewReport(actor, report)
+        } else {
+            canViewReport(actor, report)
+        }
 
     /** Whether [actor] may close this report at all, independent of its current status (checked separately by the caller). */
-    fun canClose(actor: ReportWorkflowActor, report: ReportScope): Boolean = canViewReport(actor, report)
+    fun canClose(actor: ReportWorkflowActor, report: ReportScope): Boolean =
+        if (actor.role == UserRole.SERVICE_USER) {
+            report.assignedUserId == actor.userId && canViewReport(actor, report)
+        } else {
+            canViewReport(actor, report)
+        }
 
     /**
      * Reassignment is a supervisor-only operation (brief §38) on a report the supervisor

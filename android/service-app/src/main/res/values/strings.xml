@@ -90,8 +90,11 @@
     <string name="older_reports_divider">Régebbi bejelentések</string>
     <string name="in_progress_hint_service">Az Ön számára elérhető folyamatban lévő bejelentések.</string>
     <string name="in_progress_hint_supervisor">A jelenlegi jogosultsági körébe tartozó folyamatban lévő bejelentések.</string>
+    <string name="filter_in_progress_all">Minden eset</string>
+    <string name="filter_in_progress_mine">Saját esetek</string>
     <string name="empty_new_queue">Nincs új bejelentés.</string>
     <string name="empty_in_progress_queue">Nincs folyamatban lévő bejelentés.</string>
+    <string name="empty_my_in_progress_queue">Nincs saját folyamatban lévő bejelentése.</string>
     <string name="empty_archive">Nincs lezárt bejelentés.</string>
     <string name="search_hint_reports">Vonat, település, azonosító…</string>
     <string name="action_load_more">További betöltése</string>

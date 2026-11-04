@@ -134,16 +134,10 @@ class JdbcReportWorkflowQueryRepository(
 
     /** The IN_PROGRESS queue (brief §22): oldest submitted first, public id tie-breaker. */
     fun findInProgressQueue(actor: ReportWorkflowActor, filter: ReportListFilter, page: Int, size: Int): ReportWorkflowPage {
-        val ownershipClause: Pair<String, Map<String, Any>>? = if (actor.role == UserRole.SERVICE_USER) {
-            "r.assigned_user_id = :selfId" to mapOf("selfId" to actor.userId)
-        } else {
-            null
-        }
         val (where, params) = whereClause(
             "r.status = 'IN_PROGRESS'",
             visibilityClause(actor),
             filterClause(filter),
-            ownershipClause,
         )
         val total = jdbc.sql("SELECT COUNT(*) $FROM_JOINS $where").params(params).query(Int::class.java).single()
 

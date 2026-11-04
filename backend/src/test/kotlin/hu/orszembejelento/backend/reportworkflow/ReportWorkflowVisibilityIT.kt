@@ -36,24 +36,44 @@ class ReportWorkflowVisibilityIT : ReportWorkflowTestSupport() {
     }
 
     @Test
-    fun `a SERVICE_USER sees an IN_PROGRESS report only when it is their own claim`() {
+    fun `a SERVICE_USER in the same area sees an IN_PROGRESS report under all cases, but stranger in another area cannot`() {
         val area = givenRoutedArea()
+        val otherArea = givenRoutedArea()
         val owner = givenServiceUser()
+        val colleague = givenServiceUser()
         val stranger = givenServiceUser()
         grantArea(owner.id, area.areaId)
-        grantArea(stranger.id, area.areaId)
+        grantArea(colleague.id, area.areaId)
+        grantArea(stranger.id, otherArea.areaId)
         val report = givenRoutedReport(area)
 
         claim(bearerFor(owner), report.publicId, 0)
 
+        // Owner sees the report in the queue
         val ownerView = inProgressQueue(bearerFor(owner))
         check(json(ownerView).get("items").asList().size == 1)
 
+        // Colleague in the same area sees it under Minden eset (no assignee filter)
+        val colleagueView = inProgressQueue(bearerFor(colleague))
+        check(json(colleagueView).get("items").asList().size == 1)
+
+        // Colleague filtering by own assignee gets empty list (Saját esetek)
+        val colleagueOwnView = inProgressQueue(bearerFor(colleague), assigneeServiceId = colleague.serviceId.value)
+        check(json(colleagueOwnView).get("items").asList().isEmpty())
+
+        // Colleague may view detail, but may NOT close it
+        val colleagueDetail = detail(bearerFor(colleague), report.publicId)
+        check(colleagueDetail.statusCode() == 200)
+
+        val colleagueClose = close(bearerFor(colleague), report.publicId, 1)
+        check(colleagueClose.statusCode() == 403)
+
+        // Stranger in another area cannot see or access it at all
         val strangerView = inProgressQueue(bearerFor(stranger))
-        check(json(strangerView).get("items").asList().isEmpty()) { "a stranger must not see another SERVICE_USER's claim" }
+        check(json(strangerView).get("items").asList().isEmpty())
 
         val strangerDetail = detail(bearerFor(stranger), report.publicId)
-        check(strangerDetail.statusCode() == 404) { "an IN_PROGRESS report not assigned to the actor must be scope-hidden" }
+        check(strangerDetail.statusCode() == 404)
         check(errorCode(strangerDetail) == "REPORT_NOT_FOUND")
     }
 

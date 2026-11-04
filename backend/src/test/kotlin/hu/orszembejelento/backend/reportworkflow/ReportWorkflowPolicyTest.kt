@@ -91,11 +91,24 @@ class ReportWorkflowPolicyTest {
     }
 
     @Test
-    fun `a SERVICE_USER sees an IN_PROGRESS report only when they are themselves the assignee`() {
+    fun `a SERVICE_USER sees IN_PROGRESS reports in their own scope under all cases`() {
         val selfId = UUID.randomUUID()
+        val otherId = UUID.randomUUID()
         val user = ReportWorkflowActor(selfId, sid(), UserRole.SERVICE_USER, false, setOf(alpha))
         check(policy.canViewReport(user, routed(ReportStatus.IN_PROGRESS, areaId = alpha, assignee = selfId)))
-        check(!policy.canViewReport(user, routed(ReportStatus.IN_PROGRESS, areaId = alpha, assignee = UUID.randomUUID())))
+        check(policy.canViewReport(user, routed(ReportStatus.IN_PROGRESS, areaId = alpha, assignee = otherId)))
+        check(!policy.canViewReport(user, routed(ReportStatus.IN_PROGRESS, areaId = beta, assignee = otherId)))
+    }
+
+    @Test
+    fun `a SERVICE_USER may close or return an IN_PROGRESS report only when they are themselves the assignee`() {
+        val selfId = UUID.randomUUID()
+        val otherId = UUID.randomUUID()
+        val user = ReportWorkflowActor(selfId, sid(), UserRole.SERVICE_USER, false, setOf(alpha))
+        check(policy.canClose(user, routed(ReportStatus.IN_PROGRESS, areaId = alpha, assignee = selfId)))
+        check(!policy.canClose(user, routed(ReportStatus.IN_PROGRESS, areaId = alpha, assignee = otherId)))
+        check(policy.canReturn(user, routed(ReportStatus.IN_PROGRESS, areaId = alpha, assignee = selfId)))
+        check(!policy.canReturn(user, routed(ReportStatus.IN_PROGRESS, areaId = alpha, assignee = otherId)))
     }
 
     @Test
