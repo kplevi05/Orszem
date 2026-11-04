@@ -26,3 +26,7 @@ class ReportUnclassifiedCannotAssignException : RuntimeException("an unclassifie
 
 /** The reassignment target fails eligibility: does not exist, not ACTIVE, not SERVICE_USER, or lacks current area access (brief §39). */
 class InvalidAssigneeException : RuntimeException("the reassignment target is not a valid assignee")
+
+/** The message text is blank, exceeds 1000 characters, or contains invalid characters. */
+class ReportMessageInvalidException : RuntimeException("report message must be 1..1000 valid characters")
+

@@ -10,9 +10,11 @@ import hu.orszembejelento.service.reports.data.ReportCategorySummary
 import hu.orszembejelento.service.reports.data.ReportDetailResponse
 import hu.orszembejelento.service.reports.data.ReportEventTypeSummary
 import hu.orszembejelento.service.reports.data.ReportFilter
+import hu.orszembejelento.service.reports.data.ReportMessageItemResponse
 import hu.orszembejelento.service.reports.data.ReportQueuePageResponse
 import hu.orszembejelento.service.reports.data.ReportSettlementSummary
 import hu.orszembejelento.service.reports.data.ReportWorkflowRepository
+import hu.orszembejelento.service.reports.ui.MessageDialogStep
 import hu.orszembejelento.service.reports.ui.ModerationDeleteOutcome
 import hu.orszembejelento.service.reports.ui.ReportDetailViewModel
 import hu.orszembejelento.service.reports.ui.WorkflowMutationKind
@@ -66,9 +68,12 @@ class ReportDetailViewModelTest {
     private class FakeRepository(
         var detailResponses: MutableList<ApiResult<ReportDetailResponse>>,
         var claimResult: ApiResult<ReportDetailResponse> = ApiResult.SessionEnded,
+        var sendMessageResult: ApiResult<ReportDetailResponse> = ApiResult.SessionEnded,
     ) : ReportWorkflowRepository {
         var detailCalls = 0
         var claimCalls = 0
+        var sendMessageCalls = 0
+        var lastMessageText: String? = null
 
         override suspend fun newQueue(page: Int, size: Int, filter: ReportFilter): ApiResult<ReportQueuePageResponse> = error("unused")
         override suspend fun inProgressQueue(page: Int, size: Int, filter: ReportFilter): ApiResult<ReportQueuePageResponse> = error("unused")
@@ -87,6 +92,12 @@ class ReportDetailViewModelTest {
         override suspend fun returnToNew(publicReportId: String, expectedVersion: Long) = error("unused")
         override suspend fun close(publicReportId: String, expectedVersion: Long) = error("unused")
         override suspend fun reassign(publicReportId: String, expectedVersion: Long, targetServiceId: String) = error("unused")
+
+        override suspend fun sendMessage(publicReportId: String, messageText: String): ApiResult<ReportDetailResponse> {
+            sendMessageCalls++
+            lastMessageText = messageText
+            return sendMessageResult
+        }
     }
 
     /** Phase 9 brief §38-43 - a minimal fake for the optional moderation-delete side. */
@@ -258,5 +269,86 @@ class ReportDetailViewModelTest {
 
         assertEquals(null, vm.state.value.moderationDeleteOutcome)
         assertFalse(vm.state.value.moderationDeleteInFlight)
+    }
+
+    @Test
+    fun `message dialog flow - confirmation cancel returns to editor with draft preserved, editor cancel closes and clears`() = runTest {
+        val fake = FakeRepository(detailResponses = mutableListOf(ApiResult.Success(detail("NEW", 0))))
+        val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {})
+
+        assertEquals(MessageDialogStep.IDLE, vm.state.value.messageDialogStep)
+
+        vm.openMessageEditor()
+        assertEquals(MessageDialogStep.EDITING, vm.state.value.messageDialogStep)
+
+        vm.onMessageDraftChanged("Tisztelt Bejelentő! Felvettük a hibajegyet.")
+        vm.requestMessageConfirmation()
+        assertEquals(MessageDialogStep.CONFIRMING, vm.state.value.messageDialogStep)
+        assertEquals("Tisztelt Bejelentő! Felvettük a hibajegyet.", vm.state.value.messageDraft)
+
+        // Mégse in confirmation dialog returns to editor with text preserved
+        vm.cancelMessageConfirmation()
+        assertEquals(MessageDialogStep.EDITING, vm.state.value.messageDialogStep)
+        assertEquals("Tisztelt Bejelentő! Felvettük a hibajegyet.", vm.state.value.messageDraft)
+        assertEquals(0, fake.sendMessageCalls)
+
+        // Mégse in editor dialog closes the entire flow and clears draft
+        vm.cancelMessageEditor()
+        assertEquals(MessageDialogStep.IDLE, vm.state.value.messageDialogStep)
+        assertEquals("", vm.state.value.messageDraft)
+        assertEquals(0, fake.sendMessageCalls)
+    }
+
+    @Test
+    fun `message send failure returns to editor with draft preserved and never marks message as sent`() = runTest {
+        val fake = FakeRepository(
+            detailResponses = mutableListOf(ApiResult.Success(detail("NEW", 0))),
+            sendMessageResult = ApiResult.NetworkError,
+        )
+        val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {})
+
+        vm.openMessageEditor()
+        vm.onMessageDraftChanged("Üzenet, ami hiba miatt nem megy el elsőre.")
+        vm.requestMessageConfirmation()
+        vm.confirmAndSendMessage()
+
+        assertEquals(1, fake.sendMessageCalls)
+        assertEquals(MessageDialogStep.EDITING, vm.state.value.messageDialogStep)
+        assertEquals("Üzenet, ami hiba miatt nem megy el elsőre.", vm.state.value.messageDraft)
+        assertTrue(vm.state.value.messageSendError is ApiResult.NetworkError)
+        assertEquals(null, vm.state.value.lastMutation)
+    }
+
+    @Test
+    fun `message send success closes dialog, clears draft, and updates detail with backend response`() = runTest {
+        val updatedDetail = detail("IN_PROGRESS", 1).copy(
+            messages = listOf(
+                ReportMessageItemResponse(
+                    id = "m1",
+                    messageText = "A helyszíni ellenőrzés megtörtént.",
+                    sentAt = "2026-01-01T01:00:00Z",
+                    senderServiceId = "SZ-000001",
+                    senderNickname = "Szolgálat",
+                ),
+            ),
+        )
+        val fake = FakeRepository(
+            detailResponses = mutableListOf(ApiResult.Success(detail("IN_PROGRESS", 1))),
+            sendMessageResult = ApiResult.Success(updatedDetail),
+        )
+        val vm = ReportDetailViewModel("r1", fake, onSessionEnded = {})
+
+        vm.openMessageEditor()
+        vm.onMessageDraftChanged("  A helyszíni ellenőrzés megtörtént.  ")
+        vm.requestMessageConfirmation()
+        vm.confirmAndSendMessage()
+
+        assertEquals(1, fake.sendMessageCalls)
+        assertEquals("A helyszíni ellenőrzés megtörtént.", fake.lastMessageText)
+        assertEquals(MessageDialogStep.IDLE, vm.state.value.messageDialogStep)
+        assertEquals("", vm.state.value.messageDraft)
+        assertEquals(null, vm.state.value.messageSendError)
+        assertEquals(1, vm.state.value.detail?.messages?.size)
+        assertEquals("A helyszíni ellenőrzés megtörtént.", vm.state.value.detail?.messages?.first()?.messageText)
     }
 }

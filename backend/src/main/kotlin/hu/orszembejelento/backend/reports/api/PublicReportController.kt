@@ -70,6 +70,7 @@ data class SubmitReportResponse(
 data class SettlementSummary(val id: UUID, val name: String)
 data class CategorySummary(val code: String, val displayName: String)
 data class EventTypeSummary(val code: String, val displayName: String)
+data class PublicReportMessageSummary(val id: UUID, val messageText: String, val sentAt: Instant)
 
 data class PublicReportResponse(
     val reportId: UUID,
@@ -81,6 +82,7 @@ data class PublicReportResponse(
     val eventType: EventTypeSummary,
     val note: String? = null,
     val status: String,
+    val messages: List<PublicReportMessageSummary> = emptyList(),
 )
 
 /**
@@ -197,5 +199,6 @@ class PublicReportController(
         eventType = EventTypeSummary(eventType.code, eventType.displayName),
         note = report.note,
         status = publicStatus.name,
+        messages = messages.map { PublicReportMessageSummary(it.id, it.messageText, it.sentAt) },
     )
 }

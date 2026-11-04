@@ -40,6 +40,13 @@ data class CategorySummaryBody(val code: String, val displayName: String)
 data class EventTypeSummaryBody(val code: String, val displayName: String)
 
 @Serializable
+data class PublicReportMessageSummaryBody(
+    val id: String,
+    val messageText: String,
+    val sentAt: String,
+)
+
+@Serializable
 data class PublicReportResponseBody(
     val reportId: String,
     val occurredAt: String,
@@ -50,6 +57,7 @@ data class PublicReportResponseBody(
     val eventType: EventTypeSummaryBody,
     val note: String? = null,
     val status: String,
+    val messages: List<PublicReportMessageSummaryBody> = emptyList(),
 )
 
 @Serializable

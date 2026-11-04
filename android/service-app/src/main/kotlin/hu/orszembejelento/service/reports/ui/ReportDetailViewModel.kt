@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 
 enum class WorkflowMutationKind { CLAIM, RETURN, CLOSE, REASSIGN }
 
+enum class MessageDialogStep { IDLE, EDITING, CONFIRMING, SENDING }
+
 /**
  * How a moderation delete finished (correction pass §3) - both outcomes mean the report is
  * gone from ordinary workflow and the screen navigates away, but they are **not** the same
@@ -61,6 +63,9 @@ class ReportDetailViewModel(
         val moderationDeleteInFlight: Boolean = false,
         val moderationDeleteError: ApiResult<Nothing>? = null,
         val moderationDeleteOutcome: ModerationDeleteOutcome? = null,
+        val messageDialogStep: MessageDialogStep = MessageDialogStep.IDLE,
+        val messageDraft: String = "",
+        val messageSendError: ApiResult<Nothing>? = null,
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -146,6 +151,92 @@ class ReportDetailViewModel(
 
     fun consumeModerationDeleteError() {
         _state.update { it.copy(moderationDeleteError = null) }
+    }
+
+    // --------------------------------------------------- Message to the Reporter (4-step flow)
+
+    fun openMessageEditor() {
+        _state.update {
+            it.copy(
+                messageDialogStep = MessageDialogStep.EDITING,
+                messageDraft = "",
+                messageSendError = null,
+            )
+        }
+    }
+
+    fun onMessageDraftChanged(value: String) {
+        val clipped = if (value.length <= MAX_MESSAGE_LENGTH) value else value.take(MAX_MESSAGE_LENGTH)
+        _state.update { it.copy(messageDraft = clipped, messageSendError = null) }
+    }
+
+    /** Closes the entire message flow without sending and discards the draft. */
+    fun cancelMessageEditor() {
+        if (_state.value.messageDialogStep == MessageDialogStep.SENDING) return
+        _state.update {
+            it.copy(
+                messageDialogStep = MessageDialogStep.IDLE,
+                messageDraft = "",
+                messageSendError = null,
+            )
+        }
+    }
+
+    /** Moves from the editor to the confirmation dialog when the draft is non-blank. */
+    fun requestMessageConfirmation() {
+        val current = _state.value
+        if (current.messageDialogStep != MessageDialogStep.EDITING) return
+        if (current.messageDraft.trim().isEmpty()) return
+        _state.update { it.copy(messageDialogStep = MessageDialogStep.CONFIRMING, messageSendError = null) }
+    }
+
+    /** Cancels confirmation and returns to the editor while preserving the written draft text. */
+    fun cancelMessageConfirmation() {
+        if (_state.value.messageDialogStep != MessageDialogStep.CONFIRMING) return
+        _state.update { it.copy(messageDialogStep = MessageDialogStep.EDITING) }
+    }
+
+    /**
+     * Sends the confirmed message to the backend. Only a backend 200 OK closes the dialog and
+     * records the message as sent; on any error, returns to the editor (`EDITING`) with the
+     * user's written text intact and surfaces the error inside the editor.
+     */
+    fun confirmAndSendMessage() {
+        val current = _state.value
+        if (current.messageDialogStep != MessageDialogStep.CONFIRMING) return
+        val trimmed = current.messageDraft.trim()
+        if (trimmed.isEmpty()) return
+
+        viewModelScope.launch {
+            _state.update { it.copy(messageDialogStep = MessageDialogStep.SENDING, messageSendError = null) }
+            when (val result = repository.sendMessage(publicReportId, trimmed)) {
+                is ApiResult.Success -> _state.update {
+                    it.copy(
+                        detail = result.value,
+                        messageDialogStep = MessageDialogStep.IDLE,
+                        messageDraft = "",
+                        messageSendError = null,
+                    )
+                }
+                ApiResult.SessionEnded -> {
+                    onSessionEnded()
+                    _state.update { it.copy(messageDialogStep = MessageDialogStep.EDITING) }
+                }
+                else -> {
+                    @Suppress("UNCHECKED_CAST")
+                    _state.update {
+                        it.copy(
+                            messageDialogStep = MessageDialogStep.EDITING,
+                            messageSendError = result as ApiResult<Nothing>,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    companion object {
+        const val MAX_MESSAGE_LENGTH = 1000
     }
 
     private fun mutate(kind: WorkflowMutationKind, call: suspend (Long) -> ApiResult<ReportDetailResponse>) {

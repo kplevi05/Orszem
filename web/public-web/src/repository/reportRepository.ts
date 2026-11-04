@@ -182,7 +182,14 @@ export function createReportRepository(api: PublicApi = publicApi) {
 
     if (result.status === 200 && result.body) {
       const status = result.body.status as PublicReportStatus
-      await putReport({ ...record, publicStatus: status, lastStatusCheckedAt: new Date().toISOString(), lastErrorCode: null })
+      const messages = result.body.messages ?? record.messages ?? []
+      await putReport({
+        ...record,
+        publicStatus: status,
+        messages,
+        lastStatusCheckedAt: new Date().toISOString(),
+        lastErrorCode: null,
+      })
       return { kind: 'updated', status }
     }
 

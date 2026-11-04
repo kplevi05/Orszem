@@ -54,6 +54,7 @@ import hu.orszembejelento.backend.reports.domain.TrainIdentifierTooLongException
 import hu.orszembejelento.backend.reportworkflow.domain.InvalidAssigneeException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportAlreadyArchivedException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportAlreadyAssignedException
+import hu.orszembejelento.backend.reportworkflow.domain.ReportMessageInvalidException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportNotVisibleException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportStateChangedException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportUnclassifiedCannotAssignException
@@ -382,6 +383,10 @@ class ApiExceptionHandler {
     @ExceptionHandler(InvalidAssigneeException::class)
     fun handleInvalidAssignee(request: HttpServletRequest) =
         error(request, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ASSIGNEE, "The reassignment target is not a valid assignee.")
+
+    @ExceptionHandler(ReportMessageInvalidException::class)
+    fun handleReportMessageInvalid(request: HttpServletRequest) =
+        error(request, HttpStatus.BAD_REQUEST, ErrorCode.REPORT_MESSAGE_INVALID, "The message must be between 1 and 1000 valid characters.")
 
     // ------------------------------------------------------------------------ Phase 9 - moderation
 

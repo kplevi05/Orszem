@@ -12,6 +12,8 @@ import hu.orszembejelento.backend.reports.domain.ReportNotFoundException
 import hu.orszembejelento.backend.reports.domain.toPublic
 import hu.orszembejelento.backend.reports.infrastructure.JdbcEventCatalogRepository
 import hu.orszembejelento.backend.reports.infrastructure.JdbcReportRepository
+import hu.orszembejelento.backend.reportworkflow.domain.ReportMessage
+import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportMessageRepository
 import java.util.UUID
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -32,6 +34,7 @@ data class PublicReportDetail(
     val category: ReportCategory,
     val eventType: ReportEventType,
     val currentlyModerationDeleted: Boolean,
+    val messages: List<ReportMessage> = emptyList(),
 ) {
     val publicStatus: PublicReportStatus
         get() = if (currentlyModerationDeleted) PublicReportStatus.CLOSED else report.status.toPublic()
@@ -56,6 +59,7 @@ class GetPublicReportUseCase(
     private val eventCatalogRepository: JdbcEventCatalogRepository,
     private val referenceRepository: JdbcReferenceRepository,
     private val moderation: JdbcModerationRepository,
+    private val messageRepository: JdbcReportMessageRepository,
 ) {
 
     @Transactional(readOnly = true)
@@ -80,6 +84,7 @@ class GetPublicReportUseCase(
             ?: error("event type ${eventType.code} references category ${eventType.categoryCode}, which no longer exists")
 
         val currentlyDeleted = moderation.hasOpenEpisode(report.id)
-        return PublicReportDetail(report, settlement.name, category, eventType, currentlyDeleted)
+        val messages = if (currentlyDeleted) emptyList() else messageRepository.findMessagesByReport(report.id)
+        return PublicReportDetail(report, settlement.name, category, eventType, currentlyDeleted, messages)
     }
 }

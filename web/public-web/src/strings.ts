@@ -88,6 +88,7 @@ export const strings = {
   settlementDataSourceUrl: 'https://www.ksh.hu',
 
   locateUnavailableWeb: 'A helyzet meghatározása nem érhető el a webes alkalmazásban - kérjük, keresse meg a települést kézzel.',
+  historyMessagesTitle: 'Üzenetek a szolgálattól',
 } as const
 
 export function publicStatusLabel(status: 'RECEIVED' | 'PROCESSING' | 'CLOSED'): string {

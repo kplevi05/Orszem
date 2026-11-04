@@ -44,6 +44,7 @@ enum class AuditEventType {
     REPORT_RETURNED_TO_NEW,
     REPORT_REASSIGNED,
     REPORT_ARCHIVED,
+    REPORT_MESSAGE_SENT,
 
     // Phase 9 — report moderation. The target is always the REPORT; the actor is always the
     // MODERATOR/SUPER_ADMIN who performed the moderation mutation.

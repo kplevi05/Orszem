@@ -1,4 +1,5 @@
 import type { PublicReportStatus, SubmissionState } from '../domain/submissionState'
+import type { PublicReportMessageSummaryBody } from '../api/publicApi'
 
 /**
  * One local report-history record (Phase 5 brief §32, mirroring the Android Room entity's
@@ -27,6 +28,7 @@ export interface ReportRecord {
   readonly localCreatedAt: string
   readonly lastStatusCheckedAt: string | null
   readonly lastErrorCode: string | null
+  readonly messages?: readonly PublicReportMessageSummaryBody[]
 }
 
 /** The single origin-local AES-GCM key record. `key` is a non-extractable `CryptoKey`, structured-cloned as-is. */

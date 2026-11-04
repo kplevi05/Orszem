@@ -23,7 +23,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * without the device-local Keystore key that encrypted them, so restoring the database
  * without the key would only leave undecryptable rows (§24).
  */
-@Database(entities = [ReportHistoryEntity::class], version = 2, exportSchema = true)
+@Database(entities = [ReportHistoryEntity::class], version = 3, exportSchema = true)
 @TypeConverters(Converters::class)
 abstract class ReportHistoryDatabase : RoomDatabase() {
 
@@ -38,9 +38,15 @@ abstract class ReportHistoryDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `report_history` ADD COLUMN `messages_json` TEXT")
+            }
+        }
+
         fun build(context: Context): ReportHistoryDatabase =
             Room.databaseBuilder(context.applicationContext, ReportHistoryDatabase::class.java, FILE_NAME)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
     }
 }

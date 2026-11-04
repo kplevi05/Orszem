@@ -42,6 +42,8 @@ interface ReportWorkflowRepository {
     suspend fun returnToNew(publicReportId: String, expectedVersion: Long): ApiResult<ReportDetailResponse>
     suspend fun close(publicReportId: String, expectedVersion: Long): ApiResult<ReportDetailResponse>
     suspend fun reassign(publicReportId: String, expectedVersion: Long, targetServiceId: String): ApiResult<ReportDetailResponse>
+    suspend fun sendMessage(publicReportId: String, messageText: String): ApiResult<ReportDetailResponse> =
+        ApiResult.NetworkError
 }
 
 /**
@@ -92,4 +94,7 @@ class DefaultReportWorkflowRepository(
 
     override suspend fun reassign(publicReportId: String, expectedVersion: Long, targetServiceId: String): ApiResult<ReportDetailResponse> =
         apiCall(auth) { bearer -> api.reassign(bearer, publicReportId, ReassignRequest(expectedVersion, targetServiceId)) }
+
+    override suspend fun sendMessage(publicReportId: String, messageText: String): ApiResult<ReportDetailResponse> =
+        apiCall(auth) { bearer -> api.sendMessage(bearer, publicReportId, SendReportMessageRequest(messageText)) }
 }

@@ -42,6 +42,11 @@ import hu.orszembejelento.app.ui.components.SoftCard
 import hu.orszembejelento.app.ui.components.StatusPill
 import hu.orszembejelento.app.ui.newreport.publicStatusLabel
 import hu.orszembejelento.app.report.data.network.ApiErrorCode
+import hu.orszembejelento.app.report.data.network.PublicReportMessageSummaryBody
+import java.time.Instant
+import kotlinx.serialization.json.Json
+
+private val historyMessagesJson = Json { ignoreUnknownKeys = true }
 
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel) {
@@ -128,6 +133,36 @@ fun HistoryItemCard(item: ReportHistoryEntity, onRetry: () -> Unit, onRefresh: (
                     style = MaterialTheme.typography.bodySmall,
                     color = PublicPalette.TextMuted,
                 )
+            }
+        }
+
+        val messages = item.messagesJson?.takeIf { it.isNotBlank() }?.let { raw ->
+            runCatching { historyMessagesJson.decodeFromString<List<PublicReportMessageSummaryBody>>(raw) }.getOrNull()
+        }.orEmpty()
+        if (messages.isNotEmpty()) {
+            SoftCard(
+                containerColor = PublicPalette.SurfaceTint,
+                modifier = Modifier.padding(top = 8.dp),
+            ) {
+                Text(
+                    stringResource(R.string.history_messages_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = PublicPalette.Primary,
+                )
+                Column(modifier = Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    messages.forEach { msg ->
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(msg.messageText, style = MaterialTheme.typography.bodyMedium)
+                            val sentText = runCatching { Instant.parse(msg.sentAt) }.getOrNull()
+                                ?.let { HungarianDateTime.format(it) } ?: msg.sentAt
+                            Text(
+                                sentText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = PublicPalette.TextMuted,
+                            )
+                        }
+                    }
+                }
             }
         }
 

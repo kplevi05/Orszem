@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -18,7 +19,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -118,6 +121,18 @@ fun ReportDetailScreen(
 
                     ReportFieldsCard(detail)
 
+                    OutlinedButton(
+                        onClick = { viewModel.openMessageEditor() },
+                        enabled = !state.mutationInFlight && !state.moderationDeleteInFlight,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.action_message_to_reporter))
+                    }
+
+                    if (detail.messages.isNotEmpty()) {
+                        ReportMessagesSection(detail)
+                    }
+
                     if (detail.assignmentHistory.isNotEmpty()) {
                         AssignmentHistorySection(detail)
                     }
@@ -194,6 +209,22 @@ fun ReportDetailScreen(
             onDismiss = { showDeleteDialog = false },
         )
     }
+    if (state.messageDialogStep == MessageDialogStep.EDITING) {
+        MessageEditorDialog(
+            draft = state.messageDraft,
+            error = state.messageSendError,
+            onDraftChanged = viewModel::onMessageDraftChanged,
+            onSendClicked = viewModel::requestMessageConfirmation,
+            onCancelClicked = viewModel::cancelMessageEditor,
+        )
+    }
+    if (state.messageDialogStep == MessageDialogStep.CONFIRMING || state.messageDialogStep == MessageDialogStep.SENDING) {
+        MessageConfirmDialog(
+            sending = state.messageDialogStep == MessageDialogStep.SENDING,
+            onConfirmSend = viewModel::confirmAndSendMessage,
+            onCancelBackToEditor = viewModel::cancelMessageConfirmation,
+        )
+    }
 }
 
 @Composable
@@ -264,6 +295,107 @@ private fun DetailRow(label: String, value: String) {
         Text(value, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 2.dp))
     }
     HorizontalDivider()
+}
+
+@Composable
+private fun ReportMessagesSection(detail: ReportDetailResponse) {
+    Column {
+        Text(stringResource(R.string.report_messages_section_title), style = MaterialTheme.typography.titleSmall)
+        Card(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                detail.messages.forEachIndexed { index, msg ->
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(msg.messageText, style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = "${userIdentityLabel(msg.senderServiceId, msg.senderNickname)} · ${formatInstant(msg.sentAt)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (index < detail.messages.lastIndex) {
+                        HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MessageEditorDialog(
+    draft: String,
+    error: hu.orszembejelento.service.common.data.ApiResult<Nothing>?,
+    onDraftChanged: (String) -> Unit,
+    onSendClicked: () -> Unit,
+    onCancelClicked: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onCancelClicked,
+        title = { Text(stringResource(R.string.message_editor_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (error != null) {
+                    InlineErrorBanner(apiErrorMessage(error))
+                }
+                OutlinedTextField(
+                    value = draft,
+                    onValueChange = onDraftChanged,
+                    label = { Text(stringResource(R.string.message_editor_field_label)) },
+                    placeholder = { Text(stringResource(R.string.message_editor_field_hint)) },
+                    minLines = 4,
+                    maxLines = 8,
+                    supportingText = {
+                        Text("${draft.length} / ${ReportDetailViewModel.MAX_MESSAGE_LENGTH}")
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSendClicked,
+                enabled = draft.trim().isNotEmpty(),
+            ) {
+                Text(stringResource(R.string.action_send_message))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancelClicked) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun MessageConfirmDialog(
+    sending: Boolean,
+    onConfirmSend: () -> Unit,
+    onCancelBackToEditor: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { if (!sending) onCancelBackToEditor() },
+        title = { Text(stringResource(R.string.message_confirm_dialog_title)) },
+        text = {
+            Text(stringResource(R.string.message_confirm_dialog_text))
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirmSend,
+                enabled = !sending,
+            ) {
+                Text(stringResource(R.string.action_send_message))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onCancelBackToEditor,
+                enabled = !sending,
+            ) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
 }
 
 @Composable

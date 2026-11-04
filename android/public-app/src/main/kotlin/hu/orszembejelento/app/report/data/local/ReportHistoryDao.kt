@@ -62,10 +62,16 @@ interface ReportHistoryDao {
     suspend fun markState(clientSubmissionId: UUID, state: SubmissionState, errorCode: String?)
 
     @Query(
-        "UPDATE report_history SET public_status = :status, last_status_checked_at = :checkedAt, last_error_code = NULL " +
+        "UPDATE report_history SET public_status = :status, messages_json = :messagesJson, " +
+            "last_status_checked_at = :checkedAt, last_error_code = NULL " +
             "WHERE client_submission_id = :clientSubmissionId",
     )
-    suspend fun updateStatus(clientSubmissionId: UUID, status: PublicReportStatus, checkedAt: Instant)
+    suspend fun updateStatus(
+        clientSubmissionId: UUID,
+        status: PublicReportStatus,
+        checkedAt: Instant,
+        messagesJson: String? = null,
+    )
 
     @Query(
         "UPDATE report_history SET last_status_checked_at = :checkedAt, last_error_code = :errorCode " +

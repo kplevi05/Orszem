@@ -149,6 +149,9 @@ enum class ErrorCode {
     /** The reassignment target fails eligibility: not found, not ACTIVE, not SERVICE_USER, or lacks current area access (§39). */
     INVALID_ASSIGNEE,
 
+    /** The message text sent to the reporter is blank, exceeds 1000 characters, or contains invalid characters. */
+    REPORT_MESSAGE_INVALID,
+
     // ---------------------------------------- Phase 7 cross-phase invariant review addendum
 
     /**

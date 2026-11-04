@@ -74,6 +74,15 @@ data class AssignmentHistoryItemResponse(
 )
 
 @Serializable
+data class ReportMessageItemResponse(
+    val id: String,
+    val messageText: String,
+    val sentAt: String,
+    val senderServiceId: String,
+    val senderNickname: String? = null,
+)
+
+@Serializable
 data class ReportDetailResponse(
     val publicReportId: String,
     val occurredAt: String,
@@ -92,6 +101,7 @@ data class ReportDetailResponse(
     val assignee: ReportAssigneeSummary? = null,
     val archivedAt: String? = null,
     val assignmentHistory: List<AssignmentHistoryItemResponse> = emptyList(),
+    val messages: List<ReportMessageItemResponse> = emptyList(),
 )
 
 // ---------------------------------------------------------------------------------- request DTOs
@@ -101,6 +111,9 @@ data class WorkflowMutationRequest(val expectedVersion: Long)
 
 @Serializable
 data class ReassignRequest(val expectedVersion: Long, val targetServiceId: String)
+
+@Serializable
+data class SendReportMessageRequest(val messageText: String)
 
 /**
  * The Phase 7 service report-workflow API.
@@ -183,5 +196,12 @@ interface ReportWorkflowApi {
         @Header("Authorization") bearer: String,
         @Path("publicReportId") publicReportId: String,
         @Body request: ReassignRequest,
+    ): Response<ReportDetailResponse>
+
+    @POST("api/v1/service/reports/{publicReportId}/messages")
+    suspend fun sendMessage(
+        @Header("Authorization") bearer: String,
+        @Path("publicReportId") publicReportId: String,
+        @Body request: SendReportMessageRequest,
     ): Response<ReportDetailResponse>
 }

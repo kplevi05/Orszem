@@ -4,6 +4,7 @@ import hu.orszembejelento.backend.reportworkflow.application.ReportDetailResult
 import hu.orszembejelento.backend.reportworkflow.application.ReportQueueItem
 import hu.orszembejelento.backend.reportworkflow.application.ReportQueuePageResult
 import hu.orszembejelento.backend.reportworkflow.application.ResolvedAssignmentEpisode
+import hu.orszembejelento.backend.reportworkflow.application.ResolvedReportMessage
 import hu.orszembejelento.backend.reportworkflow.infrastructure.ReportWorkflowRow
 import jakarta.validation.constraints.NotNull
 import java.time.Instant
@@ -103,6 +104,24 @@ data class AssignmentHistoryItemResponse(
     }
 }
 
+data class ReportMessageItemResponse(
+    val id: String,
+    val messageText: String,
+    val sentAt: Instant,
+    val senderServiceId: String,
+    val senderNickname: String?,
+) {
+    companion object {
+        fun from(msg: ResolvedReportMessage) = ReportMessageItemResponse(
+            id = msg.id.toString(),
+            messageText = msg.messageText,
+            sentAt = msg.sentAt,
+            senderServiceId = msg.senderServiceId,
+            senderNickname = msg.senderNickname,
+        )
+    }
+}
+
 /**
  * The full report-workflow detail (brief §24). Deliberately excludes the Public access
  * credential/hash, Service auth internals and audit-event implementation metadata — none of
@@ -126,6 +145,7 @@ data class ReportDetailResponse(
     val assignee: ReportAssigneeSummary?,
     val archivedAt: Instant?,
     val assignmentHistory: List<AssignmentHistoryItemResponse>,
+    val messages: List<ReportMessageItemResponse> = emptyList(),
 ) {
     companion object {
         fun from(result: ReportDetailResult): ReportDetailResponse {
@@ -150,6 +170,7 @@ data class ReportDetailResponse(
                 assignee = row.assigneeServiceId?.let { ReportAssigneeSummary(it, row.assigneeNickname) },
                 archivedAt = row.archivedAt,
                 assignmentHistory = result.history.map(AssignmentHistoryItemResponse::from),
+                messages = result.messages.map(ReportMessageItemResponse::from),
             )
         }
     }
@@ -161,4 +182,8 @@ data class WorkflowMutationRequest(@field:NotNull val expectedVersion: Long? = n
 data class ReassignRequest(
     @field:NotNull val expectedVersion: Long? = null,
     val targetServiceId: String? = null,
+)
+
+data class SendReportMessageRequest(
+    val messageText: String? = null,
 )

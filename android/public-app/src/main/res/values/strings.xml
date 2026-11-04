@@ -105,4 +105,6 @@
     <string name="location_off_message">A helymeghatározás használatához kapcsolja be a GPS szolgáltatást a készülékén.</string>
     <string name="location_off_cancel">MÉGSE</string>
     <string name="location_off_settings">BEÁLLÍTÁSOK MEGNYITÁSA</string>
+
+    <string name="history_messages_title">Üzenetek a szolgálattól</string>
 </resources>

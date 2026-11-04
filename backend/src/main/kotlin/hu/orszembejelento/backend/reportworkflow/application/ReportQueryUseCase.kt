@@ -11,6 +11,7 @@ import hu.orszembejelento.backend.reportworkflow.domain.ReportScope
 import hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowActor
 import hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy
 import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportAssignmentRepository
+import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportMessageRepository
 import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportWorkflowQueryRepository
 import hu.orszembejelento.backend.reportworkflow.infrastructure.ReportListFilter
 import hu.orszembejelento.backend.reportworkflow.infrastructure.ReportWorkflowPage
@@ -49,13 +50,26 @@ data class ResolvedAssignmentEpisode(
     val endReason: AssignmentEndReason?,
 )
 
-data class ReportDetailResult(val row: ReportWorkflowRow, val history: List<ResolvedAssignmentEpisode>)
+data class ResolvedReportMessage(
+    val id: UUID,
+    val messageText: String,
+    val sentAt: Instant,
+    val senderServiceId: String,
+    val senderNickname: String?,
+)
+
+data class ReportDetailResult(
+    val row: ReportWorkflowRow,
+    val history: List<ResolvedAssignmentEpisode>,
+    val messages: List<ResolvedReportMessage> = emptyList(),
+)
 
 /** Read-only report-workflow queries: the three queues and one detail lookup. */
 @Service
 class ReportQueryUseCase(
     private val queryRepository: JdbcReportWorkflowQueryRepository,
     private val assignmentRepository: JdbcReportAssignmentRepository,
+    private val messageRepository: JdbcReportMessageRepository,
     private val users: JdbcUserRepository,
     private val policy: ReportWorkflowPolicy,
     private val clock: Clock,
@@ -113,7 +127,19 @@ class ReportQueryUseCase(
             )
         }
 
-        return ReportDetailResult(row, history)
+        val rawMessages = messageRepository.findMessagesByReport(row.id)
+        val messages = rawMessages.map { msg ->
+            val sender = resolve(msg.senderUserId)
+            ResolvedReportMessage(
+                id = msg.id,
+                messageText = msg.messageText,
+                sentAt = msg.sentAt,
+                senderServiceId = sender.serviceId.value,
+                senderNickname = sender.nickname,
+            )
+        }
+
+        return ReportDetailResult(row, history, messages)
     }
 
     private fun toPageResult(

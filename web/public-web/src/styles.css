@@ -711,3 +711,41 @@ legend {
   color: inherit;
   text-decoration: underline;
 }
+
+.report-messages {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-tint);
+  border: 1px solid var(--border);
+}
+
+.report-messages-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.report-message-item {
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.report-message-item:first-of-type {
+  padding-top: 0;
+  border-top: none;
+}
+
+.report-message-text {
+  font-size: 0.92rem;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.report-message-time {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}

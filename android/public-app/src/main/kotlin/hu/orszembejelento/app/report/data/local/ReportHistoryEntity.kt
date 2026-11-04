@@ -81,6 +81,9 @@ data class ReportHistoryEntity(
 
     @ColumnInfo(name = "note")
     val note: String? = null,
+
+    @ColumnInfo(name = "messages_json")
+    val messagesJson: String? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -95,7 +98,7 @@ data class ReportHistoryEntity(
             eventTypeDisplaySnapshot == other.eventTypeDisplaySnapshot && submissionState == other.submissionState &&
             publicStatus == other.publicStatus && serverSubmittedAt == other.serverSubmittedAt &&
             localCreatedAt == other.localCreatedAt && lastStatusCheckedAt == other.lastStatusCheckedAt &&
-            lastErrorCode == other.lastErrorCode && note == other.note
+            lastErrorCode == other.lastErrorCode && note == other.note && messagesJson == other.messagesJson
     }
 
     override fun hashCode(): Int = clientSubmissionId.hashCode()

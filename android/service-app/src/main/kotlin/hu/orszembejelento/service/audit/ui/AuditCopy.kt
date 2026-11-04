@@ -56,6 +56,7 @@ internal fun auditEventTypeLabelRes(code: String): Int? = when (code) {
     "REPORT_RETURNED_TO_NEW" -> R.string.audit_event_report_returned_to_new
     "REPORT_REASSIGNED" -> R.string.audit_event_report_reassigned
     "REPORT_ARCHIVED" -> R.string.audit_event_report_archived
+    "REPORT_MESSAGE_SENT" -> R.string.audit_event_report_message_sent
     "REPORT_MODERATION_DELETED" -> R.string.audit_event_report_moderation_deleted
     "REPORT_MODERATION_RESTORED" -> R.string.audit_event_report_moderation_restored
     "SERVICE_AREA_CREATED" -> R.string.audit_event_service_area_created
@@ -88,7 +89,7 @@ internal fun auditTargetTypeLabelRes(code: String): Int? = when (code) {
 internal val AUDIT_EVENT_TYPE_ORDER: List<String> = listOf(
     "USER_CREATED", "USER_PASSWORD_RESET", "USER_DEACTIVATED", "USER_REACTIVATED", "USER_ROLE_CHANGED",
     "USER_AREA_GRANTED", "USER_AREA_REVOKED", "USER_GLOBAL_ACCESS_GRANTED", "USER_GLOBAL_ACCESS_REVOKED", "USER_NICKNAME_CHANGED",
-    "REPORT_CLAIMED", "REPORT_RETURNED_TO_NEW", "REPORT_REASSIGNED", "REPORT_ARCHIVED",
+    "REPORT_CLAIMED", "REPORT_RETURNED_TO_NEW", "REPORT_REASSIGNED", "REPORT_ARCHIVED", "REPORT_MESSAGE_SENT",
     "REPORT_MODERATION_DELETED", "REPORT_MODERATION_RESTORED",
     "SERVICE_AREA_CREATED", "SERVICE_AREA_RENAMED", "SERVICE_AREA_ACTIVATED", "SERVICE_AREA_DEACTIVATED", "SERVICE_AREA_DELETED",
     "SETTLEMENT_SERVICE_AREA_ASSIGNED", "SETTLEMENT_SERVICE_AREA_MOVED", "SETTLEMENT_SERVICE_AREA_UNASSIGNED",

@@ -17,6 +17,7 @@ class ErrorCopyTest {
             "REPORT_NOT_FOUND" to R.string.error_report_not_found,
             "REPORT_UNCLASSIFIED_CANNOT_ASSIGN" to R.string.error_report_unclassified_cannot_assign,
             "INVALID_ASSIGNEE" to R.string.error_invalid_assignee,
+            "REPORT_MESSAGE_INVALID" to R.string.error_report_message_invalid,
             "REPORT_WORKFLOW_FORBIDDEN" to R.string.error_report_workflow_forbidden,
             "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS" to R.string.error_user_has_active_assignments,
             "USER_REQUIRES_SERVICE_AREA" to R.string.error_user_requires_service_area,
@@ -61,7 +62,7 @@ class ErrorCopyTest {
     fun `every mapped code produces a distinct message - no silent collapsing to the generic fallback`() {
         val codes = listOf(
             "REPORT_ALREADY_ASSIGNED", "REPORT_STATE_CHANGED", "REPORT_ALREADY_ARCHIVED", "REPORT_NOT_FOUND",
-            "REPORT_UNCLASSIFIED_CANNOT_ASSIGN", "INVALID_ASSIGNEE", "REPORT_WORKFLOW_FORBIDDEN",
+            "REPORT_UNCLASSIFIED_CANNOT_ASSIGN", "INVALID_ASSIGNEE", "REPORT_MESSAGE_INVALID", "REPORT_WORKFLOW_FORBIDDEN",
             "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS", "USER_REQUIRES_SERVICE_AREA", "USER_NOT_FOUND",
             "USER_NOT_MANAGEABLE", "USER_MANAGEMENT_FORBIDDEN",
             "MODERATION_FORBIDDEN", "REPORT_ALREADY_DELETED", "REPORT_NOT_DELETED",

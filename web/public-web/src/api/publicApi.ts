@@ -31,6 +31,12 @@ export interface EventTypeSummaryBody {
   readonly displayName: string
 }
 
+export interface PublicReportMessageSummaryBody {
+  readonly id: string
+  readonly messageText: string
+  readonly sentAt: string
+}
+
 export interface PublicReportResponseBody {
   readonly reportId: string
   readonly occurredAt: string
@@ -41,6 +47,7 @@ export interface PublicReportResponseBody {
   readonly eventType: EventTypeSummaryBody
   readonly note?: string | null
   readonly status: string
+  readonly messages?: readonly PublicReportMessageSummaryBody[]
 }
 
 export interface ReportCatalogCategoryBody {

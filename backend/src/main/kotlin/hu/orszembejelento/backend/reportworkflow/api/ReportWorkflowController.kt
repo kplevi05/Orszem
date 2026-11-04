@@ -8,6 +8,7 @@ import hu.orszembejelento.backend.reportworkflow.application.ReassignReportUseCa
 import hu.orszembejelento.backend.reportworkflow.application.ReportQueryUseCase
 import hu.orszembejelento.backend.reportworkflow.application.ReportWorkflowActorLoader
 import hu.orszembejelento.backend.reportworkflow.application.ReturnReportUseCase
+import hu.orszembejelento.backend.reportworkflow.application.SendReportMessageUseCase
 import hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowActor
 import hu.orszembejelento.backend.reportworkflow.infrastructure.ReportListFilter
 import io.swagger.v3.oas.annotations.Operation
@@ -49,6 +50,7 @@ class ReportWorkflowController(
     private val returnReport: ReturnReportUseCase,
     private val closeReport: CloseReportUseCase,
     private val reassignReport: ReassignReportUseCase,
+    private val sendReportMessage: SendReportMessageUseCase,
 ) {
 
     @GetMapping("/new")
@@ -198,6 +200,19 @@ class ReportWorkflowController(
         @Valid @RequestBody request: ReassignRequest,
     ): ResponseEntity<ReportDetailResponse> = mutate(principal, publicReportId) { actor ->
         reassignReport.reassign(actor, publicReportId, requireNotNull(request.expectedVersion), request.targetServiceId)
+    }
+
+    @PostMapping("/{publicReportId}/messages")
+    @Operation(
+        summary = "Send an immutable message to the reporter of a visible report",
+        description = "Any authenticated service user who can view the report may send a message (1..1000 characters) to its reporter.",
+    )
+    fun sendMessage(
+        @AuthenticationPrincipal principal: AuthenticatedActor,
+        @PathVariable publicReportId: UUID,
+        @RequestBody request: SendReportMessageRequest,
+    ): ResponseEntity<ReportDetailResponse> = mutate(principal, publicReportId) { actor ->
+        sendReportMessage.send(actor, publicReportId, request.messageText)
     }
 
     // ------------------------------------------------------------------------------ helpers

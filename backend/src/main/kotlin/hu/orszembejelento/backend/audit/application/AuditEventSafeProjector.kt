@@ -212,6 +212,7 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
                 stringDetail(AuditDetailCode.TO_STATUS, node.path("toStatus").asString(null)),
                 userDetail(AuditDetailCode.PREVIOUS_ASSIGNEE, node, "previousAssigneeServiceId", userLabels),
             )
+            AuditEventType.REPORT_MESSAGE_SENT -> emptyList()
 
             AuditEventType.REPORT_MODERATION_DELETED -> listOfNotNull(
                 stringDetail(AuditDetailCode.REASON, node.path("reason").asString(null)),

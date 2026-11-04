@@ -77,9 +77,19 @@ class FakeReportHistoryDao(private val callLog: MutableList<String>? = null) : R
         }
     }
 
-    override suspend fun updateStatus(clientSubmissionId: UUID, status: PublicReportStatus, checkedAt: Instant) {
+    override suspend fun updateStatus(
+        clientSubmissionId: UUID,
+        status: PublicReportStatus,
+        checkedAt: Instant,
+        messagesJson: String?,
+    ) {
         rows[clientSubmissionId]?.let {
-            rows[clientSubmissionId] = it.copy(publicStatus = status, lastStatusCheckedAt = checkedAt, lastErrorCode = null)
+            rows[clientSubmissionId] = it.copy(
+                publicStatus = status,
+                messagesJson = messagesJson ?: it.messagesJson,
+                lastStatusCheckedAt = checkedAt,
+                lastErrorCode = null,
+            )
             publish()
         }
     }

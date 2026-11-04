@@ -51,6 +51,18 @@ export function HistoryItemCard({
       {record.note && <p className="meta-line">{record.note}</p>}
       <p className="meta-line">{formatDateTime(record.occurredAt)}</p>
 
+      {record.messages && record.messages.length > 0 && (
+        <div className="report-messages">
+          <div className="report-messages-title">{strings.historyMessagesTitle}</div>
+          {record.messages.map((msg) => (
+            <div key={msg.id} className="report-message-item">
+              <div className="report-message-text">{msg.messageText}</div>
+              <div className="report-message-time">{formatDateTime(msg.sentAt)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {record.submissionState === 'SUBMITTED' && (
         <>
           {record.lastStatusCheckedAt && <p className="meta-line">{strings.historyLastChecked(formatDateTime(record.lastStatusCheckedAt))}</p>}

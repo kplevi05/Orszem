@@ -22,6 +22,7 @@ fun errorMessageRes(code: String?): Int = when (code) {
     "REPORT_NOT_FOUND" -> R.string.error_report_not_found
     "REPORT_UNCLASSIFIED_CANNOT_ASSIGN" -> R.string.error_report_unclassified_cannot_assign
     "INVALID_ASSIGNEE" -> R.string.error_invalid_assignee
+    "REPORT_MESSAGE_INVALID" -> R.string.error_report_message_invalid
     "REPORT_WORKFLOW_FORBIDDEN" -> R.string.error_report_workflow_forbidden
     "USER_HAS_ACTIVE_REPORT_ASSIGNMENTS" -> R.string.error_user_has_active_assignments
     "USER_REQUIRES_SERVICE_AREA" -> R.string.error_user_requires_service_area

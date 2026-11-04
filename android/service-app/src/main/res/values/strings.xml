@@ -545,4 +545,16 @@
 
     <string name="common_yes">Igen</string>
     <string name="common_no">Nem</string>
+
+    <!-- Message to Reporter -->
+    <string name="action_message_to_reporter">Üzenet a Bejelentőnek</string>
+    <string name="action_send_message">Elküld</string>
+    <string name="report_messages_section_title">Elküldött üzenetek a bejelentőnek</string>
+    <string name="message_editor_dialog_title">Üzenet a Bejelentőnek</string>
+    <string name="message_editor_field_label">Üzenet szövege</string>
+    <string name="message_editor_field_hint">Írja be a bejelentőnek szánt üzenetet…</string>
+    <string name="message_confirm_dialog_title">Üzenet küldésének megerősítése</string>
+    <string name="message_confirm_dialog_text">Ellenőrizte az üzenet tartalmát? Biztosan el szeretné küldeni? Az elküldött üzenet nem vonható vissza.</string>
+    <string name="error_report_message_invalid">Az üzenet nem lehet üres, és legfeljebb 1000 karakter hosszú lehet.</string>
+    <string name="audit_event_report_message_sent">Üzenet küldése a bejelentőnek</string>
 </resources>

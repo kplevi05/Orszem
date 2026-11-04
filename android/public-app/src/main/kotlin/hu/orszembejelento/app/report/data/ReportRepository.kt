@@ -19,6 +19,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import retrofit2.Response
 
@@ -219,9 +220,15 @@ class ReportRepository(
 
         return when (response.code()) {
             200 -> {
-                val status = response.body()?.status?.let { runCatching { PublicReportStatus.valueOf(it) }.getOrNull() }
+                val body = response.body() ?: return StatusRefreshOutcome.NetworkFailure
+                val status = runCatching { PublicReportStatus.valueOf(body.status) }.getOrNull()
                     ?: return StatusRefreshOutcome.NetworkFailure
-                dao.updateStatus(clientSubmissionId, status, now())
+                val messagesJson = if (body.messages.isNotEmpty()) {
+                    runCatching { json.encodeToString(body.messages) }.getOrNull()
+                } else {
+                    entity.messagesJson
+                }
+                dao.updateStatus(clientSubmissionId, status, now(), messagesJson)
                 StatusRefreshOutcome.Updated(status)
             }
 
