@@ -1,6 +1,7 @@
 package hu.orszembejelento.service.usermanagement
 
 import hu.orszembejelento.service.common.data.ApiResult
+import hu.orszembejelento.service.usermanagement.data.AssignableAreaResponse
 import hu.orszembejelento.service.usermanagement.data.ManagedUserPageResponse
 import hu.orszembejelento.service.usermanagement.data.ManagedUserResponse
 import hu.orszembejelento.service.usermanagement.ui.UsersListViewModel
@@ -41,7 +42,7 @@ class UsersListViewModelTest {
     fun `canManage is preserved for each list row, never overridden client-side`() = runTest {
         var repoCalls = 0
         val vm = UsersListViewModel(
-            fetchPage = { page, _, _ ->
+            fetchPage = { page, _, _, _, _, _ ->
                 repoCalls++
                 ApiResult.Success(
                     ManagedUserPageResponse(
@@ -61,7 +62,7 @@ class UsersListViewModelTest {
     fun `updateQuery resets paging and issues a fresh search`() = runTest {
         val seenQueries = mutableListOf<String?>()
         val vm = UsersListViewModel(
-            fetchPage = { page, _, query ->
+            fetchPage = { page, _, _, _, query, _ ->
                 seenQueries += query
                 ApiResult.Success(ManagedUserPageResponse(items = emptyList(), page = page, size = 30, totalCount = 0))
             },
@@ -75,7 +76,7 @@ class UsersListViewModelTest {
     @Test
     fun `canLoadMore is false once every item has been loaded`() = runTest {
         val vm = UsersListViewModel(
-            fetchPage = { page, _, _ ->
+            fetchPage = { page, _, _, _, _, _ ->
                 ApiResult.Success(ManagedUserPageResponse(items = listOf(user("SZ-1")), page = page, size = 1, totalCount = 1))
             },
             onSessionEnded = {},
@@ -87,7 +88,7 @@ class UsersListViewModelTest {
     fun `SessionEnded invokes the callback rather than surfacing as an ordinary error`() = runTest {
         var sessionEndedCalls = 0
         val vm = UsersListViewModel(
-            fetchPage = { _, _, _ -> ApiResult.SessionEnded },
+            fetchPage = { _, _, _, _, _, _ -> ApiResult.SessionEnded },
             onSessionEnded = { sessionEndedCalls++ },
         )
         assertEquals(1, sessionEndedCalls)
@@ -102,7 +103,7 @@ class UsersListViewModelTest {
         try {
             var calls = 0
             val vm = UsersListViewModel(
-                fetchPage = { page, _, _ ->
+                fetchPage = { page, _, _, _, _, _ ->
                     calls++
                     if (calls == 1) {
                         delay(1_000)
@@ -122,5 +123,73 @@ class UsersListViewModelTest {
         } finally {
             Dispatchers.resetMain()
         }
+    }
+
+    @Test
+    fun `default status filter is ACTIVE and passed to fetchPage`() = runTest {
+        var capturedStatus: String? = "UNSET"
+        val vm = UsersListViewModel(
+            fetchPage = { page, size, role, status, query, areaId ->
+                capturedStatus = status
+                ApiResult.Success(ManagedUserPageResponse(items = emptyList(), page = page, size = size, totalCount = 0))
+            },
+            fetchAreas = { ApiResult.Success(emptyList()) },
+            onSessionEnded = {},
+        )
+        assertEquals("ACTIVE", vm.state.value.statusFilter)
+        assertEquals("ACTIVE", capturedStatus)
+    }
+
+    @Test
+    fun `setStatusFilter updates status filter and triggers re-fetch`() = runTest {
+        val capturedStatuses = mutableListOf<String?>()
+        val vm = UsersListViewModel(
+            fetchPage = { page, size, role, status, query, areaId ->
+                capturedStatuses += status
+                ApiResult.Success(ManagedUserPageResponse(items = emptyList(), page = page, size = size, totalCount = 0))
+            },
+            fetchAreas = { ApiResult.Success(emptyList()) },
+            onSessionEnded = {},
+        )
+        vm.setStatusFilter("DEACTIVATED")
+        assertEquals("DEACTIVATED", vm.state.value.statusFilter)
+        assertEquals("DEACTIVATED", capturedStatuses.last())
+
+        vm.setStatusFilter(null)
+        assertEquals(null, vm.state.value.statusFilter)
+        assertEquals(null, capturedStatuses.last())
+    }
+
+    @Test
+    fun `setAreaFilter updates area filter and triggers re-fetch`() = runTest {
+        val capturedAreas = mutableListOf<String?>()
+        val vm = UsersListViewModel(
+            fetchPage = { page, size, role, status, query, areaId ->
+                capturedAreas += areaId
+                ApiResult.Success(ManagedUserPageResponse(items = emptyList(), page = page, size = size, totalCount = 0))
+            },
+            fetchAreas = { ApiResult.Success(emptyList()) },
+            onSessionEnded = {},
+        )
+        vm.setAreaFilter("area-test-uuid")
+        assertEquals("area-test-uuid", vm.state.value.areaFilter)
+        assertEquals("area-test-uuid", capturedAreas.last())
+
+        vm.setAreaFilter(null)
+        assertEquals(null, vm.state.value.areaFilter)
+        assertEquals(null, capturedAreas.last())
+    }
+
+    @Test
+    fun `fetchAreas loads assignable areas into state`() = runTest {
+        val areas = listOf(AssignableAreaResponse("area-1", "Észak-Dunántúl"), AssignableAreaResponse("area-2", "Dél-Alföld"))
+        val vm = UsersListViewModel(
+            fetchPage = { page, size, _, _, _, _ ->
+                ApiResult.Success(ManagedUserPageResponse(items = emptyList(), page = page, size = size, totalCount = 0))
+            },
+            fetchAreas = { ApiResult.Success(areas) },
+            onSessionEnded = {},
+        )
+        assertEquals(areas, vm.state.value.availableAreas)
     }
 }

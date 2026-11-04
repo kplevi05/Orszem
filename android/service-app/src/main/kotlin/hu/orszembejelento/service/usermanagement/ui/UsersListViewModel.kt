@@ -3,6 +3,7 @@ package hu.orszembejelento.service.usermanagement.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import hu.orszembejelento.service.common.data.ApiResult
+import hu.orszembejelento.service.usermanagement.data.AssignableAreaResponse
 import hu.orszembejelento.service.usermanagement.data.ManagedUserPageResponse
 import hu.orszembejelento.service.usermanagement.data.ManagedUserResponse
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
@@ -17,19 +18,23 @@ private const val PAGE_SIZE = 30
 
 /**
  * `Felhasználók` (brief §51): server-side paginated, service-ID-ascending, backend-enforced
- * visibility/manageability.
+ * visibility/manageability. Supports filtering by status (default: ACTIVE) and service area.
  *
- * Takes [fetchPage] rather than a whole [UserManagementRepository] - mirrors
+ * Takes [fetchPage] and [fetchAreas] rather than a whole [UserManagementRepository] - mirrors
  * [hu.orszembejelento.service.reports.ui.ReportQueueViewModel]'s identical shape, which
- * makes both unit-testable with a plain lambda instead of a mocked/subclassed repository.
+ * makes both unit-testable with plain lambdas instead of a mocked/subclassed repository.
  */
 class UsersListViewModel(
-    private val fetchPage: suspend (page: Int, size: Int, query: String?) -> ApiResult<ManagedUserPageResponse>,
+    private val fetchPage: suspend (page: Int, size: Int, role: String?, status: String?, query: String?, areaId: String?) -> ApiResult<ManagedUserPageResponse>,
+    private val fetchAreas: suspend () -> ApiResult<List<AssignableAreaResponse>> = { ApiResult.Success(emptyList()) },
     private val onSessionEnded: () -> Unit,
 ) : ViewModel() {
 
     constructor(repository: UserManagementRepository, onSessionEnded: () -> Unit) : this(
-        fetchPage = { page, size, query -> repository.list(page = page, size = size, query = query) },
+        fetchPage = { page, size, role, status, query, areaId ->
+            repository.list(page = page, size = size, role = role, status = status, query = query, areaId = areaId)
+        },
+        fetchAreas = { repository.assignableAreas() },
         onSessionEnded = onSessionEnded,
     )
 
@@ -41,6 +46,9 @@ class UsersListViewModel(
         val loadingMore: Boolean = false,
         val error: ApiResult<Nothing>? = null,
         val query: String = "",
+        val statusFilter: String? = "ACTIVE",
+        val areaFilter: String? = null,
+        val availableAreas: List<AssignableAreaResponse> = emptyList(),
     ) {
         val canLoadMore: Boolean get() = items.size < totalCount
     }
@@ -55,7 +63,18 @@ class UsersListViewModel(
     private var refreshJob: Job? = null
 
     init {
+        loadAreas()
         refresh()
+    }
+
+    private fun loadAreas() {
+        viewModelScope.launch {
+            when (val result = fetchAreas()) {
+                is ApiResult.Success -> _state.update { it.copy(availableAreas = result.value) }
+                ApiResult.SessionEnded -> onSessionEnded()
+                else -> Unit
+            }
+        }
     }
 
     fun refresh() {
@@ -80,9 +99,22 @@ class UsersListViewModel(
         refresh()
     }
 
+    fun setStatusFilter(status: String?) {
+        if (_state.value.statusFilter == status) return
+        _state.update { it.copy(statusFilter = status) }
+        refresh()
+    }
+
+    fun setAreaFilter(areaId: String?) {
+        if (_state.value.areaFilter == areaId) return
+        _state.update { it.copy(areaFilter = areaId) }
+        refresh()
+    }
+
     private suspend fun load(page: Int, replace: Boolean) {
-        val query = _state.value.query
-        when (val result = fetchPage(page, PAGE_SIZE, query.ifBlank { null })) {
+        val current = _state.value
+        val query = current.query
+        when (val result = fetchPage(page, PAGE_SIZE, null, current.statusFilter, query.ifBlank { null }, current.areaFilter)) {
             is ApiResult.Success -> _state.update {
                 it.copy(
                     items = if (replace) result.value.items else it.items + result.value.items,

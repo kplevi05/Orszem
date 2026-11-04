@@ -1,6 +1,7 @@
 package hu.orszembejelento.service.usermanagement.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,12 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -90,8 +93,56 @@ fun UsersScreen(
                 placeholder = { Text(stringResource(R.string.search_hint_users)) },
                 leadingIcon = { Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.content_description_search)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp),
             )
+
+            // Status filter: Aktív (default), Deaktivált, Összes
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = state.statusFilter == "ACTIVE",
+                    onClick = { viewModel.setStatusFilter("ACTIVE") },
+                    label = { Text(stringResource(R.string.filter_user_status_active)) },
+                )
+                FilterChip(
+                    selected = state.statusFilter == "DEACTIVATED",
+                    onClick = { viewModel.setStatusFilter("DEACTIVATED") },
+                    label = { Text(stringResource(R.string.filter_user_status_deactivated)) },
+                )
+                FilterChip(
+                    selected = state.statusFilter == null,
+                    onClick = { viewModel.setStatusFilter(null) },
+                    label = { Text(stringResource(R.string.filter_user_status_all)) },
+                )
+            }
+
+            // Service area filter: Minden terület (default), plus each assignable area
+            if (state.availableAreas.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = state.areaFilter == null,
+                        onClick = { viewModel.setAreaFilter(null) },
+                        label = { Text(stringResource(R.string.filter_user_area_all)) },
+                    )
+                    state.availableAreas.forEach { area ->
+                        FilterChip(
+                            selected = state.areaFilter == area.id,
+                            onClick = { viewModel.setAreaFilter(area.id) },
+                            label = { Text(area.name) },
+                        )
+                    }
+                }
+            }
 
             when {
                 state.loading -> FullScreenLoading()

@@ -66,8 +66,6 @@ export function Step1Form({ state, dispatch }: { readonly state: NewReportState;
             ))}
           </ul>
         )}
-
-        <RailwayLineSection state={state} dispatch={dispatch} />
       </div>
     </div>
   )

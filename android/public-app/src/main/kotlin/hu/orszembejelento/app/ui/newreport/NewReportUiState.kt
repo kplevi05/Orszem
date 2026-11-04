@@ -53,7 +53,7 @@ data class NewReportUiState(
     val success: SuccessInfo? = null,
 ) {
     val step1Valid: Boolean
-        get() = selectedSettlement != null && lineStep.isResolved(lineAnswer)
+        get() = selectedSettlement != null
 
     val step2Valid: Boolean
         get() = selectedEventTypeCode != null

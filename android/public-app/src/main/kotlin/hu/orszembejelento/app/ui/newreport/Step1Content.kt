@@ -77,8 +77,6 @@ fun Step1Content(state: NewReportUiState, viewModel: NewReportViewModel, onLocat
                 Text(" " + stringResource(R.string.action_locate_me))
             }
             LocateStatusMessage(state.locateStatus)
-
-            RailwayLineSection(state, viewModel, modifier = Modifier.padding(top = 10.dp))
         }
     }
 }

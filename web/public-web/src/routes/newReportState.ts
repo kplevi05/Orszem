@@ -74,7 +74,7 @@ export function initialNewReportState(): NewReportState {
 }
 
 export function isStep1Valid(state: NewReportState): boolean {
-  return state.selectedSettlement !== null && isLineStepResolved(state.lineStep, state.lineAnswer)
+  return state.selectedSettlement !== null
 }
 
 export function isStep2Valid(state: NewReportState): boolean {

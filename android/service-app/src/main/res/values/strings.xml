@@ -241,8 +241,8 @@
     <string name="action_password_reset">Ideiglenes jelszó kiadása</string>
     <string name="action_deactivate">Deaktiválás</string>
     <string name="action_reactivate">Aktiválás</string>
-    <string name="action_change_role_to_moderator">Szerepkör: Moderátor</string>
-    <string name="action_change_role_to_service_user">Szerepkör: Szolgálati munkatárs</string>
+    <string name="action_change_role_to_moderator">Új szerepkör beállítása: Moderátor</string>
+    <string name="action_change_role_to_service_user">Új szerepkör beállítása: Szolgálati munkatárs</string>
     <string name="action_grant_global_access">Minden terület jogosultság megadása</string>
     <string name="action_revoke_global_access">Minden terület jogosultság visszavonása</string>
     <string name="confirm_deactivate_title">Felhasználó deaktiválása</string>
@@ -272,6 +272,12 @@
     <string name="action_retry">Újrapróbálkozás</string>
     <string name="content_description_back">Vissza</string>
     <string name="content_description_search">Keresés</string>
+
+    <!-- User management list filters -->
+    <string name="filter_user_status_active">Aktív</string>
+    <string name="filter_user_status_deactivated">Deaktivált</string>
+    <string name="filter_user_status_all">Összes</string>
+    <string name="filter_user_area_all">Minden terület</string>
 
     <!-- Phase 10: service area administration -->
     <string name="service_area_search_hint">Terület neve…</string>

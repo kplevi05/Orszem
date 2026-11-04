@@ -111,7 +111,7 @@ describe('step 1 validity', () => {
     expect(isStep1Valid(state)).toBe(true)
   })
 
-  it('is false while a requires-choice line step has not been answered yet', () => {
+  it('is true once the settlement is selected regardless of line step', () => {
     let state = initialNewReportState()
     state = newReportReducer(state, {
       type: 'settlementSelected',
@@ -122,6 +122,6 @@ describe('step 1 validity', () => {
       token: state.lineLookupToken,
       step: { kind: 'requires-choice', coverage: 'COMPLETE', options: [{ id: 'l1', code: '1', displayName: 'Line 1' }] },
     })
-    expect(isStep1Valid(state)).toBe(false)
+    expect(isStep1Valid(state)).toBe(true)
   })
 })
