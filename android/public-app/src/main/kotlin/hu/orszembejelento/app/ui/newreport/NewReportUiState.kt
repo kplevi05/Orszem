@@ -21,6 +21,7 @@ data class SuccessInfo(
     val eventTypeDisplay: String,
     val trainIdentifier: String?,
     val settlementName: String,
+    val note: String? = null,
     val status: String,
 )
 
@@ -44,6 +45,7 @@ data class NewReportUiState(
     val catalogFailed: Boolean = false,
     val selectedCategoryCode: String? = null,
     val selectedEventTypeCode: String? = null,
+    val noteInput: String = "",
 
     // Submission
     val submitting: Boolean = false,

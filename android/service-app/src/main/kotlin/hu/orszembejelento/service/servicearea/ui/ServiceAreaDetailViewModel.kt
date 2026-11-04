@@ -33,6 +33,7 @@ class ServiceAreaDetailViewModel(
         val mutationError: ApiResult<Nothing>? = null,
         /** Set exactly when the last mutation attempt failed - purely so the UI can dismiss the inline banner independently of a fresh load error. */
         val lastMutationFailed: Boolean = false,
+        val deleted: Boolean = false,
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -69,6 +70,38 @@ class ServiceAreaDetailViewModel(
 
     /** Removes one mapped line from this area (brief §21/§52) - `expectedCurrentServiceAreaId` is this area's own id, since the line is listed as currently mapped here. */
     fun unassignLine(railwayLineId: String) = mutate { repository.unassignRailwayLine(railwayLineId, areaId) }
+
+    fun unassignSettlement(settlementId: String) = mutate { repository.unassignSettlement(settlementId, areaId) }
+
+    fun deleteArea() {
+        var alreadyInFlight = false
+        _state.update {
+            if (it.mutationInFlight) {
+                alreadyInFlight = true
+                it
+            } else {
+                it.copy(mutationInFlight = true, mutationError = null)
+            }
+        }
+        if (alreadyInFlight) return
+
+        viewModelScope.launch {
+            when (val result = repository.deleteArea(areaId, requireVersion())) {
+                is ApiResult.Success -> {
+                    _state.update { it.copy(mutationInFlight = false, lastMutationFailed = false, deleted = true) }
+                }
+                ApiResult.SessionEnded -> {
+                    onSessionEnded()
+                    _state.update { it.copy(mutationInFlight = false) }
+                }
+                else -> {
+                    @Suppress("UNCHECKED_CAST")
+                    _state.update { it.copy(mutationInFlight = false, mutationError = result as ApiResult<Nothing>, lastMutationFailed = true) }
+                    refresh()
+                }
+            }
+        }
+    }
 
     private fun requireVersion(): Long = _state.value.detail?.adminVersion ?: error("mutate() called before detail loaded")
 

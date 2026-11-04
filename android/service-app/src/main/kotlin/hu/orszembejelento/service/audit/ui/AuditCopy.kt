@@ -62,10 +62,14 @@ internal fun auditEventTypeLabelRes(code: String): Int? = when (code) {
     "SERVICE_AREA_RENAMED" -> R.string.audit_event_service_area_renamed
     "SERVICE_AREA_ACTIVATED" -> R.string.audit_event_service_area_activated
     "SERVICE_AREA_DEACTIVATED" -> R.string.audit_event_service_area_deactivated
+    "SERVICE_AREA_DELETED" -> R.string.audit_event_service_area_deleted
     "RAILWAY_LINE_SERVICE_AREA_ASSIGNED" -> R.string.audit_event_railway_line_assigned
     "RAILWAY_LINE_SERVICE_AREA_MOVED" -> R.string.audit_event_railway_line_moved
     "RAILWAY_LINE_SERVICE_AREA_UNASSIGNED" -> R.string.audit_event_railway_line_unassigned
     "SETTLEMENT_LINE_SERVICE_AREA_CHANGED" -> R.string.audit_event_settlement_line_area_changed
+    "SETTLEMENT_SERVICE_AREA_ASSIGNED" -> R.string.audit_event_settlement_assigned
+    "SETTLEMENT_SERVICE_AREA_MOVED" -> R.string.audit_event_settlement_moved
+    "SETTLEMENT_SERVICE_AREA_UNASSIGNED" -> R.string.audit_event_settlement_unassigned
     else -> null
 }
 
@@ -86,7 +90,8 @@ internal val AUDIT_EVENT_TYPE_ORDER: List<String> = listOf(
     "USER_AREA_GRANTED", "USER_AREA_REVOKED", "USER_GLOBAL_ACCESS_GRANTED", "USER_GLOBAL_ACCESS_REVOKED", "USER_NICKNAME_CHANGED",
     "REPORT_CLAIMED", "REPORT_RETURNED_TO_NEW", "REPORT_REASSIGNED", "REPORT_ARCHIVED",
     "REPORT_MODERATION_DELETED", "REPORT_MODERATION_RESTORED",
-    "SERVICE_AREA_CREATED", "SERVICE_AREA_RENAMED", "SERVICE_AREA_ACTIVATED", "SERVICE_AREA_DEACTIVATED",
+    "SERVICE_AREA_CREATED", "SERVICE_AREA_RENAMED", "SERVICE_AREA_ACTIVATED", "SERVICE_AREA_DEACTIVATED", "SERVICE_AREA_DELETED",
+    "SETTLEMENT_SERVICE_AREA_ASSIGNED", "SETTLEMENT_SERVICE_AREA_MOVED", "SETTLEMENT_SERVICE_AREA_UNASSIGNED",
     "RAILWAY_LINE_SERVICE_AREA_ASSIGNED", "RAILWAY_LINE_SERVICE_AREA_MOVED", "RAILWAY_LINE_SERVICE_AREA_UNASSIGNED",
     "SETTLEMENT_LINE_SERVICE_AREA_CHANGED",
     "SUPER_ADMIN_CREATED", "SUPER_ADMIN_PASSWORD_RESET",

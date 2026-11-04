@@ -92,6 +92,8 @@ import hu.orszembejelento.service.servicearea.ui.ServiceAreaAdminListScreen
 import hu.orszembejelento.service.servicearea.ui.ServiceAreaAdminListViewModel
 import hu.orszembejelento.service.servicearea.ui.ServiceAreaDetailScreen
 import hu.orszembejelento.service.servicearea.ui.ServiceAreaDetailViewModel
+import hu.orszembejelento.service.servicearea.ui.SettlementPickerScreen
+import hu.orszembejelento.service.servicearea.ui.SettlementPickerViewModel
 import hu.orszembejelento.service.usermanagement.data.UserManagementRepository
 import hu.orszembejelento.service.usermanagement.ui.CreateUserScreen
 import hu.orszembejelento.service.usermanagement.ui.CreateUserViewModel
@@ -122,6 +124,7 @@ internal object Routes {
     const val CREATE_SERVICE_AREA = "service-areas/create"
     const val SERVICE_AREA_DETAIL = "service-areas/{areaId}"
     const val RAILWAY_LINE_PICKER = "service-areas/{areaId}/lines/add?areaName={areaName}"
+    const val SETTLEMENT_PICKER = "service-areas/{areaId}/settlements/add?areaName={areaName}"
     const val AUDIT = "audit"
     const val AUDIT_DETAIL = "audit/{auditEventId}"
 
@@ -131,6 +134,8 @@ internal object Routes {
     fun serviceAreaDetail(areaId: String) = "service-areas/$areaId"
     fun railwayLinePicker(areaId: String, areaName: String) =
         "service-areas/$areaId/lines/add?areaName=${android.net.Uri.encode(areaName)}"
+    fun settlementPicker(areaId: String, areaName: String) =
+        "service-areas/$areaId/settlements/add?areaName=${android.net.Uri.encode(areaName)}"
     fun auditDetail(auditEventId: String) = "audit/$auditEventId"
 }
 
@@ -206,10 +211,17 @@ fun ServiceNavHost(
     // The "active work view" — a persisted, per-user local area lens (brief §13-14). It is
     // only ever applied as the `areaId` query param, so it can never widen scope. A stored
     // area the user no longer covers is dropped (recover to "all areas").
-    val areaChoices = remember(ownAreas) { ownAreas.map { AreaChoice(it.id, it.name) } }
+    val areaChoices = remember(ownAreas) { ownAreas.filter { it.active }.map { AreaChoice(it.id, it.name) } }
     var activeWorkAreaId by remember(serviceId) {
         val stored = activeWorkAreaStore.get(serviceId)
-        mutableStateOf(stored?.takeIf { s -> globalAreaAccess || ownAreas.any { it.id == s } })
+        mutableStateOf(stored?.takeIf { s -> ownAreas.any { it.id == s && it.active } })
+    }
+    androidx.compose.runtime.LaunchedEffect(ownAreas) {
+        val current = activeWorkAreaId
+        if (current != null && ownAreas.none { it.id == current && it.active }) {
+            activeWorkAreaStore.set(serviceId, null)
+            activeWorkAreaId = null
+        }
     }
 
     // A ViewModel store scoped to this signed-in session, not to the Activity. The queue
@@ -578,6 +590,7 @@ fun ServiceNavHost(
                     onBack = { navController.popBackStack() },
                     onCreated = { areaId ->
                         serviceAreaListViewModel?.refresh()
+                        authViewModel.reloadIdentity()
                         // Straight into the new area's own detail (brief §47: "create first,
                         // then configure lines") - pop the create screen off first so Back
                         // from the detail returns to the list, not back to an empty form.
@@ -598,11 +611,6 @@ fun ServiceNavHost(
                 )
                 val detailState by detailViewModel.state.collectAsState()
 
-                // The RailwayLine picker pushed on top of this same detail signals a change
-                // back through the standard Navigation-Compose result mechanism (the picker's
-                // own ViewModel is scoped to its own back-stack entry, so it cannot reach this
-                // detailViewModel directly) - a plain `refresh()` here picks up whatever the
-                // picker actually committed, never a locally-reconstructed guess.
                 val linesChanged = entry.savedStateHandle.getStateFlow("linesChanged", false).collectAsState()
                 androidx.compose.runtime.LaunchedEffect(linesChanged.value) {
                     if (linesChanged.value) {
@@ -615,11 +623,43 @@ fun ServiceNavHost(
                     viewModel = detailViewModel,
                     onBack = {
                         serviceAreaListViewModel?.refresh()
+                        authViewModel.reloadIdentity()
+                        navController.popBackStack()
+                    },
+                    onAddSettlement = {
+                        val name = detailState.detail?.name ?: return@ServiceAreaDetailScreen
+                        navController.navigate(Routes.settlementPicker(areaId, name))
+                    },
+                    onDeleted = {
+                        serviceAreaListViewModel?.refresh()
+                        authViewModel.reloadIdentity()
+                        queues.forEach { it.refresh() }
                         navController.popBackStack()
                     },
                     onAddRailwayLine = {
                         val name = detailState.detail?.name ?: return@ServiceAreaDetailScreen
                         navController.navigate(Routes.railwayLinePicker(areaId, name))
+                    },
+                )
+            }
+            composable(
+                Routes.SETTLEMENT_PICKER,
+                arguments = listOf(navArgument("areaId") {}, navArgument("areaName") { defaultValue = "" }),
+            ) { entry ->
+                val repo = areaAdminRepository ?: return@composable
+                val areaId = entry.arguments?.getString("areaId") ?: return@composable
+                val areaName = entry.arguments?.getString("areaName").orEmpty()
+                val pickerViewModel: SettlementPickerViewModel = viewModel(
+                    key = "settlement-picker-$areaId",
+                    factory = viewModelFactory { SettlementPickerViewModel(areaId, repo, onSessionEnded) },
+                )
+                SettlementPickerScreen(
+                    viewModel = pickerViewModel,
+                    targetAreaId = areaId,
+                    targetAreaName = areaName,
+                    onBack = { navController.popBackStack() },
+                    onChanged = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("linesChanged", true)
                     },
                 )
             }

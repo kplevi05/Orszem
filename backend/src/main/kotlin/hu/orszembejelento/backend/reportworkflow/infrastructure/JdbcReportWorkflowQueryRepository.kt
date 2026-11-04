@@ -21,6 +21,7 @@ data class ReportListFilter(
     val settlementId: UUID? = null,
     val areaId: UUID? = null,
     val assigneeServiceId: String? = null,
+    val unclassifiedOnly: Boolean = false,
 )
 
 /**
@@ -43,6 +44,7 @@ data class ReportWorkflowRow(
     val categoryDisplayName: String,
     val eventTypeCode: String,
     val eventTypeDisplayName: String,
+    val note: String? = null,
     val status: ReportStatus,
     val routingStatus: RoutingSnapshotStatus,
     val routingReason: UnclassifiedReason?,
@@ -216,7 +218,7 @@ class JdbcReportWorkflowQueryRepository(
         if (actor.role == UserRole.SUPER_ADMIN) return null
         if (actor.role == UserRole.MODERATOR && actor.globalAreaAccess) return null
 
-        val unclassifiedFallback = actor.role == UserRole.SERVICE_USER && workflowFallbackProperties.unclassifiedServiceUserAccessEnabled
+        val unclassifiedFallback = workflowFallbackProperties.unclassifiedServiceUserAccessEnabled
         val unclassifiedClause = "rs.routing_status = 'UNCLASSIFIED'"
 
         if (actor.role == UserRole.SERVICE_USER && actor.globalAreaAccess) {
@@ -243,7 +245,11 @@ class JdbcReportWorkflowQueryRepository(
         filter.categoryCode?.let { clauses += "r.event_type_code IN (SELECT code FROM report_event_types WHERE category_code = :fCategory)"; params["fCategory"] = it }
         filter.eventTypeCode?.let { clauses += "r.event_type_code = :fEventType"; params["fEventType"] = it }
         filter.settlementId?.let { clauses += "r.settlement_id = :fSettlement"; params["fSettlement"] = it }
-        filter.areaId?.let { clauses += "rs.service_area_id = :fArea"; params["fArea"] = it }
+        if (filter.unclassifiedOnly) {
+            clauses += "rs.routing_status = 'UNCLASSIFIED'"
+        } else {
+            filter.areaId?.let { clauses += "rs.service_area_id = :fArea"; params["fArea"] = it }
+        }
         filter.assigneeServiceId?.let { clauses += "au.service_id = :fAssignee"; params["fAssignee"] = it }
         filter.query?.takeIf { it.isNotBlank() }?.let {
             clauses += "(r.train_identifier ILIKE :fQuery OR s.name ILIKE :fQuery OR r.public_id::text ILIKE :fQuery)"
@@ -287,6 +293,7 @@ class JdbcReportWorkflowQueryRepository(
         categoryDisplayName = rs.getString("category_display_name"),
         eventTypeCode = rs.getString("event_type_code"),
         eventTypeDisplayName = rs.getString("event_type_display_name"),
+        note = rs.getString("note"),
         status = ReportStatus.valueOf(rs.getString("status")),
         routingStatus = RoutingSnapshotStatus.valueOf(rs.getString("routing_status")),
         routingReason = rs.getString("routing_reason")?.let(UnclassifiedReason::valueOf),
@@ -327,7 +334,7 @@ class JdbcReportWorkflowQueryRepository(
                    r.settlement_id, s.name AS settlement_name, s.county_name,
                    et.category_code AS category_code, cat.display_name AS category_display_name,
                    r.event_type_code, et.display_name AS event_type_display_name,
-                   r.status,
+                   r.note, r.status,
                    rs.routing_status, rs.routing_reason,
                    rs.resolved_railway_line_id, rl.display_name AS resolved_railway_line_display_name,
                    rs.service_area_id, sa.name AS service_area_name, sa.status AS service_area_status,

@@ -100,7 +100,7 @@ orszem:
   # deliberate, switchable owner decision, never implied by merging this code. Flip with no
   # client release required.
   workflow:
-    unclassified-service-user-access-enabled: ${ORSZEM_UNCLASSIFIED_SERVICE_USER_ACCESS_ENABLED:false}
+    unclassified-service-user-access-enabled: ${ORSZEM_UNCLASSIFIED_SERVICE_USER_ACCESS_ENABLED:true}
 
 logging:
   level:

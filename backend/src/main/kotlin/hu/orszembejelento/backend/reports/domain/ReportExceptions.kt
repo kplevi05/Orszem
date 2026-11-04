@@ -39,6 +39,10 @@ class OccurredAtTooFarInFutureException :
 class TrainIdentifierTooLongException(val maxCodePoints: Int) :
     ReportException("VALIDATION_ERROR", "trainIdentifier must be at most $maxCodePoints Unicode code point(s)")
 
+/** `note`, once trimmed, exceeds the maximum length (256 Unicode code points). */
+class ReportNoteTooLongException(val maxCodePoints: Int) :
+    ReportException("VALIDATION_ERROR", "note must be at most $maxCodePoints Unicode code point(s)")
+
 /**
  * `clientSubmissionId` already names a report whose stored business payload or bound
  * access credential does not match this request.

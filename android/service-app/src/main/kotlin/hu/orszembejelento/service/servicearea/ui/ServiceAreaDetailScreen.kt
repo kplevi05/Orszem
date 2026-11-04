@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -21,6 +22,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,27 +38,30 @@ import hu.orszembejelento.service.common.ui.ErrorState
 import hu.orszembejelento.service.common.ui.FullScreenLoading
 import hu.orszembejelento.service.common.ui.InlineErrorBanner
 import hu.orszembejelento.service.common.ui.apiErrorMessage
-import hu.orszembejelento.service.servicearea.data.MappedRailwayLineResponse
+import hu.orszembejelento.service.servicearea.data.MappedSettlementResponse
 import hu.orszembejelento.service.servicearea.data.ServiceAreaAdminDetailResponse
 
 /**
- * `Szolgálati terület` detail (brief §48-49/§53-56/§60).
- *
- * Never shows `adminVersion`, internal DB metadata, or a routing/lock detail anywhere (brief
- * §48/§67/§6). Deactivation's own blockers are explained in plain Hungarian both as a
- * disabled-button hint (brief §53) and, since the backend stays authoritative and displayed
- * counts can go stale, as the exact same copy if the backend rejects anyway (brief §53/§58).
- * There is no report-reroute action anywhere on this screen (brief §63), and user-area
- * assignments are never edited here (brief §61) - only a read-only mapped-line list and the
- * area's own lifecycle actions.
+ * `Szolgálati terület` detail: rename, activate/deactivate, delete, and settlement assignments.
  */
 @Composable
-fun ServiceAreaDetailScreen(viewModel: ServiceAreaDetailViewModel, onBack: () -> Unit, onAddRailwayLine: () -> Unit) {
+fun ServiceAreaDetailScreen(
+    viewModel: ServiceAreaDetailViewModel,
+    onBack: () -> Unit,
+    onAddSettlement: () -> Unit = {},
+    onDeleted: () -> Unit = onBack,
+    @Suppress("UNUSED_PARAMETER") onAddRailwayLine: () -> Unit = {},
+) {
     val state by viewModel.state.collectAsState()
     var showRenameDialog by remember { mutableStateOf(false) }
     var showActivateDialog by remember { mutableStateOf(false) }
     var showDeactivateDialog by remember { mutableStateOf(false) }
-    var confirmUnassignLine by remember { mutableStateOf<MappedRailwayLineResponse?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var confirmUnassignSettlement by remember { mutableStateOf<MappedSettlementResponse?>(null) }
+
+    LaunchedEffect(state.deleted) {
+        if (state.deleted) onDeleted()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -95,12 +100,11 @@ fun ServiceAreaDetailScreen(viewModel: ServiceAreaDetailViewModel, onBack: () ->
                         InlineErrorBanner(apiErrorMessage(state.mutationError!!))
                     }
 
-                    RailwayLinesSection(
-                        lines = detail.mappedRailwayLines,
-                        settlementMappingCount = detail.mappedSettlementLineCount,
+                    SettlementsSection(
+                        settlements = detail.mappedSettlements,
                         mutationInFlight = state.mutationInFlight,
-                        onAdd = onAddRailwayLine,
-                        onUnassign = { confirmUnassignLine = it },
+                        onAdd = onAddSettlement,
+                        onUnassign = { confirmUnassignSettlement = it },
                     )
 
                     LifecycleSection(
@@ -108,6 +112,7 @@ fun ServiceAreaDetailScreen(viewModel: ServiceAreaDetailViewModel, onBack: () ->
                         mutationInFlight = state.mutationInFlight,
                         onActivate = { showActivateDialog = true },
                         onDeactivate = { showDeactivateDialog = true },
+                        onDelete = { showDeleteDialog = true },
                     )
 
                     Spacer(modifier = Modifier.padding(bottom = 24.dp))
@@ -142,44 +147,46 @@ fun ServiceAreaDetailScreen(viewModel: ServiceAreaDetailViewModel, onBack: () ->
             onDismiss = { showDeactivateDialog = false },
         )
     }
-    confirmUnassignLine?.let { line ->
+    if (showDeleteDialog) {
         ConfirmDialog(
-            title = stringResource(R.string.unassign_line_dialog_title),
-            text = stringResource(R.string.unassign_line_warning) + "\n\n" + stringResource(R.string.line_future_only_notice),
+            title = stringResource(R.string.delete_area_dialog_title),
+            text = stringResource(R.string.delete_area_dialog_text),
+            confirmLabel = stringResource(R.string.action_delete_area),
+            dangerous = true,
+            onConfirm = { showDeleteDialog = false; viewModel.deleteArea() },
+            onDismiss = { showDeleteDialog = false },
+        )
+    }
+    confirmUnassignSettlement?.let { settlement ->
+        ConfirmDialog(
+            title = stringResource(R.string.unassign_settlement_dialog_title),
+            text = stringResource(R.string.unassign_settlement_warning, settlement.name),
             confirmLabel = stringResource(R.string.action_unassign_line),
             dangerous = true,
-            onConfirm = { confirmUnassignLine = null; viewModel.unassignLine(line.id) },
-            onDismiss = { confirmUnassignLine = null },
+            onConfirm = { confirmUnassignSettlement = null; viewModel.unassignSettlement(settlement.id) },
+            onDismiss = { confirmUnassignSettlement = null },
         )
     }
 }
 
 @Composable
-private fun RailwayLinesSection(
-    lines: List<MappedRailwayLineResponse>,
-    settlementMappingCount: Int,
+private fun SettlementsSection(
+    settlements: List<MappedSettlementResponse>,
     mutationInFlight: Boolean,
     onAdd: () -> Unit,
-    onUnassign: (MappedRailwayLineResponse) -> Unit,
+    onUnassign: (MappedSettlementResponse) -> Unit,
 ) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.railway_lines_section_title), style = MaterialTheme.typography.titleSmall)
-            TextButton(onClick = onAdd) { Text(stringResource(R.string.action_add_railway_line)) }
-        }
-        Text(
-            stringResource(R.string.railway_lines_settlement_mapping_count, settlementMappingCount),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            stringResource(R.string.railway_lines_whole_line_title),
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(top = 10.dp),
-        )
-        if (lines.isEmpty()) {
             Text(
-                stringResource(R.string.railway_lines_section_empty),
+                stringResource(R.string.settlements_section_title, settlements.size),
+                style = MaterialTheme.typography.titleSmall,
+            )
+            TextButton(onClick = onAdd) { Text(stringResource(R.string.action_add_settlement)) }
+        }
+        if (settlements.isEmpty()) {
+            Text(
+                stringResource(R.string.settlements_section_empty),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp),
@@ -187,23 +194,24 @@ private fun RailwayLinesSection(
         } else {
             Card(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                 Column(modifier = Modifier.padding(4.dp)) {
-                    lines.forEach { line ->
-                        // A stacked layout, not a single squeezed Row: a long display name
-                        // (realistic Hungarian line names routinely are) must never be forced
-                        // into whatever narrow width is left over once "Hozzárendelés
-                        // megszüntetése" claims its own space - the same class of layout
-                        // squeeze the Phase 9 correction pass fixed for long metadata.
+                    settlements.forEach { settlement ->
                         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
-                            Text(line.displayName, style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                line.lineCode + if (!line.active) " · " + stringResource(R.string.railway_line_inactive_reference) else "",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            val title = buildString {
+                                append(settlement.name)
+                                settlement.countyName?.takeIf { it.isNotBlank() }?.let { append(" ($it)") }
+                            }
+                            Text(title, style = MaterialTheme.typography.bodyMedium)
+                            if (!settlement.active) {
+                                Text(
+                                    stringResource(R.string.line_settlement_inactive_suffix),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                             TextButton(
-                                onClick = { onUnassign(line) },
+                                onClick = { onUnassign(settlement) },
                                 enabled = !mutationInFlight,
-                                modifier = Modifier.align(Alignment.End).padding(top = 4.dp),
+                                modifier = Modifier.align(Alignment.End).padding(top = 2.dp),
                             ) {
                                 Text(stringResource(R.string.action_unassign_line))
                             }
@@ -222,28 +230,13 @@ private fun LifecycleSection(
     mutationInFlight: Boolean,
     onActivate: () -> Unit,
     onDeactivate: () -> Unit,
+    onDelete: () -> Unit,
 ) {
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (detail.active) {
-            val blockedByLines = detail.mappedRailwayLineCount > 0 || detail.mappedSettlementLineCount > 0
-            val blockedByReports = detail.openOperationalReportCount > 0
-            val eligible = !blockedByLines && !blockedByReports
-            if (blockedByLines) {
-                Text(stringResource(R.string.deactivate_blocked_lines), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-            }
-            if (blockedByReports) {
-                Text(
-                    stringResource(R.string.deactivate_blocked_reports),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = if (blockedByLines) 4.dp else 0.dp),
-                )
-            }
             OutlinedButton(
                 onClick = onDeactivate,
-                // Backend remains authoritative regardless (brief §53) - this only spares the
-                // user an avoidable round trip when the displayed counts already show why.
-                enabled = eligible && !mutationInFlight,
+                enabled = !mutationInFlight,
                 modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
             ) { Text(stringResource(R.string.action_deactivate_area)) }
         } else {
@@ -252,6 +245,14 @@ private fun LifecycleSection(
                 enabled = !mutationInFlight,
                 modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
             ) { Text(stringResource(R.string.action_activate_area)) }
+        }
+        OutlinedButton(
+            onClick = onDelete,
+            enabled = !mutationInFlight,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.action_delete_area))
         }
     }
 }

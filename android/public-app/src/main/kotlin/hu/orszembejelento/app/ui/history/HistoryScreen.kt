@@ -120,6 +120,7 @@ fun HistoryItemCard(item: ReportHistoryEntity, onRetry: () -> Unit, onRefresh: (
         Column(modifier = Modifier.padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(item.settlementNameSnapshot, style = MaterialTheme.typography.bodyMedium, color = PublicPalette.TextMuted)
             item.trainIdentifier?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = PublicPalette.TextMuted) }
+            item.note?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = PublicPalette.TextMuted) }
             Text(HungarianDateTime.format(item.occurredAt), style = MaterialTheme.typography.bodySmall, color = PublicPalette.TextMuted)
             item.lastStatusCheckedAt?.let {
                 Text(

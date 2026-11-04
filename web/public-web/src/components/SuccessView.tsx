@@ -26,6 +26,7 @@ export function SuccessView({
         <p className="meta-line">{strings.successEventType(info.eventTypeDisplay)}</p>
         {info.trainIdentifier && <p className="meta-line">{strings.successTrain(info.trainIdentifier)}</p>}
         <p className="meta-line">{strings.successSettlement(info.settlementName)}</p>
+        {info.note && <p className="meta-line">{strings.successNote(info.note)}</p>}
         <p className="meta-line">{strings.successStatus(strings.statusReceived)}</p>
         <SettlementDataSourceNote style={{ margin: '0.25rem 0 0' }} />
       </div>

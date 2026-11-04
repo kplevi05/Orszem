@@ -60,6 +60,20 @@ export function Step2Form({ state, dispatch }: { readonly state: NewReportState;
           ))}
         </fieldset>
       )}
+
+      <label className="field">
+        <span>{strings.fieldNote}</span>
+        <textarea
+          rows={4}
+          maxLength={256}
+          placeholder={strings.fieldNoteHint}
+          value={state.noteInput}
+          onChange={(e) => dispatch({ type: 'noteChanged', value: e.target.value })}
+        />
+        <small className="muted" style={{ textAlign: 'right' }}>
+          {strings.fieldNoteCount(state.noteInput.length, 256)}
+        </small>
+      </label>
     </div>
   )
 }

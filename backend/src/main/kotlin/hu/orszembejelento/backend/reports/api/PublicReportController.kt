@@ -56,6 +56,8 @@ data class SubmitReportRequest(
     val railwayLineId: UUID?,
     @field:NotBlank
     val eventTypeCode: String?,
+    @field:Size(max = 1024)
+    val note: String? = null,
 )
 
 /** The stable, immutable creation receipt - never the current (mutable) status. See §24. */
@@ -77,6 +79,7 @@ data class PublicReportResponse(
     val settlement: SettlementSummary,
     val category: CategorySummary,
     val eventType: EventTypeSummary,
+    val note: String? = null,
     val status: String,
 )
 
@@ -134,6 +137,7 @@ class PublicReportController(
             settlementId = request.settlementId!!,
             railwayLineId = request.railwayLineId,
             eventTypeCode = request.eventTypeCode!!,
+            note = request.note,
         )
         // The source is resolved by the same trusted-proxy-aware resolver the login throttle uses.
         val sourceAddress = clientIpResolver.resolve(httpRequest)
@@ -191,6 +195,7 @@ class PublicReportController(
         settlement = SettlementSummary(report.settlementId, settlementName),
         category = CategorySummary(category.code, category.displayName),
         eventType = EventTypeSummary(eventType.code, eventType.displayName),
+        note = report.note,
         status = publicStatus.name,
     )
 }

@@ -19,6 +19,7 @@ export interface SuccessInfo {
   readonly eventTypeDisplay: string
   readonly trainIdentifier: string | null
   readonly settlementName: string
+  readonly note?: string | null
   readonly status: string
 }
 
@@ -37,6 +38,7 @@ export interface NewReportState {
   readonly catalogFailed: boolean
   readonly selectedCategoryCode: string | null
   readonly selectedEventTypeCode: string | null
+  readonly noteInput: string
   readonly submitting: boolean
   readonly error: UiErrorReason | null
   readonly success: SuccessInfo | null
@@ -62,6 +64,7 @@ export function initialNewReportState(): NewReportState {
     catalogFailed: false,
     selectedCategoryCode: null,
     selectedEventTypeCode: null,
+    noteInput: '',
     submitting: false,
     error: null,
     success: null,
@@ -96,6 +99,7 @@ export type NewReportAction =
   | { readonly type: 'catalogLoadFailed' }
   | { readonly type: 'categorySelected'; readonly code: string }
   | { readonly type: 'eventTypeSelected'; readonly code: string }
+  | { readonly type: 'noteChanged'; readonly value: string }
   | { readonly type: 'submitStarted' }
   | { readonly type: 'submitSucceeded'; readonly info: SuccessInfo }
   | { readonly type: 'submitFailed'; readonly reason: UiErrorReason; readonly backToStep1?: boolean }
@@ -157,6 +161,8 @@ export function newReportReducer(state: NewReportState, action: NewReportAction)
       return { ...state, selectedCategoryCode: action.code, selectedEventTypeCode: null }
     case 'eventTypeSelected':
       return { ...state, selectedEventTypeCode: action.code }
+    case 'noteChanged':
+      return { ...state, noteInput: action.value.slice(0, 256) }
     case 'submitStarted':
       return { ...state, submitting: true, error: null }
     case 'submitSucceeded':

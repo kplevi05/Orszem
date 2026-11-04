@@ -25,12 +25,22 @@ data class ServiceAreaAdminListRow(
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
     val mappedSettlementLineCount: Int = 0,
+    val mappedSettlementCount: Int = 0,
 )
 
 data class ServiceAreaAdminListPage(val items: List<ServiceAreaAdminListRow>, val totalElements: Int)
 
 /** One mapped RailwayLine as shown inside a ServiceArea's detail (brief §38/§49). */
 data class ServiceAreaMappedRailwayLine(val id: UUID, val lineCode: String, val displayName: String, val active: Boolean)
+
+/** One mapped Settlement as shown inside a ServiceArea's detail. */
+data class ServiceAreaMappedSettlement(
+    val id: UUID,
+    val kshCode: String,
+    val name: String,
+    val countyName: String?,
+    val active: Boolean,
+)
 
 /** The full ServiceArea admin detail (brief §38). */
 data class ServiceAreaAdminDetail(
@@ -42,7 +52,30 @@ data class ServiceAreaAdminDetail(
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
     val mappedSettlementLineCount: Int = 0,
+    val mappedSettlements: List<ServiceAreaMappedSettlement> = emptyList(),
+    val mappedSettlementCount: Int = 0,
 )
+
+enum class SettlementAssignmentFilter { ALL, ASSIGNED, UNASSIGNED }
+
+data class SettlementAdminListFilter(
+    val query: String? = null,
+    val active: Boolean? = null,
+    val serviceAreaId: UUID? = null,
+    val assignment: SettlementAssignmentFilter = SettlementAssignmentFilter.ALL,
+)
+
+data class SettlementAdminListRow(
+    val id: UUID,
+    val kshCode: String,
+    val name: String,
+    val countyName: String?,
+    val active: Boolean,
+    val currentServiceAreaId: UUID?,
+    val currentServiceAreaName: String?,
+)
+
+data class SettlementAdminListPage(val items: List<SettlementAdminListRow>, val totalElements: Int)
 
 /**
  * Which assignment state to filter the RailwayLine admin list to (brief §39, extended for

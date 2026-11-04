@@ -541,6 +541,7 @@ input:focus-visible,
 }
 
 .field input,
+.field textarea,
 input[type='text'],
 input[type='datetime-local'] {
   padding: 0.85rem 0.9rem;
@@ -550,6 +551,11 @@ input[type='datetime-local'] {
   width: 100%;
   background: var(--surface);
   color: var(--text);
+  font-family: inherit;
+}
+
+.field textarea {
+  resize: vertical;
 }
 
 .suggestion-list {

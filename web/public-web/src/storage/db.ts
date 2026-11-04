@@ -20,6 +20,7 @@ export interface ReportRecord {
   readonly categoryDisplaySnapshot: string
   readonly eventTypeCode: string
   readonly eventTypeDisplaySnapshot: string
+  readonly note?: string | null
   readonly submissionState: SubmissionState
   readonly publicStatus: PublicReportStatus | null
   readonly serverSubmittedAt: string | null

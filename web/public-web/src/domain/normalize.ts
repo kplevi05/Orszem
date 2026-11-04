@@ -5,6 +5,7 @@ export interface NormalizedReportPayload {
   readonly settlementId: string
   readonly railwayLineId: string | null
   readonly eventTypeCode: string
+  readonly note?: string | null
 }
 
 /** Raw, human-entered form values before normalization. */
@@ -14,21 +15,24 @@ export interface ReportDraft {
   readonly settlementId: string
   readonly railwayLineId: string | null
   readonly eventTypeCode: string
+  readonly noteInput?: string | null
 }
 
 /**
- * Trims and blank-normalizes `trainIdentifierInput`, mirroring exactly what the backend's
- * own `SubmitReportUseCase.normalize` does - so what this client persists and later
- * compares against a server replay is the same value the server itself computes.
+ * Trims and blank-normalizes `trainIdentifierInput` and `noteInput`, mirroring exactly what
+ * the backend's own `SubmitReportUseCase.normalize` does - so what this client persists and
+ * later compares against a server replay is the same value the server itself computes.
  */
 export function normalizeReportDraft(draft: ReportDraft): NormalizedReportPayload {
   const trimmed = draft.trainIdentifierInput?.trim() ?? ''
+  const trimmedNote = draft.noteInput?.trim() ?? ''
   return {
     occurredAt: draft.occurredAt.toISOString(),
     trainIdentifier: trimmed.length > 0 ? trimmed : null,
     settlementId: draft.settlementId,
     railwayLineId: draft.railwayLineId,
     eventTypeCode: draft.eventTypeCode,
+    note: trimmedNote.length > 0 ? trimmedNote : null,
   }
 }
 
@@ -38,6 +42,7 @@ export function payloadsEqual(a: NormalizedReportPayload, b: NormalizedReportPay
     a.trainIdentifier === b.trainIdentifier &&
     a.settlementId === b.settlementId &&
     a.railwayLineId === b.railwayLineId &&
-    a.eventTypeCode === b.eventTypeCode
+    a.eventTypeCode === b.eventTypeCode &&
+    (a.note ?? null) === (b.note ?? null)
   )
 }

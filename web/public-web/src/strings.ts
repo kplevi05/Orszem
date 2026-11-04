@@ -47,6 +47,9 @@ export const strings = {
   step2Title: '2. Esemény',
   categoryChooseTitle: 'Kategória',
   eventTypeChooseTitle: 'Esemény típusa',
+  fieldNote: 'Megjegyzés (nem kötelező)',
+  fieldNoteHint: 'További részletek leírása (legfeljebb 256 karakter)…',
+  fieldNoteCount: (len: number, max: number) => `${len} / ${max}`,
   catalogLoadFailed: 'A kategórialista betöltése nem sikerült.',
 
   successTitle: 'Bejelentés elküldve',
@@ -54,6 +57,7 @@ export const strings = {
   successEventType: (name: string) => `Esemény: ${name}`,
   successTrain: (train: string) => `Vonatszám: ${train}`,
   successSettlement: (name: string) => `Település: ${name}`,
+  successNote: (note: string) => `Megjegyzés: ${note}`,
   successStatus: (status: string) => `Állapot: ${status}`,
 
   historyTitle: 'Előzmények',

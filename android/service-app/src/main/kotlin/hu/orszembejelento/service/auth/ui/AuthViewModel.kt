@@ -143,6 +143,16 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         _state.value = AuthState.Unauthenticated
     }
 
+    fun reloadIdentity() {
+        viewModelScope.launch {
+            when (val outcome = repository.reloadIdentity()) {
+                is AuthOutcome.Success -> apply(outcome, onEnded = AuthState.Unauthenticated)
+                AuthOutcome.SessionEnded -> _state.value = AuthState.Unauthenticated
+                else -> Unit
+            }
+        }
+    }
+
     private fun apply(
         outcome: AuthOutcome,
         onEnded: AuthState,

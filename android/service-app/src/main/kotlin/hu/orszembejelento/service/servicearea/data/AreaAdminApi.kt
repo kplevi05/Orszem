@@ -28,9 +28,10 @@ data class ServiceAreaAdminListItemResponse(
     val name: String,
     val active: Boolean,
     val adminVersion: Long,
-    val mappedRailwayLineCount: Int,
-    val openOperationalReportCount: Int,
+    val mappedRailwayLineCount: Int = 0,
+    val openOperationalReportCount: Int = 0,
     val mappedSettlementLineCount: Int = 0,
+    val mappedSettlementCount: Int = 0,
 )
 
 @Serializable
@@ -51,15 +52,47 @@ data class MappedRailwayLineResponse(
 )
 
 @Serializable
+data class MappedSettlementResponse(
+    val id: String,
+    val kshCode: String,
+    val name: String,
+    val countyName: String? = null,
+    val active: Boolean = true,
+)
+
+@Serializable
 data class ServiceAreaAdminDetailResponse(
     val id: String,
     val name: String,
     val active: Boolean,
     val adminVersion: Long,
     val mappedRailwayLines: List<MappedRailwayLineResponse> = emptyList(),
-    val mappedRailwayLineCount: Int,
-    val openOperationalReportCount: Int,
+    val mappedRailwayLineCount: Int = 0,
+    val openOperationalReportCount: Int = 0,
     val mappedSettlementLineCount: Int = 0,
+    val mappedSettlements: List<MappedSettlementResponse> = emptyList(),
+    val mappedSettlementCount: Int = 0,
+)
+
+@Serializable
+data class SettlementAdminListItemResponse(
+    val id: String,
+    val kshCode: String,
+    val name: String,
+    val countyName: String? = null,
+    val active: Boolean = true,
+    val currentServiceAreaId: String? = null,
+    val currentServiceAreaName: String? = null,
+    val currentServiceAreaActive: Boolean? = null,
+)
+
+@Serializable
+data class SettlementAdminListPageResponse(
+    val items: List<SettlementAdminListItemResponse>,
+    val page: Int,
+    val size: Int,
+    val totalElements: Int,
+    val totalPages: Int,
 )
 
 @Serializable
@@ -128,6 +161,12 @@ data class AssignRailwayLineRequest(val targetServiceAreaId: String, val expecte
 @Serializable
 data class UnassignRailwayLineRequest(val expectedCurrentServiceAreaId: String)
 
+@Serializable
+data class AssignSettlementRequest(val targetServiceAreaId: String, val expectedCurrentServiceAreaId: String? = null)
+
+@Serializable
+data class UnassignSettlementRequest(val expectedCurrentServiceAreaId: String)
+
 /**
  * The Phase 10 ServiceArea-administration API.
  *
@@ -177,6 +216,38 @@ interface AreaAdminApi {
         @Path("areaId") areaId: String,
         @Body request: ServiceAreaVersionedRequest,
     ): Response<ServiceAreaAdminResponse>
+
+    @POST("api/v1/service/service-area-admin/areas/{areaId}/delete")
+    suspend fun deleteArea(
+        @Header("Authorization") bearer: String,
+        @Path("areaId") areaId: String,
+        @Body request: ServiceAreaVersionedRequest,
+    ): Response<Unit>
+
+    @GET("api/v1/service/service-area-admin/settlements")
+    suspend fun listSettlements(
+        @Header("Authorization") bearer: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+        @Query("query") query: String? = null,
+        @Query("active") active: Boolean? = null,
+        @Query("serviceAreaId") serviceAreaId: String? = null,
+        @Query("assignment") assignment: String? = null,
+    ): Response<SettlementAdminListPageResponse>
+
+    @POST("api/v1/service/service-area-admin/settlements/{settlementId}/assign")
+    suspend fun assignSettlement(
+        @Header("Authorization") bearer: String,
+        @Path("settlementId") settlementId: String,
+        @Body request: AssignSettlementRequest,
+    ): Response<Unit>
+
+    @POST("api/v1/service/service-area-admin/settlements/{settlementId}/unassign")
+    suspend fun unassignSettlement(
+        @Header("Authorization") bearer: String,
+        @Path("settlementId") settlementId: String,
+        @Body request: UnassignSettlementRequest,
+    ): Response<Unit>
 
     @GET("api/v1/service/service-area-admin/railway-lines")
     suspend fun listRailwayLines(

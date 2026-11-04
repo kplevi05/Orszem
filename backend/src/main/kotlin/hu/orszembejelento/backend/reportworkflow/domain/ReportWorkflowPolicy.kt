@@ -63,10 +63,13 @@ class ReportWorkflowPolicy(
         if (actor.role == UserRole.SUPER_ADMIN) return true
 
         if (!report.routed) {
-            if (unclassifiedServiceUserAccessEnabled && actor.role == UserRole.SERVICE_USER) {
-                return when (report.status) {
-                    ReportStatus.NEW, ReportStatus.ARCHIVED -> true
-                    ReportStatus.IN_PROGRESS -> report.assignedUserId == actor.userId
+            if (unclassifiedServiceUserAccessEnabled) {
+                if (actor.role == UserRole.MODERATOR) return true
+                if (actor.role == UserRole.SERVICE_USER) {
+                    return when (report.status) {
+                        ReportStatus.NEW, ReportStatus.ARCHIVED -> true
+                        ReportStatus.IN_PROGRESS -> report.assignedUserId == actor.userId
+                    }
                 }
             }
             return areaScopePolicy.canViewUnclassified(actorAsAreaActor(actor))

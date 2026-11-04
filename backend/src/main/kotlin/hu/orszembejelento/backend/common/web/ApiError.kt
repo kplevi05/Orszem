@@ -212,6 +212,12 @@ enum class ErrorCode {
     /** The line is already mapped to the requested target area. */
     RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA,
 
+    /** Settlement administration error codes for manual settlement-to-service-area assignment. */
+    SETTLEMENT_NOT_FOUND,
+    SETTLEMENT_INACTIVE,
+    SETTLEMENT_ASSIGNMENT_CHANGED,
+    SETTLEMENT_ALREADY_ASSIGNED_TO_AREA,
+
     // ------------------------------------------------------------------ Phase 11 - analytics
 
     /** `areaId` does not exist, or exists outside the actor's current analytics scope - one response for both (brief §22). */

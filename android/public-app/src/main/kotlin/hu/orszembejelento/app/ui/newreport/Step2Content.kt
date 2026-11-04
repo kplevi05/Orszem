@@ -12,12 +12,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import hu.orszembejelento.app.R
 import hu.orszembejelento.app.ui.PublicPalette
@@ -82,6 +84,23 @@ fun Step2Content(state: NewReportUiState, viewModel: NewReportViewModel) {
                         }
                     }
                 }
+
+                OutlinedTextField(
+                    value = state.noteInput,
+                    onValueChange = viewModel::onNoteChanged,
+                    label = { Text(stringResource(R.string.field_note)) },
+                    placeholder = { Text(stringResource(R.string.field_note_hint)) },
+                    minLines = 3,
+                    maxLines = 5,
+                    supportingText = {
+                        Text(
+                            stringResource(R.string.field_note_count, state.noteInput.codePointCount(0, state.noteInput.length), 256),
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End,
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+                )
             }
         }
     }

@@ -59,11 +59,11 @@ class JdbcReportRepository(private val jdbc: JdbcClient) {
             INSERT INTO reports (
                 id, public_id, client_submission_id, public_access_credential_hash,
                 occurred_at, submitted_at, train_identifier, settlement_id,
-                submitted_railway_line_id, event_type_code, status
+                submitted_railway_line_id, event_type_code, note, status
             ) VALUES (
                 :id, :publicId, :clientSubmissionId, :credentialHash,
                 :occurredAt, :submittedAt, :trainIdentifier, :settlementId,
-                :railwayLineId, :eventTypeCode, :status
+                :railwayLineId, :eventTypeCode, :note, :status
             )
             ON CONFLICT (client_submission_id) DO NOTHING
             """.trimIndent(),
@@ -78,6 +78,7 @@ class JdbcReportRepository(private val jdbc: JdbcClient) {
             .param("settlementId", report.settlementId)
             .param("railwayLineId", report.submittedRailwayLineId)
             .param("eventTypeCode", report.eventTypeCode)
+            .param("note", report.note)
             .param("status", report.status.name)
             .update()
         return inserted > 0
@@ -159,6 +160,7 @@ class JdbcReportRepository(private val jdbc: JdbcClient) {
         settlementId = rs.getObject("settlement_id", UUID::class.java),
         submittedRailwayLineId = rs.getObject("submitted_railway_line_id", UUID::class.java),
         eventTypeCode = rs.getString("event_type_code"),
+        note = rs.getString("note"),
         status = ReportStatus.valueOf(rs.getString("status")),
         assignedUserId = rs.getObject("assigned_user_id", UUID::class.java),
         workflowVersion = rs.getLong("workflow_version"),
@@ -181,7 +183,7 @@ class JdbcReportRepository(private val jdbc: JdbcClient) {
         const val SELECT_REPORT = """
             SELECT id, public_id, client_submission_id, public_access_credential_hash,
                    occurred_at, submitted_at, train_identifier, settlement_id,
-                   submitted_railway_line_id, event_type_code, status,
+                   submitted_railway_line_id, event_type_code, note, status,
                    assigned_user_id, workflow_version, archived_at
               FROM reports
         """

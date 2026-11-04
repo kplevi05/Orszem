@@ -57,6 +57,7 @@ data class DeletedReportDetailResponse(
     val settlement: ReportSettlementSummary,
     val category: ReportCategorySummary,
     val eventType: ReportEventTypeSummary,
+    val note: String? = null,
     val resolvedRailwayLine: ReportRailwayLineSummary? = null,
     val serviceArea: ReportAreaSummary? = null,
     val workflowVersion: Long,

@@ -78,6 +78,9 @@ data class ReportHistoryEntity(
     /** A stable, non-sensitive code the UI maps to Hungarian copy - never a raw exception message. */
     @ColumnInfo(name = "last_error_code")
     val lastErrorCode: String?,
+
+    @ColumnInfo(name = "note")
+    val note: String? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -92,7 +95,7 @@ data class ReportHistoryEntity(
             eventTypeDisplaySnapshot == other.eventTypeDisplaySnapshot && submissionState == other.submissionState &&
             publicStatus == other.publicStatus && serverSubmittedAt == other.serverSubmittedAt &&
             localCreatedAt == other.localCreatedAt && lastStatusCheckedAt == other.lastStatusCheckedAt &&
-            lastErrorCode == other.lastErrorCode
+            lastErrorCode == other.lastErrorCode && note == other.note
     }
 
     override fun hashCode(): Int = clientSubmissionId.hashCode()

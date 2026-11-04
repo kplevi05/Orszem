@@ -240,6 +240,15 @@ class NewReportViewModel(
         _state.update { it.copy(selectedEventTypeCode = eventTypeCode) }
     }
 
+    fun onNoteChanged(value: String) {
+        val capped = if (value.codePointCount(0, value.length) > 256) {
+            value.substring(0, value.offsetByCodePoints(0, 256))
+        } else {
+            value
+        }
+        _state.update { it.copy(noteInput = capped) }
+    }
+
     // -------------------------------------------------------------------- Submission
 
     fun onSubmit() {
@@ -260,6 +269,7 @@ class NewReportViewModel(
             settlementId = settlement.id,
             railwayLineId = railwayLineId,
             eventTypeCode = eventTypeCode,
+            noteInput = current.noteInput,
         )
         val display = ReportDisplaySnapshot(
             settlementName = settlement.name,
@@ -312,6 +322,7 @@ class NewReportViewModel(
                     eventTypeDisplay = display.eventTypeDisplay,
                     trainIdentifier = it.trainIdentifierInput.trim().ifEmpty { null },
                     settlementName = display.settlementName,
+                    note = it.noteInput.trim().ifEmpty { null },
                     status = status,
                 ),
             )

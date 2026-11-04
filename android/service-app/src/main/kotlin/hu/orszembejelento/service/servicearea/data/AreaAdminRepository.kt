@@ -23,6 +23,15 @@ data class RailwayLineAdminListFilter(
     val assignment: RailwayLineAssignmentFilter = RailwayLineAssignmentFilter.ALL,
 )
 
+enum class SettlementAssignmentFilter { ALL, ASSIGNED, UNASSIGNED }
+
+data class SettlementAdminListFilter(
+    val query: String? = null,
+    val active: Boolean? = null,
+    val serviceAreaId: String? = null,
+    val assignment: SettlementAssignmentFilter = SettlementAssignmentFilter.ALL,
+)
+
 /**
  * The ServiceArea-administration surface every Phase 10 screen/ViewModel depends on.
  *
@@ -41,6 +50,13 @@ interface AreaAdminRepository {
     suspend fun renameArea(areaId: String, expectedVersion: Long, name: String): ApiResult<ServiceAreaAdminResponse>
     suspend fun activateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse>
     suspend fun deactivateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse>
+    suspend fun deleteArea(areaId: String, expectedVersion: Long): ApiResult<Unit> = ApiResult.NetworkError
+    suspend fun listSettlements(page: Int, size: Int, filter: SettlementAdminListFilter): ApiResult<SettlementAdminListPageResponse> =
+        ApiResult.NetworkError
+    suspend fun assignSettlement(settlementId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit> =
+        ApiResult.NetworkError
+    suspend fun unassignSettlement(settlementId: String, expectedCurrentServiceAreaId: String): ApiResult<Unit> =
+        ApiResult.NetworkError
     suspend fun listRailwayLines(page: Int, size: Int, filter: RailwayLineAdminListFilter): ApiResult<RailwayLineAdminListPageResponse>
     suspend fun railwayLineSettlementMappings(railwayLineId: String): ApiResult<RailwayLineSettlementMappingsResponse>
     suspend fun assignRailwayLine(railwayLineId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit>
@@ -74,6 +90,23 @@ class DefaultAreaAdminRepository(
 
     override suspend fun deactivateArea(areaId: String, expectedVersion: Long): ApiResult<ServiceAreaAdminResponse> =
         apiCall(auth) { bearer -> api.deactivateArea(bearer, areaId, ServiceAreaVersionedRequest(expectedVersion)) }
+
+    override suspend fun deleteArea(areaId: String, expectedVersion: Long): ApiResult<Unit> =
+        apiCall(auth) { bearer -> api.deleteArea(bearer, areaId, ServiceAreaVersionedRequest(expectedVersion)) }
+
+    override suspend fun listSettlements(page: Int, size: Int, filter: SettlementAdminListFilter): ApiResult<SettlementAdminListPageResponse> =
+        apiCall(auth) { bearer ->
+            api.listSettlements(
+                bearer, page, size, filter.query, filter.active, filter.serviceAreaId,
+                filter.assignment.takeIf { it != SettlementAssignmentFilter.ALL }?.name,
+            )
+        }
+
+    override suspend fun assignSettlement(settlementId: String, targetServiceAreaId: String, expectedCurrentServiceAreaId: String?): ApiResult<Unit> =
+        apiCall(auth) { bearer -> api.assignSettlement(bearer, settlementId, AssignSettlementRequest(targetServiceAreaId, expectedCurrentServiceAreaId)) }
+
+    override suspend fun unassignSettlement(settlementId: String, expectedCurrentServiceAreaId: String): ApiResult<Unit> =
+        apiCall(auth) { bearer -> api.unassignSettlement(bearer, settlementId, UnassignSettlementRequest(expectedCurrentServiceAreaId)) }
 
     override suspend fun listRailwayLines(page: Int, size: Int, filter: RailwayLineAdminListFilter): ApiResult<RailwayLineAdminListPageResponse> =
         apiCall(auth) { bearer ->

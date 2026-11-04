@@ -82,6 +82,7 @@ data class ReportDetailResponse(
     val settlement: ReportSettlementSummary,
     val category: ReportCategorySummary,
     val eventType: ReportEventTypeSummary,
+    val note: String? = null,
     val status: String,
     val workflowVersion: Long,
     val routingClassification: String,
@@ -120,6 +121,7 @@ interface ReportWorkflowApi {
         @Query("eventTypeCode") eventTypeCode: String? = null,
         @Query("settlementId") settlementId: String? = null,
         @Query("areaId") areaId: String? = null,
+        @Query("unclassifiedOnly") unclassifiedOnly: Boolean = false,
     ): Response<ReportQueuePageResponse>
 
     @GET("api/v1/service/reports/in-progress")
@@ -132,6 +134,7 @@ interface ReportWorkflowApi {
         @Query("eventTypeCode") eventTypeCode: String? = null,
         @Query("settlementId") settlementId: String? = null,
         @Query("areaId") areaId: String? = null,
+        @Query("unclassifiedOnly") unclassifiedOnly: Boolean = false,
         @Query("assigneeServiceId") assigneeServiceId: String? = null,
     ): Response<ReportQueuePageResponse>
 
@@ -145,6 +148,7 @@ interface ReportWorkflowApi {
         @Query("eventTypeCode") eventTypeCode: String? = null,
         @Query("settlementId") settlementId: String? = null,
         @Query("areaId") areaId: String? = null,
+        @Query("unclassifiedOnly") unclassifiedOnly: Boolean = false,
     ): Response<ReportQueuePageResponse>
 
     @GET("api/v1/service/reports/{publicReportId}")

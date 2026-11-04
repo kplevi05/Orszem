@@ -70,7 +70,7 @@ class SubmitReportBodyAdvice(private val objectMapper: ObjectMapper) : RequestBo
         // the backend derives category from eventTypeCode alone.
         val ALLOWED_FIELDS = setOf(
             "clientSubmissionId", "occurredAt", "trainIdentifier",
-            "settlementId", "railwayLineId", "eventTypeCode",
+            "settlementId", "railwayLineId", "eventTypeCode", "note",
         )
     }
 }

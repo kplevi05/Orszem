@@ -49,3 +49,11 @@ class RailwayLineAssignmentChangedException : RuntimeException()
 
 /** The line is already mapped to the requested target area - assigning it there again is not a state change. */
 class RailwayLineAlreadyAssignedToAreaException : RuntimeException()
+
+class SettlementAdminNotFoundException : RuntimeException()
+
+class SettlementAdminInactiveException : RuntimeException()
+
+class SettlementAssignmentChangedException : RuntimeException()
+
+class SettlementAlreadyAssignedToAreaException : RuntimeException()

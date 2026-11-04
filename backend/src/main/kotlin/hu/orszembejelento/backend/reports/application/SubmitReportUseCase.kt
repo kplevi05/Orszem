@@ -13,6 +13,7 @@ import hu.orszembejelento.backend.reports.domain.OccurredAtTooFarInFutureExcepti
 import hu.orszembejelento.backend.reports.domain.PublicReportAccessCredential
 import hu.orszembejelento.backend.reports.domain.PublicReportAccessCredentialHasher
 import hu.orszembejelento.backend.reports.domain.Report
+import hu.orszembejelento.backend.reports.domain.ReportNoteTooLongException
 import hu.orszembejelento.backend.reports.domain.ReportRoutingSnapshot
 import hu.orszembejelento.backend.reports.domain.ReportStatus
 import hu.orszembejelento.backend.reports.domain.RoutingSnapshotStatus
@@ -36,6 +37,7 @@ data class SubmitReportCommand(
     val settlementId: UUID,
     val railwayLineId: UUID?,
     val eventTypeCode: String,
+    val note: String? = null,
 )
 
 sealed class SubmitReportOutcome {
@@ -153,6 +155,7 @@ class SubmitReportUseCase(
             settlementId = normalized.settlementId,
             submittedRailwayLineId = normalized.railwayLineId,
             eventTypeCode = normalized.eventTypeCode,
+            note = normalized.note,
             status = ReportStatus.NEW,
         )
 
@@ -193,12 +196,20 @@ class SubmitReportUseCase(
                 throw TrainIdentifierTooLongException(properties.trainIdentifierMaxCodePoints)
             }
         }
+        val note = command.note?.trim()?.ifEmpty { null }
+        if (note != null) {
+            val codePoints = note.codePointCount(0, note.length)
+            if (codePoints > properties.noteMaxCodePoints) {
+                throw ReportNoteTooLongException(properties.noteMaxCodePoints)
+            }
+        }
         return NormalizedReportPayload(
             occurredAt = command.occurredAt,
             trainIdentifier = trainIdentifier,
             settlementId = command.settlementId,
             railwayLineId = command.railwayLineId,
             eventTypeCode = command.eventTypeCode,
+            note = note,
         )
     }
 

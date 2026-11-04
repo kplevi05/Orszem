@@ -1,10 +1,14 @@
 package hu.orszembejelento.service.reports.ui
 
 import hu.orszembejelento.service.common.ui.SettlementDataSourceNote
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
@@ -12,6 +16,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -152,6 +157,39 @@ internal fun ReportQueueBody(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = state.filter.areaId == null && !state.filter.unclassifiedOnly,
+                    onClick = {
+                        onAreaFilterChanged(null)
+                        viewModel.updateFilter(state.filter.copy(areaId = null, unclassifiedOnly = false))
+                    },
+                    label = { Text(stringResource(R.string.filter_all_areas)) },
+                )
+                areaChoices.forEach { choice ->
+                    FilterChip(
+                        selected = state.filter.areaId == choice.id && !state.filter.unclassifiedOnly,
+                        onClick = {
+                            val nextAreaId = if (state.filter.areaId == choice.id) null else choice.id
+                            onAreaFilterChanged(nextAreaId)
+                            viewModel.updateFilter(state.filter.copy(areaId = nextAreaId, unclassifiedOnly = false))
+                        },
+                        label = { Text(choice.name) },
+                    )
+                }
+                FilterChip(
+                    selected = state.filter.unclassifiedOnly,
+                    onClick = {
+                        val nextUnclassified = !state.filter.unclassifiedOnly
+                        if (nextUnclassified) onAreaFilterChanged(null)
+                        viewModel.updateFilter(state.filter.copy(areaId = null, unclassifiedOnly = nextUnclassified))
+                    },
+                    label = { Text(stringResource(R.string.analytics_area_unclassified)) },
+                )
+            }
         }
 
         if (showFilters && catalogRepository != null) {

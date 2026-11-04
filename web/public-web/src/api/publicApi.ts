@@ -9,6 +9,7 @@ export interface SubmitReportRequestBody {
   readonly settlementId: string
   readonly railwayLineId: string | null
   readonly eventTypeCode: string
+  readonly note?: string | null
 }
 
 export interface SubmitReportResponseBody {
@@ -38,6 +39,7 @@ export interface PublicReportResponseBody {
   readonly settlement: SettlementSummaryBody
   readonly category: CategorySummaryBody
   readonly eventType: EventTypeSummaryBody
+  readonly note?: string | null
   readonly status: string
 }
 

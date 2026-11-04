@@ -54,6 +54,7 @@ fun SuccessContent(
                 SuccessDetailLine(stringResource(R.string.success_event_type, info.eventTypeDisplay))
                 info.trainIdentifier?.let { SuccessDetailLine(stringResource(R.string.success_train, it)) }
                 SuccessDetailLine(stringResource(R.string.success_settlement, info.settlementName))
+                info.note?.let { SuccessDetailLine(stringResource(R.string.success_note, it)) }
                 SuccessDetailLine(stringResource(R.string.success_status, stringResource(R.string.status_received)))
                 SettlementDataSourceNote(color = PublicPalette.TextMuted)
             }

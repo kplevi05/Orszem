@@ -69,10 +69,11 @@ class ReportWorkflowController(
         @RequestParam(required = false) eventTypeCode: String?,
         @RequestParam(required = false) settlementId: UUID?,
         @RequestParam(required = false) areaId: UUID?,
+        @RequestParam(defaultValue = "false") unclassifiedOnly: Boolean,
     ): ResponseEntity<ReportQueuePageResponse> {
         val actor = actorLoader.load(principal)
         val (boundedPage, boundedSize) = boundedPaging(page, size)
-        val result = queries.newQueue(actor, filter(query, categoryCode, eventTypeCode, settlementId, areaId), boundedPage, boundedSize)
+        val result = queries.newQueue(actor, filter(query, categoryCode, eventTypeCode, settlementId, areaId, unclassifiedOnly = unclassifiedOnly), boundedPage, boundedSize)
         return noStore(ReportQueuePageResponse.from(result))
     }
 
@@ -92,12 +93,13 @@ class ReportWorkflowController(
         @RequestParam(required = false) settlementId: UUID?,
         @RequestParam(required = false) areaId: UUID?,
         @RequestParam(required = false) assigneeServiceId: String?,
+        @RequestParam(defaultValue = "false") unclassifiedOnly: Boolean,
     ): ResponseEntity<ReportQueuePageResponse> {
         val actor = actorLoader.load(principal)
         val (boundedPage, boundedSize) = boundedPaging(page, size)
         val result = queries.inProgressQueue(
             actor,
-            filter(query, categoryCode, eventTypeCode, settlementId, areaId, assigneeServiceId),
+            filter(query, categoryCode, eventTypeCode, settlementId, areaId, assigneeServiceId, unclassifiedOnly),
             boundedPage,
             boundedSize,
         )
@@ -118,10 +120,11 @@ class ReportWorkflowController(
         @RequestParam(required = false) eventTypeCode: String?,
         @RequestParam(required = false) settlementId: UUID?,
         @RequestParam(required = false) areaId: UUID?,
+        @RequestParam(defaultValue = "false") unclassifiedOnly: Boolean,
     ): ResponseEntity<ReportQueuePageResponse> {
         val actor = actorLoader.load(principal)
         val (boundedPage, boundedSize) = boundedPaging(page, size)
-        val result = queries.archiveQueue(actor, filter(query, categoryCode, eventTypeCode, settlementId, areaId), boundedPage, boundedSize)
+        val result = queries.archiveQueue(actor, filter(query, categoryCode, eventTypeCode, settlementId, areaId, unclassifiedOnly = unclassifiedOnly), boundedPage, boundedSize)
         return noStore(ReportQueuePageResponse.from(result))
     }
 
@@ -217,6 +220,7 @@ class ReportWorkflowController(
         settlementId: UUID?,
         areaId: UUID?,
         assigneeServiceId: String? = null,
+        unclassifiedOnly: Boolean = false,
     ) = ReportListFilter(
         query = query?.takeIf { it.isNotBlank() },
         categoryCode = categoryCode,
@@ -224,6 +228,7 @@ class ReportWorkflowController(
         settlementId = settlementId,
         areaId = areaId,
         assigneeServiceId = assigneeServiceId,
+        unclassifiedOnly = unclassifiedOnly,
     )
 
     private fun boundedPaging(page: Int, size: Int?): Pair<Int, Int> =

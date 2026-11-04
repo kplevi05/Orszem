@@ -168,12 +168,7 @@ private fun ServiceAreaAdminCard(area: ServiceAreaAdminListItemResponse, onClick
                 )
             }
             Text(
-                stringResource(R.string.area_card_line_count, area.mappedRailwayLineCount),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                stringResource(R.string.area_card_settlement_mapping_count, area.mappedSettlementLineCount),
+                stringResource(R.string.area_card_settlement_count, area.mappedSettlementCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -181,7 +176,7 @@ private fun ServiceAreaAdminCard(area: ServiceAreaAdminListItemResponse, onClick
                 Text(
                     stringResource(R.string.area_card_open_report_count, area.openOperationalReportCount),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

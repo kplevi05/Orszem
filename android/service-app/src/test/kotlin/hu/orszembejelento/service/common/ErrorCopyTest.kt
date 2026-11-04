@@ -42,6 +42,10 @@ class ErrorCopyTest {
             "TARGET_SERVICE_AREA_INACTIVE" to R.string.error_target_service_area_inactive,
             "RAILWAY_LINE_ASSIGNMENT_CHANGED" to R.string.error_railway_line_assignment_changed,
             "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA" to R.string.error_railway_line_already_assigned,
+            "SETTLEMENT_NOT_FOUND" to R.string.error_settlement_not_found,
+            "SETTLEMENT_INACTIVE" to R.string.error_settlement_inactive,
+            "SETTLEMENT_ASSIGNMENT_CHANGED" to R.string.error_settlement_assignment_changed,
+            "SETTLEMENT_ALREADY_ASSIGNED_TO_AREA" to R.string.error_settlement_already_assigned,
             // ADR 0011: the whole-line endpoint refused a pair-configured line (stale/old client).
             "SETTLEMENT_LINE_MIXED_ROUTING_MODES" to R.string.error_settlement_line_mixed_routing_modes,
             // Phase 11 analytics codes (brief §30).
@@ -65,7 +69,9 @@ class ErrorCopyTest {
             "SERVICE_AREA_ALREADY_ACTIVE", "SERVICE_AREA_ALREADY_INACTIVE", "SERVICE_AREA_HAS_RAILWAY_LINES",
             "SERVICE_AREA_HAS_OPEN_REPORTS", "SERVICE_AREA_NAME_INVALID", "SERVICE_AREA_NAME_ALREADY_IN_USE",
             "RAILWAY_LINE_NOT_FOUND", "RAILWAY_LINE_INACTIVE", "TARGET_SERVICE_AREA_INACTIVE",
-            "RAILWAY_LINE_ASSIGNMENT_CHANGED", "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA", "SETTLEMENT_LINE_MIXED_ROUTING_MODES",
+            "RAILWAY_LINE_ASSIGNMENT_CHANGED", "RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA",
+            "SETTLEMENT_NOT_FOUND", "SETTLEMENT_INACTIVE", "SETTLEMENT_ASSIGNMENT_CHANGED", "SETTLEMENT_ALREADY_ASSIGNED_TO_AREA",
+            "SETTLEMENT_LINE_MIXED_ROUTING_MODES",
             "ANALYTICS_AREA_NOT_AVAILABLE", "ANALYTICS_UNCLASSIFIED_FORBIDDEN",
             "ANALYTICS_PERIOD_INVALID", "ANALYTICS_CATEGORY_NOT_FOUND",
         )

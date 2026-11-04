@@ -8,6 +8,9 @@ import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminDetail
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListPage
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListRow
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaMappedRailwayLine
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaMappedSettlement
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminListPage
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminListRow
 import hu.orszembejelento.backend.reference.domain.ServiceArea
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -31,6 +34,13 @@ data class AssignRailwayLineRequest(
 
 data class UnassignRailwayLineRequest(@field:NotNull val expectedCurrentServiceAreaId: UUID? = null)
 
+data class AssignSettlementRequest(
+    @field:NotNull val targetServiceAreaId: UUID? = null,
+    val expectedCurrentServiceAreaId: UUID? = null,
+)
+
+data class UnassignSettlementRequest(@field:NotNull val expectedCurrentServiceAreaId: UUID? = null)
+
 /** A mutated/created ServiceArea, returned by create/rename/activate/deactivate - never the raw `adminVersion` name leaking internal DB metadata beyond what brief §8 itself requires clients to carry back as `expectedVersion` next time. */
 data class ServiceAreaAdminResponse(val id: String, val name: String, val active: Boolean, val adminVersion: Long) {
     companion object {
@@ -46,6 +56,7 @@ data class ServiceAreaAdminListItemResponse(
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
     val mappedSettlementLineCount: Int,
+    val mappedSettlementCount: Int = 0,
 ) {
     companion object {
         fun from(row: ServiceAreaAdminListRow) = ServiceAreaAdminListItemResponse(
@@ -56,6 +67,7 @@ data class ServiceAreaAdminListItemResponse(
             mappedRailwayLineCount = row.mappedRailwayLineCount,
             openOperationalReportCount = row.openOperationalReportCount,
             mappedSettlementLineCount = row.mappedSettlementLineCount,
+            mappedSettlementCount = row.mappedSettlementCount,
         )
     }
 }
@@ -81,6 +93,24 @@ data class MappedRailwayLineResponse(val id: String, val lineCode: String, val d
     }
 }
 
+data class MappedSettlementResponse(
+    val id: String,
+    val kshCode: String,
+    val name: String,
+    val countyName: String?,
+    val active: Boolean,
+) {
+    companion object {
+        fun from(s: ServiceAreaMappedSettlement) = MappedSettlementResponse(
+            id = s.id.toString(),
+            kshCode = s.kshCode,
+            name = s.name,
+            countyName = s.countyName,
+            active = s.active,
+        )
+    }
+}
+
 data class ServiceAreaAdminDetailResponse(
     val id: String,
     val name: String,
@@ -90,6 +120,8 @@ data class ServiceAreaAdminDetailResponse(
     val mappedRailwayLineCount: Int,
     val openOperationalReportCount: Int,
     val mappedSettlementLineCount: Int,
+    val mappedSettlements: List<MappedSettlementResponse> = emptyList(),
+    val mappedSettlementCount: Int = 0,
 ) {
     companion object {
         fun from(detail: ServiceAreaAdminDetail) = ServiceAreaAdminDetailResponse(
@@ -101,7 +133,52 @@ data class ServiceAreaAdminDetailResponse(
             mappedRailwayLineCount = detail.mappedRailwayLineCount,
             openOperationalReportCount = detail.openOperationalReportCount,
             mappedSettlementLineCount = detail.mappedSettlementLineCount,
+            mappedSettlements = detail.mappedSettlements.map(MappedSettlementResponse::from),
+            mappedSettlementCount = detail.mappedSettlementCount,
         )
+    }
+}
+
+data class SettlementAdminListItemResponse(
+    val id: String,
+    val kshCode: String,
+    val name: String,
+    val countyName: String?,
+    val active: Boolean,
+    val currentServiceAreaId: String?,
+    val currentServiceAreaName: String?,
+) {
+    companion object {
+        fun from(row: SettlementAdminListRow) = SettlementAdminListItemResponse(
+            id = row.id.toString(),
+            kshCode = row.kshCode,
+            name = row.name,
+            countyName = row.countyName,
+            active = row.active,
+            currentServiceAreaId = row.currentServiceAreaId?.toString(),
+            currentServiceAreaName = row.currentServiceAreaName,
+        )
+    }
+}
+
+data class SettlementAdminListPageResponse(
+    val items: List<SettlementAdminListItemResponse>,
+    val page: Int,
+    val size: Int,
+    val totalElements: Int,
+    val totalPages: Int,
+) {
+    companion object {
+        fun from(result: SettlementAdminListPage, page: Int, size: Int): SettlementAdminListPageResponse {
+            val totalPages = if (size <= 0) 0 else (result.totalElements + size - 1) / size
+            return SettlementAdminListPageResponse(
+                items = result.items.map(SettlementAdminListItemResponse::from),
+                page = page,
+                size = size,
+                totalElements = result.totalElements,
+                totalPages = totalPages,
+            )
+        }
     }
 }
 

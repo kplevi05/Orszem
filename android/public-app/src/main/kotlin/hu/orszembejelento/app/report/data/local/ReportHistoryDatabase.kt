@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * The Public app's local report-history database (Phase 5 brief §20-21).
@@ -21,7 +23,7 @@ import androidx.room.TypeConverters
  * without the device-local Keystore key that encrypted them, so restoring the database
  * without the key would only leave undecryptable rows (§24).
  */
-@Database(entities = [ReportHistoryEntity::class], version = 1, exportSchema = true)
+@Database(entities = [ReportHistoryEntity::class], version = 2, exportSchema = true)
 @TypeConverters(Converters::class)
 abstract class ReportHistoryDatabase : RoomDatabase() {
 
@@ -30,7 +32,15 @@ abstract class ReportHistoryDatabase : RoomDatabase() {
     companion object {
         const val FILE_NAME = "report-history.db"
 
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `report_history` ADD COLUMN `note` TEXT")
+            }
+        }
+
         fun build(context: Context): ReportHistoryDatabase =
-            Room.databaseBuilder(context.applicationContext, ReportHistoryDatabase::class.java, FILE_NAME).build()
+            Room.databaseBuilder(context.applicationContext, ReportHistoryDatabase::class.java, FILE_NAME)
+                .addMigrations(MIGRATION_1_2)
+                .build()
     }
 }

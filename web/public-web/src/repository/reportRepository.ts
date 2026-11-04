@@ -47,6 +47,7 @@ export function createReportRepository(api: PublicApi = publicApi) {
       settlementId: record.settlementId,
       railwayLineId: record.railwayLineId,
       eventTypeCode: record.eventTypeCode,
+      note: record.note ?? null,
     }
 
     let result
@@ -124,6 +125,7 @@ export function createReportRepository(api: PublicApi = publicApi) {
         categoryDisplaySnapshot: display.categoryDisplay,
         eventTypeCode: normalized.eventTypeCode,
         eventTypeDisplaySnapshot: display.eventTypeDisplay,
+        note: normalized.note ?? null,
         submissionState: 'PENDING',
         publicStatus: null,
         serverSubmittedAt: null,

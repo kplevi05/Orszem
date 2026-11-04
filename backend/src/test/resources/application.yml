@@ -19,3 +19,5 @@ orszem:
     enabled: true
     burst: 1000000
     refill-period: 1s
+  workflow:
+    unclassified-service-user-access-enabled: false

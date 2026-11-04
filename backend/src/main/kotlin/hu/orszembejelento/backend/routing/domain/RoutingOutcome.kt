@@ -73,7 +73,7 @@ sealed class RoutingOutcome {
 
     data class Routed(
         val serviceAreaId: UUID,
-        val railwayLineId: UUID,
+        val railwayLineId: UUID? = null,
         override val referenceDatasetVersion: String,
     ) : Decided()
 

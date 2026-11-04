@@ -228,6 +228,7 @@ private fun ReportFieldsCard(detail: ReportDetailResponse) {
             detail.trainIdentifier?.let { DetailRow(stringResource(R.string.field_train_identifier), it) }
             DetailRow(stringResource(R.string.field_category), detail.category.displayName)
             DetailRow(stringResource(R.string.field_event_type), detail.eventType.displayName)
+            detail.note?.let { DetailRow(stringResource(R.string.field_note), it) }
             DetailRow(stringResource(R.string.field_settlement), detail.settlement.name)
             detail.resolvedRailwayLine?.let { DetailRow(stringResource(R.string.field_railway_line), it.displayName) }
             DetailRow(

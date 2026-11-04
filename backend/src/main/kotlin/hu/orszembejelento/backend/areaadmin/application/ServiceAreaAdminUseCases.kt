@@ -9,6 +9,11 @@ import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNameAlreadyInUseEx
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNameBlankException
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNotFoundException
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaStateChangedException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminInactiveException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminNotFoundException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAlreadyAssignedToAreaException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAssignmentChangedException
+import hu.orszembejelento.backend.areaadmin.domain.TargetServiceAreaInactiveException
 import hu.orszembejelento.backend.audit.domain.AuditActorType
 import hu.orszembejelento.backend.audit.domain.AuditEventType
 import hu.orszembejelento.backend.audit.domain.AuditTargetType
@@ -149,6 +154,9 @@ class ActivateServiceAreaUseCase(
         val newVersion = locked.adminVersion + 1
         val now = clock.instant()
         serviceAreas.updateStatusAndBumpVersion(locked.id, ServiceAreaStatus.ACTIVE, newVersion, now)
+        serviceAreas.mappedSettlementIds(locked.id).forEach { settlementId ->
+            serviceAreas.routeOpenReportsForSettlement(settlementId, locked.id)
+        }
 
         audit.record(
             operationId = UUID.randomUUID(),
@@ -190,6 +198,9 @@ class DeactivateServiceAreaUseCase(
         if (!locked.isActive) throw ServiceAreaAlreadyInactiveException()
 
         if (serviceAreas.countMappedRailwayLines(locked.id) > 0 || serviceAreas.countSettlementLineMappings(locked.id) > 0) throw ServiceAreaHasRailwayLinesException()
+        if (serviceAreas.countMappedSettlements(locked.id) > 0) {
+            serviceAreas.unclassifyAllReportsOfArea(locked.id)
+        }
         if (serviceAreas.countOpenOperationalReports(locked.id) > 0) throw ServiceAreaHasOpenReportsException()
 
         val newVersion = locked.adminVersion + 1
@@ -206,6 +217,147 @@ class DeactivateServiceAreaUseCase(
             metadata = mapOf("adminVersion" to newVersion.toString()),
         )
         return locked.copy(status = ServiceAreaStatus.INACTIVE, adminVersion = newVersion, updatedAt = now)
+    }
+}
+
+/**
+ * Deletes a ServiceArea (`SUPER_ADMIN` only) and ensures zero ticket loss by converting any
+ * report routing snapshots referencing the deleted area to `UNCLASSIFIED` (`SERVICE_AREA_INACTIVE`)
+ * so those tickets immediately become visible to everyone.
+ */
+@Service
+class DeleteServiceAreaUseCase(
+    private val serviceAreas: JdbcServiceAreaRepository,
+    private val referenceRepository: JdbcReferenceRepository,
+    private val audit: JdbcAuditRepository,
+) {
+    @Transactional
+    fun delete(actor: AreaAdminActor, areaId: UUID, expectedVersion: Long) {
+        referenceRepository.acquireImportLock()
+
+        val locked = serviceAreas.lockById(areaId) ?: throw ServiceAreaNotFoundException()
+        if (locked.adminVersion != expectedVersion) throw ServiceAreaStateChangedException()
+
+        serviceAreas.deleteArea(locked.id)
+
+        audit.record(
+            operationId = UUID.randomUUID(),
+            actorType = AuditActorType.USER,
+            actorUserId = actor.userId,
+            eventType = AuditEventType.SERVICE_AREA_DELETED,
+            targetType = AuditTargetType.SERVICE_AREA,
+            targetId = locked.id,
+            metadata = mapOf("oldName" to locked.name),
+        )
+    }
+}
+
+/**
+ * Assigns or moves a settlement to an active ServiceArea (`SUPER_ADMIN` only).
+ * Also routes any currently open (`NEW`, non-deleted) reports for this settlement into the
+ * target ServiceArea.
+ */
+@Service
+class AssignSettlementUseCase(
+    private val serviceAreas: JdbcServiceAreaRepository,
+    private val referenceRepository: JdbcReferenceRepository,
+    private val audit: JdbcAuditRepository,
+    private val clock: Clock,
+) {
+    @Transactional
+    fun assign(
+        actor: AreaAdminActor,
+        settlementId: UUID,
+        targetServiceAreaId: UUID,
+        expectedCurrentServiceAreaId: UUID?,
+    ) {
+        referenceRepository.acquireImportLock()
+
+        val settlement = referenceRepository.findSettlementById(settlementId) ?: throw SettlementAdminNotFoundException()
+        if (!settlement.active) throw SettlementAdminInactiveException()
+
+        val currentArea = serviceAreas.findAreaOfSettlement(settlement.id)
+        if (currentArea?.id != expectedCurrentServiceAreaId) throw SettlementAssignmentChangedException()
+        if (currentArea?.id == targetServiceAreaId) throw SettlementAlreadyAssignedToAreaException()
+
+        val areaIdsToLock = listOfNotNull(currentArea?.id, targetServiceAreaId).distinct().sortedBy { it.toString() }
+        val lockedById = areaIdsToLock.associateWith { id ->
+            serviceAreas.lockById(id) ?: throw ServiceAreaNotFoundException()
+        }
+
+        val targetArea = lockedById.getValue(targetServiceAreaId)
+        if (!targetArea.isActive) throw TargetServiceAreaInactiveException()
+
+        val now = clock.instant()
+        serviceAreas.assignSettlement(targetArea.id, settlement.id)
+        serviceAreas.routeOpenReportsForSettlement(settlement.id, targetArea.id)
+
+        serviceAreas.bumpAdminVersion(targetArea.id, targetArea.adminVersion + 1, now)
+        if (currentArea != null) {
+            val lockedFrom = lockedById.getValue(currentArea.id)
+            serviceAreas.bumpAdminVersion(lockedFrom.id, lockedFrom.adminVersion + 1, now)
+        }
+
+        val isMove = currentArea != null
+        audit.record(
+            operationId = UUID.randomUUID(),
+            actorType = AuditActorType.USER,
+            actorUserId = actor.userId,
+            eventType = if (isMove) AuditEventType.SETTLEMENT_SERVICE_AREA_MOVED else AuditEventType.SETTLEMENT_SERVICE_AREA_ASSIGNED,
+            targetType = AuditTargetType.SERVICE_AREA,
+            targetId = targetArea.id,
+            metadata = buildMap {
+                put("settlementName", settlement.name)
+                put("kshCode", settlement.kshCode.value)
+                put("toAreaId", targetArea.id.toString())
+                if (currentArea != null) put("fromAreaId", currentArea.id.toString())
+            },
+        )
+    }
+}
+
+/**
+ * Unassigns a settlement from its current ServiceArea (`SUPER_ADMIN` only) and moves any
+ * currently open (`NEW`, non-deleted) reports for this settlement in that area back to
+ * `UNCLASSIFIED` so no ticket is lost.
+ */
+@Service
+class UnassignSettlementUseCase(
+    private val serviceAreas: JdbcServiceAreaRepository,
+    private val referenceRepository: JdbcReferenceRepository,
+    private val audit: JdbcAuditRepository,
+    private val clock: Clock,
+) {
+    @Transactional
+    fun unassign(actor: AreaAdminActor, settlementId: UUID, expectedCurrentServiceAreaId: UUID) {
+        referenceRepository.acquireImportLock()
+
+        val settlement = referenceRepository.findSettlementById(settlementId) ?: throw SettlementAdminNotFoundException()
+        val currentArea = serviceAreas.findAreaOfSettlement(settlement.id)
+        if (currentArea == null || currentArea.id != expectedCurrentServiceAreaId) {
+            throw SettlementAssignmentChangedException()
+        }
+
+        val lockedArea = serviceAreas.lockById(currentArea.id) ?: throw ServiceAreaNotFoundException()
+        val removed = serviceAreas.removeSettlementMapping(lockedArea.id, settlement.id)
+        if (removed == 0) throw SettlementAssignmentChangedException()
+
+        serviceAreas.unclassifyOpenReportsForSettlement(settlement.id, lockedArea.id)
+        serviceAreas.bumpAdminVersion(lockedArea.id, lockedArea.adminVersion + 1, clock.instant())
+
+        audit.record(
+            operationId = UUID.randomUUID(),
+            actorType = AuditActorType.USER,
+            actorUserId = actor.userId,
+            eventType = AuditEventType.SETTLEMENT_SERVICE_AREA_UNASSIGNED,
+            targetType = AuditTargetType.SERVICE_AREA,
+            targetId = lockedArea.id,
+            metadata = mapOf(
+                "settlementName" to settlement.name,
+                "kshCode" to settlement.kshCode.value,
+                "fromAreaId" to lockedArea.id.toString(),
+            ),
+        )
     }
 }
 

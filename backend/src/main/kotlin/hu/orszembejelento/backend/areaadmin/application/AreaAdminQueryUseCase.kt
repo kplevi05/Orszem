@@ -10,7 +10,10 @@ import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminDetail
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListFilter
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListPage
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaMappedRailwayLine
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaMappedSettlement
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNotFoundException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminListFilter
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminListPage
 import hu.orszembejelento.backend.areaadmin.infrastructure.JdbcAreaAdminQueryRepository
 import hu.orszembejelento.backend.reference.infrastructure.JdbcReferenceRepository
 import hu.orszembejelento.backend.scope.infrastructure.JdbcServiceAreaRepository
@@ -42,6 +45,12 @@ class AreaAdminQueryUseCase(
             }
         }.sortedBy { it.lineCode }
 
+        val collator = Collator.getInstance(Locale.forLanguageTag("hu"))
+        val mappedSettlements = queries.findMappedSettlementsOfArea(area.id).sortedWith(
+            Comparator<ServiceAreaMappedSettlement> { a, b -> collator.compare(a.name, b.name) }
+                .thenComparing(Comparator.comparing(ServiceAreaMappedSettlement::kshCode)),
+        )
+
         return ServiceAreaAdminDetail(
             id = area.id,
             name = area.name,
@@ -51,8 +60,14 @@ class AreaAdminQueryUseCase(
             mappedRailwayLineCount = mappedLines.size,
             openOperationalReportCount = serviceAreas.countOpenOperationalReports(area.id),
             mappedSettlementLineCount = serviceAreas.countSettlementLineMappings(area.id),
+            mappedSettlements = mappedSettlements,
+            mappedSettlementCount = mappedSettlements.size,
         )
     }
+
+    @Transactional(readOnly = true)
+    fun settlementList(filter: SettlementAdminListFilter, page: Int, size: Int): SettlementAdminListPage =
+        queries.findSettlementList(filter, page, size)
 
     @Transactional(readOnly = true)
     fun railwayLineList(filter: RailwayLineAdminListFilter, page: Int, size: Int): RailwayLineAdminListPage =

@@ -17,11 +17,12 @@ data class ReportFilter(
     val settlementId: String? = null,
     val settlementName: String? = null,
     val areaId: String? = null,
+    val unclassifiedOnly: Boolean = false,
     val assigneeServiceId: String? = null,
 ) {
     /** Server-side filters the user set explicitly (search text and the assignee CTA aside). */
     val activeFacetCount: Int
-        get() = listOf(categoryCode, eventTypeCode, settlementId, areaId).count { it != null }
+        get() = listOf(categoryCode, eventTypeCode, settlementId, areaId).count { it != null } + if (unclassifiedOnly) 1 else 0
 }
 
 /**
@@ -55,20 +56,26 @@ class DefaultReportWorkflowRepository(
 
     override suspend fun newQueue(page: Int, size: Int, filter: ReportFilter): ApiResult<ReportQueuePageResponse> =
         apiCall(auth) { bearer ->
-            api.newQueue(bearer, page, size, filter.query, filter.categoryCode, filter.eventTypeCode, filter.settlementId, filter.areaId)
+            api.newQueue(
+                bearer, page, size, filter.query, filter.categoryCode, filter.eventTypeCode,
+                filter.settlementId, filter.areaId, filter.unclassifiedOnly,
+            )
         }
 
     override suspend fun inProgressQueue(page: Int, size: Int, filter: ReportFilter): ApiResult<ReportQueuePageResponse> =
         apiCall(auth) { bearer ->
             api.inProgressQueue(
                 bearer, page, size, filter.query, filter.categoryCode, filter.eventTypeCode,
-                filter.settlementId, filter.areaId, filter.assigneeServiceId,
+                filter.settlementId, filter.areaId, filter.unclassifiedOnly, filter.assigneeServiceId,
             )
         }
 
     override suspend fun archiveQueue(page: Int, size: Int, filter: ReportFilter): ApiResult<ReportQueuePageResponse> =
         apiCall(auth) { bearer ->
-            api.archiveQueue(bearer, page, size, filter.query, filter.categoryCode, filter.eventTypeCode, filter.settlementId, filter.areaId)
+            api.archiveQueue(
+                bearer, page, size, filter.query, filter.categoryCode, filter.eventTypeCode,
+                filter.settlementId, filter.areaId, filter.unclassifiedOnly,
+            )
         }
 
     override suspend fun detail(publicReportId: String): ApiResult<ReportDetailResponse> =

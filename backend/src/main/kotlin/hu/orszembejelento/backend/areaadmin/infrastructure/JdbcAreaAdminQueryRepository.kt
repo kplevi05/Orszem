@@ -8,6 +8,11 @@ import hu.orszembejelento.backend.areaadmin.domain.RailwayLineSettlementAssignme
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListFilter
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListPage
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListRow
+import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaMappedSettlement
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminListFilter
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminListPage
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminListRow
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAssignmentFilter
 import java.sql.ResultSet
 import java.util.UUID
 import org.springframework.jdbc.core.simple.JdbcClient
@@ -35,6 +40,7 @@ class JdbcAreaAdminQueryRepository(private val jdbc: JdbcClient) {
             SELECT sa.id, sa.name, sa.status, sa.admin_version,
                    (SELECT COUNT(*) FROM service_area_railway_lines m WHERE m.service_area_id = sa.id) AS mapped_line_count,
                    (SELECT COUNT(*) FROM service_area_settlement_lines p WHERE p.service_area_id = sa.id) AS mapped_pair_count,
+                   (SELECT COUNT(*) FROM service_area_settlements sm WHERE sm.service_area_id = sa.id) AS mapped_settlement_count,
                    (
                        SELECT COUNT(*) FROM reports r
                          JOIN report_routing_snapshots rs ON rs.report_id = r.id
@@ -81,6 +87,77 @@ class JdbcAreaAdminQueryRepository(private val jdbc: JdbcClient) {
         mappedRailwayLineCount = rs.getInt("mapped_line_count"),
         openOperationalReportCount = rs.getInt("open_report_count"),
         mappedSettlementLineCount = rs.getInt("mapped_pair_count"),
+        mappedSettlementCount = rs.getInt("mapped_settlement_count"),
+    )
+
+    // --------------------------------------------------------- Settlement admin list & detail
+
+    fun findMappedSettlementsOfArea(areaId: UUID): List<ServiceAreaMappedSettlement> =
+        jdbc.sql(
+            """
+            SELECT s.id, s.ksh_code, s.name, s.county_name, s.active
+              FROM service_area_settlements m
+              JOIN settlements s ON s.id = m.settlement_id
+             WHERE m.service_area_id = :areaId
+             ORDER BY s.name ASC, s.ksh_code ASC
+            """.trimIndent(),
+        )
+            .param("areaId", areaId)
+            .query { rs, _ ->
+                ServiceAreaMappedSettlement(
+                    id = rs.getObject("id", UUID::class.java),
+                    kshCode = rs.getString("ksh_code"),
+                    name = rs.getString("name"),
+                    countyName = rs.getString("county_name"),
+                    active = rs.getBoolean("active"),
+                )
+            }
+            .list()
+
+    fun findSettlementList(filter: SettlementAdminListFilter, page: Int, size: Int): SettlementAdminListPage {
+        val (where, params) = settlementFilterClause(filter)
+        val total = jdbc.sql("SELECT COUNT(*) $SETTLEMENT_FROM_JOINS $where").params(params).query(Int::class.java).single()
+
+        val items = jdbc.sql(
+            "SELECT s.id, s.ksh_code, s.name, s.county_name, s.active, m.service_area_id, sa.name AS service_area_name " +
+                "$SETTLEMENT_FROM_JOINS $where ORDER BY s.name ASC, s.ksh_code ASC LIMIT :limit OFFSET :offset",
+        )
+            .params(params)
+            .param("limit", size)
+            .param("offset", page * size)
+            .query(::mapSettlementRow)
+            .list()
+
+        return SettlementAdminListPage(items, total)
+    }
+
+    private fun settlementFilterClause(filter: SettlementAdminListFilter): Pair<String, Map<String, Any>> {
+        val clauses = mutableListOf<String>()
+        val params = mutableMapOf<String, Any>()
+
+        filter.active?.let { clauses += "s.active = :fActive"; params["fActive"] = it }
+        filter.serviceAreaId?.let { clauses += "m.service_area_id = :fArea"; params["fArea"] = it }
+        when (filter.assignment) {
+            SettlementAssignmentFilter.ASSIGNED -> clauses += "m.service_area_id IS NOT NULL"
+            SettlementAssignmentFilter.UNASSIGNED -> clauses += "m.service_area_id IS NULL"
+            SettlementAssignmentFilter.ALL -> {}
+        }
+        filter.query?.takeIf { it.isNotBlank() }?.let {
+            clauses += "(s.name ILIKE :fQuery OR s.ksh_code ILIKE :fQuery OR COALESCE(s.county_name, '') ILIKE :fQuery)"
+            params["fQuery"] = "%${escapeLike(it)}%"
+        }
+
+        return (if (clauses.isEmpty()) "" else "WHERE " + clauses.joinToString(" AND ")) to params
+    }
+
+    private fun mapSettlementRow(rs: ResultSet, @Suppress("UNUSED_PARAMETER") rowNum: Int) = SettlementAdminListRow(
+        id = rs.getObject("id", UUID::class.java),
+        kshCode = rs.getString("ksh_code"),
+        name = rs.getString("name"),
+        countyName = rs.getString("county_name"),
+        active = rs.getBoolean("active"),
+        currentServiceAreaId = rs.getObject("service_area_id", UUID::class.java),
+        currentServiceAreaName = rs.getString("service_area_name"),
     )
 
     // ---------------------------------------------------------------- RailwayLine admin list
@@ -190,6 +267,12 @@ class JdbcAreaAdminQueryRepository(private val jdbc: JdbcClient) {
     private fun escapeLike(raw: String): String = raw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
     private companion object {
+        const val SETTLEMENT_FROM_JOINS = """
+              FROM settlements s
+              LEFT JOIN service_area_settlements m ON m.settlement_id = s.id
+              LEFT JOIN service_areas sa ON sa.id = m.service_area_id
+        """
+
         // `p` is one grouped row per line that has pair-level mappings, so the join can never
         // multiply a line's row; a line without any pair mapping simply has p.pair_count NULL.
         const val LINE_FROM_JOINS = """

@@ -50,6 +50,7 @@ data class Report(
     val settlementId: UUID,
     val submittedRailwayLineId: UUID?,
     val eventTypeCode: String,
+    val note: String? = null,
     val status: ReportStatus,
     // Phase 7 workflow state (V004). Defaulted so every existing Phase 4 call site that
     // constructs a freshly-submitted Report - always NEW, unassigned, version 0, never
@@ -66,7 +67,7 @@ data class Report(
             occurredAt == other.occurredAt && submittedAt == other.submittedAt &&
             trainIdentifier == other.trainIdentifier && settlementId == other.settlementId &&
             submittedRailwayLineId == other.submittedRailwayLineId && eventTypeCode == other.eventTypeCode &&
-            status == other.status && assignedUserId == other.assignedUserId &&
+            note == other.note && status == other.status && assignedUserId == other.assignedUserId &&
             workflowVersion == other.workflowVersion && archivedAt == other.archivedAt
     }
 
@@ -84,6 +85,7 @@ data class Report(
         settlementId = settlementId,
         railwayLineId = submittedRailwayLineId,
         eventTypeCode = eventTypeCode,
+        note = note,
     )
 }
 
@@ -102,6 +104,7 @@ data class NormalizedReportPayload(
     val settlementId: UUID,
     val railwayLineId: UUID?,
     val eventTypeCode: String,
+    val note: String? = null,
 )
 
 /**
@@ -129,8 +132,8 @@ data class ReportRoutingSnapshot(
     init {
         when (routingStatus) {
             RoutingSnapshotStatus.ROUTED -> require(
-                serviceAreaId != null && resolvedRailwayLineId != null && routingReason == null,
-            ) { "a ROUTED snapshot must name an area and a line, and carry no reason" }
+                serviceAreaId != null && routingReason == null,
+            ) { "a ROUTED snapshot must name an area and carry no reason" }
             RoutingSnapshotStatus.UNCLASSIFIED -> require(
                 serviceAreaId == null && routingReason != null,
             ) { "an UNCLASSIFIED snapshot must carry a reason and never an area" }

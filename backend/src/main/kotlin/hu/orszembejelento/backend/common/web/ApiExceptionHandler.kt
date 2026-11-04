@@ -18,6 +18,10 @@ import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNameAlreadyInUseEx
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNameBlankException
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaNotFoundException
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaStateChangedException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminInactiveException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminNotFoundException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAlreadyAssignedToAreaException
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAssignmentChangedException
 import hu.orszembejelento.backend.areaadmin.domain.TargetServiceAreaInactiveException
 import hu.orszembejelento.backend.audit.domain.AuditEventNotFoundException
 import hu.orszembejelento.backend.audit.domain.AuditEventTypeInvalidException
@@ -44,6 +48,7 @@ import hu.orszembejelento.backend.reports.domain.InvalidReportAccessCredentialEx
 import hu.orszembejelento.backend.reports.domain.InvalidSettlementException
 import hu.orszembejelento.backend.reports.domain.OccurredAtTooFarInFutureException
 import hu.orszembejelento.backend.reports.domain.ReportNotFoundException
+import hu.orszembejelento.backend.reports.domain.ReportNoteTooLongException
 import hu.orszembejelento.backend.reports.domain.SubmissionRateLimitedException
 import hu.orszembejelento.backend.reports.domain.TrainIdentifierTooLongException
 import hu.orszembejelento.backend.reportworkflow.domain.InvalidAssigneeException
@@ -278,7 +283,11 @@ class ApiExceptionHandler {
     fun handleInvalidRailwayLine(request: HttpServletRequest) =
         error(request, HttpStatus.BAD_REQUEST, ErrorCode.INVALID_RAILWAY_LINE, "The railway line is unknown.")
 
-    @ExceptionHandler(OccurredAtTooFarInFutureException::class, TrainIdentifierTooLongException::class)
+    @ExceptionHandler(
+        OccurredAtTooFarInFutureException::class,
+        TrainIdentifierTooLongException::class,
+        ReportNoteTooLongException::class,
+    )
     fun handleReportValidation(exception: RuntimeException, request: HttpServletRequest) =
         error(request, HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_ERROR, exception.message ?: "The request is invalid.")
 
@@ -464,6 +473,30 @@ class ApiExceptionHandler {
         HttpStatus.CONFLICT,
         ErrorCode.RAILWAY_LINE_ALREADY_ASSIGNED_TO_AREA,
         "This railway line is already assigned to that service area.",
+    )
+
+    @ExceptionHandler(SettlementAdminNotFoundException::class)
+    fun handleSettlementAdminNotFound(request: HttpServletRequest) =
+        error(request, HttpStatus.NOT_FOUND, ErrorCode.SETTLEMENT_NOT_FOUND, "No such settlement.")
+
+    @ExceptionHandler(SettlementAdminInactiveException::class)
+    fun handleSettlementAdminInactive(request: HttpServletRequest) =
+        error(request, HttpStatus.CONFLICT, ErrorCode.SETTLEMENT_INACTIVE, "This settlement is not active.")
+
+    @ExceptionHandler(SettlementAssignmentChangedException::class)
+    fun handleSettlementAssignmentChanged(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.SETTLEMENT_ASSIGNMENT_CHANGED,
+        "This settlement's service area assignment has changed.",
+    )
+
+    @ExceptionHandler(SettlementAlreadyAssignedToAreaException::class)
+    fun handleSettlementAlreadyAssignedToArea(request: HttpServletRequest) = error(
+        request,
+        HttpStatus.CONFLICT,
+        ErrorCode.SETTLEMENT_ALREADY_ASSIGNED_TO_AREA,
+        "This settlement is already assigned to that service area.",
     )
 
     @ExceptionHandler(hu.orszembejelento.backend.areaadmin.domain.SettlementLineConfigurationException::class)

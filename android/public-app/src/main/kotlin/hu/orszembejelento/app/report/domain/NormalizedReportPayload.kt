@@ -14,6 +14,7 @@ data class NormalizedReportPayload(
     val settlementId: UUID,
     val railwayLineId: UUID?,
     val eventTypeCode: String,
+    val note: String? = null,
 )
 
 /** Raw, human-entered form values before normalization. */
@@ -23,6 +24,7 @@ data class ReportDraft(
     val settlementId: UUID,
     val railwayLineId: UUID?,
     val eventTypeCode: String,
+    val noteInput: String? = null,
 )
 
 /**
@@ -36,4 +38,8 @@ fun ReportDraft.normalize(): NormalizedReportPayload = NormalizedReportPayload(
     settlementId = settlementId,
     railwayLineId = railwayLineId,
     eventTypeCode = eventTypeCode,
+    note = noteInput?.trim()?.ifEmpty { null }?.let { trimmed ->
+        val cpCount = trimmed.codePointCount(0, trimmed.length)
+        if (cpCount > 256) trimmed.substring(0, trimmed.offsetByCodePoints(0, 256)) else trimmed
+    },
 )

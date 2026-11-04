@@ -82,6 +82,23 @@ class RoutingService(
         val current = referenceRepository.findCurrentReferenceState()
             ?: return RoutingOutcome.ReferenceDatasetUnavailable
 
+        val settlementArea = serviceAreaRepository.findAreaOfSettlement(settlementId)
+        if (settlementArea != null) {
+            val optionalLine: RailwayLine? = if (railwayLineId != null) {
+                resolveExplicitLine(settlementId, railwayLineId)
+                    ?: return RoutingOutcome.Unclassified(UnclassifiedReason.REFERENCE_MISMATCH, current.datasetVersion)
+            } else {
+                (inferLine(settlementId, current.settlementRailwayLinesCoverage) as? InferenceResult.Line)?.line
+            }
+            if (optionalLine != null && !optionalLine.active) {
+                return RoutingOutcome.Unclassified(UnclassifiedReason.RAILWAY_LINE_INACTIVE, current.datasetVersion, optionalLine.id)
+            }
+            if (!settlementArea.isActive) {
+                return RoutingOutcome.Unclassified(UnclassifiedReason.SERVICE_AREA_INACTIVE, current.datasetVersion, optionalLine?.id)
+            }
+            return RoutingOutcome.Routed(settlementArea.id, optionalLine?.id, current.datasetVersion)
+        }
+
         val resolvedLine = if (railwayLineId != null) {
             resolveExplicitLine(settlementId, railwayLineId)
                 ?: return RoutingOutcome.Unclassified(UnclassifiedReason.REFERENCE_MISMATCH, current.datasetVersion)

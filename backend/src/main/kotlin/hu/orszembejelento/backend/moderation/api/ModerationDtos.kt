@@ -90,6 +90,7 @@ data class DeletedReportDetailResponse(
     val settlement: ReportSettlementSummary,
     val category: ReportCategorySummary,
     val eventType: ReportEventTypeSummary,
+    val note: String? = null,
     val resolvedRailwayLine: ReportRailwayLineSummary?,
     val serviceArea: ReportAreaSummary?,
     val workflowVersion: Long,
@@ -112,6 +113,7 @@ data class DeletedReportDetailResponse(
                 settlement = ReportSettlementSummary(row.settlementId.toString(), row.settlementName, row.countyName),
                 category = ReportCategorySummary(row.categoryCode, row.categoryDisplayName),
                 eventType = ReportEventTypeSummary(row.eventTypeCode, row.eventTypeDisplayName),
+                note = row.note,
                 resolvedRailwayLine = row.resolvedRailwayLineId?.let {
                     ReportRailwayLineSummary(it.toString(), row.resolvedRailwayLineDisplayName ?: "")
                 },

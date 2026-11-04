@@ -117,6 +117,7 @@ class ReportRepository(
                 localCreatedAt = now(),
                 lastStatusCheckedAt = null,
                 lastErrorCode = null,
+                note = normalized.note,
             ).also { dao.insert(it) }
         }.getOrNull() ?: return SubmitOutcome.LocalPersistenceFailed
 
@@ -142,6 +143,7 @@ class ReportRepository(
             settlementId = entity.settlementId.toString(),
             railwayLineId = entity.railwayLineId?.toString(),
             eventTypeCode = entity.eventTypeCode,
+            note = entity.note,
         )
 
         val response = runCatching { api.submitReport(body, credential.value) }

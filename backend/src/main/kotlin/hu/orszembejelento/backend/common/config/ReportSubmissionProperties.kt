@@ -18,4 +18,7 @@ data class ReportSubmissionProperties(
 
     /** The hard maximum length of a trimmed `trainIdentifier`, in Unicode code points. */
     val trainIdentifierMaxCodePoints: Int = 64,
+
+    /** The hard maximum length of a trimmed `note`, in Unicode code points. */
+    val noteMaxCodePoints: Int = 256,
 )

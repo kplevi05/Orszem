@@ -126,6 +126,146 @@ class JdbcServiceAreaRepository(private val jdbc: JdbcClient) {
             .param("lineId", railwayLineId)
             .update()
 
+    // ------------------------------------------- settlement -> area configuration
+
+    /** Every settlement id currently mapped to [serviceAreaId] in `service_area_settlements`. */
+    fun mappedSettlementIds(serviceAreaId: UUID): List<UUID> =
+        jdbc.sql("SELECT settlement_id FROM service_area_settlements WHERE service_area_id = :areaId")
+            .param("areaId", serviceAreaId)
+            .query(UUID::class.java)
+            .list()
+            .filterNotNull()
+
+    /** How many settlements currently map to [serviceAreaId]. */
+    fun countMappedSettlements(serviceAreaId: UUID): Int =
+        jdbc.sql("SELECT COUNT(*) FROM service_area_settlements WHERE service_area_id = :areaId")
+            .param("areaId", serviceAreaId)
+            .query(Int::class.java)
+            .single()
+
+    /** The service area currently responsible for [settlementId], if any. */
+    fun findAreaOfSettlement(settlementId: UUID): ServiceArea? =
+        jdbc.sql(
+            """
+            SELECT a.id, a.name, a.status, a.created_at, a.updated_at, a.admin_version
+              FROM service_areas a
+              JOIN service_area_settlements m ON m.service_area_id = a.id
+             WHERE m.settlement_id = :settlementId
+            """.trimIndent(),
+        )
+            .param("settlementId", settlementId)
+            .query(::mapArea)
+            .optional()
+            .orElse(null)
+
+    fun assignSettlement(serviceAreaId: UUID, settlementId: UUID) {
+        jdbc.sql(
+            """
+            INSERT INTO service_area_settlements (settlement_id, service_area_id)
+            VALUES (:settlementId, :areaId)
+            ON CONFLICT (settlement_id) DO UPDATE
+               SET service_area_id = EXCLUDED.service_area_id,
+                   created_at = now()
+            """.trimIndent(),
+        )
+            .param("settlementId", settlementId)
+            .param("areaId", serviceAreaId)
+            .update()
+    }
+
+    fun removeSettlementMapping(serviceAreaId: UUID, settlementId: UUID): Int =
+        jdbc.sql("DELETE FROM service_area_settlements WHERE service_area_id = :areaId AND settlement_id = :settlementId")
+            .param("areaId", serviceAreaId)
+            .param("settlementId", settlementId)
+            .update()
+
+    /**
+     * Re-routes currently open (`NEW`, non-deleted) reports for [settlementId] into the newly
+     * assigned active [targetAreaId] so tickets already waiting in the queue immediately appear
+     * under the newly configured service area.
+     */
+    fun routeOpenReportsForSettlement(settlementId: UUID, targetAreaId: UUID) {
+        jdbc.sql(
+            """
+            UPDATE report_routing_snapshots rs
+               SET routing_status = 'ROUTED',
+                   service_area_id = :areaId,
+                   routing_reason = NULL
+              FROM reports r
+             WHERE rs.report_id = r.id
+               AND r.settlement_id = :settlementId
+               AND r.status = 'NEW'
+               AND NOT EXISTS (
+                   SELECT 1 FROM report_moderation_episodes rme
+                    WHERE rme.report_id = r.id AND rme.restored_at IS NULL
+               )
+            """.trimIndent(),
+        )
+            .param("areaId", targetAreaId)
+            .param("settlementId", settlementId)
+            .update()
+    }
+
+    /**
+     * Moves currently open (`NEW`, non-deleted) reports for [settlementId] in [fromAreaId]
+     * back to `UNCLASSIFIED` when the settlement is removed from the service area, ensuring
+     * zero ticket loss.
+     */
+    fun unclassifyOpenReportsForSettlement(settlementId: UUID, fromAreaId: UUID) {
+        jdbc.sql(
+            """
+            UPDATE report_routing_snapshots rs
+               SET routing_status = 'UNCLASSIFIED',
+                   service_area_id = NULL,
+                   routing_reason = 'NO_VERIFIED_RAILWAY_LINE_REFERENCE'
+              FROM reports r
+             WHERE rs.report_id = r.id
+               AND r.settlement_id = :settlementId
+               AND rs.service_area_id = :areaId
+               AND r.status = 'NEW'
+               AND NOT EXISTS (
+                   SELECT 1 FROM report_moderation_episodes rme
+                    WHERE rme.report_id = r.id AND rme.restored_at IS NULL
+               )
+            """.trimIndent(),
+        )
+            .param("settlementId", settlementId)
+            .param("areaId", fromAreaId)
+            .update()
+    }
+
+    /**
+     * Moves every report routing snapshot pointing at [serviceAreaId] to `UNCLASSIFIED`
+     * (`SERVICE_AREA_INACTIVE`) so no report is ever lost or orphaned when a service area is
+     * deactivated or deleted.
+     */
+    fun unclassifyAllReportsOfArea(serviceAreaId: UUID) {
+        jdbc.sql(
+            """
+            UPDATE report_routing_snapshots
+               SET routing_status = 'UNCLASSIFIED',
+                   service_area_id = NULL,
+                   routing_reason = 'SERVICE_AREA_INACTIVE'
+             WHERE service_area_id = :areaId
+            """.trimIndent(),
+        )
+            .param("areaId", serviceAreaId)
+            .update()
+    }
+
+    /**
+     * Deletes a service area after converting any report routing snapshots referencing it to
+     * `UNCLASSIFIED`, ensuring zero ticket loss.
+     */
+    fun deleteArea(serviceAreaId: UUID) {
+        unclassifyAllReportsOfArea(serviceAreaId)
+        jdbc.sql("DELETE FROM service_area_settlements WHERE service_area_id = :areaId").param("areaId", serviceAreaId).update()
+        jdbc.sql("DELETE FROM service_area_settlement_lines WHERE service_area_id = :areaId").param("areaId", serviceAreaId).update()
+        jdbc.sql("DELETE FROM service_area_railway_lines WHERE service_area_id = :areaId").param("areaId", serviceAreaId).update()
+        jdbc.sql("DELETE FROM user_service_areas WHERE service_area_id = :areaId").param("areaId", serviceAreaId).update()
+        jdbc.sql("DELETE FROM service_areas WHERE id = :areaId").param("areaId", serviceAreaId).update()
+    }
+
     /**
      * Every currently-open (NEW or IN_PROGRESS), non-moderation-deleted report whose *routing
      * snapshot* names [serviceAreaId] - the deactivation blocker (brief §15). Deliberately the

@@ -141,6 +141,17 @@ class AuthRepository(
         }
     }
 
+    suspend fun reloadIdentity(): AuthOutcome = call {
+        val response = withFreshToken { bearer -> api.me(bearer) } ?: return@call AuthOutcome.SessionEnded
+        if (response.isSuccessful) {
+            val identity = response.body()!!
+            cachedIdentity = identity
+            successOf(identity)
+        } else {
+            AuthOutcome.Failure(failureKind(response))
+        }
+    }
+
     /**
      * The single entry point every other feature repository (report workflow, user
      * management) uses to call a Service-authenticated endpoint.

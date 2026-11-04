@@ -124,6 +124,7 @@
     <string name="field_service_area">Szolgálati terület</string>
     <string name="field_category">Kategória</string>
     <string name="field_event_type">Eseménytípus</string>
+    <string name="field_note">Megjegyzés</string>
     <string name="field_report_id">Bejelentés azonosítója</string>
     <string name="field_current_assignee">Jelenlegi ügyintéző</string>
     <string name="field_closed_at">Lezárva</string>
@@ -284,8 +285,25 @@
     <string name="service_area_status_inactive">Inaktív</string>
     <string name="area_card_line_count">%1$d teljes vonal</string>
     <string name="area_card_settlement_mapping_count">%1$d településenkénti hozzárendelés</string>
+    <string name="area_card_settlement_count">%1$d település</string>
     <string name="area_card_open_report_count">%1$d nyitott bejelentés</string>
     <string name="service_area_empty">Nincs a szűrésnek megfelelő szolgálati terület.</string>
+
+    <string name="settlements_section_title">Települések (%1$d)</string>
+    <string name="settlements_section_empty">Nincs település ehhez a szolgálati területhez rendelve.</string>
+    <string name="action_add_settlement">Település hozzáadása</string>
+    <string name="action_add_settlement_short">Hozzáadás</string>
+    <string name="settlement_picker_title">Település kiválasztása</string>
+    <string name="settlement_picker_search_hint">Település neve…</string>
+    <string name="settlement_picker_empty">Nincs a szűrésnek megfelelő település.</string>
+    <string name="filter_assignment_assigned_settlement">Hozzárendelt</string>
+    <string name="move_settlement_dialog_title">Település áthelyezése</string>
+    <string name="move_settlement_dialog_text">%1$s jelenleg a(z) „%2$s” szolgálati terület része. Áthelyezi a(z) „%3$s” szolgálati területhez?</string>
+    <string name="unassign_settlement_dialog_title">Település eltávolítása</string>
+    <string name="unassign_settlement_warning">Biztosan megszünteti %1$s hozzárendelését ehhez a szolgálati területhez? A településhez tartozó nyitott bejelentések besorolatlanná válnak, és mindenki számára láthatóak lesznek.</string>
+    <string name="action_delete_area">Terület törlése</string>
+    <string name="delete_area_dialog_title">Szolgálati terület törlése</string>
+    <string name="delete_area_dialog_text">Biztosan törli ezt a szolgálati területet? A település-hozzárendelések megszűnnek, a területhez tartozó bejelentések pedig besorolatlanná válnak (egyik sem vész el, mindenki számára láthatóak lesznek).</string>
 
     <string name="railway_lines_section_title">Vasútvonal-hozzárendelések</string>
     <string name="railway_lines_whole_line_title">Teljes vonalas hozzárendelések</string>
@@ -361,6 +379,10 @@
     <string name="error_target_service_area_inactive">A kiválasztott szolgálati terület jelenleg inaktív.</string>
     <string name="error_railway_line_assignment_changed">A vasútvonal hozzárendelése időközben megváltozott. Frissítettük az aktuális állapotot.</string>
     <string name="error_railway_line_already_assigned">Ez a vasútvonal már ehhez a területhez van rendelve.</string>
+    <string name="error_settlement_not_found">A település nem található.</string>
+    <string name="error_settlement_inactive">Ez a település jelenleg inaktív.</string>
+    <string name="error_settlement_assignment_changed">A település hozzárendelése időközben megváltozott. Frissítettük az aktuális állapotot.</string>
+    <string name="error_settlement_already_assigned">Ez a település már ehhez a területhez van rendelve.</string>
     <string name="error_settlement_line_mixed_routing_modes">Ez a vonal településenként van konfigurálva, ezért nem rendelhető teljes egészében egyetlen szolgálati területhez. A vonal településpárjai külön-külön rendelhetők területhez.</string>
     <string name="error_service_area_admin_forbidden">Ehhez a művelethez nincs jogosultsága.</string>
 
@@ -464,10 +486,14 @@
     <string name="audit_event_service_area_renamed">Szolgálati terület átnevezve</string>
     <string name="audit_event_service_area_activated">Szolgálati terület aktiválva</string>
     <string name="audit_event_service_area_deactivated">Szolgálati terület deaktiválva</string>
+    <string name="audit_event_service_area_deleted">Szolgálati terület törölve</string>
     <string name="audit_event_railway_line_assigned">Vasútvonal hozzárendelve</string>
     <string name="audit_event_railway_line_moved">Vasútvonal áthelyezve</string>
     <string name="audit_event_railway_line_unassigned">Vasútvonal hozzárendelése megszüntetve</string>
     <string name="audit_event_settlement_line_area_changed">Település és vasútvonal szolgálati területe módosítva</string>
+    <string name="audit_event_settlement_assigned">Település hozzárendelve szolgálati területhez</string>
+    <string name="audit_event_settlement_moved">Település áthelyezve szolgálati területhez</string>
+    <string name="audit_event_settlement_unassigned">Település hozzárendelése megszüntetve</string>
 
     <!-- Target-type labels, for the ACTUAL current AuditTargetType set only. -->
     <string name="audit_target_type_user">Felhasználó</string>

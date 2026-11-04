@@ -4,13 +4,18 @@ import hu.orszembejelento.backend.areaadmin.application.ActivateServiceAreaUseCa
 import hu.orszembejelento.backend.areaadmin.application.AreaAdminActorLoader
 import hu.orszembejelento.backend.areaadmin.application.AreaAdminQueryUseCase
 import hu.orszembejelento.backend.areaadmin.application.AssignRailwayLineUseCase
+import hu.orszembejelento.backend.areaadmin.application.AssignSettlementUseCase
 import hu.orszembejelento.backend.areaadmin.application.CreateServiceAreaUseCase
 import hu.orszembejelento.backend.areaadmin.application.DeactivateServiceAreaUseCase
+import hu.orszembejelento.backend.areaadmin.application.DeleteServiceAreaUseCase
 import hu.orszembejelento.backend.areaadmin.application.RenameServiceAreaUseCase
 import hu.orszembejelento.backend.areaadmin.application.UnassignRailwayLineUseCase
+import hu.orszembejelento.backend.areaadmin.application.UnassignSettlementUseCase
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAdminListFilter
 import hu.orszembejelento.backend.areaadmin.domain.RailwayLineAssignmentFilter
 import hu.orszembejelento.backend.areaadmin.domain.ServiceAreaAdminListFilter
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAdminListFilter
+import hu.orszembejelento.backend.areaadmin.domain.SettlementAssignmentFilter
 import hu.orszembejelento.backend.auth.application.AuthenticatedActor
 import hu.orszembejelento.backend.common.web.ApiPaths
 import io.swagger.v3.oas.annotations.Operation
@@ -47,8 +52,11 @@ class AreaAdminController(
     private val renameArea: RenameServiceAreaUseCase,
     private val activateArea: ActivateServiceAreaUseCase,
     private val deactivateArea: DeactivateServiceAreaUseCase,
+    private val deleteArea: DeleteServiceAreaUseCase,
     private val assignLine: AssignRailwayLineUseCase,
     private val unassignLine: UnassignRailwayLineUseCase,
+    private val assignSettlement: AssignSettlementUseCase,
+    private val unassignSettlement: UnassignSettlementUseCase,
 ) {
 
     @GetMapping("/areas")
@@ -118,6 +126,70 @@ class AreaAdminController(
     ): ResponseEntity<ServiceAreaAdminResponse> {
         val actor = actorLoader.load(principal)
         return noStore(ServiceAreaAdminResponse.from(deactivateArea.deactivate(actor, areaId, requireNotNull(request.expectedVersion))))
+    }
+
+    @PostMapping("/areas/{areaId}/delete")
+    @Operation(
+        summary = "Delete a service area",
+        description = "SUPER_ADMIN only. Unclassifies any reports pointing at this service area so zero tickets are lost, then deletes the area and its mappings.",
+    )
+    fun deleteArea(
+        @AuthenticationPrincipal principal: AuthenticatedActor,
+        @PathVariable areaId: UUID,
+        @Valid @RequestBody request: ServiceAreaVersionedRequest,
+    ): ResponseEntity<Void> {
+        val actor = actorLoader.load(principal)
+        deleteArea.delete(actor, areaId, requireNotNull(request.expectedVersion))
+        return noContent()
+    }
+
+    @GetMapping("/settlements")
+    @Operation(summary = "List/search settlements for service area administration", description = "SUPER_ADMIN only. Server-side paginated.")
+    fun listSettlements(
+        @AuthenticationPrincipal principal: AuthenticatedActor,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(required = false) size: Int?,
+        @RequestParam(required = false) query: String?,
+        @RequestParam(required = false) active: Boolean?,
+        @RequestParam(required = false) serviceAreaId: UUID?,
+        @RequestParam(defaultValue = "ALL") assignment: String,
+    ): ResponseEntity<SettlementAdminListPageResponse> {
+        actorLoader.load(principal)
+        val (boundedPage, boundedSize) = boundedPaging(page, size)
+        val filter = SettlementAdminListFilter(
+            query = query?.takeIf { it.isNotBlank() },
+            active = active,
+            serviceAreaId = serviceAreaId,
+            assignment = runCatching { SettlementAssignmentFilter.valueOf(assignment) }.getOrDefault(SettlementAssignmentFilter.ALL),
+        )
+        return noStore(SettlementAdminListPageResponse.from(queries.settlementList(filter, boundedPage, boundedSize), boundedPage, boundedSize))
+    }
+
+    @PostMapping("/settlements/{settlementId}/assign")
+    @Operation(
+        summary = "Assign or move a settlement to a service area",
+        description = "SUPER_ADMIN only. `expectedCurrentServiceAreaId` null assigns an unassigned settlement; non-null moves it from that area.",
+    )
+    fun assignSettlement(
+        @AuthenticationPrincipal principal: AuthenticatedActor,
+        @PathVariable settlementId: UUID,
+        @Valid @RequestBody request: AssignSettlementRequest,
+    ): ResponseEntity<Void> {
+        val actor = actorLoader.load(principal)
+        assignSettlement.assign(actor, settlementId, requireNotNull(request.targetServiceAreaId), request.expectedCurrentServiceAreaId)
+        return noContent()
+    }
+
+    @PostMapping("/settlements/{settlementId}/unassign")
+    @Operation(summary = "Unassign a settlement from its service area", description = "SUPER_ADMIN only.")
+    fun unassignSettlement(
+        @AuthenticationPrincipal principal: AuthenticatedActor,
+        @PathVariable settlementId: UUID,
+        @Valid @RequestBody request: UnassignSettlementRequest,
+    ): ResponseEntity<Void> {
+        val actor = actorLoader.load(principal)
+        unassignSettlement.unassign(actor, settlementId, requireNotNull(request.expectedCurrentServiceAreaId))
+        return noContent()
     }
 
     @GetMapping("/railway-lines")

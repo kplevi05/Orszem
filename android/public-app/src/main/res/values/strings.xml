@@ -49,6 +49,9 @@
     <string name="step2_title">2. Esemény</string>
     <string name="category_choose_title">Kategória</string>
     <string name="event_type_choose_title">Esemény típusa</string>
+    <string name="field_note">Megjegyzés (nem kötelező)</string>
+    <string name="field_note_hint">További részletek leírása (legfeljebb 256 karakter)…</string>
+    <string name="field_note_count">%1$d / %2$d</string>
     <string name="action_submit">Bejelentés küldése</string>
     <string name="catalog_load_failed">A kategórialista betöltése nem sikerült.</string>
     <string name="action_retry">Újrapróbálás</string>
@@ -61,6 +64,7 @@
     <string name="success_event_type">Esemény: %1$s</string>
     <string name="success_train">Vonatszám: %1$s</string>
     <string name="success_settlement">Település: %1$s</string>
+    <string name="success_note">Megjegyzés: %1$s</string>
     <string name="success_status">Állapot: %1$s</string>
     <string name="action_new_report">Új bejelentés</string>
     <string name="action_view_history">Előzmények</string>

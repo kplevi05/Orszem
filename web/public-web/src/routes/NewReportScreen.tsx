@@ -87,6 +87,7 @@ export function NewReportScreen() {
         settlementId: settlement.id,
         railwayLineId,
         eventTypeCode,
+        noteInput: state.noteInput,
       },
       {
         settlementName: settlement.name,
@@ -106,6 +107,7 @@ export function NewReportScreen() {
             eventTypeDisplay: eventType?.displayName ?? eventTypeCode,
             trainIdentifier: state.trainIdentifierInput.trim() || null,
             settlementName: settlement.name,
+            note: state.noteInput.trim() || null,
             status: strings.statusReceived,
           },
         })

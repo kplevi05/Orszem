@@ -86,6 +86,9 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             AuditEventType.RAILWAY_LINE_SERVICE_AREA_MOVED,
             AuditEventType.RAILWAY_LINE_SERVICE_AREA_UNASSIGNED,
             AuditEventType.SETTLEMENT_LINE_SERVICE_AREA_CHANGED,
+            AuditEventType.SETTLEMENT_SERVICE_AREA_ASSIGNED,
+            AuditEventType.SETTLEMENT_SERVICE_AREA_MOVED,
+            AuditEventType.SETTLEMENT_SERVICE_AREA_UNASSIGNED,
             -> setOfNotNull(uuidOrNull(node.path("fromAreaId").asString(null)), uuidOrNull(node.path("toAreaId").asString(null)))
             else -> emptySet()
         }
@@ -119,6 +122,8 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             AuditTargetType.USER -> userLabel(row.targetUserServiceId, row.targetUserNickname)
             AuditTargetType.REPORT -> node.path("publicReportId").asString(null)?.let(::shortReportId)
             AuditTargetType.SERVICE_AREA -> row.targetAreaName
+                ?: node.path("oldName").asString(null)?.takeIf(String::isNotBlank)
+                ?: node.path("name").asString(null)?.takeIf(String::isNotBlank)
             AuditTargetType.RAILWAY_LINE -> railwayLineLabel(row.targetLineCode, row.targetLineDisplayName)
             // Neither carries a safe per-instance identifier worth showing (brief §11): a
             // session has no admin-facing code, and a reference-dataset import is a system
@@ -228,6 +233,9 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
             )
             AuditEventType.SERVICE_AREA_ACTIVATED -> emptyList()
             AuditEventType.SERVICE_AREA_DEACTIVATED -> emptyList()
+            AuditEventType.SERVICE_AREA_DELETED -> listOfNotNull(
+                stringDetail(AuditDetailCode.OLD_NAME, node.path("oldName").asString(null)),
+            )
 
             AuditEventType.RAILWAY_LINE_SERVICE_AREA_ASSIGNED -> listOfNotNull(singleAreaDetail(AuditDetailCode.TO_AREA, node, "toAreaId", areaNames))
             AuditEventType.RAILWAY_LINE_SERVICE_AREA_MOVED -> listOfNotNull(
@@ -235,6 +243,20 @@ class AuditEventSafeProjector(private val objectMapper: ObjectMapper) {
                 singleAreaDetail(AuditDetailCode.TO_AREA, node, "toAreaId", areaNames),
             )
             AuditEventType.RAILWAY_LINE_SERVICE_AREA_UNASSIGNED -> listOfNotNull(singleAreaDetail(AuditDetailCode.FROM_AREA, node, "fromAreaId", areaNames))
+
+            AuditEventType.SETTLEMENT_SERVICE_AREA_ASSIGNED -> listOfNotNull(
+                stringDetail(AuditDetailCode.NEW_NAME, node.path("settlementName").asString(null)),
+                singleAreaDetail(AuditDetailCode.TO_AREA, node, "toAreaId", areaNames),
+            )
+            AuditEventType.SETTLEMENT_SERVICE_AREA_MOVED -> listOfNotNull(
+                stringDetail(AuditDetailCode.NEW_NAME, node.path("settlementName").asString(null)),
+                singleAreaDetail(AuditDetailCode.FROM_AREA, node, "fromAreaId", areaNames),
+                singleAreaDetail(AuditDetailCode.TO_AREA, node, "toAreaId", areaNames),
+            )
+            AuditEventType.SETTLEMENT_SERVICE_AREA_UNASSIGNED -> listOfNotNull(
+                stringDetail(AuditDetailCode.OLD_NAME, node.path("settlementName").asString(null)),
+                singleAreaDetail(AuditDetailCode.FROM_AREA, node, "fromAreaId", areaNames),
+            )
         }
 
     /** A short subset of [fullDetails] for the list row (brief §21/§51) - at most the one or two facts a card can show. */

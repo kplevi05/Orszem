@@ -26,10 +26,15 @@ class GetOwnAccountUseCase(private val serviceAreas: JdbcServiceAreaRepository) 
     fun scopeOf(userId: UUID): OwnAccountScope {
         val actor = serviceAreas.loadAreaActor(userId)
             ?: return OwnAccountScope(role = UserRole.SERVICE_USER, globalAreaAccess = false, areas = emptyList())
+        val areas = if (actor.role == UserRole.SUPER_ADMIN || actor.globalAreaAccess) {
+            serviceAreas.findAllActive()
+        } else {
+            serviceAreas.assignedAreas(userId)
+        }
         return OwnAccountScope(
             role = actor.role,
             globalAreaAccess = actor.globalAreaAccess,
-            areas = serviceAreas.assignedAreas(userId),
+            areas = areas,
         )
     }
 }

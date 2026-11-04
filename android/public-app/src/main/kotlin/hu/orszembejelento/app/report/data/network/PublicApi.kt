@@ -20,6 +20,7 @@ data class SubmitReportRequestBody(
     val settlementId: String,
     val railwayLineId: String?,
     val eventTypeCode: String,
+    val note: String? = null,
 )
 
 @Serializable
@@ -47,6 +48,7 @@ data class PublicReportResponseBody(
     val settlement: SettlementSummaryBody,
     val category: CategorySummaryBody,
     val eventType: EventTypeSummaryBody,
+    val note: String? = null,
     val status: String,
 )
 

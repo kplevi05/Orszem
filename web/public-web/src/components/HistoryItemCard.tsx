@@ -48,6 +48,7 @@ export function HistoryItemCard({
 
       <p className="meta-line">{record.settlementNameSnapshot}</p>
       {record.trainIdentifier && <p className="meta-line">{record.trainIdentifier}</p>}
+      {record.note && <p className="meta-line">{record.note}</p>}
       <p className="meta-line">{formatDateTime(record.occurredAt)}</p>
 
       {record.submissionState === 'SUBMITTED' && (

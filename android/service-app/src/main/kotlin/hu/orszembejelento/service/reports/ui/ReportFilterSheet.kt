@@ -63,6 +63,7 @@ fun ReportFilterSheet(
     }
 
     var areaId by remember { mutableStateOf(current.areaId) }
+    var unclassifiedOnly by remember { mutableStateOf(current.unclassifiedOnly) }
     var categoryCode by remember { mutableStateOf(current.categoryCode) }
     var eventTypeCode by remember { mutableStateOf(current.eventTypeCode) }
     var settlementId by remember { mutableStateOf(current.settlementId) }
@@ -94,17 +95,34 @@ fun ReportFilterSheet(
         ) {
             Text(stringResource(R.string.filters_title), style = MaterialTheme.typography.titleLarge)
 
-            if (areaChoices.isNotEmpty()) {
-                FilterGroup(stringResource(R.string.filter_area)) {
-                    FilterChip(selected = areaId == null, onClick = { areaId = null }, label = { Text(stringResource(R.string.filter_all_areas)) })
-                    areaChoices.forEach { choice ->
-                        FilterChip(
-                            selected = areaId == choice.id,
-                            onClick = { areaId = if (areaId == choice.id) null else choice.id },
-                            label = { Text(choice.name) },
-                        )
-                    }
+            FilterGroup(stringResource(R.string.filter_area)) {
+                FilterChip(
+                    selected = areaId == null && !unclassifiedOnly,
+                    onClick = { areaId = null; unclassifiedOnly = false },
+                    label = { Text(stringResource(R.string.filter_all_areas)) },
+                )
+                areaChoices.forEach { choice ->
+                    FilterChip(
+                        selected = areaId == choice.id && !unclassifiedOnly,
+                        onClick = {
+                            if (areaId == choice.id) {
+                                areaId = null
+                            } else {
+                                areaId = choice.id
+                                unclassifiedOnly = false
+                            }
+                        },
+                        label = { Text(choice.name) },
+                    )
                 }
+                FilterChip(
+                    selected = unclassifiedOnly,
+                    onClick = {
+                        unclassifiedOnly = !unclassifiedOnly
+                        if (unclassifiedOnly) areaId = null
+                    },
+                    label = { Text(stringResource(R.string.analytics_area_unclassified)) },
+                )
             }
 
             if (catalogFailed && catalog == null) {
@@ -169,6 +187,7 @@ fun ReportFilterSheet(
                         onApply(
                             current.copy(
                                 areaId = areaId,
+                                unclassifiedOnly = unclassifiedOnly,
                                 categoryCode = categoryCode,
                                 eventTypeCode = eventTypeCode,
                                 settlementId = settlementId,
@@ -180,7 +199,7 @@ fun ReportFilterSheet(
                 ) { Text(stringResource(R.string.action_apply)) }
                 TextButton(
                     onClick = {
-                        areaId = null; categoryCode = null; eventTypeCode = null; settlementId = null; settlementName = null
+                        areaId = null; unclassifiedOnly = false; categoryCode = null; eventTypeCode = null; settlementId = null; settlementName = null
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.action_clear_filters)) }
