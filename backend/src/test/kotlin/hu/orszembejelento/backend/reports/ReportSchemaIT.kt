@@ -225,16 +225,16 @@ class ReportSchemaIT : PublicReportTestSupport() {
     }
 
     @Test
-    fun `a ROUTED snapshot without a resolved line is rejected`() {
+    fun `a ROUTED snapshot without a resolved line is accepted under V009 settlement routing`() {
         val settlement = insertSettlement("00001")
         val area = insertArea()
         val report = UUID.randomUUID()
         insertReport(id = report, settlementId = settlement)
 
-        val rejected = runCatching {
+        val success = runCatching {
             insertSnapshot(report, status = "ROUTED", resolvedLineId = null, areaId = area, reason = null)
-        }.isFailure
-        check(rejected) { "ROUTED must always name a resolved line" }
+        }.isSuccess
+        check(success) { "ROUTED without a resolved line is allowed under settlement-based routing (V009)" }
     }
 
     @Test

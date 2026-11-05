@@ -56,7 +56,7 @@ class DatabaseBaselineIT : AbstractPostgresIntegrationTest() {
         // Pinned explicitly rather than counted loosely: an unexpected extra migration, or
         // one applied out of order, should fail here rather than surface as a schema
         // mystery later.
-        check(applied.map { it["version"] } == listOf("001", "002", "003", "004", "005", "006", "007", "008")) {
+        check(applied.map { it["version"] } == listOf("001", "002", "003", "004", "005", "006", "007", "008", "009", "010")) {
             "unexpected migration history: $applied"
         }
         check(applied.all { it["success"] == true }) { "a migration did not apply successfully: $applied" }
@@ -89,6 +89,7 @@ class DatabaseBaselineIT : AbstractPostgresIntegrationTest() {
                 "service_areas",
                 "service_area_railway_lines",
                 "service_area_settlement_lines",
+                "service_area_settlements",
                 "user_service_areas",
                 // Phase 4 - public reporting backend
                 "report_categories",
@@ -99,6 +100,8 @@ class DatabaseBaselineIT : AbstractPostgresIntegrationTest() {
                 "report_assignments",
                 // Phase 9 - report moderation (soft deletion)
                 "report_moderation_episodes",
+                // Phase 10 - report messages
+                "report_messages",
             ),
         ) {
             "unexpected schema. Stations and sections belong to a later phase and must " +

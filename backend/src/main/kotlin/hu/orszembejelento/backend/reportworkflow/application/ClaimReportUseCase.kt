@@ -7,6 +7,7 @@ import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
 import hu.orszembejelento.backend.identity.domain.UserStatus
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
 import hu.orszembejelento.backend.moderation.infrastructure.JdbcModerationRepository
+import hu.orszembejelento.backend.reference.infrastructure.JdbcReferenceRepository
 import hu.orszembejelento.backend.reports.domain.Report
 import hu.orszembejelento.backend.reports.domain.ReportStatus
 import hu.orszembejelento.backend.reports.infrastructure.JdbcReportRepository
@@ -53,6 +54,7 @@ class ClaimReportUseCase(
     private val reports: JdbcReportRepository,
     private val users: JdbcUserRepository,
     private val serviceAreas: JdbcServiceAreaRepository,
+    private val referenceRepository: JdbcReferenceRepository,
     private val assignments: JdbcReportAssignmentRepository,
     private val scopeResolver: ReportScopeResolver,
     private val policy: ReportWorkflowPolicy,
@@ -63,6 +65,8 @@ class ClaimReportUseCase(
 
     @Transactional
     fun claim(actor: ReportWorkflowActor, publicReportId: UUID, expectedVersion: Long): Report {
+        referenceRepository.acquireSharedReferenceStateLock()
+
         val (locked, scope) = lockAndResolve(reports, scopeResolver, moderation::hasOpenEpisode, publicReportId)
         if (!policy.canClaim(actor, scope)) throw ReportNotVisibleException()
 
@@ -92,7 +96,10 @@ class ClaimReportUseCase(
             ownActiveAreaIds = serviceAreas.activeAssignedAreaIds(selfUser.id),
         )
         // Area/routing eligibility loss is scope-hiding, exactly like the original gate above.
-        if (!policy.canClaim(freshActor, scope)) throw ReportNotVisibleException()
+        val freshSnapshot = reports.findRoutingSnapshot(locked.id)
+            ?: error("report ${locked.publicId} has no routing snapshot")
+        val freshScope = scopeResolver.resolve(locked, freshSnapshot)
+        if (!policy.canClaim(freshActor, freshScope)) throw ReportNotVisibleException()
 
         if (locked.workflowVersion != expectedVersion) throw ReportStateChangedException()
 

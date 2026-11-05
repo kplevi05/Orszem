@@ -1,6 +1,6 @@
 import type { CatalogCategory } from '../repository/catalogRepository'
 import type { SettlementOption } from '../repository/referenceRepository'
-import { isLineStepResolved, NOT_YET_ANSWERED, type LineAnswer, type RailwayLineStep } from '../domain/lineDecision'
+import { NOT_YET_ANSWERED, type LineAnswer, type RailwayLineStep } from '../domain/lineDecision'
 
 export type ReportStep = 'ALAPADATOK' | 'ESEMENY' | 'SUCCESS'
 

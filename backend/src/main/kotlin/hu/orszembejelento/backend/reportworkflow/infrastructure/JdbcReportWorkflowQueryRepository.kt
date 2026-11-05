@@ -213,14 +213,18 @@ class JdbcReportWorkflowQueryRepository(
         if (actor.role == UserRole.MODERATOR && actor.globalAreaAccess) return null
 
         val unclassifiedFallback = workflowFallbackProperties.unclassifiedServiceUserAccessEnabled
-        val unclassifiedClause = "rs.routing_status = 'UNCLASSIFIED'"
+        val unclassifiedClause = if (actor.role == UserRole.SERVICE_USER) {
+            "(rs.routing_status = 'UNCLASSIFIED' AND (r.status != 'IN_PROGRESS' OR r.assigned_user_id = :selfId))"
+        } else {
+            "rs.routing_status = 'UNCLASSIFIED'"
+        }
 
         if (actor.role == UserRole.SERVICE_USER && actor.globalAreaAccess) {
             // Any active normal area, no ownership restriction - but still never UNCLASSIFIED,
             // unless the nationwide fallback is enabled.
             val routed = "rs.routing_status = 'ROUTED' AND sa.status = 'ACTIVE'"
             val clause = if (unclassifiedFallback) "(($routed) OR $unclassifiedClause)" else routed
-            return clause to emptyMap()
+            return clause to mapOf("selfId" to actor.userId)
         }
 
         // A territorial MODERATOR and a non-global SERVICE_USER: routed, area ACTIVE, area in
@@ -229,7 +233,11 @@ class JdbcReportWorkflowQueryRepository(
         val ids = actor.ownActiveAreaIds.ifEmpty { setOf(NEVER_MATCHES) }
         val routed = "rs.routing_status = 'ROUTED' AND sa.status = 'ACTIVE' AND rs.service_area_id IN (:ownAreaIds)"
         val clause = if (unclassifiedFallback) "(($routed) OR $unclassifiedClause)" else routed
-        return clause to mapOf("ownAreaIds" to ids)
+        val params = mutableMapOf<String, Any>("ownAreaIds" to ids)
+        if (actor.role == UserRole.SERVICE_USER) {
+            params["selfId"] = actor.userId
+        }
+        return clause to params
     }
 
     private fun filterClause(filter: ReportListFilter): Pair<String, Map<String, Any>>? {

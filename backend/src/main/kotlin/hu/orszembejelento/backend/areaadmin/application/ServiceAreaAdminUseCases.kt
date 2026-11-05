@@ -198,9 +198,6 @@ class DeactivateServiceAreaUseCase(
         if (!locked.isActive) throw ServiceAreaAlreadyInactiveException()
 
         if (serviceAreas.countMappedRailwayLines(locked.id) > 0 || serviceAreas.countSettlementLineMappings(locked.id) > 0) throw ServiceAreaHasRailwayLinesException()
-        if (serviceAreas.countMappedSettlements(locked.id) > 0) {
-            serviceAreas.unclassifyAllReportsOfArea(locked.id)
-        }
         if (serviceAreas.countOpenOperationalReports(locked.id) > 0) throw ServiceAreaHasOpenReportsException()
 
         val newVersion = locked.adminVersion + 1

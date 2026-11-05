@@ -48,10 +48,11 @@ class CloseReportIT : ReportWorkflowTestSupport() {
     @Test
     fun `a SERVICE_USER cannot close another user's claimed report - hidden as 404`() {
         val area = givenRoutedArea()
+        val otherArea = givenRoutedArea()
         val owner = givenServiceUser()
         val stranger = givenServiceUser()
         grantArea(owner.id, area.areaId)
-        grantArea(stranger.id, area.areaId)
+        grantArea(stranger.id, otherArea.areaId)
         val report = givenRoutedReport(area)
         check(claim(bearerFor(owner), report.publicId, 0).statusCode() == 200)
 

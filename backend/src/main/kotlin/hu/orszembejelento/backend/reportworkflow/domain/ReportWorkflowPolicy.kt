@@ -64,10 +64,10 @@ class ReportWorkflowPolicy(
 
         if (!report.routed) {
             if (unclassifiedServiceUserAccessEnabled) {
-                if (actor.role == UserRole.MODERATOR) return true
                 if (actor.role == UserRole.SERVICE_USER) {
                     return when (report.status) {
-                        ReportStatus.NEW, ReportStatus.IN_PROGRESS, ReportStatus.ARCHIVED -> true
+                        ReportStatus.NEW, ReportStatus.ARCHIVED -> true
+                        ReportStatus.IN_PROGRESS -> report.assignedUserId == actor.userId
                     }
                 }
             }

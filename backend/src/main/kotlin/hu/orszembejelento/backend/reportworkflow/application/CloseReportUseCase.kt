@@ -49,14 +49,16 @@ class CloseReportUseCase(
     @Transactional
     fun close(actor: ReportWorkflowActor, publicReportId: UUID, expectedVersion: Long): Report {
         val (locked, scope) = lockAndResolve(reports, scopeResolver, moderation::hasOpenEpisode, publicReportId)
-        if (!policy.canClose(actor, scope)) throw ReportNotVisibleException()
+        if (!policy.canViewReport(actor, scope)) throw ReportNotVisibleException()
 
         when (locked.status) {
             ReportStatus.ARCHIVED -> throw ReportAlreadyArchivedException()
             // A visible-but-unclaimed NEW report is a real, informative rejection for a
             // SERVICE_USER (§37) - they can see it, they simply may not close it directly.
             ReportStatus.NEW -> if (actor.role == UserRole.SERVICE_USER) throw ReportWorkflowForbiddenException()
-            ReportStatus.IN_PROGRESS -> {}
+            ReportStatus.IN_PROGRESS -> if (actor.role == UserRole.SERVICE_USER && locked.assignedUserId != actor.userId) {
+                throw ReportWorkflowForbiddenException()
+            }
         }
         if (locked.workflowVersion != expectedVersion) throw ReportStateChangedException()
 

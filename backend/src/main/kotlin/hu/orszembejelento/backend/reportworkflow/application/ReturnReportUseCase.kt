@@ -4,6 +4,7 @@ import hu.orszembejelento.backend.audit.domain.AuditActorType
 import hu.orszembejelento.backend.audit.domain.AuditEventType
 import hu.orszembejelento.backend.audit.domain.AuditTargetType
 import hu.orszembejelento.backend.audit.infrastructure.JdbcAuditRepository
+import hu.orszembejelento.backend.identity.domain.UserRole
 import hu.orszembejelento.backend.identity.infrastructure.JdbcUserRepository
 import hu.orszembejelento.backend.moderation.infrastructure.JdbcModerationRepository
 import hu.orszembejelento.backend.reports.domain.Report
@@ -14,6 +15,7 @@ import hu.orszembejelento.backend.reportworkflow.domain.ReportAlreadyArchivedExc
 import hu.orszembejelento.backend.reportworkflow.domain.ReportNotVisibleException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportStateChangedException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowActor
+import hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowForbiddenException
 import hu.orszembejelento.backend.reportworkflow.domain.ReportWorkflowPolicy
 import hu.orszembejelento.backend.reportworkflow.infrastructure.JdbcReportAssignmentRepository
 import java.time.Clock
@@ -46,12 +48,14 @@ class ReturnReportUseCase(
     @Transactional
     fun returnReport(actor: ReportWorkflowActor, publicReportId: UUID, expectedVersion: Long): Report {
         val (locked, scope) = lockAndResolve(reports, scopeResolver, moderation::hasOpenEpisode, publicReportId)
-        if (!policy.canReturn(actor, scope)) throw ReportNotVisibleException()
+        if (!policy.canViewReport(actor, scope)) throw ReportNotVisibleException()
 
         when (locked.status) {
             ReportStatus.ARCHIVED -> throw ReportAlreadyArchivedException()
             ReportStatus.NEW -> throw ReportStateChangedException()
-            ReportStatus.IN_PROGRESS -> {}
+            ReportStatus.IN_PROGRESS -> if (actor.role == UserRole.SERVICE_USER && locked.assignedUserId != actor.userId) {
+                throw ReportNotVisibleException()
+            }
         }
         if (locked.workflowVersion != expectedVersion) throw ReportStateChangedException()
 
